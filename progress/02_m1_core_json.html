@@ -72,10 +72,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A1 / 单测覆盖 02 IPC 桩函数</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td>Rust：<code>src-tauri/src/{error.rs,types.rs,cmds/{mod,json,history,session,window,system}.rs}</code>（JsonitaError 8 变体 + 8 enum + 11 IPC payload struct + 21 命令 stubs）· <code>src-tauri/src/main.rs</code>（invoke_handler 注册 21 命令）· <code>Cargo.toml</code>（thiserror 1）；TS：<code>src/types/{error,enums,commands,events}.ts</code>（mirror Rust）· <code>src/ipc/{error,commands,events}.ts</code>（typed invoke + listen）· <code>src/store/editor.ts</code>（zustand slice 起步；ui/history/session 留 M1-N4+ 加）· <code>package.json</code>（zustand 5）</td></tr>
+        <tr><td>verification</td><td>agent 端：21 stubs 注册齐 ✓ · TS mirror 完整 ✓ · 链接校验 0 broken；<b>待用户本机跑</b>：<code>pnpm install</code> + <code>cargo check</code> 都过 → <code>pnpm tsc --noEmit</code> 0 错 → 任意 stub 命令在 DevTools console 调 <code>invoke('json_format', { text: '{}', opts: { indent: 'spaces2' } })</code> 应回 <code>'{}'</code></td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n1): state management + ipc skeleton (21 stubs + typed wrappers)</code></td></tr>
         <tr><td>blocked_by</td><td>M0 全部 exit-criteria</td></tr>
         <tr><td>关键交付物</td><td>Zustand store 拆 4 个 slice（input / output / tabs / settings 占位）；Rust 端 02 § 6.1 commands 桩函数全部注册（暂返 mock 数据）；TS 端 <code>invoke()</code> 薄封装 + 错误矩阵映射</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/02_ipc.html">02 § 2 命令分组</a> · <a href="../spec/02_ipc.html">02 § 6.1 命令签名</a> · <a href="../spec/13_schemas.html">13 § 1 错误类型 / § 3 settings struct</a></td></tr>
