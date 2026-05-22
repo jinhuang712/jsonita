@@ -61,6 +61,11 @@ fn main() {
             cmds::settings::settings_get_all,
             cmds::settings::settings_set,
             cmds::settings::settings_reset,
+            // M2-N2: ai api key (Keychain) + test connection (mock until M2-N3)
+            cmds::ai::ai_set_api_key,
+            cmds::ai::ai_delete_api_key,
+            cmds::ai::ai_test_connection,
+            cmds::ai::ai_has_api_key,
         ])
         .setup(|app| {
             // macOS: 让 Dock 不出现图标（spec/07 § 1.4 等效 LSUIElement）

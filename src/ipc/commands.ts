@@ -79,3 +79,19 @@ export const settings = {
     invoke<Settings>('settings_set', { patch }),
   reset: () => invoke<Settings>('settings_reset'),
 };
+
+// ──────────── ai (M2-N2 keychain; M2-N3 fix/connection real) ────────────
+
+export interface TestConnectionResp {
+  ok: boolean;
+  latencyMs: number;
+  modelEchoed: string;
+}
+
+export const ai = {
+  setApiKey: (apiKey: string) => invoke<void>('ai_set_api_key', { apiKey }),
+  deleteApiKey: () => invoke<void>('ai_delete_api_key'),
+  testConnection: (apiKey: string, modelId: string) =>
+    invoke<TestConnectionResp>('ai_test_connection', { apiKey, modelId }),
+  hasApiKey: () => invoke<boolean>('ai_has_api_key'),
+};

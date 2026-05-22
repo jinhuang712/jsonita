@@ -5,6 +5,7 @@
 
 pub mod db;
 pub mod history;
+pub mod keychain;
 pub mod session;
 pub mod settings;
 pub mod window;

@@ -4,6 +4,7 @@ import { settings as settingsApi } from '../ipc/commands';
 import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
+import { ApiKeyInput } from './ApiKeyInput';
 
 /**
  * 设置 Modal — 6 分组 nav + 字段。
@@ -234,8 +235,11 @@ function GroupAi({ settings, patch }: GroupProps) {
           style={inputStyle}
         />
       </div>
-      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 4 }}>
-        M2-N2 起此分组加 API Key 输入（落 Keychain）。
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginBottom: 4 }}>
+          DeepSeek API Key
+        </div>
+        <ApiKeyInput modelId={settings.aiModelId} />
       </div>
     </div>
   );
