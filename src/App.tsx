@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { AccessibilityModal } from './permissions/AccessibilityModal';
 import { FloatingWindow } from './shell/FloatingWindow';
 
 export function App() {
   const [modalOpen, setModalOpen] = useState(false);
+  useGlobalHotkeys();
 
   // 首次 mount：查 ⌘⇧J 注册状态 + listen 后续 event
   useEffect(() => {

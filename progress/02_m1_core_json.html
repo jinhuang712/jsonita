@@ -174,10 +174,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A15..A18</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification（minimal · RestoreTimer 留 M2 polish）</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/cmds/session.rs</code> 真实化 State&lt;Db&gt; 调 store::session；<code>src/hooks/useGlobalHotkeys.ts</code>（⌘K 清空+clearLast / ⌘⇧L loadLast → setContent / Esc/⌘W win.hide()）；<code>src/hooks/useDebouncedTransform.ts</code> success 时 session.saveLast 持久化；<code>src/App.tsx</code> useGlobalHotkeys()；<code>package.json</code> react-hotkeys-hook 4.6</td></tr>
+        <tr><td>verification</td><td>agent 端：3 hotkey + saveLast 钩子接通 ✓；<b>待用户本机跑</b>：粘 JSON → 自动 saveLast；按 ⌘K → editor 清空 + last_session 清；粘 A → Quit → 重启 → ⌘⇧L → 找回 A；<b>简化版未实现 RestoreTimer（5min 窗口期内自动恢复）</b>，window:shown 不主动 restore；M2-N1 起补完整状态机（spec/10 § 5）</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n7): session persistence + global hotkeys (⌘K / ⌘⇧L / Esc)</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n6-sqlite-history</code></td></tr>
         <tr><td>关键交付物</td><td><code>last_session</code> 单行表（持久化）；in-memory <code>RestoreTimer</code>（hide 时 start，show 时 stop + restore，超时 clear）；<kbd>⌘⇧L</kbd> 找回（即使应用重启）；<kbd>⌘K</kbd> 清空浮窗 + 不写 last_session</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/10_storage.html">10 § 5 last_session 状态机</a>（含 stateDiagram）</td></tr>

@@ -7,9 +7,28 @@
 
 import { useEffect } from 'react';
 import { isJsonitaError } from '../ipc/error';
-import { json } from '../ipc/commands';
+import { json, session } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
 import { useUiStore, type Pane } from '../store/ui';
+import type { OpType } from '../types/enums';
+
+function paneToOpType(p: Pane): OpType {
+  switch (p) {
+    case 'minify':
+      return 'minify';
+    case 'tree':
+      return 'tree';
+    case 'json-to-str':
+      return 'json-to-str';
+    case 'str-to-json':
+      return 'str-to-json';
+    case 'ai-fix':
+      return 'ai-fix';
+    case 'format':
+    default:
+      return 'format';
+  }
+}
 
 const LARGE_THRESHOLD = 5 * 1024 * 1024;
 
@@ -61,6 +80,14 @@ export function useDebouncedTransform() {
         setStatus('valid');
         setError(null);
         setShowAiFix(false);
+        // M1-N7：success 时持久化 last_session（恢复支持）
+        session
+          .saveLast({
+            content,
+            opType: paneToOpType(activePane),
+            savedAt: Date.now(),
+          })
+          .catch(() => {});
       } catch (e: unknown) {
         if (isJsonitaError(e) && e.kind === 'Parse') {
           setStatus('error');
