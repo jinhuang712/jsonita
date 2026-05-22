@@ -338,7 +338,7 @@
         {
           "node": "M1-N5",
           "title": "TreeView + Path 复制",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n5-tree",
           "task_file": null,
           "spec_refs": [
