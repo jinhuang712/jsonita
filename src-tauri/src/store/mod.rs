@@ -7,6 +7,8 @@ pub mod db;
 pub mod history;
 pub mod session;
 pub mod settings;
+pub mod window;
 
 pub use db::Db;
 pub use settings::SettingsStore;
+pub use window::{WindowState, WindowStore};

@@ -40,7 +40,7 @@ pub fn toggle(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-/// CloseRequested → 拦截改 hide；Focused(false) → 失焦 hide。
+/// CloseRequested → 拦截改 hide；Focused(false) → 失焦 hide；Resized → mark userDragged。
 fn install_window_events(win: &WebviewWindow) {
     let w = win.clone();
     win.on_window_event(move |event| match event {
@@ -51,6 +51,14 @@ fn install_window_events(win: &WebviewWindow) {
         tauri::WindowEvent::Focused(false) => {
             // M2-N1 起按 settings.hide_on_blur 判读；M0 默认开
             let _ = w.hide();
+        }
+        tauri::WindowEvent::Resized(size) => {
+            // M1-N9：用户拖动 → mark userDragged；自身 resize（智能宽度）走 begin/end_self_resize 跳过
+            if let Some(store) = w.try_state::<crate::store::WindowStore>() {
+                if !store.is_self_resizing() {
+                    let _ = store.mark_user_dragged(size.width, size.height);
+                }
+            }
         }
         _ => {}
     });

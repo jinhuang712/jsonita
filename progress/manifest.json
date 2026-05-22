@@ -392,7 +392,7 @@
         {
           "node": "M1-N9",
           "title": "智能宽度 + soft-wrap",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n9-smart-width",
           "task_file": null,
           "spec_refs": [
