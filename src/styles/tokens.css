@@ -1,0 +1,157 @@
+/**
+ * 设计令牌 — spec/03_design_tokens.html
+ *
+ * M1-N3 minimal set（M3-N1 主题打磨时会补全所有 token + 切换机制）。
+ * light = `:root`; dark via `[data-theme="dark"]` 覆盖（M3-N1 加切换逻辑）。
+ */
+
+:root {
+  /* § 4.2 品牌 / 中性 */
+  --bg: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-code: #F5F5F7;
+  --bg-overlay: rgba(0, 0, 0, 0.32);
+  --text: #1A1A1A;
+  --text-muted: #6B7280;
+  --text-faint: #9CA3AF;
+  --border: #E5E7EB;
+  --border-strong: #D1D5DB;
+  --primary: #057AF3;
+  --primary-soft: #EFF6FF;
+  --primary-edge: #BFDBFE;
+  --accent: #FA9B10;
+  --accent-soft: #FFF7ED;
+
+  /* § 4.3 状态色 */
+  --ok: #06B78F;
+  --ok-bg: #ECFDF5;
+  --warn: #D97706;
+  --warn-bg: #FFFBEB;
+  --danger: #DC2626;
+  --danger-bg: #FEF2F2;
+  --info: #3B82F6;
+  --info-bg: #EFF6FF;
+
+  /* § 4.4 JSON + editor */
+  --json-key: #057AF3;
+  --json-string: #15803D;
+  --json-number: #1D4ED8;
+  --json-bool: #6B3CE9;
+  --json-null: #9CA3AF;
+  --json-punc: #6B7280;
+  --editor-bg: #FFFFFF;
+  --editor-gutter: #FAFAFA;
+  --editor-line-active: #F0F7FF;
+  --editor-selection: #BFDBFE80;
+  --editor-cursor: #057AF3;
+  --editor-error-underline: #DC2626;
+  --editor-bracket-match: #BFDBFE;
+  --editor-indent-guide: #E5E7EB;
+
+  /* § 6 字体 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
+    "PingFang SC", "Microsoft YaHei UI", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas,
+    "Liberation Mono", "PingFang SC", "Microsoft YaHei UI", monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12.5px;
+  --fs-base: 13.5px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-editor: 13px;
+  --fs-tree: 12px;
+  --lh-tight: 1.25;
+  --lh-snug: 1.4;
+  --lh-normal: 1.6;
+  --lh-code: 1.55;
+
+  /* § 7 间距 */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  /* § 8 圆角 / 阴影 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 14px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(5, 122, 243, 0.32);
+
+  /* § 9 动效 */
+  --dur-instant: 80ms;
+  --dur-fast: 120ms;
+  --dur-base: 150ms;
+  --dur-slow: 200ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* § 10 Z-index */
+  --z-sticky: 20;
+  --z-modal-bg: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+}
+
+[data-theme="dark"] {
+  --bg: #1A1A1C;
+  --bg-card: #232326;
+  --bg-code: #1F1F22;
+  --bg-overlay: rgba(0, 0, 0, 0.56);
+  --text: #E5E7EB;
+  --text-muted: #9BA3AF;
+  --text-faint: #6B7280;
+  --border: #2E2E33;
+  --border-strong: #3F3F46;
+  --primary: #3B9CFF;
+  --primary-soft: rgba(59, 156, 255, 0.12);
+  --primary-edge: rgba(59, 156, 255, 0.32);
+  --accent: #FBA43A;
+  --accent-soft: rgba(251, 164, 58, 0.12);
+
+  --ok: #28D9A8;
+  --ok-bg: rgba(40, 217, 168, 0.14);
+  --warn: #F0A23A;
+  --warn-bg: rgba(240, 162, 58, 0.14);
+  --danger: #F87171;
+  --danger-bg: rgba(248, 113, 113, 0.14);
+  --info: #60A5FA;
+  --info-bg: rgba(96, 165, 250, 0.14);
+
+  --json-key: #5DA8FF;
+  --json-string: #4ADE80;
+  --json-number: #93C5FD;
+  --json-bool: #C084FC;
+  --json-null: #6B7280;
+  --json-punc: #9BA3AF;
+  --editor-bg: #232326;
+  --editor-gutter: #1F1F22;
+  --editor-line-active: rgba(59, 156, 255, 0.08);
+  --editor-selection: rgba(59, 156, 255, 0.28);
+  --editor-cursor: #5DA8FF;
+  --editor-error-underline: #F87171;
+  --editor-bracket-match: rgba(59, 156, 255, 0.32);
+  --editor-indent-guide: #2E2E33;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-focus: 0 0 0 3px rgba(93, 168, 255, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

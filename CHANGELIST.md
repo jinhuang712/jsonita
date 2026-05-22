@@ -8,6 +8,42 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1-N3 · CodeMirror 6 集成（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src/styles/tokens.css` ── spec/03 完整设计令牌 light + dark：4 组颜色（品牌 / 中性 / 状态 / JSON+editor）+ 字体栈（mono 含 PingFang SC / Microsoft YaHei UI 末尾防 CJK 方框）+ 字号 6 档 + 间距 8 档 + 圆角 + 阴影 + 动效 + Z-index；含 `[data-theme="dark"]` 覆盖（M3-N1 加切换机制）+ `@media (prefers-reduced-motion: reduce)` 动画归零（a11y）
+- `src/styles/global.css` ── html/body 透明（NSPanel 兼容）+ 字体 / 颜色继承 tokens + `<kbd>` 通用样式
+- `src/editor/highlight.ts` ── `HighlightStyle.define` 6 类 tag（propertyName/string/number/bool/null/punc）→ CSS variables 让 data-theme 切换自动应用
+- `src/editor/theme.ts` ── `EditorView.theme(sharedSpec, { dark: ... })`：全走 CSS vars；&amp;/cm-content/cursor/selection/gutters/activeLine/foldPlaceholder/matchingBracket/searchMatch/lintRange-error/tooltip-lint 全覆盖；输出 jsonitaLightTheme + jsonitaDarkTheme 双 instance
+- `src/editor/extensions.ts` ── `makeExtensions(cfg)` 装 12 项标配（lineNumbers / highlightActiveLine+Gutter / foldGutter+codeFolding / bracketMatching / closeBrackets / history / drawSelection / highlightSelectionMatches / indentationMarkers / allowMultipleSelections / lineWrapping / json+jsonParseLinter+lintGutter / syntaxHighlighting+jsonitaJsonHighlight / theme / placeholder / keymap）；可选 cfg: theme / readOnly / softWrap / placeholderText
+- `src/editor/Editor.tsx` ── React 包装：useRef + EditorView 单次 init（strict mode 友好）；theme/config 变化时重建 instance；外部 setValue 走 dispatch(changes) 保留 undo 历史
+- `src/editor/lint.ts` ── 外部 linter 入口：`externalErrorAsDiagnostic(doc, err)` 把 Rust 端返回的 line/col/msg 转 CM Diagnostic（spec/08 § 2.2 合并策略；M1-N4 store/editor.error 字段挂上）
+- `src/components/PanelShell.tsx` ── 替换 placeholder text 为内嵌 Editor 实例 + useEditorStore binding（content + setContent）+ `placeholderText={t('empty.title')}`（i18n）
+- `src/main.tsx` ── import './styles/tokens.css' + './styles/global.css'（顺序：tokens 先于 global 让 var() 可解析）
+- `package.json` ── 10 个 CodeMirror v6 包 + `@lezer/highlight 1.2` + `@uiw/codemirror-extensions-indentation-markers 4.23`
+
+关键决策：
+
+- **设计令牌一次性铺全**（不只放 M1-N3 用的）：tokens.css 覆盖 spec/03 全部域；M3-N1 起加切换机制（matchMedia / settings.theme 三数据源）；当前 light 默认，dark 通过手动 `<html data-theme="dark">` 可即时预览
+- **theme 用 CSS variables 而非 hex hardcode**：未来主题切换零代码改动；React 部分只需 set `document.documentElement.dataset.theme = 'dark'`
+- **shared spec + dark: true/false flag 双 instance**：CM6 内部 highlightStyle 需要知道 dark/light（影响默认 fallback 颜色）；我们的 highlight 走 CSS vars 不依赖 dark flag，但仍保留两 instance 让 CM 内部对齐
+- **placeholder 走 i18n**：通过 `placeholderText` prop 传入；CodeMirror placeholder extension 接受字符串，不直接支持响应式 ── 当前 mount 时一次性传，M3-N1 i18n 切语言时重建 instance 即可（已锁 theme 变 reload）
+- **lint.ts 暴露 `externalLinter(getError)` 工厂**：M1-N4 store/editor 加 error 字段后挂上；当前不在 extensions 里加，避免空 getter 调用噪音
+
+待用户本机验证：
+
+- `pnpm install`（10 个 CM 包 + lezer + uiw ≈ 4 MB 安装）
+- `pnpm tsc --noEmit` 0 错
+- `pnpm tauri dev` 启动 → 浮窗内 Editor 可输入；输入 `{"a":1,"b":[1,2]}` 看 JSON 高亮按 spec/03 § 4.4 token 颜色（key 蓝 / string 绿 / number 深蓝 / bool 紫 / null 灰 / punc 中性）
+- 测 12 项扩展：行号 left gutter 显示 / 输入 `{` 自动补 `}` / `⌘F` 弹搜索 / `⌘Z` 撤销 / 输入非法 JSON 看红波浪 + lint tooltip
+- DevTools 改 `document.documentElement.dataset.theme = 'dark'` → CSS 变量切换 dark 配色立即生效（编辑器内部需要重建 instance，M3-N1 加 Compartment 后热切）
+
+进度状态：
+
+- `progress/manifest.json` M1-N3 `status: completed`
+- `progress/02_m1_core_json.html#m1-n3-codemirror` status: `done · pending-user-verification`
+
 #### M1-N2 · JSON 引擎核心（done · pending-user-verification）
 
 新增 / 修改文件：

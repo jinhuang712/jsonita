@@ -106,10 +106,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A1 / 切主题正常 + 12 项扩展可用</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>package.json</code>（10 个 @codemirror/* + @lezer/highlight + @uiw indent-markers）· <code>src/styles/{tokens,global}.css</code>（spec/03 全部令牌 light+dark via data-theme）· <code>src/editor/{Editor.tsx,extensions.ts,theme.ts,highlight.ts,lint.ts}</code>（5 文件 CM6 wrapping）· <code>src/components/PanelShell.tsx</code>（接 Editor + store binding + i18n placeholder）· <code>src/main.tsx</code>（import CSS）</td></tr>
+        <tr><td>verification</td><td>agent 端：5 editor 文件 + 2 CSS 文件就位 ✓ · 12 项标配扩展全开 ✓ · CSS vars 全 spec/03 对齐 ✓ · 链接 0 broken；<b>待用户本机跑</b>：<code>pnpm install</code>（首次会装 CodeMirror 10 个包）→ <code>pnpm tsc --noEmit</code> 0 错 → <code>pnpm tauri dev</code> 看 Editor 可输入 + 12 项扩展可用（行号 / 折叠 / 括号匹配 / 多光标 / search ⌘F / undo ⌘Z / lint 红波浪 / placeholder）+ JSON 高亮按 spec/03 § 4.4 token 显示（key 蓝 / string 绿 / number 深蓝 / bool 紫 / null 灰）</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n3): codemirror 6 integration (12 extensions + json highlight + design tokens)</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n1-store-ipc</code></td></tr>
         <tr><td>关键交付物</td><td>CodeMirror 6 装入；<a href="../spec/08_editor.html">08 § 1.4</a> 12 项标配扩展全开（lineWrapping / bracketMatching / indentationMarkers / foldGutter+codeFolding / lineNumbers / highlightActiveLine / search / multipleSelections / history / autocompletion / placeholder / 自定义 keymap）；<code>@codemirror/lang-json</code> 接入；light / dark theme extension 切换跟系统</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/08_editor.html">08 § 1 编辑器 § 2 错误标注 § 3 状态栏联动</a> · <a href="../spec/03_design_tokens.html">03 § 1-3</a>（颜色 / 字号 / token）</td></tr>
