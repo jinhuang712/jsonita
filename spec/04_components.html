@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 04 组件库映射</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="04">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 04</span>
+      <h1 class="doc-title">组件库映射</h1>
+      <p class="doc-subtitle">shadcn/ui 复用清单 + 自定义组件清单 + 每个组件的 token / props / 状态完整定义。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>策略</h2>
+
+    <ul>
+      <li><b>shadcn/ui 是源码不是依赖</b> ── 按需 <code>npx shadcn@latest add &lt;component&gt;</code> 拷贝到 <code>src/ui/&lt;name&gt;.tsx</code>，再改样式让它指向我们的 <a href="03_design_tokens.html">02 设计令牌</a> token</li>
+      <li><b>基元用 shadcn</b>（Button / Input / Select / Switch / Dialog / Tooltip / DropdownMenu / Tabs / ScrollArea）</li>
+      <li><b>业务组件自写</b>（Editor / TreeView / TabBar / StatusBar / Toast / HistoryItem 等）</li>
+      <li><b>不引 antd / Mantine / Chakra</b> ── bundle 太大且风格冲突</li>
+    </ul>
+
+    <h2><span class="h2-num">2</span>shadcn/ui 复用清单</h2>
+
+    <table>
+      <thead><tr><th>组件</th><th>来源</th><th>用途</th><th>覆写要点</th></tr></thead>
+      <tbody>
+        <tr><td><code>Button</code></td><td>shadcn</td><td>设置 / Modal / Toast 内按钮</td><td>variant=default 改 bg <code>var(--primary)</code> · radius <code>--radius-md</code></td></tr>
+        <tr><td><code>Input</code></td><td>shadcn</td><td>设置 / API key 输入</td><td>border <code>--border-strong</code> · focus ring <code>--shadow-focus</code></td></tr>
+        <tr><td><code>Label</code></td><td>shadcn</td><td>表单项标签</td><td>color <code>--text-muted</code> · fs <code>--fs-sm</code></td></tr>
+        <tr><td><code>Select</code></td><td>shadcn</td><td>主题 / 缩进 / 历史上限选择</td><td>下拉浮层 bg <code>--bg-card</code> · 阴影 <code>--shadow-lg</code></td></tr>
+        <tr><td><code>Switch</code></td><td>shadcn</td><td>设置面板所有 checkbox 项</td><td>checked bg <code>--primary</code></td></tr>
+        <tr><td><code>Tabs</code></td><td>shadcn</td><td>设置面板分组（General / Shortcuts / AI / ...）</td><td>border-bottom + active underline 样式</td></tr>
+        <tr><td><code>Dialog</code></td><td>shadcn (Radix)</td><td>设置 / 历史 / AI 错误 modal</td><td>背景 <code>--bg-overlay</code> · 容器 radius <code>--radius-2xl</code></td></tr>
+        <tr><td><code>DropdownMenu</code></td><td>shadcn</td><td>历史项右键菜单 / Tray 替代菜单</td><td>同 Select</td></tr>
+        <tr><td><code>Tooltip</code></td><td>shadcn</td><td>按钮 / 状态栏 hover 提示</td><td>bg dark always · z <code>--z-tooltip</code></td></tr>
+        <tr><td><code>ScrollArea</code></td><td>shadcn</td><td>历史列表 / 设置面板滚动</td><td>thumb color <code>--border-strong</code></td></tr>
+        <tr><td><code>Toaster</code></td><td>sonner（shadcn 推荐）</td><td>状态 / 错误 Toast</td><td>position bottom-right · 自定义 4 variants</td></tr>
+        <tr><td><code>Separator</code></td><td>shadcn</td><td>Modal / Dropdown 分隔线</td><td>color <code>--border</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">2.1</span>shadcn 覆写模式</h3>
+
+    <p>每个 shadcn 组件拷过来后<b>立刻</b>替换它默认的 Tailwind class，让所有颜色 / 字号 / 圆角都过 token：</p>
+
+    <pre><code>// src/ui/button.tsx（节选）
+const buttonVariants = cva(
+  // 基础
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap " +
+  "rounded-md text-base font-medium transition-colors " +
+  "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 " +
+  "disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-white hover:bg-primary/90",
+        outline: "border border-border bg-bg-card hover:bg-primary-soft hover:text-primary",
+        ghost:   "hover:bg-primary-soft hover:text-primary",
+        danger:  "bg-danger text-white hover:bg-danger/90",
+      },
+      size: {
+        sm: "h-7 px-3 text-sm",
+        md: "h-8 px-3.5",
+        lg: "h-9 px-4 text-md",
+      },
+    },
+    defaultVariants: { variant: "default", size: "md" },
+  }
+);</code></pre>
+
+    <h2><span class="h2-num">3</span>自定义组件清单</h2>
+
+    <table>
+      <thead><tr><th>组件</th><th>文件</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>FloatingWindow</code></td><td>shell/FloatingWindow.tsx</td><td>浮窗壳 ── 路由当前 pane / 监听 IPC events</td></tr>
+        <tr><td><code>TabBar</code></td><td>shell/TabBar.tsx</td><td>顶部 6 个功能 Tab（含 AI Fix 仅错误时）</td></tr>
+        <tr><td><code>StatusBar</code></td><td>shell/StatusBar.tsx</td><td>底部状态栏（valid / error · lines · bytes · History · Settings）</td></tr>
+        <tr><td><code>Toast</code></td><td>shell/Toast.tsx</td><td>四 variant + retry action（封装 sonner）</td></tr>
+        <tr><td><code>RestoreBar</code></td><td>shell/RestoreBar.tsx</td><td>"Restored from N min ago" 顶部条 + Discard</td></tr>
+        <tr><td><code>Editor</code></td><td>editor/Editor.tsx</td><td>CodeMirror 6 包装（见 <a href="08_editor.html">07</a>）</td></tr>
+        <tr><td><code>TreeView</code></td><td>tree/TreeView.tsx</td><td>JSON 树 ── 复用 react-json-view-lite 外壳但自定义颜色</td></tr>
+        <tr><td><code>DiffView</code></td><td>panes/DiffView.tsx</td><td>AI Fix 接受前的 diff 展示（左原右改）</td></tr>
+        <tr><td><code>HistoryModal</code></td><td>history/HistoryModal.tsx</td><td>Dialog 内的搜索 + 列表 + 项操作</td></tr>
+        <tr><td><code>HistoryItem</code></td><td>history/HistoryItem.tsx</td><td>单条历史的列表行（pin / star / op-type / time）</td></tr>
+        <tr><td><code>SettingsModal</code></td><td>settings/SettingsModal.tsx</td><td>设置面板（左侧 nav + 右侧 panel）</td></tr>
+        <tr><td><code>ShortcutInput</code></td><td>settings/ShortcutInput.tsx</td><td>录入快捷键 + 冲突检测</td></tr>
+        <tr><td><code>ApiKeyInput</code></td><td>settings/ApiKeyInput.tsx</td><td>masked 输入 + 测试连接</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">4</span>关键自定义组件详设</h2>
+
+    <h3><span class="h3-num">4.1</span>TabBar</h3>
+
+    <p>顶部 6 个 Tab：Format / Minify / Tree / →Str / →JSON /（+ AI Fix 仅错误）。</p>
+
+    <pre><code>// src/shell/TabBar.tsx
+export type Pane = 'format' | 'minify' | 'tree' | 'json-to-str' | 'str-to-json' | 'ai-fix';
+
+interface TabBarProps {
+  active: Pane;
+  showAiFix: boolean;       // 仅在编辑器 parse error 时为 true
+  onChange: (p: Pane) =&gt; void;
+}</code></pre>
+
+    <table>
+      <thead><tr><th>状态</th><th>样式</th></tr></thead>
+      <tbody>
+        <tr><td>default</td><td>bg <code>--bg-card</code> · text <code>--text-muted</code> · border <code>--border</code> · radius <code>--radius-md</code> · h 26px · px 10px · fs <code>--fs-xs</code></td></tr>
+        <tr><td>hover</td><td>bg <code>--primary-soft</code> · text <code>--primary</code></td></tr>
+        <tr><td>active</td><td>bg <code>--primary</code> · text white · border <code>--primary</code></td></tr>
+        <tr><td>focus</td><td>+ box-shadow <code>--shadow-focus</code></td></tr>
+        <tr><td>ai variant</td><td>bg <code>linear-gradient(135deg, #FFEDD5, #FED7AA)</code>（light）/ <code>rgba(251,164,58,0.18)</code>（dark）· text <code>--accent</code></td></tr>
+      </tbody>
+    </table>
+
+    <p><b>键盘</b>：聚焦 TabBar 后 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环；<kbd>Enter</kbd> 或 <kbd>Space</kbd> 切换。不绑 <kbd>⌘1-6</kbd>（见 <a href="../plan/02_interaction.html">plan/02 § 1.1</a>）。</p>
+
+    <h3><span class="h3-num">4.2</span>StatusBar</h3>
+
+    <pre><code>interface StatusBarProps {
+  status: 'valid' | 'error' | 'empty' | 'large';
+  errorLoc?: { line: number; col: number; msg: string };
+  meta?: { lines: number; bytes: number };
+  historyCount: number;
+  onOpenHistory: () =&gt; void;
+  onOpenSettings: () =&gt; void;
+}</code></pre>
+
+    <table>
+      <thead><tr><th>status</th><th>左侧呈现</th><th>圆点色</th></tr></thead>
+      <tbody>
+        <tr><td><code>valid</code></td><td>"● Valid JSON · X lines · Y bytes"</td><td><code>--ok</code></td></tr>
+        <tr><td><code>error</code></td><td>"● Line X, Col Y: {msg}"</td><td><code>--danger</code></td></tr>
+        <tr><td><code>empty</code></td><td>"—"</td><td>无</td></tr>
+        <tr><td><code>large</code></td><td>"● Large file · X bytes"</td><td><code>--warn</code></td></tr>
+      </tbody>
+    </table>
+
+    <p>右侧：<code>History ({n}) · ⚙ Settings</code> ── 两个按钮（<code>Button variant=ghost size=sm</code>）。</p>
+
+    <h3><span class="h3-num">4.3</span>Toast</h3>
+
+    <p>基于 <code>sonner</code> 封装，四 variant 对应四种状态色：</p>
+
+    <pre><code>// src/shell/Toast.tsx
+import { toast as sonnerToast } from 'sonner';
+
+export const toast = {
+  info:    (m: string, opts?: ToastOpts) =&gt; sonnerToast(m, { ...opts, className: 'toast-info' }),
+  ok:      (m: string, opts?: ToastOpts) =&gt; sonnerToast.success(m, { ...opts, className: 'toast-ok' }),
+  warn:    (m: string, opts?: ToastOpts) =&gt; sonnerToast.warning(m, { ...opts, className: 'toast-warn' }),
+  danger:  (m: string, opts?: ToastOpts) =&gt; sonnerToast.error(m, { ...opts, className: 'toast-danger' }),
+};
+
+interface ToastOpts {
+  description?: string;
+  action?: { label: string; onClick: () =&gt; void };
+  duration?: number;        // 默认 5000；带 action 时 8000
+}</code></pre>
+
+    <p>样式（global.css）：</p>
+
+    <pre><code>.toast-info    { background: var(--info-bg);   border-color: var(--info);   color: var(--info); }
+.toast-ok      { background: var(--ok-bg);     border-color: var(--ok);     color: var(--ok); }
+.toast-warn    { background: var(--warn-bg);   border-color: var(--warn);   color: var(--warn); }
+.toast-danger  { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+[data-sonner-toast] {
+  border-radius: var(--radius-md);
+  border-width: 1px;
+  border-style: solid;
+  font-size: var(--fs-sm);
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: var(--shadow-md);
+}</code></pre>
+
+    <h3><span class="h3-num">4.4</span>RestoreBar</h3>
+
+    <p>窗口顶部条带（浮窗内 H ≈ 32px），出现在恢复上次会话时。</p>
+
+    <pre><code>interface RestoreBarProps {
+  sinceText: string;       // "5 min ago" 等
+  onDiscard: () =&gt; void;   // 立即清空内容
+  autoFadeMs?: number;     // 默认 5000，5s 后淡出
+}</code></pre>
+
+    <table>
+      <thead><tr><th>变体</th><th>样式</th></tr></thead>
+      <tbody>
+        <tr><td>default</td><td>bg <code>--info-bg</code> · text <code>--info</code> · border-bottom <code>--info</code> 2px · fs <code>--fs-sm</code></td></tr>
+        <tr><td>fading-out</td><td>opacity 0 over var(--dur-slow)</td></tr>
+      </tbody>
+    </table>
+
+    <p>视觉与布局：见 <a href="01_mockups.html#7">12 § 7 RestoreBar</a>。</p>
+
+    <h3><span class="h3-num">4.5</span>HistoryModal + HistoryItem</h3>
+
+    <p>Dialog 内布局：上方搜索框 + 筛选 chips（All / Pinned / Starred）+ 下方 ScrollArea 包列表。</p>
+
+    <pre><code>interface HistoryItemProps {
+  row: HistoryRow;
+  selected: boolean;
+  onLoad: (id: number) =&gt; void;     // 双击 / Enter 载入到编辑器
+  onPin: (id: number) =&gt; void;
+  onStar: (id: number) =&gt; void;
+  onDelete: (id: number) =&gt; void;
+}</code></pre>
+
+    <p>单行高度 h=56px ── 视觉与布局：见 <a href="01_mockups.html#6">12 § 6 历史 Modal</a>。</p>
+
+    <table>
+      <thead><tr><th>状态</th><th>样式</th></tr></thead>
+      <tbody>
+        <tr><td>default</td><td>bg <code>--bg-card</code> · border-bottom <code>--border</code></td></tr>
+        <tr><td>hover</td><td>bg <code>--primary-soft</code> · 显示操作按钮</td></tr>
+        <tr><td>selected</td><td>+ border-left 3px <code>--primary</code></td></tr>
+        <tr><td>pinned</td><td>op-type chip 旁边加 📌（用 icon 不 emoji）</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>op-type chip 配色</b>：</p>
+
+    <table>
+      <thead><tr><th>op</th><th>chip bg</th><th>chip text</th></tr></thead>
+      <tbody>
+        <tr><td>format</td><td><code>--primary-soft</code></td><td><code>--primary</code></td></tr>
+        <tr><td>minify</td><td><code>--primary-soft</code></td><td><code>--primary</code></td></tr>
+        <tr><td>tree</td><td><code>--info-bg</code></td><td><code>--info</code></td></tr>
+        <tr><td>str-to-json</td><td><code>--ok-bg</code></td><td><code>--ok</code></td></tr>
+        <tr><td>json-to-str</td><td><code>--ok-bg</code></td><td><code>--ok</code></td></tr>
+        <tr><td>ai-fix</td><td><code>--accent-soft</code></td><td><code>--accent</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.6</span>SettingsModal</h3>
+
+    <p>Dialog 整体 W 720 × H 540（最大）。左侧 nav（W 180）+ 右侧 panel + 底部 footer（Done / Reset）。视觉与布局：见 <a href="01_mockups.html#5">12 § 5 设置 Modal</a>。</p>
+
+    <p><b>规则</b>：所有改动<b>即时生效</b>（不需要 Done 按钮提交）。Done 仅关闭 Modal。Reset 弹二次确认 Dialog。</p>
+
+    <h3><span class="h3-num">4.7</span>ShortcutInput</h3>
+
+    <pre><code>interface ShortcutInputProps {
+  value: string;            // "Cmd+Shift+J" 风格
+  onChange: (next: string) =&gt; void;
+  onConflict?: (info: ShortcutRegisterResp) =&gt; void;
+}</code></pre>
+
+    <p><b>录入 UX</b>：</p>
+
+    <ol>
+      <li>未聚焦：显示当前值，hover 高亮可点</li>
+      <li>聚焦：变红色提示 "Press keys to record..."；listen <code>keydown</code></li>
+      <li>用户按下组合（如 <kbd>⌘⇧J</kbd>）：解析 modifiers + key → 调 <code>shortcut_register</code> 验证</li>
+      <li>冲突：变红 + Tooltip 提示 <code>Already used by {with_app || "system"}</code>，不写入</li>
+      <li>成功：变绿 1s 后回 default 状态</li>
+    </ol>
+
+    <h3><span class="h3-num">4.8</span>ApiKeyInput</h3>
+
+    <pre><code>interface ApiKeyInputProps {
+  hasKey: boolean;          // 已存 Keychain 时为 true
+  onSubmit: (key: string) =&gt; Promise&lt;void&gt;;
+  onTest: () =&gt; Promise&lt;TestConnectionResp&gt;;
+}</code></pre>
+
+    <p><b>UX</b>：</p>
+
+    <ul>
+      <li>已有 key：输入框显示 <code>••••••••</code>（mask），右侧 [Replace] 和 [Test] 按钮</li>
+      <li>无 key：placeholder "sk-..."，右侧 [Save] + [Test]</li>
+      <li>Test 中：按钮 spinner；返回后 Toast(ok/danger)</li>
+      <li>Test 不消耗存好的 key：直接输入框的当前值传给 <code>ai_test_connection</code>（如果已 mask 则用 Keychain 里的）</li>
+    </ul>
+
+    <h3><span class="h3-num">4.9</span>TreeView（含 Hover 复制）</h3>
+
+    <p>JSON 树视图。视觉：见 <a href="01_mockups.html#1.3">01 § 1.3 Tree Tab</a>。实现细节：<a href="08_editor.html">08 § 4</a>。</p>
+
+    <pre><code>interface TreeViewProps {
+  data: unknown;                   // 解析后的 JSON
+  initialExpandDepth?: number;     // 默认 2
+  onPathClick?: (path: string) =&gt; void;     // 点击 key → 复制 path
+  onCopyNode?: (info: CopyNodeInfo) =&gt; void; // 点击行尾 📋 → 复制 value/subtree
+}
+
+interface CopyNodeInfo {
+  path:   string;     // 'user.items[2]'
+  isLeaf: boolean;
+  text:   string;     // 计算好的可直接 writeText 的字符串
+}</code></pre>
+
+    <table>
+      <thead><tr><th>node 类型</th><th>hover 出现位置</th><th>复制内容</th></tr></thead>
+      <tbody>
+        <tr><td>string leaf</td><td>行尾</td><td>带引号 raw <code>"alice"</code></td></tr>
+        <tr><td>number / bool / null leaf</td><td>行尾</td><td>字面量 <code>30</code> / <code>true</code> / <code>null</code></td></tr>
+        <tr><td>object / array</td><td>标签行尾</td><td>递归 pretty-print JSON（2 空格缩进）</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.10</span>DiffView</h3>
+
+    <p>AI Fix 应用前的 diff 展示，双栏。简化实现：用 <code>diff</code> 库计算行级 diff，按行染色（增=绿底，删=红底）。</p>
+
+    <pre><code>interface DiffViewProps {
+  before: string;
+  after: string;
+  onAccept: () =&gt; void;
+  onReject: () =&gt; void;
+}</code></pre>
+
+    <table>
+      <thead><tr><th>行类型</th><th>light bg</th><th>dark bg</th></tr></thead>
+      <tbody>
+        <tr><td>unchanged</td><td>transparent</td><td>transparent</td></tr>
+        <tr><td>added</td><td><code>rgba(6,183,143,0.10)</code></td><td><code>rgba(40,217,168,0.16)</code></td></tr>
+        <tr><td>removed</td><td><code>rgba(220,38,38,0.08)</code></td><td><code>rgba(248,113,113,0.16)</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">5</span>布局组件清单（无业务）</h2>
+
+    <table>
+      <thead><tr><th>名称</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>SplitPane</code></td><td>左右双栏（input | output）；记忆拖拽宽度到 localStorage</td></tr>
+        <tr><td><code>ResizeHandle</code></td><td>SplitPane 的拖拽柄</td></tr>
+        <tr><td><code>EmptyState</code></td><td>无数据 placeholder（无历史 / 无 API key / 无内容）</td></tr>
+        <tr><td><code>Spinner</code></td><td>按钮内 loading（圆环 12 × 12，1s 旋转）</td></tr>
+        <tr><td><code>KbdGroup</code></td><td>渲染 "⌘⇧J" 这种组合（用 &lt;kbd&gt; 多个）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">6</span>状态变体清单（横向核验）</h2>
+
+    <p>所有交互组件必须实现完整 6 态：</p>
+
+    <table>
+      <thead><tr><th>态</th><th>判定</th><th>视觉变化</th></tr></thead>
+      <tbody>
+        <tr><td>default</td><td>无交互</td><td>token 默认值</td></tr>
+        <tr><td>hover</td><td>鼠标悬停</td><td>bg → soft / cursor pointer</td></tr>
+        <tr><td>focus-visible</td><td>键盘聚焦</td><td>+ <code>box-shadow: var(--shadow-focus)</code></td></tr>
+        <tr><td>active</td><td>按下中</td><td>opacity 0.9 / scale 0.98</td></tr>
+        <tr><td>disabled</td><td>不可点</td><td>opacity 0.5 + cursor not-allowed</td></tr>
+        <tr><td>loading</td><td>异步进行中</td><td>+ Spinner + 文字微调 / pointer-events none</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">WARN</span>
+      <div class="callout-body">
+        <p><b>不要</b>用 <code>:focus</code> 而要用 <code>:focus-visible</code> ── 避免鼠标点击也出现 focus ring。所有 shadcn 组件已用 <code>:focus-visible</code>，自写组件须同步。</p>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">7</span>不实现的组件（v1 红线）</h2>
+
+    <ul>
+      <li><b>Tour / Onboarding 浮层</b> ── 工具应自解释，不引导</li>
+      <li><b>Splash screen</b> ── 启动越快越好，不放 logo 屏</li>
+      <li><b>Banner / Announcement</b> ── 无 PM 渠道发公告</li>
+      <li><b>Avatar / 用户系统</b> ── 不登录</li>
+      <li><b>Drag & Drop file</b> ── v1 不读 fs，仅剪贴板</li>
+    </ul>
+
+    <h2><span class="h2-num">8</span>承上启下</h2>
+
+    <ul>
+      <li><b>05 窗口</b> ── 用 FloatingWindow 这个壳</li>
+      <li><b>07 编辑器</b> ── 用 Editor + StatusBar</li>
+      <li><b>09 存储</b> ── 设置 / 历史 UI 与 Modal 组件接</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

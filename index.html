@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita · 项目文档</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
+</head>
+<body class="is-index">
+
+<div class="index-wrap">
+
+  <header class="index-hero">
+    <span class="index-tag">project documentation</span>
+    <h1 class="index-title">Jsonita</h1>
+    <p class="index-tagline">
+      一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。
+      聚合格式化 / 树状视图 / 字符串互转 / 嵌套解开 / AI 自动修复。
+    </p>
+  </header>
+
+  <div class="index-three-col">
+
+    <section class="index-col">
+      <div class="index-col-head">
+        <div class="index-col-title">Plan</div>
+        <div class="index-col-subtitle">产品设计</div>
+      </div>
+      <ul class="index-list">
+        <li><a href="plan/00_overview.html"><span class="index-list-num">00</span><span class="index-list-title">项目概览</span></a></li>
+        <li><a href="plan/01_features.html"><span class="index-list-num">01</span><span class="index-list-title">功能清单</span></a></li>
+        <li><a href="plan/02_interaction.html"><span class="index-list-num">02</span><span class="index-list-title">交互草图</span></a></li>
+        <li><a href="plan/03_tech_stack.html"><span class="index-list-num">03</span><span class="index-list-title">技术选型</span></a></li>
+        <li><a href="plan/04_nfr.html"><span class="index-list-num">04</span><span class="index-list-title">非功能性需求</span></a></li>
+      </ul>
+    </section>
+
+    <section class="index-col">
+      <div class="index-col-head">
+        <div class="index-col-title">Spec</div>
+        <div class="index-col-subtitle">技术设计</div>
+      </div>
+      <ul class="index-list">
+        <li><a href="spec/00_architecture.html"><span class="index-list-num">00</span><span class="index-list-title">系统架构</span></a></li>
+        <li><a href="spec/01_mockups.html"><span class="index-list-num">01</span><span class="index-list-title">原型图 &amp; 交互细节</span></a></li>
+        <li><a href="spec/02_ipc.html"><span class="index-list-num">02</span><span class="index-list-title">IPC 合约</span></a></li>
+        <li><a href="spec/03_design_tokens.html"><span class="index-list-num">03</span><span class="index-list-title">设计令牌</span></a></li>
+        <li><a href="spec/04_components.html"><span class="index-list-num">04</span><span class="index-list-title">组件库映射</span></a></li>
+        <li><a href="spec/05_icons_theme.html"><span class="index-list-num">05</span><span class="index-list-title">图标资源 &amp; 主题</span></a></li>
+        <li><a href="spec/06_window.html"><span class="index-list-num">06</span><span class="index-list-title">窗口 runtime</span></a></li>
+        <li><a href="spec/07_menubar.html"><span class="index-list-num">07</span><span class="index-list-title">菜单栏 &amp; 快捷键</span></a></li>
+        <li><a href="spec/08_editor.html"><span class="index-list-num">08</span><span class="index-list-title">编辑器 &amp; 树 UI</span></a></li>
+        <li><a href="spec/09_json_engine.html"><span class="index-list-num">09</span><span class="index-list-title">JSON 引擎</span></a></li>
+        <li><a href="spec/10_storage.html"><span class="index-list-num">10</span><span class="index-list-title">存储 &amp; 会话</span></a></li>
+        <li><a href="spec/11_ai_client.html"><span class="index-list-num">11</span><span class="index-list-title">AI 客户端</span></a></li>
+        <li><a href="spec/12_packaging.html"><span class="index-list-num">12</span><span class="index-list-title">打包、签名、验收</span></a></li>
+        <li><a href="spec/13_schemas.html"><span class="index-list-num">13</span><span class="index-list-title">数据模型参考</span></a></li>
+      </ul>
+    </section>
+
+    <section class="index-col">
+      <div class="index-col-head">
+        <div class="index-col-title">Progress</div>
+        <div class="index-col-subtitle">实施进度</div>
+      </div>
+      <ul class="index-list">
+        <li class="pending"><span class="index-list-num">—</span><span class="index-list-title">待 Spec 完成后生成</span></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <div class="md-tabs" role="tablist">
+    <button class="md-tab active" data-target="pane-readme" role="tab">README</button>
+    <button class="md-tab" data-target="pane-todo" role="tab">TODO</button>
+    <button class="md-tab" data-target="pane-changelist" role="tab">CHANGELIST</button>
+  </div>
+  <div class="md-panes">
+    <article id="pane-readme" class="md-pane active"></article>
+    <article id="pane-todo" class="md-pane"></article>
+    <article id="pane-changelist" class="md-pane"></article>
+  </div>
+
+<script type="text/markdown" id="src-readme">
+# Jsonita
+
+一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。
+
+> **Stack**: Tauri 2.x · React 18 · TypeScript · Rust · CodeMirror 6 · SQLite
+
+核心能力：JSON 格式化 · 树状视图 · String 互转 · 嵌套 stringified 解开 · AI Auto Fix · 历史记录 · 会话保留 · 自定义快捷键
+
+完整的设计约束（产品边界）见 [`plan/00_overview.html`](plan/00_overview.html) C 章节；具体性能指标见 [`plan/04_nfr.html`](plan/04_nfr.html)。
+
+## 项目结构
+
+```
+jsonita/
+├─ index.html         # 📍 文档导航入口（用浏览器打开此文件）
+├─ README.md          # 本文件
+├─ TODO.md            # 阶段性 TODO
+├─ CHANGELIST.md      # 变更历史
+│
+├─ assets/            # 文档共享资源
+│  ├─ style.css       # 共享样式
+│  └─ nav.js          # 共享导航（sidebar / topbar / pagination 自动渲染）
+│
+├─ plan/              # 产品设计（5 篇，聚焦产品定义）
+│  ├─ 00_overview.html       项目概览 + 设计约束
+│  ├─ 01_features.html       功能清单（含 before/after 实例）
+│  ├─ 02_interaction.html    交互草图（HTML mockup）
+│  ├─ 03_tech_stack.html     技术选型
+│  └─ 04_nfr.html            非功能性需求
+│
+├─ spec/              # 技术设计（待 plan 批准后生成；含验收标准等实施细节）
+├─ progress/          # 实施进度（待 spec 完成后生成；含里程碑 / 风险 / 不做的事 / 看板）
+│
+├─ src/               # React 前端（M0 起新增）
+└─ src-tauri/         # Rust 后端（M0 起新增）
+```
+
+## 如何阅读
+
+```bash
+open index.html
+```
+
+## 当前进度
+
+- [x] 项目命名 & 查重
+- [x] 项目骨架 & git init
+- [x] 根 `index.html` 文档导航
+- [x] `plan/00-04_*.html` 5 篇产品设计（聚焦产品边界）
+- [x] `spec/00-13_*.html` 14 篇技术设计（含架构 / 原型图集 / IPC / tokens / 组件 / 图标 / runtime / 编辑器 / 引擎 / 存储 / AI / 打包验收 / 数据模型参考）
+- [ ] `progress/*.html` 进度跟踪（含里程碑、看板、日志、风险）
+- [ ] M0 Skeleton —— Tauri 脚手架 + 菜单栏图标 + 全局快捷键
+
+## License
+
+待定（计划：MIT 或 Apache-2.0）
+</script>
+
+<script type="text/markdown" id="src-todo">
+# Jsonita TODO
+
+> 高层 TODO 占位；详细任务跟踪进入 spec 后改用 `progress/`。
+
+## Phase 0 · Planning（done）
+
+- [x] 项目命名 Jsonita（查重通过）
+- [x] git init + 项目骨架
+- [x] 根 `index.html` 文档导航 + `assets/style.css` + `assets/nav.js`
+- [x] `plan/` 5 篇产品设计（精简至 00-04，聚焦产品边界）
+- [x] `01_features` 加 before/after 实例 + F2 真 HTML 树状 + F3.3 嵌套 stringified 解开
+- [x] `02_interaction` HTML/CSS mockup 替代 ASCII
+- [x] `CHANGELIST.md`（Keep a Changelog 风格）
+- [x] 用户审阅 & 批准 plan
+
+## Phase 0.5 · Spec（done）
+
+- [x] `spec/00_architecture` 系统架构 + 进程模型 + 模块边界
+- [x] `spec/01_ipc` 完整 commands / events 合约（含错误矩阵）
+- [x] `spec/02_design_tokens` light / dark 双主题 token 系统 + Tailwind 集成
+- [x] `spec/03_components` shadcn/ui 选用 + 自定义组件清单
+- [x] `spec/04_icons_theme` 图标资源全景（manifest / icns / ico / menubar template）
+- [x] `spec/05_window` 浮窗 NSPanel-like 实现 + 定位 + 失焦 + 动效
+- [x] `spec/06_menubar` tray icon + 全局快捷键 + 冲突检测 + 权限引导
+- [x] `spec/07_editor` CodeMirror 6 配置 + JSON 树 + 错误标注
+- [x] `spec/08_json_engine` Rust 端 format / minify / unwrap / 错误定位算法
+- [x] `spec/09_storage` SQLite schema + migration + Keychain + last_session 时序
+- [x] `spec/10_ai_client` DeepSeek 请求 / prompt / 验证 / diff / 测试连接
+- [x] `spec/11_packaging` tauri.conf 全文 + 签名 + notarize + 验收用例
+- [x] `spec/12_mockups` 所有界面 HTML/CSS 原型集（主浮窗 6 态 / Modal / Toast / Empty / light vs dark）
+- [ ] `progress/*.html` 进度看板（含里程碑 / 风险 / 不做的事 / 日志等）
+
+## Phase 1 · M0 Skeleton（next）
+
+- [ ] `pnpm create tauri-app` —— React + TypeScript + Vite 模板
+- [ ] 菜单栏图标（Rust 端 tray icon）
+- [ ] 浮窗（NSPanel-like 行为，失焦自动隐藏 POC）
+- [ ] 全局快捷键（默认 `⌘⇧J`）
+- [ ] 空白 UI 跑通 `.dmg` 打包
+
+## Phase 2 · M1 Core JSON
+
+- [ ] CodeMirror 6 集成 + 标配扩展（lineWrapping / bracketMatching / indentationMarkers / foldGutter+codeFolding / lineNumbers / highlightActiveLine / search / multipleSelections / history）
+- [ ] JSON Formatter（缩进 / Sort keys / Minify）
+- [ ] JSON TreeView（折叠 / 搜索 / Path 复制）
+- [ ] JSON ↔ String 互转
+- [ ] 历史记录（SQLite）
+- [ ] 会话保留与恢复（last_session 表 + in-memory 计时器 + ⌘⇧L 找回 + ⌘K 不污染上次）
+- [ ] 嵌套 stringified JSON 全量解开（F3.3，Golang proto 场景，无层数限制 + 200ms 超时防死循环）
+- [ ] 单窗模式（F9，in-place 替换 input + CodeMirror history ⌘Z 回滚 / F7.1 设置开关）
+
+## Phase 3 · M2 AI Fix + Settings
+
+- [ ] DeepSeek 客户端（fetch + 节流）
+- [ ] API key 管理（Keychain）
+- [ ] 设置面板
+- [ ] 自定义快捷键 + 冲突检测
+- [ ] code signing + notarization
+
+## Phase 4 · M3 Polish + Cross-platform
+
+- [ ] 主题 / 动效 / Empty State
+- [ ] 中文 UI
+- [ ] Windows 构建（可选）
+- [ ] README / 演示 GIF
+
+## Phase 5 · 分发扩展（v1.1+）
+
+- [ ] homebrew tap：`brew install jsonita`
+- [ ] npm 包装：`npx jsonita` 或 `npm install -g jsonita`
+- [ ] 自动更新（tauri-plugin-updater）
+</script>
+
+<script type="text/markdown" id="src-changelist">
+# Changelog
+
+本项目的所有重要变更记录于此文件。
+
+格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) ，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/spec/v2.0.0.html) 。
+
+## [Unreleased]
+
+### Planning Phase
+- 项目立项、命名 `Jsonita`（西语小化后缀 -ita，"小巧的 JSON 工具"）
+- 完成查重：GitHub / npm / crates.io / PyPI 均无重名
+- 锁定技术栈：Tauri 2.x + React 18 + TypeScript + CodeMirror 6 + SQLite
+
+### Spec Phase
+- 完成 12 章技术设计 `spec/00-11_*.html`：
+  - 00 系统架构（进程模型 · 模块边界 Rust + TS · 数据流 · 错误传播 · 不变量）
+  - 01 IPC 合约（20+ commands · 8 events · 类型镜像 · 错误矩阵）
+  - 02 设计令牌（light / dark 双主题 CSS variables · 字号 / 间距 / 圆角 / 阴影 / 动效 · Tailwind 集成 · 对比度核验）
+  - 03 组件库映射（shadcn/ui 12 项 + 13 个自定义组件 · 6 态变体规则）
+  - 04 图标资源 & 主题（manifest.json 全景 · macOS .icns · Windows .ico · menubar template/light/dark × 18/22 × @1/@2/@3）
+  - 05 窗口 runtime（NSPanel-like cocoa 实现 · 多屏定位 · 失焦 · 关闭拦截 · 淡入淡出）
+  - 06 菜单栏 & 快捷键（tray API · global-shortcut 注册 · 冲突检测 · macOS 权限）
+  - 07 编辑器 & 树 UI（CodeMirror 6 扩展清单 · light/dark theme extension · JSON 树自定义颜色 · JSON Path 复制）
+  - 08 JSON 引擎（serde_json 封装 · 嵌套解开算法 + 超时 · 错误位置定位 · ↔ string 互转）
+  - 09 存储 & 会话（SQLite schema 含 FTS5 · migration 框架 · Keychain 封装 · last_session 状态机）
+  - 10 AI 客户端（DeepSeek 请求 · prompt 模板 · 响应验证 · 进度推送 · 错误透传含 429）
+  - 11 打包、签名、验收（tauri.conf 全文 · entitlements · CI workflow · 9 类验收用例对齐 plan NFR）
+  - 12 原型图 & 交互细节（主浮窗 6 态 + 单窗模式 + 状态栏 4 态 + 菜单栏 tray + 设置 Modal + 历史 Modal + RestoreBar + Toast 四 variant + AI Fix DiffView + 权限引导 + Empty States + light vs dark 对照）
+- 04 图标章节真实展示所有图片资源：source masters / 多尺寸 PNG / macOS iconset / Windows ICO / menubar template 全套（含暗背景反色对照）
+- 全局清理 ASCII box-drawing 原型图：组件 / 菜单栏改成指向 12 章 mockups；状态机改用 mermaid stateDiagram
+
+---
+
+## [0.1.0-plan] - 2026-05-22
+
+### Added
+- 项目目录骨架：`plan/` `spec/` `progress/` `assets/`
+- 共享文档样式 `assets/style.css`
+- 共享文档导航脚本 `assets/nav.js`
+- 根目录 `index.html` —— 项目文档导航入口
+- `plan/` 10 篇产品设计：
+  - `00_overview.html` 项目概览（含设计约束 Constraints & Must-have）
+  - `01_features.html` 功能清单
+  - `02_interaction.html` 交互草图
+  - `03_tech_stack.html` 技术选型
+  - `04_nfr.html` 非功能性需求
+  - `05_milestones.html` 里程碑
+  - `06_out_of_scope.html` 不做的事
+  - `07_risks.html` 风险与未决
+  - `08_acceptance.html` 验收标准
+  - `09_next.html` 下一步
+- `README.md` `TODO.md` `CHANGELIST.md` `.gitignore`
+
+### Changed (after multiple rounds of review)
+- 删除 `00_overview.html` 的「阅读路径建议」「这份文档」「命名由来」装饰性章节，开场白也删除
+- 删除原 `02_core_value.html`，「核心价值」从口号化卡片重构为 `00_overview.html` C 章节的「设计约束（Constraints & Must-have）」可量化列表
+- C 章节进一步改为左右双列对照：Must Have ✓ / Must Not ✕（视觉减负）
+- 删除原 `01_positioning.html`（套路化 PM 模板，无信息量）
+- 删除原 `02_user_stories.html`（细节过多，属于 spec 阶段）
+- 章节数从初始 13 → 10，多次重编号
+- 重做 `01_features.html`：F1-F4 加 before/after 实例；F2 用 HTML/CSS 真模拟彩色树状视图
+- 重做 `02_interaction.html`：删除所有 ASCII art，改用 HTML/CSS macOS 风格 mockup（traffic light + Tab + 双栏 + 状态栏）+ flow-steps 卡片表达流程
+- 新增 CSS 组件：`.constraints-grid` / `.example-grid` / `.tree-mock` / `.mockup-window` / `.flow-steps`
+
+### Added (post-review feature)
+- **F8 会话保留与恢复**：关闭后 5 min 内（可配置 Off / 1 / 5 / 15 / 60 min）唤起自动恢复内容；`⌘⇧L` 任意时刻找回上次（即使应用重启）；`⌘K` 主动清空不污染「上次会话」
+- 实现：sqlite `last_session` 单行表（持久化）+ in-memory 计时器（窗口期）
+- C 章节同步加 must-have「短期会话恢复」+ must-not「超时仍自动还原」
+- 02 主流程 STEP 04 行为更新（"暂存上次会话"）
+- **F3.3 嵌套 Stringified JSON 全量解开**：Golang proto 序列化常见场景；自动识别字段值是 stringified JSON 时递归展开（默认开启，**无层数限制**，单次解析超时 200ms 即停防死循环 / 巨型嵌套）
+- F6 快捷键精简：删「切换 Tab ⌘1-⌘6 / 复制输出 ⌘⇧C / 聚焦输入框 ⌘L」（非核心，污染系统级快捷键）
+- F7 设置面板重构：从单行 inline 文字改为 6 个分组（General / Shortcuts / AI / History / JSON Transform / About）+ checkbox 清晰展示（开机自启动 / 菜单栏图标 / 自动粘贴 / 失焦隐藏 / 启用 AI / 自动解嵌套 等）
+- 00 C 章节重写：删工程数字，改为产品级 7 vs 7 简短约束（"可安装"/"不联网"等）；具体指标链接到 04 NFR
+
+### Roadmap noted (post-v1)
+- v1.1+ 分发扩展：homebrew tap、npm 包装（用户提出，"后话"）
+
+### Removed (post-review)
+- 删除客户端限流（10 次/min）—— 用户用自己的 API key，应用不当家长替用户"省 token"；上游 DeepSeek 的 rate limit (429 + retry-after) 透传即可
+- 02 状态表合并「AI 调用失败」+「AI 限流」为一项；02 AI Fix 流程 STEP 02 描述更新
+- 删除 03 末尾 SPEC callout（spec 文件还不存在，不应预告）+ F7.3「spec 阶段确认」括号
+- 删除 01 F5 导出格式 / F7.4 导出按钮（"数据全本地"不含"可导出"）
+- 删除 02 第 6 章节「窗口与剪贴板行为」（会话恢复/找回/清空 在 01 F8；多屏/切应用/失焦 合并到第 1 章节）
+- 删除 04 末尾 RISK callout（性能基线锁定属 progress，不是 plan）
+- 删除 00 C「够轻够快」hover 数字 + F1「性能：100KB &lt; 50ms」段（数字归 04 NFR，plan 不重复）
+
+### Added (more)
+- **F9 单窗模式**：可选 in-place 替换 input 编辑器（取消左右双栏），`⌘Z` 用 CodeMirror 6 history extension 回滚；F7.1 General 加 ☐ 开关；AI Fix 单窗下退化为 toast「已修复，⌘Z 撤销」
+- **F1 编辑器交互细节**：补全 CodeMirror 6 标配扩展说明 —— soft-wrap 软换行、括号匹配高亮、缩进引导垂直线、大数组/对象折叠 `[ … ]`、行号、当前行高亮、`⌘F` 搜索、`⌘D` 多光标、`⌘Z` undo
+- **JSON syntax highlighting**：nav.js 加 CSS-only highlighter（auto-detect `<pre><code>` starting with [/{/"），CSS .json-key/string/number/bool/null 与 .tree-* 同色（string 用绿色 #15803D）
+- **Constraints hover tooltip**：00 C 章节 small 灰字改为 CSS-only hover tooltip（data-tip 属性 + ::after，"够轻够快" 类无 tooltip 直接简短）
+
+### Removed (plan 聚焦产品边界)
+- 删除 `05_milestones.html`（属 progress 范畴 —— 里程碑 / 时间线归实施期）
+- 删除 `06_out_of_scope.html`（受众不清；"不做的事"用 00 C 章节 Must Not 7 条覆盖足够，细节归 progress）
+- 删除 `07_risks.html`（plan 阶段只提问题不给措施 → 没价值；归 progress 持续跟踪）
+- 删除 `08_acceptance.html`（验收标准属 spec；plan 阶段产品边界已经定义清楚）
+- 删除 `09_next.html`（meta 章节无信息量；spec / progress 计划在 README / TODO 即可）
+- plan 从 10 篇 → 5 篇（00 overview / 01 features / 02 interaction / 03 tech / 04 nfr）—— 只保留"产品定义"层，不涉及"实施层"
+
+### Decided
+- **桌面壳**：Tauri 2.x（Rust + 系统 WebView）—— 为后续 Windows 适配留口
+- **前端栈**：React 18 + TypeScript 5 + Vite + Tailwind + shadcn/ui
+- **编辑器**：CodeMirror 6（~150KB，比 Monaco 轻量）
+- **JSON 树**：react-json-view-lite
+- **状态**：Zustand
+- **本地存储**：SQLite（rusqlite）+ macOS Keychain（API key）
+- **交互**：菜单栏常驻图标 + 全局快捷键浮窗
+- **历史**：SQLite 限制最近 100 条
+
+### Out of Scope (v1)
+- HTTP 客户端 / JSON Schema 编辑器 / JSON Diff / 云同步 / 协作
+
+---
+
+## 版本规划
+
+| 版本 | 阶段 | 目标 |
+|---|---|---|
+| `0.1.0-plan` | 当前 | 完整 Plan 文档（PRD） |
+| `0.2.0-spec` | 下一阶段 | 完整 Spec 文档（技术设计） |
+| `0.3.0-m0` | M0 | Tauri 脚手架 + 菜单栏图标 + 全局快捷键 |
+| `0.4.0-m1` | M1 | 核心 JSON 能力（Format/Tree/String 互转）+ 历史记录 |
+| `0.5.0-m2` | M2 | AI Auto Fix + 设置面板 + 自定义快捷键 + dmg 打包 |
+| `1.0.0` | M3 | 打磨发布 + 中文 UI + Windows 适配（可选） |
+</script>
+
+  <footer class="doc-footer">Jsonita · documentation index</footer>
+
+</div>
+
+<script>
+(function() {
+  function getMd(id) {
+    const el = document.getElementById(id);
+    return el ? el.textContent.replace(/^\n/, '').replace(/\n\s*$/, '') : '';
+  }
+
+  function renderFallback(el, raw) {
+    const escaped = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    el.innerHTML = '<pre style="white-space: pre-wrap; font-size: 12.5px; padding: 16px; background: var(--bg-code); border-radius: 8px;">' + escaped + '</pre>';
+  }
+
+  function renderAll() {
+    const targets = [
+      ['src-readme', 'pane-readme'],
+      ['src-todo', 'pane-todo'],
+      ['src-changelist', 'pane-changelist']
+    ];
+    const hasMarked = typeof window.marked !== 'undefined' && typeof window.marked.parse === 'function';
+    if (hasMarked && window.marked.setOptions) {
+      window.marked.setOptions({ gfm: true, breaks: false });
+    }
+    targets.forEach(function(pair) {
+      const raw = getMd(pair[0]);
+      const dst = document.getElementById(pair[1]);
+      if (!dst) return;
+      if (hasMarked) {
+        dst.innerHTML = window.marked.parse(raw);
+      } else {
+        renderFallback(dst, raw);
+      }
+    });
+  }
+
+  function wireTabs() {
+    const tabs = document.querySelectorAll('.md-tab');
+    tabs.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const target = btn.dataset.target;
+        tabs.forEach(function(b) { b.classList.toggle('active', b === btn); });
+        document.querySelectorAll('.md-pane').forEach(function(p) {
+          p.classList.toggle('active', p.id === target);
+        });
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    renderAll();
+    wireTabs();
+  });
+})();
+</script>
+
+</body>
+</html>

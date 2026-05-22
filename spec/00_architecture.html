@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 00 系统架构</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="00">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 00</span>
+      <h1 class="doc-title">系统架构</h1>
+      <p class="doc-subtitle">进程模型、模块边界、数据流与错误传播。开发者从此处入手获得系统全貌。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>系统全景</h2>
+
+    <p>Jsonita 是一个<b>双进程</b>桌面应用：Rust 主进程承载所有系统能力（菜单栏 / 快捷键 / SQLite / Keychain / HTTP），WebView 渲染进程承载 UI（React + CodeMirror）。两者通过 Tauri IPC 通信。</p>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">INFO</span>
+      <div class="callout-body">
+        <p>整套架构在 <a href="../plan/03_tech_stack.html">plan/03 技术选型</a> 已锁定。本章只描述<b>如何组合</b>，不再讨论是否采用 Tauri / React / SQLite。</p>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>层</th><th>承载组件</th><th>关键库</th><th>边界</th></tr></thead>
+      <tbody>
+        <tr><td>表现层</td><td>主浮窗 UI / 设置面板 / 历史列表 / Toast / 状态栏</td><td>React 18, CodeMirror 6, Tailwind, shadcn/ui, react-json-view-lite</td><td>WebView 进程内；不直接访问 fs / net / clipboard</td></tr>
+        <tr><td>逻辑层</td><td>编辑器状态机、UI store、IPC 客户端</td><td>Zustand, TypeScript</td><td>WebView 进程内；可调 Tauri command / 监听 event</td></tr>
+        <tr><td>IPC 层</td><td>commands / events 合约</td><td>Tauri 2 IPC, serde</td><td>序列化通过 <code>serde_json</code>；payload &lt; 1 MB 直接走 IPC，&gt; 1 MB 走 chunked event</td></tr>
+        <tr><td>领域层</td><td>JSON 引擎、AI Fix 调度、设置、会话恢复、历史</td><td>serde_json, rusqlite, reqwest, keyring, tokio</td><td>Rust 主进程；纯函数优先</td></tr>
+        <tr><td>系统层</td><td>菜单栏、全局快捷键、窗口、剪贴板、Accessibility 权限</td><td>tauri-plugin-global-shortcut, tray-icon, tauri-plugin-clipboard-manager</td><td>Rust 主进程；macOS / Windows 抽象不同</td></tr>
+        <tr><td>持久化</td><td>history.db / app_config.json / Keychain 条目</td><td>rusqlite, tauri-plugin-store, keyring</td><td>仅 Rust 端直接访问</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">2</span>进程模型与生命周期</h2>
+
+    <h3><span class="h3-num">2.1</span>进程拓扑</h3>
+
+    <p>启动后常驻 <b>1 个主进程</b>（Tauri host），按需启动 <b>1 个 WebView 进程</b>（浮窗）。无 worker 子进程（v1）。</p>
+
+    <table>
+      <thead><tr><th>进程</th><th>启动时机</th><th>退出时机</th><th>常驻内存目标</th></tr></thead>
+      <tbody>
+        <tr><td>Rust host</td><td>登录系统时（开机自启动）/ 用户首次启动</td><td>用户在菜单栏点 Quit / <kbd>⌘Q</kbd></td><td>≤ 40 MB（无浮窗时）</td></tr>
+        <tr><td>WebView 浮窗</td><td><kbd>⌘⇧J</kbd> / 点菜单栏图标</td><td>失焦 / <kbd>Esc</kbd> / <kbd>⌘W</kbd>（默认是 hide 不是 close，进程保留）</td><td>≤ 80 MB（含编辑器空闲）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">WARN</span>
+      <div class="callout-body">
+        <p>浮窗实际是<b>常驻不销毁</b>，关闭只是 <code>window.hide()</code> + 内存里保留 DOM。这换来 <b>呼出 &lt; 500ms</b> 的首屏体验，代价是 ~80 MB 稳态内存 ── 与 <a href="../plan/04_nfr.html">04 NFR § 1 性能</a> 锁定的目标一致。</p>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">2.2</span>启动时序</h3>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">T+0 ms</div>
+        <div class="flow-step-title">macOS launchd</div>
+        <div class="flow-step-desc">登录会话拉起 <code>Jsonita.app</code></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">T+~120 ms</div>
+        <div class="flow-step-title">Rust main</div>
+        <div class="flow-step-desc">初始化 tokio runtime / 打开 SQLite / 加载 settings</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">T+~200 ms</div>
+        <div class="flow-step-title">注册系统</div>
+        <div class="flow-step-desc">挂 tray icon · 注册全局快捷键 · 准备 WebView</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">T+~500 ms</div>
+        <div class="flow-step-title">WebView ready</div>
+        <div class="flow-step-desc">浮窗 DOM 构建完成，hide 等待呼出</div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">2.3</span>呼出时序</h3>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">T+0 ms</div>
+        <div class="flow-step-title">⌘⇧J</div>
+        <div class="flow-step-desc">global-shortcut 触发 Rust handler</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">T+~20 ms</div>
+        <div class="flow-step-title">定位 + show</div>
+        <div class="flow-step-desc">读光标所在屏 · 设 window.center_top()</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">T+~100 ms</div>
+        <div class="flow-step-title">emit ready</div>
+        <div class="flow-step-desc">Rust → WebView 发 <code>window:shown</code> event</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">T+~150 ms</div>
+        <div class="flow-step-title">UI 就绪</div>
+        <div class="flow-step-desc">编辑器聚焦 · 剪贴板 sniff · 150 ms 淡入完成</div>
+      </div>
+    </div>
+
+    <p>目标 &lt; 500 ms（P95）。预算分配：global-shortcut 20 ms · 窗口操作 80 ms · IPC 30 ms · React 渲染 50 ms · CodeMirror reflow 50 ms · 淡入 150 ms ≈ 380 ms 稳态。</p>
+
+    <h2><span class="h2-num">3</span>模块边界（Rust 端）</h2>
+
+    <p>采用 <b>单 crate + 模块化</b> 结构（不拆 workspace；v2 跨平台或体量爆炸再拆）。</p>
+
+    <pre><code>src-tauri/src/
+├─ main.rs                 // tauri::Builder 装配；register handlers
+├─ lib.rs                  // re-exports
+├─ commands/               // IPC 命令集合（每个 .rs 一组）
+│  ├─ mod.rs
+│  ├─ json_ops.rs          // format / minify / parse / unwrap
+│  ├─ history.rs           // list / search / pin / star / clear
+│  ├─ session.rs           // save_last / load_last / clear_last
+│  ├─ settings.rs          // get / set / reset
+│  ├─ ai.rs                // fix_with_deepseek / test_connection
+│  ├─ window.rs            // show / hide / toggle
+│  └─ system.rs            // open_log_dir / open_db_path / quit
+├─ engine/                 // 领域逻辑（与 Tauri 解耦，可单测）
+│  ├─ mod.rs
+│  ├─ json.rs              // serde_json 封装；format / minify
+│  ├─ unwrap.rs            // 递归 unwrap-stringified（带超时）
+│  ├─ error_loc.rs         // 解析错误 → (line, col)
+│  └─ stringify.rs         // JSON ↔ string 互转
+├─ store/                  // 持久化层
+│  ├─ mod.rs
+│  ├─ db.rs                // rusqlite 连接池 + migration
+│  ├─ history.rs           // history 表 CRUD
+│  ├─ session.rs           // last_session 单行表
+│  ├─ settings.rs          // tauri-plugin-store wrapper
+│  └─ migrations/          // 0001_init.sql ...
+├─ ai/                     // AI Fix 客户端
+│  ├─ mod.rs
+│  ├─ deepseek.rs          // reqwest 请求
+│  └─ prompt.rs            // prompt 模板
+├─ system/                 // 平台抽象
+│  ├─ mod.rs
+│  ├─ tray.rs              // 菜单栏图标
+│  ├─ shortcuts.rs         // 全局快捷键
+│  ├─ window_panel.rs      // NSPanel-like 行为（macOS）
+│  └─ keychain.rs          // keyring crate wrapper
+├─ events.rs               // event 名常量 + payload 结构体
+└─ error.rs                // JsonitaError + From impls
+</code></pre>
+
+    <p><b>依赖方向</b>：<code>commands</code> → <code>engine</code> / <code>store</code> / <code>ai</code> / <code>system</code>。领域层之间不互调（如 <code>engine</code> 不调 <code>store</code>，由 <code>commands</code> 协调）。</p>
+
+    <h2><span class="h2-num">4</span>模块边界（TypeScript 端）</h2>
+
+    <pre><code>src/
+├─ main.tsx                // ReactDOM root；挂载 App
+├─ App.tsx                 // 顶级路由（主浮窗 / 设置 / 历史）
+├─ shell/                  // 浮窗壳
+│  ├─ FloatingWindow.tsx
+│  ├─ TabBar.tsx           // Format / Minify / Tree / →Str / →JSON / AI Fix
+│  ├─ StatusBar.tsx
+│  └─ Toast.tsx
+├─ panes/                  // 6 个功能面板
+│  ├─ FormatPane.tsx
+│  ├─ MinifyPane.tsx
+│  ├─ TreePane.tsx
+│  ├─ JsonToStrPane.tsx
+│  ├─ StrToJsonPane.tsx
+│  └─ AiFixPane.tsx
+├─ editor/                 // CodeMirror 6 封装
+│  ├─ Editor.tsx
+│  ├─ extensions.ts        // 标配扩展集合
+│  ├─ lint.ts              // JSON linter（拿到 (line, col)）
+│  └─ theme.ts             // light / dark theme
+├─ tree/                   // JSON 树
+│  ├─ TreeView.tsx
+│  └─ jsonpath.ts          // 计算 / 复制 JSON Path
+├─ settings/               // 设置面板
+│  ├─ SettingsModal.tsx
+│  ├─ General.tsx
+│  ├─ Shortcuts.tsx
+│  ├─ Ai.tsx
+│  ├─ History.tsx
+│  ├─ JsonTransform.tsx
+│  └─ About.tsx
+├─ history/                // 历史列表
+│  ├─ HistoryModal.tsx
+│  └─ HistoryItem.tsx
+├─ store/                  // Zustand store
+│  ├─ editor.ts            // 编辑器内容 / mode / 错误
+│  ├─ ui.ts                // 浮窗显隐 / Toast / Modal
+│  ├─ settings.ts          // 镜像 Rust settings
+│  └─ ai.ts                // AI 调用 loading / 错误
+├─ ipc/                    // Tauri 客户端封装
+│  ├─ commands.ts          // 类型化 invoke wrapper
+│  └─ events.ts            // 类型化 listen wrapper
+├─ theme/                  // 主题切换
+│  ├─ ThemeProvider.tsx
+│  └─ tokens.ts            // CSS variables 注入
+└─ types/                  // 共享 TS 类型（与 Rust 镜像）
+   ├─ commands.ts
+   ├─ events.ts
+   └─ models.ts
+</code></pre>
+
+    <p><b>规则</b>：<code>panes/</code> / <code>editor/</code> / <code>tree/</code> 只读 store，不直接调 <code>ipc/</code>；调用通过 store actions 间接发起，方便切换实现 / mock 测试。</p>
+
+    <h2><span class="h2-num">5</span>数据流</h2>
+
+    <h3><span class="h3-num">5.1</span>典型流：用户输入 JSON → 格式化</h3>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 01</div>
+        <div class="flow-step-title">用户输入</div>
+        <div class="flow-step-desc">CodeMirror onChange 触发 → setEditorContent(text)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 02</div>
+        <div class="flow-step-title">store debounce</div>
+        <div class="flow-step-desc">editor store 300 ms 内合并 → 调 ipc.formatJson(text)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 03</div>
+        <div class="flow-step-title">IPC → Rust</div>
+        <div class="flow-step-desc">invoke <code>json_format</code> command</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 04</div>
+        <div class="flow-step-title">engine 处理</div>
+        <div class="flow-step-desc">engine::json::format(text, opts) → Result&lt;String, ParseError&gt;</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 05</div>
+        <div class="flow-step-title">返回 UI</div>
+        <div class="flow-step-desc">成功 → setOutput；失败 → setError(line, col)；状态栏更新</div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">5.2</span>典型流：AI Fix（含错误透传）</h3>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 01</div>
+        <div class="flow-step-title">检测错误</div>
+        <div class="flow-step-desc">parse fail → 状态栏红 + 「✨ AI Fix」Tab 出现</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 02</div>
+        <div class="flow-step-title">点击 → invoke</div>
+        <div class="flow-step-desc">invoke <code>ai_fix</code>(text, error_loc) → Rust</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 03</div>
+        <div class="flow-step-title">Keychain + HTTP</div>
+        <div class="flow-step-desc">读 API key · 拼 prompt · reqwest POST DeepSeek</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 04</div>
+        <div class="flow-step-title">验证</div>
+        <div class="flow-step-desc">serde_json::from_str(response) → 失败则连原始 body 一并返回</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 05</div>
+        <div class="flow-step-title">diff UI</div>
+        <div class="flow-step-desc">前端展示 diff · 用户接受 / 撤销</div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">6</span>错误传播</h2>
+
+    <h3><span class="h3-num">6.1</span>错误类型层级</h3>
+
+    <p>Rust 端单一错误枚举 <code>JsonitaError</code>，所有内部错误统一映射；通过 <code>serde</code> 序列化跨 IPC 边界传到前端。</p>
+
+    <pre><code>// src-tauri/src/error.rs
+#[derive(Debug, thiserror::Error, serde::Serialize)]
+#[serde(tag = "kind", content = "data")]
+pub enum JsonitaError {
+    #[error("JSON parse error at line {line}, col {col}: {msg}")]
+    Parse { line: u32, col: u32, msg: String },
+
+    #[error("Unwrap timeout after {ms}ms (depth reached {depth})")]
+    UnwrapTimeout { ms: u64, depth: u32 },
+
+    #[error("SQLite error: {0}")]
+    Sqlite(String),
+
+    #[error("Keychain error: {0}")]
+    Keychain(String),
+
+    #[error("HTTP {status}: {body}")]
+    Http { status: u16, body: String },
+
+    #[error("AI returned invalid JSON: {raw}")]
+    AiInvalidJson { raw: String },
+
+    #[error("Rate limited; retry after {retry_after_sec}s")]
+    RateLimit { retry_after_sec: u64 },
+
+    #[error("IO error: {0}")]
+    Io(String),
+}</code></pre>
+
+    <h3><span class="h3-num">6.2</span>跨 IPC 传递</h3>
+
+    <p>Tauri 自动把 <code>Result&lt;T, E&gt;</code> 的 <code>Err</code> 序列化为前端 <code>invoke()</code> 的 reject。前端类型：</p>
+
+    <pre><code>// src/types/commands.ts
+export type JsonitaError =
+  | { kind: 'Parse';          data: { line: number; col: number; msg: string } }
+  | { kind: 'UnwrapTimeout';  data: { ms: number; depth: number } }
+  | { kind: 'Sqlite';         data: string }
+  | { kind: 'Keychain';       data: string }
+  | { kind: 'Http';           data: { status: number; body: string } }
+  | { kind: 'AiInvalidJson';  data: { raw: string } }
+  | { kind: 'RateLimit';      data: { retry_after_sec: number } }
+  | { kind: 'Io';             data: string };</code></pre>
+
+    <div class="callout callout-ok">
+      <span class="callout-icon">OK</span>
+      <div class="callout-body">
+        <p><b>设计原则</b>：Rust 不对错误做"产品化"包装（不翻译成中文 / 不加 emoji）；UI 层根据 <code>kind</code> 决定如何展示给用户（Toast / 状态栏 / Modal）。</p>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">7</span>项目目录全景</h2>
+
+    <pre><code>jsonita/
+├─ index.html               # 文档入口
+├─ README.md / TODO.md / CHANGELIST.md
+├─ assets/                  # 文档共享 + 应用图标
+│  ├─ style.css
+│  ├─ nav.js
+│  ├─ icon.png / icon-*-2048.png
+│  └─ icons/
+│     ├─ macos/ (.icns + .iconset)
+│     ├─ windows/ (.ico)
+│     ├─ menubar/ (template / light / dark × 18/22 × @1/@2/@3)
+│     └─ manifest.json
+│
+├─ plan/                    # 5 篇产品设计
+├─ spec/                    # 12 篇技术设计（本目录）
+├─ progress/                # 实施进度（Spec 完成后填）
+│
+├─ package.json / pnpm-lock.yaml / vite.config.ts
+├─ tsconfig.json / tailwind.config.ts
+├─ src/                     # React 前端（见 § 4）
+└─ src-tauri/               # Rust 后端
+   ├─ Cargo.toml
+   ├─ tauri.conf.json
+   ├─ build.rs
+   ├─ icons/                # 由 tauri bundler 引用
+   │  └─ → ../assets/icons/macos|windows/ symlink or copy
+   └─ src/                  # 见 § 3
+</code></pre>
+
+    <h2><span class="h2-num">8</span>关键不变量</h2>
+
+    <ul>
+      <li><b>I-1 单一数据源</b>：浮窗内容只存在 React 编辑器 state；关闭时落 sqlite，重新呼出从 sqlite 读 ── 不在两处同步</li>
+      <li><b>I-2 设置项单源</b>：所有可配置项以 Rust 端 <code>tauri-plugin-store</code> 为准；前端启动时 load + 监听变更</li>
+      <li><b>I-3 错误不藏</b>：所有 IPC 错误必须有 UI 呈现（Toast / 状态栏 / Modal），不允许 silent fail</li>
+      <li><b>I-4 main 进程不阻塞</b>：所有 IO（SQLite / HTTP / Keychain）走 <code>tokio::spawn_blocking</code> 或 async client</li>
+      <li><b>I-5 UI 不直访 fs/net</b>：WebView 不开 <code>fs</code> / <code>http</code> allowlist；所有外部 IO 走 commands</li>
+      <li><b>I-6 AI 完全可关</b>：<code>settings.ai_enabled = false</code> 时，前端 AI Fix Tab 隐藏 + Rust 端 <code>ai_fix</code> command 直接返回 <code>kind: "Sqlite"-style</code> error（早 return）── 双重保险</li>
+    </ul>
+
+    <h2><span class="h2-num">9</span>承上启下</h2>
+
+    <table>
+      <thead><tr><th>从 Plan 锁定</th><th>本章如何承接</th><th>下游章节细化</th></tr></thead>
+      <tbody>
+        <tr><td>Tauri 2 / React / SQLite / Keychain</td><td>§ 1 组合方式 · § 3-4 模块边界</td><td>05 窗口 / 06 菜单栏 / 09 存储</td></tr>
+        <tr><td>呼出 ≤ 500 ms / 稳态 ≤ 80 MB</td><td>§ 2.2-2.3 时序预算</td><td>05 窗口 runtime</td></tr>
+        <tr><td>数据全本地 · AI 可关</td><td>§ 8 I-5 / I-6 不变量</td><td>10 AI 客户端</td></tr>
+        <tr><td>不联网 · API key 不存明文</td><td>§ 8 I-5 不变量 · § 3 keychain 模块</td><td>09 存储 · 10 AI 客户端</td></tr>
+      </tbody>
+    </table>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

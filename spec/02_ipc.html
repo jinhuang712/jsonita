@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 02 IPC 合约</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="02">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 02</span>
+      <h1 class="doc-title">IPC 合约</h1>
+      <p class="doc-subtitle">前后端通信契约：所有 commands / events 的完整签名表，含错误分支与时序。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>设计原则</h2>
+
+    <ul>
+      <li><b>命名</b>：Rust 命令用 snake_case（<code>json_format</code>）；前端调用时同名。事件用冒号分隔（<code>window:shown</code> / <code>ai:progress</code>）</li>
+      <li><b>同步语义</b>：所有 command <b>async</b>；前端可放心 <code>await invoke()</code>。CPU 密集操作内部用 <code>spawn_blocking</code></li>
+      <li><b>错误统一</b>：所有 command 返回 <code>Result&lt;T, JsonitaError&gt;</code>，error 类型见 <a href="00_architecture.html">00 § 6</a></li>
+      <li><b>大小限制</b>：command payload &lt; 4 MB；&gt; 4 MB 改用 event 流式分块（v1 未触发，预留）</li>
+      <li><b>幂等性</b>：所有 read 操作幂等；write 操作通过 <code>request_id</code> 字段去重（v1 仅 <code>ai_fix</code> 用到）</li>
+    </ul>
+
+    <h2><span class="h2-num">2</span>Commands 总表</h2>
+
+    <table>
+      <thead><tr><th>分组</th><th>命令</th><th>幂等</th><th>P95 耗时</th><th>描述</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4"><b>json_ops</b></td>
+            <td><code>json_format</code></td><td>✓</td><td>&lt; 50 ms</td><td>格式化（缩进 / sort_keys / minify）</td></tr>
+        <tr><td><code>json_minify</code></td><td>✓</td><td>&lt; 30 ms</td><td>压缩为单行</td></tr>
+        <tr><td><code>json_unwrap_stringified</code></td><td>✓</td><td>&lt; 200 ms</td><td>递归解开嵌套 stringified JSON（含超时）</td></tr>
+        <tr><td><code>json_stringify</code></td><td>✓</td><td>&lt; 20 ms</td><td>JSON → 转义字符串字面量</td></tr>
+
+        <tr><td rowspan="5"><b>history</b></td>
+            <td><code>history_list</code></td><td>✓</td><td>&lt; 30 ms</td><td>分页 + 排序（pinned 优先）</td></tr>
+        <tr><td><code>history_search</code></td><td>✓</td><td>&lt; 30 ms</td><td>FTS 子串匹配 content / summary</td></tr>
+        <tr><td><code>history_pin</code></td><td>—</td><td>&lt; 10 ms</td><td>置顶 / 取消</td></tr>
+        <tr><td><code>history_star</code></td><td>—</td><td>&lt; 10 ms</td><td>收藏 / 取消</td></tr>
+        <tr><td><code>history_clear</code></td><td>—</td><td>&lt; 50 ms</td><td>一键清空（不删 pinned / starred）</td></tr>
+
+        <tr><td rowspan="3"><b>session</b></td>
+            <td><code>session_save_last</code></td><td>—</td><td>&lt; 10 ms</td><td>覆盖式写 last_session</td></tr>
+        <tr><td><code>session_load_last</code></td><td>✓</td><td>&lt; 10 ms</td><td>读 last_session</td></tr>
+        <tr><td><code>session_clear_last</code></td><td>—</td><td>&lt; 10 ms</td><td>清空 last_session（⌘K 触发）</td></tr>
+
+        <tr><td rowspan="3"><b>settings</b></td>
+            <td><code>settings_get_all</code></td><td>✓</td><td>&lt; 10 ms</td><td>读全量设置</td></tr>
+        <tr><td><code>settings_set</code></td><td>—</td><td>&lt; 20 ms</td><td>按 key 写；触发 <code>settings:changed</code> 事件</td></tr>
+        <tr><td><code>settings_reset</code></td><td>—</td><td>&lt; 20 ms</td><td>恢复出厂；触发 <code>settings:changed</code></td></tr>
+
+        <tr><td rowspan="3"><b>ai</b></td>
+            <td><code>ai_fix</code></td><td>—</td><td>P50 3 s / P95 8 s</td><td>调 DeepSeek 修复 JSON</td></tr>
+        <tr><td><code>ai_test_connection</code></td><td>—</td><td>&lt; 3 s</td><td>测 API key + 模型可用</td></tr>
+        <tr><td><code>ai_set_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>写 Keychain（masked 显示前端）</td></tr>
+
+        <tr><td rowspan="3"><b>window</b></td>
+            <td><code>window_show</code></td><td>—</td><td>&lt; 200 ms</td><td>显示浮窗（含定位 + focus）</td></tr>
+        <tr><td><code>window_hide</code></td><td>—</td><td>&lt; 100 ms</td><td>隐藏浮窗（保持进程）</td></tr>
+        <tr><td><code>window_toggle</code></td><td>—</td><td>&lt; 200 ms</td><td>show / hide 切换</td></tr>
+
+        <tr><td rowspan="5"><b>system</b></td>
+            <td><code>shortcut_register</code></td><td>—</td><td>&lt; 50 ms</td><td>注册新快捷键（检测冲突）</td></tr>
+        <tr><td><code>clipboard_read</code></td><td>—</td><td>&lt; 20 ms</td><td>读剪贴板 + JSON sniff</td></tr>
+        <tr><td><code>open_log_dir</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 ~/Library/Logs/Jsonita/</td></tr>
+        <tr><td><code>open_db_path</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 history.db 所在目录</td></tr>
+        <tr><td><code>quit_app</code></td><td>—</td><td>—</td><td>正常退出（不弹确认）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">2.1</span>详细签名（按分组）</h2>
+
+    <h3><span class="h3-num">2.1.1</span>json_ops</h3>
+
+    <pre><code>// ===== Rust =====
+#[derive(Deserialize)]
+pub struct FormatOpts {
+    pub indent: IndentMode,          // Spaces2 | Spaces4 | Tab
+    pub sort_keys: bool,
+    pub trailing_newline: bool,      // 默认 true
+}
+
+#[tauri::command]
+pub async fn json_format(
+    text: String,
+    opts: FormatOpts,
+) -> Result&lt;String, JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn json_minify(text: String) -> Result&lt;String, JsonitaError&gt;;
+
+#[derive(Deserialize)]
+pub struct UnwrapOpts {
+    pub timeout_ms: u64,             // 默认 200
+    pub max_depth: Option&lt;u32&gt;,   // None = 无层数限制
+}
+
+#[tauri::command]
+pub async fn json_unwrap_stringified(
+    text: String,
+    opts: UnwrapOpts,
+) -> Result&lt;String, JsonitaError&gt;;
+
+#[derive(Deserialize)]
+pub struct StringifyOpts {
+    pub quote: QuoteStyle,           // Double | Single
+    pub escape_unicode: bool,
+}
+
+#[tauri::command]
+pub async fn json_stringify(
+    text: String,
+    opts: StringifyOpts,
+) -> Result&lt;String, JsonitaError&gt;;</code></pre>
+
+    <pre><code>// ===== TypeScript（src/ipc/commands.ts）=====
+export type IndentMode = 'spaces2' | 'spaces4' | 'tab';
+export type QuoteStyle = 'double' | 'single';
+
+export interface FormatOpts {
+  indent: IndentMode;
+  sortKeys: boolean;
+  trailingNewline: boolean;
+}
+
+export interface UnwrapOpts {
+  timeoutMs: number;
+  maxDepth?: number;
+}
+
+export interface StringifyOpts {
+  quote: QuoteStyle;
+  escapeUnicode: boolean;
+}
+
+export async function jsonFormat(text: string, opts: FormatOpts): Promise&lt;string&gt; {
+  return invoke('json_format', { text, opts });
+}
+export async function jsonMinify(text: string): Promise&lt;string&gt; {
+  return invoke('json_minify', { text });
+}
+export async function jsonUnwrapStringified(text: string, opts: UnwrapOpts): Promise&lt;string&gt; {
+  return invoke('json_unwrap_stringified', { text, opts });
+}
+export async function jsonStringify(text: string, opts: StringifyOpts): Promise&lt;string&gt; {
+  return invoke('json_stringify', { text, opts });
+}</code></pre>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">WARN</span>
+      <div class="callout-body">
+        <p><b>命名约定</b>：Rust 字段 snake_case；TS 通过 <code>serde(rename_all = "camelCase")</code> 在 struct 上声明，前端就能用 camelCase。所有 IPC 类型都按此规则。</p>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">2.1.2</span>history</h3>
+
+    <pre><code>// ===== Rust =====
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryRow {
+    pub id: i64,
+    pub created_at: i64,             // unix ms
+    pub content: String,
+    pub summary: String,             // 前 80 字符
+    pub content_hash: String,        // sha256 hex
+    pub op_type: OpType,             // 见 enum
+    pub pinned: bool,
+    pub starred: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OpType { Format, Minify, Tree, StrToJson, JsonToStr, AiFix }
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListOpts {
+    pub limit: u32,                  // 默认 50
+    pub offset: u32,                 // 默认 0
+    pub only_pinned: Option&lt;bool&gt;,
+    pub only_starred: Option&lt;bool&gt;,
+}
+
+#[tauri::command]
+pub async fn history_list(opts: ListOpts) -> Result&lt;Vec&lt;HistoryRow&gt;, JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn history_search(
+    query: String,
+    limit: u32,
+) -> Result&lt;Vec&lt;HistoryRow&gt;, JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn history_pin(id: i64, pinned: bool) -> Result&lt;(), JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn history_star(id: i64, starred: bool) -> Result&lt;(), JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn history_clear() -> Result&lt;u32, JsonitaError&gt;;  // 返回删除条数</code></pre>
+
+    <pre><code>// ===== TypeScript =====
+export interface HistoryRow {
+  id: number;
+  createdAt: number;
+  content: string;
+  summary: string;
+  contentHash: string;
+  opType: 'format' | 'minify' | 'tree' | 'str-to-json' | 'json-to-str' | 'ai-fix';
+  pinned: boolean;
+  starred: boolean;
+}</code></pre>
+
+    <h3><span class="h3-num">2.1.3</span>session</h3>
+
+    <pre><code>#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LastSession {
+    pub content: String,
+    pub op_type: OpType,
+    pub saved_at: i64,               // unix ms
+}
+
+#[tauri::command]
+pub async fn session_save_last(s: LastSession) -> Result&lt;(), JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn session_load_last() -> Result&lt;Option&lt;LastSession&gt;, JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn session_clear_last() -> Result&lt;(), JsonitaError&gt;;</code></pre>
+
+    <h3><span class="h3-num">2.1.4</span>settings</h3>
+
+    <p>全量设置类型：</p>
+
+    <pre><code>#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Settings {
+    // General
+    pub launch_at_login: bool,           // 默认 true
+    pub show_in_menubar: bool,           // 默认 true
+    pub auto_paste_clipboard: bool,      // 默认 true
+    pub hide_on_blur: bool,              // 默认 true
+    pub single_pane_mode: bool,          // 默认 false
+    pub theme: ThemeMode,                // System | Light | Dark
+    pub restore_window: RestoreWindow,   // Off | Min1 | Min5 | Min15 | Hour1（默认 Min5）
+
+    // Shortcuts
+    pub shortcut_toggle: String,         // 默认 "Cmd+Shift+J"
+    pub shortcut_restore_last: String,   // 默认 "Cmd+Shift+L"
+
+    // AI
+    pub ai_enabled: bool,                // 默认 false
+    pub ai_model_id: String,             // 默认 "deepseek-chat"
+
+    // History
+    pub history_limit: u32,              // 10 / 50 / 100 / 200（默认 100）
+
+    // JSON Transform
+    pub auto_unwrap: bool,               // F3.3 默认 true
+    pub unwrap_timeout_ms: u64,          // 默认 200
+}
+
+#[tauri::command]
+pub async fn settings_get_all() -> Result&lt;Settings, JsonitaError&gt;;
+
+#[derive(Deserialize)]
+pub struct SettingsPatch(serde_json::Map&lt;String, serde_json::Value&gt;);
+
+#[tauri::command]
+pub async fn settings_set(patch: SettingsPatch) -> Result&lt;Settings, JsonitaError&gt;;
+// 副作用：写入完成后 emit `settings:changed` 事件给所有窗口
+
+#[tauri::command]
+pub async fn settings_reset() -> Result&lt;Settings, JsonitaError&gt;;</code></pre>
+
+    <h3><span class="h3-num">2.1.5</span>ai</h3>
+
+    <pre><code>#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AiFixReq {
+    pub text: String,
+    pub error_line: Option&lt;u32&gt;,
+    pub error_col: Option&lt;u32&gt;,
+    pub error_msg: Option&lt;String&gt;,
+    pub request_id: String,          // UUID v4，幂等去重
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AiFixResp {
+    pub fixed: String,               // 已验证为合法 JSON
+    pub model: String,
+    pub tokens_in: u32,
+    pub tokens_out: u32,
+    pub elapsed_ms: u64,
+}
+
+#[tauri::command]
+pub async fn ai_fix(req: AiFixReq) -> Result&lt;AiFixResp, JsonitaError&gt;;
+// 错误分支：Http / RateLimit / AiInvalidJson / Keychain
+
+#[tauri::command]
+pub async fn ai_test_connection(
+    api_key: String,                 // 测试时直接传，不存 Keychain
+    model_id: String,
+) -> Result&lt;TestConnectionResp, JsonitaError&gt;;
+
+#[derive(Serialize)]
+pub struct TestConnectionResp {
+    pub ok: bool,
+    pub latency_ms: u64,
+    pub model_echoed: String,
+}
+
+#[tauri::command]
+pub async fn ai_set_api_key(api_key: String) -> Result&lt;(), JsonitaError&gt;;</code></pre>
+
+    <h3><span class="h3-num">2.1.6</span>window</h3>
+
+    <table>
+      <thead><tr><th>command</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>window_show()</code></td><td>显示浮窗（含定位 + focus）</td></tr>
+        <tr><td><code>window_hide()</code></td><td>隐藏浮窗</td></tr>
+        <tr><td><code>window_toggle()</code></td><td>show / hide 切换</td></tr>
+        <tr><td><code>window_resize_for_content(metrics)</code></td><td>按内容指标算理想宽度并 set_size（详见 plan F10 智能宽度 · 06 § 智能宽度算法）</td></tr>
+        <tr><td><code>window_reset_size()</code></td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContentMetrics {
+    pub max_line_chars: u32,         // 编辑器最长行字符数（用于估算理想宽度）
+    pub line_count:     u32,
+    pub bytes:          u64,
+    pub soft_wrap_on:   bool,        // 若开启，跳过本次自动扩宽
+}
+
+#[tauri::command]
+pub async fn window_resize_for_content(metrics: ContentMetrics)
+    -> Result&lt;(u32, u32), JsonitaError&gt;;  // 返回 (width, height)
+
+// 算法（详见 06 § 智能宽度）：
+//   if user_dragged_before:      return current_size (no-op)
+//   if soft_wrap_on:              return current_size
+//   if max_line_chars <= 80:      return current_size
+//   ideal_w  = clamp(max_line_chars * 8 + 64, 720, min(1400, screen_w * 0.7))
+//   animate to (ideal_w, current_h) over 150ms</code></pre>
+
+    <h3><span class="h3-num">2.1.7</span>system</h3>
+
+    <pre><code>#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShortcutRegisterReq {
+    pub action: ShortcutAction,      // ToggleWindow | RestoreLast
+    pub accelerator: String,         // "Cmd+Shift+J" 风格
+}
+
+#[derive(Serialize)]
+pub enum ShortcutRegisterResp {
+    Ok,
+    Conflict { with_app: Option&lt;String&gt; },  // 已被系统 / 其他应用占用
+}
+
+#[tauri::command]
+pub async fn shortcut_register(req: ShortcutRegisterReq)
+    -> Result&lt;ShortcutRegisterResp, JsonitaError&gt;;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClipboardSniff {
+    pub text: String,
+    pub looks_like_json: bool,       // 首尾 trim 后以 { [ " 起 / 以 } ] " 结
+}
+
+#[tauri::command]
+pub async fn clipboard_read() -> Result&lt;ClipboardSniff, JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn open_log_dir() -> Result&lt;(), JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn open_db_path() -> Result&lt;(), JsonitaError&gt;;
+
+#[tauri::command]
+pub async fn quit_app() -> Result&lt;(), JsonitaError&gt;;</code></pre>
+
+    <h2><span class="h2-num">3</span>Events 总表（Rust → 前端）</h2>
+
+    <table>
+      <thead><tr><th>事件名</th><th>触发时机</th><th>payload 类型</th><th>消费方</th></tr></thead>
+      <tbody>
+        <tr><td><code>window:shown</code></td><td><code>window_show</code> 完成后 / tray 点击 / 快捷键</td><td><code>WindowShown</code></td><td>shell/FloatingWindow（聚焦编辑器 + 剪贴板 sniff）</td></tr>
+        <tr><td><code>window:hidden</code></td><td>失焦 / Esc / ⌘W</td><td><code>{}</code></td><td>shell（清 transient state）</td></tr>
+        <tr><td><code>shortcut:restore_last</code></td><td>⌘⇧L 触发</td><td><code>{}</code></td><td>shell（调 <code>session_load_last</code>）</td></tr>
+        <tr><td><code>settings:changed</code></td><td><code>settings_set</code> / <code>settings_reset</code> 后</td><td><code>Settings</code></td><td>store/settings（更新本地缓存 + 重渲染）</td></tr>
+        <tr><td><code>ai:progress</code></td><td>AI Fix HTTP 各阶段</td><td><code>AiProgress</code></td><td>panes/AiFixPane（loading 文案切换）</td></tr>
+        <tr><td><code>history:updated</code></td><td>history_clear / 新 entry 写入</td><td><code>{}</code></td><td>history/HistoryModal（重 list）</td></tr>
+        <tr><td><code>theme:system_changed</code></td><td>macOS 切换 light/dark（仅 theme=System 时转发）</td><td><code>{ mode: "light" | "dark" }</code></td><td>theme/ThemeProvider</td></tr>
+        <tr><td><code>app:will_quit</code></td><td>Quit 前 200 ms</td><td><code>{}</code></td><td>shell（最后一次保存 last_session）</td></tr>
+        <tr><td><code>window:resized</code></td><td>用户拖动窗口边缘（debounce 500ms）</td><td><code>{ width, height, source: "user" | "auto" }</code></td><td>shell（更新内存 user_dragged flag）+ store（落盘 window.json）</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>// Payload 类型
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowShown {
+    pub clipboard: Option&lt;ClipboardSniff&gt;,  // 仅在 settings.auto_paste_clipboard = true 时填
+    pub last_session: Option&lt;LastSession&gt;,  // 仅在窗口期内呼出才填
+    pub source: ShowSource,                  // Hotkey | Tray | Manual
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase", tag = "phase", content = "data")]
+pub enum AiProgress {
+    Started,
+    Waiting { elapsed_ms: u64 },             // 每 500 ms 推一次
+    Received { tokens: u32 },
+    Validating,
+    Done,
+}</code></pre>
+
+    <h3><span class="h3-num">3.1</span>TS 监听封装</h3>
+
+    <pre><code>// src/ipc/events.ts
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+
+type EventMap = {
+  'window:shown':            WindowShown;
+  'window:hidden':           Record&lt;string, never&gt;;
+  'shortcut:restore_last':   Record&lt;string, never&gt;;
+  'settings:changed':        Settings;
+  'ai:progress':             AiProgress;
+  'history:updated':         Record&lt;string, never&gt;;
+  'theme:system_changed':    { mode: 'light' | 'dark' };
+  'app:will_quit':           Record&lt;string, never&gt;;
+};
+
+export function on&lt;K extends keyof EventMap&gt;(
+  name: K,
+  handler: (payload: EventMap[K]) =&gt; void,
+): Promise&lt;UnlistenFn&gt; {
+  return listen&lt;EventMap[K]&gt;(name, (e) =&gt; handler(e.payload));
+}</code></pre>
+
+    <h2><span class="h2-num">4</span>关键时序图</h2>
+
+    <p>三张时序图覆盖最常被实现错的链路。<b>点击图卡放大</b>，放大后支持滚轮缩放 + 拖动平移 + <kbd>Esc</kbd> 关闭。</p>
+
+    <h3><span class="h3-num">4.1</span>呼出（快捷键路径）</h3>
+
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant GS as GlobalShortcut
+    participant Rust as Rust host
+    participant Win as Tauri Window
+    participant React as WebView (React)
+    User->>GS: 按 ⌘⇧J
+    GS->>Rust: handler triggered
+    Rust->>Rust: cursor_position() → 找鼠标所在屏
+    Rust->>Win: set_position(center, top 1/3)
+    Rust->>Win: show() + set_focus()
+    Win-->>Rust: ok
+    Rust->>React: emit "window:shown" { clipboard, lastSession, source }
+    React->>React: editor.focus()
+    alt clipboard.looksLikeJson
+        React->>React: setEditorContent(clipboard.text)
+    end
+    alt 在窗口期内 (lastSession != null)
+        React->>React: showRestoreBar(sinceText)
+    end
+    React->>React: CodeMirror reflow + 150ms fade-in
+    Note over User,React: 总耗时 P95 < 500ms（已驻留 WebView）
+    </div>
+
+    <h3><span class="h3-num">4.2</span>AI Fix（含错误透传）</h3>
+
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant React as React UI
+    participant Store as ai_store
+    participant Rust as Rust ai_fix
+    participant KC as Keychain
+    participant DS as DeepSeek API
+    User->>React: click ✨ AI Fix
+    React->>Store: startFix(text, errorLoc)
+    Store-->>React: emit "ai:progress" Started
+    React->>Rust: invoke ai_fix(req)
+    Rust->>KC: get("deepseek_api_key")
+    KC-->>Rust: api_key
+    Rust->>Rust: build_prompt(text, line, col, msg)
+    Note right of Rust: 每 500ms emit<br/>"ai:progress" Waiting
+    Rust->>DS: POST /v1/chat/completions
+    alt 200 OK
+        DS-->>Rust: { fixed JSON }
+        Rust->>Rust: serde_json::from_str 验证
+        alt 验证通过
+            Rust-->>React: Ok(AiFixResp)
+            React->>React: render DiffView
+            alt 用户 Accept
+                User->>React: Accept
+                React->>React: editor.setContent + history.add
+            else 用户 Cancel
+                User->>React: Cancel
+                React->>Store: discard()
+            end
+        else 验证失败
+            Rust-->>React: Err(AiInvalidJson, raw)
+            React->>React: Modal 显示原始返回
+        end
+    else 429 Rate Limit
+        DS-->>Rust: 429 + Retry-After
+        Rust-->>React: Err(RateLimit, retry_after_sec)
+        React->>React: Toast.warn 倒计时
+    else 其他状态
+        DS-->>Rust: status + body
+        Rust-->>React: Err(Http, status, body)
+        React->>React: Toast.danger + 重试
+    end
+    </div>
+
+    <h3><span class="h3-num">4.3</span>关闭浮窗 → 会话写入</h3>
+
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant React as React UI
+    participant Rust as Rust host
+    participant DB as SQLite
+    participant Timer as RestoreTimer
+    User->>React: Esc / 失焦 / ⌘W
+    React->>React: ui_store.onCloseRequest()
+    React->>Rust: invoke session_save_last(payload)
+    Rust->>DB: UPSERT last_session WHERE id=1
+    DB-->>Rust: ok
+    Rust-->>React: ok
+    React->>React: 加 .floating-window-exit 类 (200ms)
+    React->>Rust: invoke window_hide()
+    Rust->>Rust: window.hide()
+    Rust->>Timer: arm(settings.restore_window)
+    Note over Timer: 默认 5min 倒计时<br/>窗口期内呼出 → 自动恢复<br/>超时后 sqlite 仍保留以便 ⌘⇧L
+    alt 用户在窗口期内再呼出
+        User->>Rust: ⌘⇧J
+        Rust->>DB: SELECT * FROM last_session
+        DB-->>Rust: row
+        Rust->>React: emit window:shown { lastSession: row }
+    else 超过窗口期
+        Timer->>Timer: 销毁
+        Note over Rust,DB: sqlite 数据保留<br/>等待用户主动 ⌘⇧L
+    end
+    </div>
+
+    <h2><span class="h2-num">5</span>错误处理矩阵</h2>
+
+    <table>
+      <thead><tr><th>错误 kind</th><th>常见 command</th><th>UI 呈现</th><th>用户操作建议</th></tr></thead>
+      <tbody>
+        <tr><td><code>Parse</code></td><td>json_format / minify / stringify</td><td>状态栏红 + 高亮位置</td><td>点 AI Fix 或手动修</td></tr>
+        <tr><td><code>UnwrapTimeout</code></td><td>json_unwrap_stringified</td><td>Toast（warn）</td><td>建议关 auto-unwrap 或提高超时</td></tr>
+        <tr><td><code>Sqlite</code></td><td>history_* / session_*</td><td>Toast（danger）+ "打开日志" 链接</td><td>反馈 issue</td></tr>
+        <tr><td><code>Keychain</code></td><td>ai_set_api_key / ai_fix</td><td>Modal（danger）</td><td>检查系统钥匙串权限</td></tr>
+        <tr><td><code>Http</code></td><td>ai_fix / ai_test_connection</td><td>Toast（danger）+ 「重试」+ 「打开原始返回」</td><td>检查网络 / API key</td></tr>
+        <tr><td><code>RateLimit</code></td><td>ai_fix</td><td>Toast（warn）显示倒计时</td><td>等待 retryAfterSec 后重试</td></tr>
+        <tr><td><code>AiInvalidJson</code></td><td>ai_fix</td><td>Modal 展示 raw（可复制）</td><td>提交 issue 附 raw</td></tr>
+        <tr><td><code>Io</code></td><td>open_log_dir / open_db_path</td><td>Toast（danger）</td><td>反馈 issue</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">6</span>类型同步策略</h2>
+
+    <p>Rust struct 与 TS interface 手工保持镜像（v1 不引入 ts-rs 等自动生成）。</p>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">INFO</span>
+      <div class="callout-body">
+        <p>放弃自动生成的理由：本项目只有 ~30 个 struct，手写一份 <code>src/types/*.ts</code> 维护成本可控；引入 ts-rs 会增加 build 复杂度（需 cargo test 触发生成）。v2 体量上来再换。</p>
+      </div>
+    </div>
+
+    <p><b>变更流程</b>：</p>
+    <ol>
+      <li>改 Rust struct 时，同步改 <code>src/types/*.ts</code></li>
+      <li>PR 模板检查："IPC types updated?" 复选框</li>
+      <li>CI 加一个 smoke test：浮窗启动 + 调每个 command 一次，验证 (de)serialize</li>
+    </ol>
+
+    <h2><span class="h2-num">7</span>性能与限流</h2>
+
+    <ul>
+      <li><b>前端 debounce</b>：编辑器 onChange → format/parse 调用，统一 300 ms debounce（见 <a href="00_architecture.html">00 § 5.1</a>）</li>
+      <li><b>后端不主动节流</b>：所有 command 来一个跑一个；CPU 密集走 <code>spawn_blocking</code></li>
+      <li><b>AI 不限频</b>：依 <a href="../plan/01_features.html">plan/01 F4</a>，用户用自己 key，仅透传上游 429</li>
+      <li><b>SQLite WAL</b>：所有 read 并发；write 串行（rusqlite + single connection per thread + r2d2 pool）</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

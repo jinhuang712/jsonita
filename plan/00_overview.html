@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Plan · 00 项目概览</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="plan" data-chapter="00">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">PLAN · 章节 00</span>
+      <h1 class="doc-title">项目概览</h1>
+      <p class="doc-subtitle">Jsonita 是什么，这份文档是什么，以及怎么读。</p>
+    </div>
+
+    <h2><span class="h2-num">A</span>一句话</h2>
+    <p>Jsonita 是一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集，做完即走，几乎不占内存。</p>
+
+    <h2><span class="h2-num">B</span>三句</h2>
+    <ul>
+      <li>一个浮窗，做完即关</li>
+      <li>JSON 全套能力（格式 / 树 / 互转 / AI 修复）</li>
+      <li>默认本地，AI 可选</li>
+    </ul>
+
+    <h2><span class="h2-num">C</span>设计约束（Constraints &amp; Must-have）</h2>
+    <div class="constraints-grid">
+
+      <div class="constraints-col must-have">
+        <h3 class="constraints-title">Must Have · 必须</h3>
+        <ul>
+          <li><b>可安装</b></li>
+          <li><b>保存历史，可找回上次</b></li>
+          <li><b>浮窗自动隐藏</b></li>
+          <li><b>快捷键可自定义</b></li>
+          <li><b>数据全本地</b></li>
+          <li><b>AI 可关,没 key 也能用</b></li>
+          <li data-tip="稳态内存 ≤ 80MB · 冷启动 ≤ 500ms · 安装包 ≤ 15MB · 100KB JSON 格式化 ≤ 50ms"><b>够轻够快</b></li>
+        </ul>
+      </div>
+
+      <div class="constraints-col must-not">
+        <h3 class="constraints-title">Must Not · 禁止</h3>
+        <ul>
+          <li data-tip="除主动点击 AI Fix 外零联网；自然涵盖 telemetry / 崩溃日志 / 检查更新 / 登录注册"><b>不联网</b></li>
+          <li><b>不强制使用 AI</b></li>
+          <li data-tip="顶层 Tab ≤ 6 个，要加一个先砍一个"><b>不长成 Postman</b></li>
+          <li><b>API key 不存明文</b></li>
+          <li data-tip="失焦自动隐藏 / 会话超时恢复 都可关闭"><b>不强制 UI 行为</b></li>
+          <li><b>不做无撤销破坏</b></li>
+          <li data-tip="HTTP 客户端 / JSON Schema 编辑 / Diff / 云同步 / 多人协作"><b>不做 v2 范围</b></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

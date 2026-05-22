@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 07 菜单栏 & 快捷键</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="07">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 07</span>
+      <h1 class="doc-title">菜单栏 & 快捷键</h1>
+      <p class="doc-subtitle">tray icon · 全局快捷键注册 / 冲突检测 / 权限引导 · 平台差异。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>菜单栏 tray</h2>
+
+    <h3><span class="h3-num">1.1</span>结构</h3>
+
+    <p>常驻菜单栏图标，单击左键 → toggle 浮窗；右键 → 弹下拉菜单。完整下拉菜单视觉：见 <a href="01_mockups.html#4">12 § 4 菜单栏 tray</a>。</p>
+
+    <p>菜单项序：</p>
+
+    <table>
+      <thead><tr><th>order</th><th>label</th><th>accelerator</th><th>action</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Open Jsonita</td><td><kbd>⌘⇧J</kbd></td><td>window_show</td></tr>
+        <tr><td>2</td><td>Restore Last</td><td><kbd>⌘⇧L</kbd></td><td>emit shortcut:restore_last</td></tr>
+        <tr><td>—</td><td>(separator)</td><td>—</td><td>—</td></tr>
+        <tr><td>3</td><td>Show History…</td><td>—</td><td>open_history_modal</td></tr>
+        <tr><td>4</td><td>Settings…</td><td><kbd>⌘,</kbd></td><td>open_settings_modal</td></tr>
+        <tr><td>—</td><td>(separator)</td><td>—</td><td>—</td></tr>
+        <tr><td>5</td><td>About Jsonita</td><td>—</td><td>open_about_modal</td></tr>
+        <tr><td>—</td><td>(separator)</td><td>—</td><td>—</td></tr>
+        <tr><td>6</td><td>Quit Jsonita</td><td><kbd>⌘Q</kbd></td><td>app.exit(0)</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">1.2</span>实现</h3>
+
+    <pre><code>// src-tauri/src/system/tray.rs
+use tauri::{
+    AppHandle, Manager,
+    image::Image,
+    menu::{Menu, MenuItem, PredefinedMenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+};
+
+pub const TRAY_ICON_PATH: &amp;str = "icons/menubar/jsonita-menubar-template-22@2x.png";
+
+pub fn build(app: &amp;AppHandle) -&gt; tauri::Result&lt;()&gt; {
+    let menu = build_menu(app)?;
+
+    let icon = Image::from_path(
+        app.path().resolve(TRAY_ICON_PATH, tauri::path::BaseDirectory::Resource)?
+    )?;
+
+    let tray = TrayIconBuilder::with_id("main")
+        .icon(icon)
+        .icon_as_template(cfg!(target_os = "macos"))    // macOS template
+        .menu(&amp;menu)
+        .menu_on_left_click(false)                       // 左键交给 on_event
+        .show_menu_on_left_click(false)
+        .on_tray_icon_event(handle_tray_event)
+        .on_menu_event(handle_menu_event)
+        .build(app)?;
+
+    app.manage(tray);                                    // 防止 drop 后 tray 消失
+    Ok(())
+}
+
+fn build_menu(app: &amp;AppHandle) -&gt; tauri::Result&lt;Menu&lt;tauri::Wry&gt;&gt; {
+    let open       = MenuItem::with_id(app, "open",         "Open Jsonita",  true, Some("CmdOrCtrl+Shift+J"))?;
+    let restore    = MenuItem::with_id(app, "restore_last", "Restore Last",  true, Some("CmdOrCtrl+Shift+L"))?;
+    let history    = MenuItem::with_id(app, "history",      "Show History…", true, None::&lt;&amp;str&gt;)?;
+    let settings   = MenuItem::with_id(app, "settings",     "Settings…",     true, Some("CmdOrCtrl+,"))?;
+    let about      = MenuItem::with_id(app, "about",        "About Jsonita", true, None::&lt;&amp;str&gt;)?;
+    let quit       = MenuItem::with_id(app, "quit",         "Quit Jsonita",  true, Some("CmdOrCtrl+Q"))?;
+    let sep        = PredefinedMenuItem::separator(app)?;
+
+    Menu::with_items(app, &amp;[&amp;open, &amp;restore, &amp;sep, &amp;history, &amp;settings, &amp;sep, &amp;about, &amp;sep, &amp;quit])
+}
+
+fn handle_tray_event(tray: &amp;tauri::tray::TrayIcon, event: TrayIconEvent) {
+    if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+        let app = tray.app_handle();
+        let _ = commands::window::window_toggle(app.clone());
+    }
+}
+
+fn handle_menu_event(app: &amp;AppHandle, event: tauri::menu::MenuEvent) {
+    match event.id.as_ref() {
+        "open"         =&gt; { let _ = commands::window::window_show(app.clone()); }
+        "restore_last" =&gt; { let _ = app.emit("shortcut:restore_last", ()); }
+        "history"      =&gt; { let _ = open_history_modal(app); }
+        "settings"     =&gt; { let _ = open_settings_modal(app); }
+        "about"        =&gt; { let _ = open_about_modal(app); }
+        "quit"         =&gt; { app.exit(0); }
+        _ =&gt; {}
+    }
+}</code></pre>
+
+    <h3><span class="h3-num">1.3</span>动态图标</h3>
+
+    <p>v1 不做。<br>v2 可扩展：检测到剪贴板含 JSON 时 tray 图标加红点，提示 user "have something to format"。</p>
+
+    <h3><span class="h3-num">1.4</span>"在菜单栏显示图标" 开关</h3>
+
+    <p>设置项 <code>settings.show_in_menubar</code> 默认 true。关闭时：</p>
+
+    <ul>
+      <li>调 <code>tray.remove()</code></li>
+      <li>用户只能通过快捷键呼出（保留对快捷键的依赖）</li>
+      <li>Dock 图标也跟随：菜单栏关 + dock 关 → 应用就完全 headless（必须留 Quit 入口 → 不允许同时关）</li>
+    </ul>
+
+    <h2><span class="h2-num">2</span>全局快捷键</h2>
+
+    <h3><span class="h3-num">2.1</span>默认绑定</h3>
+
+    <table>
+      <thead><tr><th>action</th><th>默认 accelerator</th><th>是否可自定义</th></tr></thead>
+      <tbody>
+        <tr><td>toggle_window</td><td><kbd>CmdOrCtrl+Shift+J</kbd></td><td>是（全局）</td></tr>
+        <tr><td>restore_last</td><td><kbd>CmdOrCtrl+Shift+L</kbd></td><td>是（全局）</td></tr>
+      </tbody>
+    </table>
+
+    <p>其他 in-app 快捷键（<kbd>⌘K</kbd> / <kbd>⌘H</kbd> / <kbd>⌘,</kbd> / <kbd>Esc</kbd> / <kbd>⌘W</kbd>）由 React 端 <code>useHotkeys</code> 注册，不走 global-shortcut（不抢系统）。</p>
+
+    <h3><span class="h3-num">2.2</span>注册</h3>
+
+    <pre><code>// src-tauri/src/system/shortcuts.rs
+use tauri::{AppHandle, Manager};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+
+#[derive(Copy, Clone)]
+pub enum ShortcutAction { ToggleWindow, RestoreLast }
+
+pub fn register_defaults(app: &amp;AppHandle) -&gt; Result&lt;(), JsonitaError&gt; {
+    let settings = app.state::&lt;SettingsStore&gt;().get();
+    register(app, ShortcutAction::ToggleWindow, &amp;settings.shortcut_toggle)?;
+    register(app, ShortcutAction::RestoreLast,  &amp;settings.shortcut_restore_last)?;
+    Ok(())
+}
+
+pub fn register(
+    app: &amp;AppHandle,
+    action: ShortcutAction,
+    accelerator: &amp;str,
+) -&gt; Result&lt;(), JsonitaError&gt; {
+    let shortcut = parse_accelerator(accelerator)?;
+    let app_clone = app.clone();
+
+    app.global_shortcut().on_shortcut(shortcut, move |_app, _sc, event| {
+        if event.state() != ShortcutState::Pressed { return; }
+        match action {
+            ShortcutAction::ToggleWindow =&gt; {
+                let _ = commands::window::window_toggle(app_clone.clone());
+            }
+            ShortcutAction::RestoreLast =&gt; {
+                let _ = app_clone.emit("shortcut:restore_last", ());
+            }
+        }
+    })?;
+    Ok(())
+}
+
+fn parse_accelerator(s: &amp;str) -&gt; Result&lt;Shortcut, JsonitaError&gt; {
+    // 解析 "CmdOrCtrl+Shift+J" 风格字符串
+    let mut mods = Modifiers::empty();
+    let mut code: Option&lt;Code&gt; = None;
+    for part in s.split('+') {
+        match part.to_lowercase().as_str() {
+            "cmd" | "command" | "meta" =&gt; mods |= Modifiers::META,
+            "cmdorctrl" =&gt; {
+                #[cfg(target_os = "macos")]   { mods |= Modifiers::META; }
+                #[cfg(not(target_os = "macos"))] { mods |= Modifiers::CONTROL; }
+            }
+            "ctrl" | "control" =&gt; mods |= Modifiers::CONTROL,
+            "alt"  | "option"  =&gt; mods |= Modifiers::ALT,
+            "shift"            =&gt; mods |= Modifiers::SHIFT,
+            other =&gt; code = Some(Code::from_str(&amp;other.to_uppercase())
+                                    .ok_or_else(|| JsonitaError::Io(format!("unknown key {}", other)))?),
+        }
+    }
+    let code = code.ok_or_else(|| JsonitaError::Io("missing key".into()))?;
+    Ok(Shortcut::new(Some(mods), code))
+}</code></pre>
+
+    <h3><span class="h3-num">2.3</span>冲突检测</h3>
+
+    <p>用户改快捷键时调 <code>shortcut_register</code> command：</p>
+
+    <pre><code>#[tauri::command]
+pub async fn shortcut_register(
+    app: tauri::AppHandle,
+    req: ShortcutRegisterReq,
+) -&gt; Result&lt;ShortcutRegisterResp, JsonitaError&gt; {
+    // 1. 解析合法性
+    let shortcut = parse_accelerator(&amp;req.accelerator)?;
+
+    // 2. 先 unregister 旧的
+    let _ = app.global_shortcut().unregister(shortcut.clone());
+
+    // 3. 尝试注册新的
+    match app.global_shortcut().register(shortcut.clone()) {
+        Ok(()) =&gt; {
+            // 4. 把回调挂上
+            install_handler(&amp;app, req.action, shortcut)?;
+            // 5. 写入 settings
+            app.state::&lt;SettingsStore&gt;().set_shortcut(req.action, req.accelerator)?;
+            Ok(ShortcutRegisterResp::Ok)
+        }
+        Err(e) =&gt; {
+            // tauri-plugin-global-shortcut 在底层 platform 调用失败时返回 Err
+            // 解读不到具体冲突 App（OS API 不暴露）→ 返回 Conflict { with_app: None }
+            Ok(ShortcutRegisterResp::Conflict { with_app: None })
+        }
+    }
+}</code></pre>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">WARN</span>
+      <div class="callout-body">
+        <p>macOS / Windows 的全局快捷键 API <b>不直接</b>暴露"被哪个 App 占用"。我们只能知道注册成功与否。<code>with_app: None</code> 时 UI 显示 "Already used by system or another app"。</p>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">2.4</span>系统级保留快捷键拒绝清单</h3>
+
+    <p>注册前在 Rust 端先 reject 这些"绝不可改"的组合，避免给用户挖坑：</p>
+
+    <pre><code>// 用户不能绑定的组合（系统级或会破坏 OS 体验）
+const RESERVED: &amp;[&amp;str] = &amp;[
+    "CmdOrCtrl+Q",          // Quit App
+    "CmdOrCtrl+W",          // Close Window
+    "CmdOrCtrl+Tab",        // 应用切换
+    "CmdOrCtrl+Space",      // Spotlight
+    "CmdOrCtrl+H",          // Hide App
+    "F11", "F12",           // 系统功能（Mission Control / 屏幕截图）
+    "Escape",
+];
+
+fn check_reserved(acc: &amp;str) -&gt; Result&lt;(), JsonitaError&gt; {
+    if RESERVED.iter().any(|r| acc.eq_ignore_ascii_case(r)) {
+        return Err(JsonitaError::Io(format!("{} is reserved by system", acc)));
+    }
+    Ok(())
+}</code></pre>
+
+    <h2><span class="h2-num">3</span>macOS Accessibility 权限</h2>
+
+    <p>tauri-plugin-global-shortcut 在 macOS 不需要 Accessibility 权限 ── 它走 <code>CGEventTap</code> 的 <b>Annotated event tap</b>（监听键盘组合，不需要事件注入权限）。<b>v1 默认不要求</b>。</p>
+
+    <p>但 macOS 13+ 在某些情况下仍会弹出 "Input Monitoring" 请求 ── 这种情况下：</p>
+
+    <h3><span class="h3-num">3.1</span>检测 + 引导</h3>
+
+    <pre><code>// src-tauri/src/system/permissions.rs
+#[cfg(target_os = "macos")]
+pub fn check_input_monitoring() -&gt; bool {
+    // 通过尝试注册一个 dummy global shortcut 来 ping 系统
+    // 失败 → 大概率是 input monitoring 没授权
+    // 实际实现：调 IOHIDCheckAccess(kIOHIDRequestTypeListenEvent)
+    unsafe {
+        let access_type = 1;   // listen event
+        let granted = ::core_foundation::base::TCFType::from_void(
+            crate::ffi::IOHIDCheckAccess(access_type)
+        );
+        granted == 0   // kIOHIDAccessTypeGranted
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub fn request_input_monitoring() {
+    unsafe { let _ = crate::ffi::IOHIDRequestAccess(1); }
+}</code></pre>
+
+    <h3><span class="h3-num">3.2</span>用户引导 UI</h3>
+
+    <p>首次启动失败 → 弹 Modal。视觉与文案：见 <a href="01_mockups.html#10">12 § 10 macOS 权限引导 Modal</a>。</p>
+
+    <p><b>触发条件</b>：</p>
+    <ul>
+      <li>启动时 <code>register_defaults()</code> 失败</li>
+      <li>用户在设置面板录入新快捷键 → <code>shortcut_register()</code> 返回 <code>Conflict</code> 且系统级 <code>IOHIDCheckAccess</code> 为未授权</li>
+    </ul>
+
+    <pre><code>// 打开系统设置 → Privacy → Input Monitoring
+fn open_input_monitoring_settings() {
+    use std::process::Command;
+    let _ = Command::new("open")
+        .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")
+        .spawn();
+}</code></pre>
+
+    <h2><span class="h2-num">4</span>In-app 快捷键</h2>
+
+    <p>仅在浮窗 focus 时响应，<b>不</b>走 global-shortcut：</p>
+
+    <table>
+      <thead><tr><th>action</th><th>combo</th><th>实现</th></tr></thead>
+      <tbody>
+        <tr><td>清空输入（不污染上次会话）</td><td><kbd>⌘K</kbd></td><td>React useHotkeys + ipc.sessionClearLast</td></tr>
+        <tr><td>打开历史</td><td><kbd>⌘H</kbd></td><td>React useHotkeys → setHistoryModalOpen(true)</td></tr>
+        <tr><td>打开设置</td><td><kbd>⌘,</kbd></td><td>React useHotkeys → setSettingsModalOpen(true)</td></tr>
+        <tr><td>关闭浮窗</td><td><kbd>Esc</kbd> / <kbd>⌘W</kbd></td><td>React useHotkeys → handleClose()</td></tr>
+        <tr><td>CodeMirror 内置</td><td><kbd>⌘F</kbd> / <kbd>⌘D</kbd> / <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd></td><td>CodeMirror 6 默认 keymap</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>// src/shell/FloatingWindow.tsx (节选)
+import { useHotkeys } from 'react-hotkeys-hook';
+
+useHotkeys('esc',      handleClose);
+useHotkeys('meta+w',   handleClose);
+useHotkeys('meta+k',   handleClearInput);
+useHotkeys('meta+h',   () =&gt; setHistoryOpen(true));
+useHotkeys('meta+,',   () =&gt; setSettingsOpen(true));</code></pre>
+
+    <h2><span class="h2-num">5</span>Windows 平台差异</h2>
+
+    <table>
+      <thead><tr><th>差异</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>accelerator 字符串</td><td>用 <code>CmdOrCtrl</code> 占位符；Windows 解析为 Ctrl</td></tr>
+        <tr><td>系统托盘</td><td>tauri tray 自动对应 Windows shell notification area</td></tr>
+        <tr><td>权限</td><td>无需 Input Monitoring；全局快捷键直接可用</td></tr>
+        <tr><td>菜单栏图标尺寸</td><td>Windows 用 16×16 ICO；template 概念 N/A，直接 light 主题黑 icon</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">6</span>测试 checklist</h2>
+
+    <ul>
+      <li>[ ] 全局 <kbd>⌘⇧J</kbd> 即使焦点在其他 App 也能呼出浮窗</li>
+      <li>[ ] 自定义快捷键后立即生效（不需重启）</li>
+      <li>[ ] 自定义快捷键冲突时显示 Tooltip 警告，不破坏旧绑定</li>
+      <li>[ ] 改 <code>shortcut_toggle</code> 后菜单栏 menu 里的 accelerator 文字也更新</li>
+      <li>[ ] menubar template 图标在 light / dark menubar 下都自动反色</li>
+      <li>[ ] 关闭 <code>show_in_menubar</code> 后 tray 立刻消失</li>
+      <li>[ ] 关闭 <code>show_in_menubar</code> + <code>hide_dock_icon</code> 同时 → 阻止操作（提示需保留一个入口）</li>
+      <li>[ ] Quit 之前发出 <code>app:will_quit</code>，前端能完成最后一次 session_save_last</li>
+    </ul>
+
+    <h2><span class="h2-num">7</span>承上启下</h2>
+
+    <ul>
+      <li><b>05 窗口 runtime</b> ── window_toggle / window_show 已定义</li>
+      <li><b>09 存储 & 会话</b> ── shortcut:restore_last 触发的 session_load_last 逻辑</li>
+      <li><b>10 AI 客户端</b> ── 设置面板里的"测试连接"按钮</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>
