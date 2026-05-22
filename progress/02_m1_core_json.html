@@ -208,10 +208,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A20 / A21 / A22</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td>Rust：<code>src-tauri/src/store/window.rs</code>（WindowStore + window.json load/save + AtomicBool self_resizing sentinel）；<code>src-tauri/src/cmds/window.rs</code>（resize_for_content 4 层 + reset_size）；<code>src-tauri/src/window/mod.rs</code>（WindowEvent::Resized → mark_user_dragged）；<code>src-tauri/src/main.rs</code>（注入 WindowStore）；前端：<code>src/hooks/useSmartWidth.ts</code>（content 变 → 300ms debounce → 算 ContentMetrics → win.resizeForContent）；<code>src/shell/FloatingWindow.tsx</code> useSmartWidth() 接入</td></tr>
+        <tr><td>verification</td><td>agent 端：4 层逻辑 + Resized 监听 + window.json 持久化 ✓；<b>待用户跑</b>：粘 200 chars 单行 → 浮窗扩宽至 ~1344；手动拖宽 → 下次启动保留</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n9): smart width 4-layer logic + window.json persistence + resized handler</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n4-layout</code></td></tr>
         <tr><td>关键交付物</td><td>浮窗智能宽度 4 层逻辑：层 1 启动用 last_size · 层 2 粘长行触发扩宽到 ideal_w · 层 3 用户手动拖动 → userDragged 锁定 · 层 4 soft-wrap 开时<b>不</b>触发扩宽；新增 IPC <code>window_resize_for_content</code> + event <code>window:resized</code></td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/06_window.html">06 § 9 智能宽度</a>（含 4 层 graph TD + 算法表）· <a href="../spec/02_ipc.html">02 § 6.1.5 window</a></td></tr>
