@@ -57,6 +57,10 @@ fn main() {
             cmds::system::open_log_dir,
             cmds::system::open_db_path,
             cmds::system::quit_app,
+            // M2-N1: settings (real load/patch/persist)
+            cmds::settings::settings_get_all,
+            cmds::settings::settings_set,
+            cmds::settings::settings_reset,
         ])
         .setup(|app| {
             // macOS: 让 Dock 不出现图标（spec/07 § 1.4 等效 LSUIElement）
@@ -80,7 +84,7 @@ fn main() {
             }
 
             // Settings store ── M1-N8 起 default 占位；M2-N1 加 load(settings.json)
-            app.manage(store::SettingsStore::new());
+            app.manage(store::SettingsStore::load());
 
             menubar::build(app.handle())?;
             window::setup(app.handle())?;

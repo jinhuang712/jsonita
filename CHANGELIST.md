@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+### M2 实施期 · 0.5.0-m2 路线起手
+
+#### M2-N1 · 设置面板（done · minimal · pending-user-verification）
+
+- `src-tauri/src/store/settings.rs` ── load(settings.json) → default 兜底；patch(shallow merge) → serde_json::Value 中转合并 → from_value 重构 Settings → 立即落盘；reset() 恢复 default + 落盘
+- `src-tauri/src/cmds/settings.rs` ── 3 命令 settings_get_all (sync from State) / settings_set (patch + emit settings:changed) / settings_reset (default + emit)；spec/02 § 6.1.4
+- `src-tauri/src/main.rs` ── invoke_handler 加 3 命令；setup 改 SettingsStore::load() 替代 ::new()
+- `src/store/settings.ts` ── zustand slice + DEFAULT_SETTINGS（mirror Rust default）
+- `src/settings/SettingsModal.tsx` ── 6 group nav + 4 group active：General (launchAtLogin/hideOnBlur/smartWidth/singlePaneMode/autoPasteClipboard 5 toggle) / AI (aiEnabled toggle + modelId input；M2-N2 加 API key) / History (historyLimit select) / JSON Transform (autoUnwrap + unwrapTimeoutMs + editorSoftWrap)；Shortcuts 留 M2-N5 占位；About 留 M3-N6 占位；Done/Reset 按钮；onChange 即时 settings_set
+- `src/ipc/commands.ts` ── settings namespace (getAll / set / reset)
+- `src/App.tsx` ── 接 SettingsModal
+
+关键决策：
+- **即时生效（onChange 立即 set）**：spec/04 § 4.6 "Done 仅关闭，每个变化 settings_set"；省 Apply 按钮
+- **Settings 整体 emit settings:changed 而非 diff**：前端 zustand store 直接整体覆盖；保持简单
+- **6 group 中 4 group 实施**：spec/04 全 6 group 设计；M2-N5（Shortcuts）+ M3-N6（About）各自补完
+- **patch 走 serde_json::Value 中转**：shallow merge for扁平 settings 结构（spec/10 § 7.2）；M3 若加嵌套对象再升级 deep merge
+
+---
+
 ### M1 实施期 · 0.4.0-m1 路线起手
 
 #### M1 Phase 收口（agent-side 全完成 9/9 节点）

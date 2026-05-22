@@ -68,3 +68,14 @@ export const system = {
   openDbPath: () => invoke<void>('open_db_path'),
   quitApp: () => invoke<void>('quit_app'),
 };
+
+// ──────────── settings (M2-N1) ────────────
+
+import type { Settings } from '../store/settings';
+
+export const settings = {
+  getAll: () => invoke<Settings>('settings_get_all'),
+  set: (patch: Partial<Settings>) =>
+    invoke<Settings>('settings_set', { patch }),
+  reset: () => invoke<Settings>('settings_reset'),
+};

@@ -73,10 +73,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M2-A1..A4</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification (minimal: 4/6 group active)</code></td></tr>
+        <tr><td>write scope</td><td>Rust：<code>src-tauri/src/store/settings.rs</code> 加 load(settings.json)/patch(shallow merge)/reset(落盘)；<code>src-tauri/src/cmds/settings.rs</code> 3 命令 settings_get_all/set/reset + emit settings:changed；<code>src-tauri/src/main.rs</code> 注册命令 + load() 替代 new()；前端：<code>src/store/settings.ts</code> zustand slice + default；<code>src/settings/SettingsModal.tsx</code> 6 group nav + General/AI/History/JSONTransform 4 group 字段（Shortcuts 留 M2-N5 / About 留 M3-N6）+ Done/Reset 按钮 + 即时生效；<code>src/ipc/commands.ts</code> settings namespace；<code>src/App.tsx</code> 接 SettingsModal</td></tr>
+        <tr><td>verification</td><td>agent 端：4/6 group + 即时生效 + emit/listen settings:changed ✓；<b>待用户跑</b>：点 StatusBar ⚙ → Modal 弹；切 group → 各显示字段；改 checkbox / select → 立即 settings_set + 落盘 settings.json；改 autoUnwrap=off + 粘嵌套 JSON → 不展开；M2-N5 Shortcuts / M3-N6 About 留占位</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m2-n1): settings store (load/patch/persist) + 6-group modal (4 active)</code></td></tr>
         <tr><td>blocked_by</td><td>M1 全部 exit-criteria</td></tr>
         <tr><td>关键交付物</td><td>Settings Modal（覆盖浮窗居中，不离开浮窗）；左侧 6 分组导航：General / Shortcuts / AI / History / JSON Transform / About；每项 checkbox / select / input 与 <a href="../spec/13_schemas.html">13 § 3 Settings struct</a> 字段一一对应；IPC <code>settings_get</code> / <code>settings_patch</code> 接通；<code>settings:changed</code> event 广播到所有窗口</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/01_mockups.html">01 § 6 Settings Modal</a> · <a href="../spec/04_components.html">04 Settings + ShortcutInput + ApiKeyInput</a> · <a href="../spec/10_storage.html">10 § 7 settings store</a></td></tr>

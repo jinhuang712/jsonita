@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { AccessibilityModal } from './permissions/AccessibilityModal';
+import { SettingsModal } from './settings/SettingsModal';
 import { FloatingWindow } from './shell/FloatingWindow';
 
 export function App() {
@@ -48,6 +49,7 @@ export function App() {
   return (
     <>
       <FloatingWindow />
+      <SettingsModal />
       {modalOpen && <AccessibilityModal onClose={() => setModalOpen(false)} />}
     </>
   );
