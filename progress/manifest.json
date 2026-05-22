@@ -366,7 +366,7 @@
         {
           "node": "M1-N7",
           "title": "会话保留 + ⌘⇧L + ⌘K",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n7-session",
           "task_file": null,
           "spec_refs": [
