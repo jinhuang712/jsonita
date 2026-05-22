@@ -19,7 +19,7 @@
 - 每次 task 完成 / 新需求 / 章节新增删改 → **立刻 + 一定要** 同步：
   1. **`TODO.md`** ── 完成项**删除该行**（见 § 1.4），不只是打勾
   2. **`CHANGELIST.md`** ── Unreleased 段追加 bullet（行数 / 新增图 / 关键决策）
-  3. **`index.html`** ── (a) Plan/Spec/Progress 列新增章节链接；(b) `<script id="src-todo">` 与 TODO.md 一致；(c) `<script id="src-changelist">` 与 CHANGELIST.md 一致；(d) `<script id="src-readme">` 若 README.md 改了同步
+  3. **`index.html`** ── 仅在<b>新增 / 删除章节</b>时改 Plan / Spec / Progress 列 `<li>` 链接（README / TODO / CHANGELIST 由 index.html 运行时 fetch 加载，<b>不再有内嵌副本</b>）
   4. **`progress/0N_*.html`**（进入实施期）── 当前 active Phase 的节点状态同步
   5. **`assets/nav.js`** ── 新增 / 删除章节时同步章节列表
 - 这些都是<b>用户能直接打开浏览器看到的项目面板</b>，不是我内部状态
@@ -145,19 +145,14 @@
 3. 必要时 AskUserQuestion 对齐
 4. **再** 动手
 
-### 5.3 完成小节点时（强制 5 步，不允许跳）
+### 5.3 完成小节点时（强制 4 步，不允许跳）
 1. **TaskUpdate(completed)** ── 单个动作完成
 2. **Edit `TODO.md`** ── 删除完成项行（不打勾）；新需求加在对应 Phase 段
 3. **Edit `CHANGELIST.md`** ── Unreleased 段加 bullet（行数 / 关键决策）
-4. **Edit `index.html` 多处**：
-   - 若新增 / 删除章节 → 改 Plan / Spec / Progress 列 `<li>` 链接
-   - `<script id="src-todo">` 与 TODO.md 一致
-   - `<script id="src-changelist">` 与 CHANGELIST.md 一致
-   - `<script id="src-readme">` 若 README.md 改了同步
-   - 同步 `assets/nav.js` 章节列表（若新增/删除章节）
+4. **新增 / 删除章节才动 `index.html` + `assets/nav.js`** ── 改 Plan/Spec/Progress 列链接 + nav.js 章节定义；README / TODO / CHANGELIST 由 index.html 运行时 fetch 加载，<b>没有内嵌副本要同步</b>
 5. **git commit**（按 § 1.5）── <b>不</b> push
 
-> 第 3-5 步过去常被略过，导致用户多次反问"index 没更新哦" / "完成项没清掉" / "怎么没 commit"。**强制 5 步**。
+> 历史教训：之前 index.html 内嵌 README/TODO/CHANGELIST 副本，导致每次改 .md 都要同步内嵌 script ── 频繁漏改让用户反复反问"index 没更新哦"。**现在删了内嵌，单源 .md ── 同步规则随之简化**。同步成本降到只有"章节列表"一项。
 
 ## 六、Progress 迭代规则
 

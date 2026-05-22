@@ -264,6 +264,29 @@ pre code {
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+/* ===== Markdown fallback（index.html file:// 协议下 fetch 失败时显示） ===== */
+.md-fallback {
+  padding: 28px 32px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.md-fallback p { margin: 8px 0; }
+.md-fallback ol { padding-left: 20px; }
+.md-fallback li { margin: 8px 0; }
+.md-fallback pre {
+  margin: 6px 0 0 0;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+.md-fallback code {
+  font-size: 12.5px;
+}
+
 /* ===== Section Divider（spec 大段标题：一·设计 / 二·机制 / 三·契约 / 四·数字 等） ===== */
 .section-divider {
   margin: 56px 0 8px;
