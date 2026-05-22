@@ -52,6 +52,13 @@
 - 修 mermaid syntax error：spec/14 § 4 字体回退图（节点 label 含 `→` `/` 没引号包裹，渲染失败）；批量加引号修复 7 个高风险节点（00 § 1 / § 7 / 03 § 11 / 15 § 2.4 / 15 § 3 中含 `/` `:` `*` 在 label 里的）
 - 新 memory `mermaid-safe-syntax`：节点 label 强制 `["..."]` 引号包裹；edge label 禁 `→` `/` `*` `（）`；stateDiagram-v2 transition label 用 `<br/>` 换行不用 `→`
 
+#### Index 渲染单源化（删内嵌副本，改 fetch + fallback）
+- 用户反馈"双轨副本会出问题" ── 之前 index.html 内嵌 `<script type="text/markdown" id="src-readme/src-todo/src-changelist">` 三段 ~290 行镜像 .md 内容，每次改 .md 都得手动同步内嵌，多次漏改
+- 改造：删除 index.html 三段内嵌 markdown 副本（440 → 157 行），renderAll() 改为 fetch `./README.md` / `./TODO.md` / `./CHANGELIST.md` 后用 marked.js 渲染
+- file:// 协议下 fetch 会失败（CORS），渲染 fallback 卡片：链接到 .md 原文 + 提示用户跑 `python3 -m http.server 8000` 或 `npx serve .` 起本地服务后访问
+- assets/style.css 新增 `.md-fallback` 样式
+- CLAUDE.md 同步简化：§ 1.3 与 § 5.3 移除"同步 index.html 内嵌 script" 步骤；§ 5.3 由强制 5 步降为 4 步；index.html 现在只在"新增 / 删除章节"时才需改 Plan/Spec/Progress 列链接
+
 #### CLAUDE.md v3 大改（progress + 测试 + git commit + 内容禁区）
 - 新增 § 1.4 "TODO 完成项必须删除（不是打勾）"硬规则；§ 1.5 "完成小节点必须 git commit 但不主动 push"
 - § 1.3 同步范围扩展：TODO + CHANGELIST + index.html + progress + nav.js 共 5 轨
