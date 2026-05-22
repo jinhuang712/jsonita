@@ -8,6 +8,21 @@
 
 ### M2 实施期 · 0.5.0-m2 路线起手
 
+#### M2-N3 · DeepSeek client + extract_json（done · minimal · pending-user-verification）
+
+- `src-tauri/Cargo.toml` ── reqwest 0.12 [json + rustls-tls, default-features=false] + uuid 1 [v4] + tokio 1 [time, macros]
+- `src-tauri/src/ai/prompt.rs` ── system_prompt 5 条规则 (spec/11 § 4.2) + user_prompt 含 hint 注入；3 inline test
+- `src-tauri/src/ai/validate.rs` ── extract_json 3-case fallback (pure JSON / markdown fenced / 文本夹缝)；5 inline test
+- `src-tauri/src/ai/deepseek.rs` ── fix() 主流程：检查 ai_enabled → Keychain.get → reqwest POST 60s timeout → 状态码 429/5xx/200 分支 → choices[0].content → extract → serde from_str 二次验证 → AiFixResp。temperature=0 + response_format=json_object 双保险；max_tokens=clamp(input/3×2, 512, 8192)
+- `src-tauri/src/cmds/ai.rs` ── ai_fix 命令真实化（接 SettingsStore State）
+- `src-tauri/src/main.rs` ── mod ai + 注册 ai_fix 命令
+
+关键决策：
+- **rustls-tls 替代 native-tls**：spec/11 § 5 + spec/12 风险 5 避开 macOS 系统证书差异
+- **M2-N3 minimal scope**：心跳 ai:progress event / 流式输出 / 重试 / DiffView UI 留 M2-N4 polish；当前主流程完整可用
+
+待用户验证：粘真实 sk- key + ai_enabled=true + DevTools 调 ai_fix → 应回修复 JSON。
+
 #### M2-N2 · API key Keychain（done · pending-user-verification）
 
 - `src-tauri/Cargo.toml` ── macOS target 加 `security-framework = "3"`
