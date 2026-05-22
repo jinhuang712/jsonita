@@ -163,7 +163,7 @@
         {
           "node": "M0-N5",
           "title": "日志框架 (tracing)",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n5-logging",
           "task_file": "progress/tasks/M0-N5_logging.md",
           "spec_refs": [

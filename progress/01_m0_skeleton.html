@@ -145,9 +145,9 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td><code>src-tauri/Cargo.toml</code>（<code>tracing</code> + <code>tracing-appender</code>）· <code>src-tauri/src/logging/{mod.rs,redact.rs}</code> · <code>src/services/logger.ts</code></td></tr>
-        <tr><td>verification</td><td>M0-A11 / A12：<code>~/Library/Logs/Jsonita/</code>下有 daily log；权限 0600；首条 INFO JSON Lines 可见</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/Cargo.toml</code>（tracing 0.1 + tracing-subscriber 0.3 [env-filter,json] + tracing-appender 0.2 + dirs 5 + libc 0.2 仅 unix）· <code>src-tauri/src/logging/mod.rs</code>（init + umask 0077 + daily rolling + 7d purge + chmod existing）· <code>src-tauri/src/logging/redact.rs</code>（RedactLayer 占位 M0 规则表空）· <code>src-tauri/src/main.rs</code>（init 头一行；guard 留 main local；emit `app.start`）· <code>src/services/logger.ts</code>（M0 仅 console；API 形状锁定）</td></tr>
+        <tr><td>verification</td><td>agent 端：logging 模块就位 ✓ · main.rs 接 init + emit app.start ✓ · 链接校验 0 broken ✓；<b>待用户本机跑</b>：(M0-A11) <code>ls -l ~/Library/Logs/Jsonita/</code> 看 <code>jsonita.YYYY-MM-DD.log</code> 文件 + 权限 <code>-rw-------</code> (M0-A12) <code>tail</code> 日志看首行 JSON Lines <code>{"timestamp":"...","level":"INFO","target":"jsonita","message":"app.start","version":"0.3.0-m0","os":"macos","arch":"aarch64"}</code> · <code>RUST_LOG=jsonita=debug pnpm tauri dev</code> 临时开 DEBUG</td></tr>
         <tr><td>commit / tag</td><td><code>feat(m0-n5): tracing + daily rolling + redact layer</code></td></tr>
         <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td>Rust 端 <code>tracing</code> + <code>tracing-appender</code> daily rolling 接入；写到 <code>~/Library/Logs/Jsonita/</code>，权限 0600；<code>RedactLayer</code> 注册（即使 M0 无敏感字段也接好）；前端 <code>logger.ts</code> 薄层（M0 暂时只 console，IPC <code>log_write</code> 留 M1）</td></tr>
