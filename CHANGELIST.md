@@ -8,6 +8,35 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1 Phase 收口（agent-side 全完成 9/9 节点）
+
+commit 列表（顺序）：
+
+1. `feat(m1-n1): state management + ipc skeleton (21 stubs + typed wrappers)` 0b6b26b
+2. `feat(m1-n2): json engine core (format/minify/unwrap/stringify) + 18 unit tests` 79f51a3
+3. `feat(m1-n3): codemirror 6 integration (12 extensions + json highlight + design tokens)` e5a7da3
+4. `feat(m1-n4): tab bar + status bar + dual-pane layout + debounced ipc` a2bfa09
+5. `feat(m1-n5): tree view with react-json-view-lite + path utils` e6db660
+6. `feat(m1-n6): sqlite store with history fts5 + r2d2 pool + migrations` f78ff53
+7. `feat(m1-n7): session persistence + global hotkeys (⌘K / ⌘⇧L / Esc)` e5e8a74
+8. `feat(m1-n8): integrate engine::unwrap into json_format via settings.auto_unwrap` 39b4b39
+9. `feat(m1-n9): smart width 4-layer logic + window.json persistence + resized handler` b5c1fb2
+
+待用户本机跑：pnpm install + cargo check + cargo test + pnpm tsc + pnpm tauri dev + M1-A1..A22 验收 + git tag 0.4.0-m1。
+
+agent 已预切 active_phase=M2（manifest）不阻塞后续 M2 实施。
+
+#### M1-N9 · 智能宽度 + soft-wrap（done · pending-user-verification）
+
+- `src-tauri/src/store/window.rs` ── WindowStore + AtomicBool self_resizing + load/save window.json
+- `src-tauri/src/cmds/window.rs` ── resize_for_content 4 层逻辑 (spec/06 § 7.1) + reset_size
+- `src-tauri/src/window/mod.rs` ── Resized handler 加 mark_user_dragged（非 self_resizing 时）
+- `src-tauri/src/main.rs` ── 注入 WindowStore::load()
+- `src/hooks/useSmartWidth.ts` ── content 变 300ms debounce 算 ContentMetrics → win.resizeForContent
+- `src/shell/FloatingWindow.tsx` ── useSmartWidth() 接入
+
+ideal_w = clamp(chars×8+64, 720, min(1400, primary_screen×0.7))；4 层：userDragged 锁定 / softWrap 跳过 / settings.smartWidth false 跳过 / maxLineChars > 80 才扩。
+
 #### M1-N8 · 嵌套 unwrap 集成（done · pending-user-verification）
 
 - `src-tauri/src/types.rs` ── Settings struct + Default impl（17 字段 spec/13 § 3.3 全对齐）
