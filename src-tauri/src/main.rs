@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod ai;
 mod cmds;
 mod engine;
 mod error;
@@ -66,6 +67,8 @@ fn main() {
             cmds::ai::ai_delete_api_key,
             cmds::ai::ai_test_connection,
             cmds::ai::ai_has_api_key,
+            // M2-N3: ai fix (real DeepSeek HTTP)
+            cmds::ai::ai_fix,
         ])
         .setup(|app| {
             // macOS: 让 Dock 不出现图标（spec/07 § 1.4 等效 LSUIElement）

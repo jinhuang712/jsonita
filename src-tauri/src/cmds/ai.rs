@@ -1,11 +1,12 @@
 //! AI 分组 ── DeepSeek HTTP（M2-N3 完整化）+ Keychain（M2-N2）。
 //!
 //! Spec ref: spec/02 § 2.5 · spec/11 AI 客户端
-//! M2-N2 范围：ai_set_api_key / ai_delete_api_key / ai_test_connection (mock)；
-//! M2-N3 起 ai_fix 接 DeepSeek。
 
+use tauri::State;
+
+use crate::ai::deepseek;
 use crate::error::JsonitaError;
-use crate::store::keychain;
+use crate::store::{keychain, SettingsStore};
 
 const DEEPSEEK_ACCOUNT: &str = "deepseek_api_key";
 
@@ -63,4 +64,14 @@ pub fn ai_has_api_key() -> bool {
         .ok()
         .flatten()
         .is_some()
+}
+
+/// AI Fix 主命令 ── M2-N3 真实化。
+#[tauri::command]
+pub async fn ai_fix(
+    req: deepseek::AiFixReq,
+    settings: State<'_, SettingsStore>,
+) -> Result<deepseek::AiFixResp, JsonitaError> {
+    let store = settings.inner().clone();
+    deepseek::fix_via_store(&store, req).await
 }
