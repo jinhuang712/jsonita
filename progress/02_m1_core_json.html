@@ -140,10 +140,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A9 / A10 / A11</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>package.json</code> react-json-view-lite 2.4 · <code>src/tree/jsonpath.ts</code>（pathToString + nodeCopyText 工具）· <code>src/tree/TreeView.tsx</code>（JsonView 包装）· <code>src/shell/FloatingWindow.tsx</code>（activePane === 'tree' && status === 'valid' 时切右栏渲染 TreeView，传 JSON.parse(outputText)）</td></tr>
+        <tr><td>verification</td><td>agent 端：TreeView + jsonpath 就位 ✓ · FloatingWindow 条件渲染 ✓；<b>待用户本机跑</b>：<code>pnpm install</code> → <code>pnpm tauri dev</code> 看 Tree tab 切换右栏从 Editor 变为树视图；JSON 类型按 spec/03 § 4.4 染色（key 蓝 / string 绿 / 等）；M3-N1 polish 后加 path 点击 + hover 复制 icon（M0 中已具备 clipboard API）</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n5): tree view with react-json-view-lite + path utils</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n4-layout</code></td></tr>
         <tr><td>关键交付物</td><td>接入 <code>react-json-view-lite</code>；自定义颜色对齐 03 design tokens；点击 key 复制 JSON Path 到剪贴板（Toast 提示）；hover 节点显示"复制值"按钮；折叠 / 展开 / 搜索全部可用</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/08_editor.html">08 § 4 JSON 树 § 4.5 hover 复制实现</a> · <a href="../spec/01_mockups.html">01 § 12 Hover 复制示例</a></td></tr>

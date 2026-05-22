@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { Editor } from '../editor/Editor';
 import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useEditorStore } from '../store/editor';
+import { useUiStore } from '../store/ui';
+import { TreeView } from '../tree/TreeView';
 import { StatusBar } from './StatusBar';
 import { TabBar } from './TabBar';
 
@@ -14,9 +17,21 @@ export function FloatingWindow() {
   const content = useEditorStore((s) => s.content);
   const outputText = useEditorStore((s) => s.outputText);
   const setContent = useEditorStore((s) => s.setContent);
+  const status = useEditorStore((s) => s.status);
+  const activePane = useUiStore((s) => s.activePane);
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
+
+  // tree tab 时把 outputText parse 为 object 给 TreeView
+  const treeData = useMemo(() => {
+    if (activePane !== 'tree' || status !== 'valid') return null;
+    try {
+      return JSON.parse(outputText);
+    } catch {
+      return null;
+    }
+  }, [activePane, outputText, status]);
 
   return (
     <div
@@ -45,13 +60,17 @@ export function FloatingWindow() {
           <Editor theme="light" value={content} onChange={setContent} softWrap={true} />
         </div>
         <div style={{ overflow: 'hidden' }}>
-          <Editor
-            theme="light"
-            value={outputText}
-            readOnly={true}
-            softWrap={true}
-            placeholderText="→ output"
-          />
+          {activePane === 'tree' && treeData !== null ? (
+            <TreeView data={treeData} />
+          ) : (
+            <Editor
+              theme="light"
+              value={outputText}
+              readOnly={true}
+              softWrap={true}
+              placeholderText="→ output"
+            />
+          )}
         </div>
       </div>
       <StatusBar />

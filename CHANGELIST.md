@@ -8,6 +8,19 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1-N5 · TreeView + Path 复制（done · pending-user-verification）
+
+- `src/tree/jsonpath.ts` ── `pathToString(path[])` 转 `$.user.items[0].name` 友好格式；`nodeCopyText(value)` 按类型计算剪贴板内容（spec/01 § 12 复制内容规则）；纯函数可单测
+- `src/tree/TreeView.tsx` ── 包装 react-json-view-lite `<JsonView>` + `shouldExpandNode` 初始展开 2 层；样式经 CSS var 桥接（M3-N1 polish 时拆 jsonita-tree-* class）；click handler 占位（M3-N1 时挂 path 复制 + hover icon）
+- `src/shell/FloatingWindow.tsx` ── `activePane === 'tree' && status === 'valid'` 时 `JSON.parse(outputText)` 喂 TreeView；其他 tab 仍走右侧 Editor
+- `package.json` ── `react-json-view-lite 2.4`（轻量树视图 lib，spec/08 § 4.1 选型）
+
+关键决策：
+- **JSON.parse 在前端做而非新 IPC 命令**：outputText 已 valid（state == 'valid'），parse 失败可能性极低；新 IPC 增 invoke 往返成本
+- **path 复制 + hover icon 延后 M3-N1**：M1-N5 先把树视图本身跑通；M3-N1 polish 时挂 click/hover handlers + Toast 反馈
+
+进度状态：M1-N5 `status: completed`；progress html 同步。
+
 #### M1-N4 · 布局 / Tab / StatusBar（done · pending-user-verification）
 
 新增 / 修改文件：
