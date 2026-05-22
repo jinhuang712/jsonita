@@ -399,25 +399,6 @@ stateDiagram-v2
       </tbody>
     </table>
 
-    <p class="section-divider"><b>四 · 测试 & 收尾</b></p>
-
-    <h2><span class="h2-num">11</span>测试 checklist</h2>
-
-    <ul>
-      <li>在两台显示器之间移动鼠标后按 ⌘⇧J，浮窗出现在<b>鼠标所在屏</b></li>
-      <li>⌘Tab 切到另一应用，浮窗仍可见在原位（验证 nonactivatingPanel）</li>
-      <li>浮窗显示时主应用焦点未被抢走（验证 nonactivatingPanel + focus:false）</li>
-      <li>resize 浮窗后关闭再呼出，大小被记忆（验证 userDragged 标志）</li>
-      <li>关闭浮窗后立即重新呼出，内容自动恢复（5 分钟内，验证 session）</li>
-      <li>hide_on_blur=false 时切应用浮窗不消失</li>
-      <li>启动 → 第一次 ⌘⇧J 间隔 &lt; 500 ms（验证预热）</li>
-      <li>浮窗在 macOS fullscreen App 上仍可见（验证 fullScreenAuxiliary）</li>
-      <li>粘贴长行 JSON（&gt; 80 chars/行）触发智能扩宽到 ideal_w</li>
-      <li>用户手动拖动后再粘贴长行，宽度不变（验证 userDragged 锁定）</li>
-      <li>soft_wrap 开启时粘贴长行不触发扩宽</li>
-      <li>红 traffic light 点击触发 hide 而非 quit（验证 close interceptor）</li>
-    </ul>
-
     <nav class="pagination" id="pagination"></nav>
 
   </article>

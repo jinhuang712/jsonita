@@ -373,22 +373,6 @@ pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt;;</code></pre>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">12</span>测试 checklist</h2>
-
-    <ul>
-      <li>无 API key 时点 AI Fix → Toast 跳设置</li>
-      <li><code>settings.ai_enabled = false</code> 时 AI Fix Tab 隐藏 + Rust 端 early return</li>
-      <li>修复成功后展示 diff，Accept 后内容替换 + 写入历史（op_type='ai-fix'）</li>
-      <li>修复失败时 Toast 含上游 status code 透传</li>
-      <li>429 时显示 retry-after 倒计时（取真实 header 而非默认值）</li>
-      <li>AI 返回 markdown 包裹的 JSON 仍能 extract（case 2）</li>
-      <li>AI 返回 <code>{"_jsonita_repair_failed": true}</code> 时 UI 提示无法修复</li>
-      <li>长请求过程中 ai:progress Waiting 事件每 500 ms 推一次</li>
-      <li>test_connection 成功 / 失败均不修改已存 Keychain</li>
-      <li>extract_json 三种 case 单测覆盖（纯 JSON / fenced / 夹在文本中）</li>
-      <li>幂等：同 request_id 二次调用应返回相同结果（v1 简化为不去重，仅记录 ── 完整 idem 留 v2）</li>
-    </ul>
-
     <nav class="pagination" id="pagination"></nav>
 
   </article>

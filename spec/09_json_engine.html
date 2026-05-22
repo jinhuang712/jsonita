@@ -345,21 +345,6 @@ pub async fn json_format(
 
     <p>测量条件：M1 Pro · release build · serde_json 1.0.x · preserve_order feature。Bench 实现走 criterion，源码 <code>src-tauri/benches/json_bench.rs</code>。</p>
 
-    <h2><span class="h2-num">11</span>测试 checklist</h2>
-
-    <ul>
-      <li>format 100 KB &lt; 50 ms（P95）</li>
-      <li>sort_keys 在嵌套 object 中按字典序排</li>
-      <li>format 错误时返回 <code>Parse { line, col, msg }</code>，line/col 与用户视角一致（1-indexed）</li>
-      <li>unwrap 多层嵌套 5+ 层正确展开</li>
-      <li>unwrap 超时返回 <code>UnwrapTimeout</code>，depth 记录正确</li>
-      <li>unwrap 不解纯数字 / bool 字符串</li>
-      <li>json_to_string 单 / 双引号切换均正确转义</li>
-      <li>string_to_json 兼容首尾有无 quote</li>
-      <li>4 层嵌套转义往返一致</li>
-      <li>所有 engine 函数在 <code>cargo test</code>（无 Tauri runtime）下可独立跑</li>
-    </ul>
-
     <nav class="pagination" id="pagination"></nav>
 
   </article>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Progress · M3 Polish + Cross-platform</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="progress" data-chapter="04">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">PROGRESS · M3</span>
+      <h1 class="doc-title">M3 Polish + Cross-platform — 主题 / 中文 / a11y / 多版本 / Windows 实验 / v1.0 发布</h1>
+      <p class="doc-subtitle">M2 完成<b>可分发</b>；M3 是<b>真正交付给真实用户</b> ── 打磨主题动效 / 解锁中文 UI / 全键盘可达 / 多 macOS 版本兼容 / Windows 实验构建（可选） / 首版正式发布。完成后 <code>1.0.0</code> tag 上线。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">PHASE</span>
+      <div class="callout-body">
+        <p><b>状态</b>：<code>planned</code>（M2 12 条退出条件全过后切 <code>active</code>）<br>
+        <b>目标版本</b>：<code>1.0.0</code><br>
+        <b>对应 plan</b>：<a href="../plan/04_nfr.html">04 NFR § 3 国际化 / § 4 可达性 / § 5 兼容性</a><br>
+        <b>对接 spec 章节</b>：<a href="../spec/01_mockups.html">01 § 9 Empty States</a> · <a href="../spec/03_design_tokens.html">03 主题 / 动效</a> · <a href="../spec/14_i18n_a11y.html">14</a> · <a href="../spec/05_icons_theme.html">05 Windows ICO</a> · <a href="../spec/12_packaging.html">12 § 6 Windows 签名</a></p>
+      </div>
+    </div>
+
+    <p class="section-divider"><b>一 · 进入与退出</b></p>
+
+    <h2><span class="h2-num">1</span>进入此 Phase 的前置</h2>
+
+    <table>
+      <thead><tr><th>前置项</th><th>状态来源</th></tr></thead>
+      <tbody>
+        <tr><td>M2 12 条退出条件全过 + v0.5.0-m2 已 sign + notarized</td><td><a href="03_m2_ai_settings.html#h-2">M2 § 2</a></td></tr>
+        <tr><td><code>git tag 0.5.0-m2</code> 已打</td><td>本地 git tag</td></tr>
+        <tr><td>用户具备至少 2 台 macOS 测试机（14 + 15）；macOS 11 Intel 走云端 / 虚拟机回归</td><td>测试环境</td></tr>
+        <tr><td>Windows 实验前置：Parallels / VM / Windows 物理机其一</td><td>仅 M3-N5 需要；其他节点不依赖</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">2</span>退出条件（M3 完成的标志 = v1.0 上线）</h2>
+
+    <table>
+      <thead><tr><th>#</th><th>退出条件</th><th>验证方式</th></tr></thead>
+      <tbody>
+        <tr><td>E1</td><td>主题切换（System / Light / Dark）< 100 ms 内 UI 全切完，无 FOUC</td><td>手动 + 慢动作录屏</td></tr>
+        <tr><td>E2</td><td><code>prefers-reduced-motion: reduce</code> 系统设置开启时，所有 fade-in / fade-out 时长 ≤ 1 ms</td><td>手动开 macOS 减少动画</td></tr>
+        <tr><td>E3</td><td>6 处 Empty State 全用真实组件（不再 placeholder）：空浮窗 / 空历史 / 无 API key / Loading / Parse 错引导 AI Fix / AI 修复中</td><td>手动逐项触发</td></tr>
+        <tr><td>E4</td><td>zh-CN locale 资源 7 个 namespace 全；Settings → Language 切换<b>立即生效</b>（不需 reload）</td><td>手动切英 ↔ 中</td></tr>
+        <tr><td>E5</td><td><code>document.documentElement.lang</code> 与 settings.locale 一致；CJK JSON 在编辑器渲染无方框（字体回退正确）</td><td>手动粘含中文 key 的 JSON</td></tr>
+        <tr><td>E6</td><td>locale 检测 3 层 fallback：未设 + navigator.language=zh-CN → zh-CN；settings.locale=en-US + navigator=zh-CN → en-US（用户优先）</td><td>手动两 case</td></tr>
+        <tr><td>E7</td><td>VoiceOver 朗读三条关键流：呼出浮窗 / parse 错误 / AI Fix 完成</td><td>VoiceOver 开启 + 实际跑</td></tr>
+        <tr><td>E8</td><td>全键盘可达：仅键盘完成格式化 / 切 Tab / 打开历史 / 打开设置 / 调 AI Fix；Tab 序无陷阱</td><td>手动拔鼠标实测</td></tr>
+        <tr><td>E9</td><td>UI 200% 缩放（macOS 显示设置 → 更大字体）下 Settings / Modal / 历史列表布局不破</td><td>手动改系统设置</td></tr>
+        <tr><td>E10</td><td>macOS 11 Big Sur (Intel) + 14 (Apple Silicon) + 15 三个版本基础流走通；双显示器 + Stage Manager 行为正确</td><td>多机回归</td></tr>
+        <tr><td>E11</td><td><b>可选</b>：Windows 11 上 .exe 能装 + 启动 + 格式化 + 呼出 ── 不做签名 / winget（留 v1.1）</td><td>VM / 物理机</td></tr>
+        <tr><td>E12</td><td>README 完整：1 段介绍 + 截图 + 演示 GIF（呼出 + 格式化 + AI Fix 三段）+ 安装 + 许可证</td><td>本地预览 + GitHub repo 主页</td></tr>
+        <tr><td>E13</td><td>GitHub Releases <code>v1.0.0</code> 发布；含 macOS universal dmg artifact</td><td>GitHub release 页可见</td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>二 · 里程碑节点</b></p>
+
+    <h2><span class="h2-num">3</span>里程碑节点（6 个）</h2>
+
+    <h3><span class="h3-num">3.1</span>M3-N1 · 主题动效打磨 + Empty State</h3>
+
+    <table>
+      <thead><tr><th>项</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>关键交付物</td><td>主题切换走 03 design tokens 3 数据源（settings.theme / OS prefers-color-scheme / system event）；FOUC 避免：inline script 在 body 之前判断初始 theme；<code>prefers-reduced-motion</code> 检测 → 动效时长 token 改 ≤ 1 ms；Empty State 6 处真实组件（含图标 + 文案 + CTA）</td></tr>
+        <tr><td>对接 spec</td><td><a href="../spec/03_design_tokens.html">03 § 4 主题切换 graph TB / § 8 动效</a> · <a href="../spec/01_mockups.html">01 § 9 Empty States</a></td></tr>
+        <tr><td>关键决策</td><td>3 数据源用 store + subscribe 统一管理；FOUC 用 inline script（M0 / M1 留的 placeholder 在此实化）；动效 token 直接 swap，<b>不</b>做单独 if-else</td></tr>
+        <tr><td>常见坑</td><td>inline script 必须 &lt; 1 KB 且不依赖任何 import；System theme 切换的 macOS 事件用 <code>matchMedia('(prefers-color-scheme: dark)').addEventListener('change')</code> 而非轮询</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.2</span>M3-N2 · 中文 UI 解锁</h3>
+
+    <table>
+      <thead><tr><th>项</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>关键交付物</td><td><code>src/locales/zh-CN/{shell,panes,settings,history,errors,about,common}.json</code> 7 个 namespace 完整翻译；Settings → Language Select 加 zh-CN 选项；切换时 <code>i18n.changeLanguage</code> + <code>document.documentElement.lang</code> 同步；mono 字体栈末尾追加 PingFang SC（03 § 6.1）</td></tr>
+        <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 5 namespace § 6 locale 检测 § 7-8 字体回退 + a11y</a></td></tr>
+        <tr><td>关键决策</td><td>翻译<b>不</b>外包 ── 用户本人是产品作者；翻译做完跑一遍 M3-A4 看是否有英文残留；错误 Toast 走 <code>errors.*</code> namespace（不再原 raw 透传）</td></tr>
+        <tr><td>常见坑</td><td>翻译完后某些 key 长度变化大（"Settings" 4 字符 → "设置" 2 字符）可能让原 fixed-width UI 错位 ── M3-N1 完成时 Empty State 已经按响应式设计应不出问题，但 Settings 分组导航宽度要留余量；DeepSeek 错误 message 可能本身是英文 ── 我们的 errors.* 映射只翻"已知 kind"，未知错误 raw 透传时加 [EN] 前缀</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.3</span>M3-N3 · a11y 完整验收</h3>
+
+    <table>
+      <thead><tr><th>项</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>关键交付物</td><td>所有交互元素加 <code>aria-label</code> / <code>aria-describedby</code>；StatusBar / Toast 加 <code>aria-live="polite"</code>；Modal 用 focus trap；Tab 序梳理（浮窗内交互元素的 logical 顺序 = 视觉顺序）；VoiceOver 三条关键流脚本 walk-through</td></tr>
+        <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 9 a11y 强制要求 § 10 screen reader 关键流</a> · <a href="../spec/04_components.html">04 所有交互组件</a></td></tr>
+        <tr><td>关键决策</td><td>a11y 是 v1<b>必须</b>过的项（plan/04 NFR § 4）；不靠"M3 末尾再补"── M0/M1/M2 的组件已经加 aria 属性，M3 是<b>完整验收</b>；VoiceOver 朗读用 macOS 内置（不另装 NVDA 等）</td></tr>
+        <tr><td>常见坑</td><td>CodeMirror 6 的 aria 默认<b>不够</b> ── 要额外配 <code>EditorView.contentAttributes</code>；Modal focus trap 与 cocoa NSPanel <code>nonactivatingPanel</code> 行为有冲突（NSPanel 不抢焦点 → focus trap 起不来）── 解法：Settings Modal 不开 nonactivating</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.4</span>M3-N4 · macOS 多版本回归</h3>
+
+    <table>
+      <thead><tr><th>项</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>关键交付物</td><td>三机回归矩阵：macOS 11 Big Sur (Intel) · 14 Sonoma (Apple Silicon) · 15 Sequoia；每机跑 M0-A1..A13 / M1-A1..A22 / M2-A1..A21 核心子集；记录 / fix 平台差异；Stage Manager 在 13+ 单独验</td></tr>
+        <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 1 tauri.conf minimumSystemVersion</a> · plan/04 NFR § 5 兼容性</td></tr>
+        <tr><td>关键决策</td><td>三个版本若发现差异，<b>优先</b>在所有版本都能用的最大公约数解；个别版本 hack 用 <code>#[cfg(...)]</code> + 详细注释</td></tr>
+        <tr><td>常见坑</td><td>macOS 11 Big Sur 的 NSPanel API 与 14/15 行为微差异（<code>fullScreenAuxiliary</code> 在 11 上有时不生效）── 已知问题；Stage Manager 在 group 间切时 NSPanel 应跟随而非消失</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.5</span>M3-N5 · Windows 实验构建（可选）</h3>
+
+    <table>
+      <thead><tr><th>项</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>关键交付物</td><td>Tauri Windows target 编译；tray 用 Windows shell notification area（spec/07 § 5 已记跨平台差异）；菜单栏图标用 16×16 ICO；NSPanel-like 行为在 Windows 用<b>普通无边框窗口 + 失焦隐藏</b>替代；<code>.exe</code> 本地能装 + 启动 + 跑基础流；<b>不</b>做签名 / winget / 自动更新（留 v1.1+）</td></tr>
+        <tr><td>对接 spec</td><td><a href="../spec/05_icons_theme.html">05 § 5 Windows ICO</a> · <a href="../spec/07_menubar.html">07 § 5 跨平台</a> · <a href="../spec/12_packaging.html">12 § 6 Windows 签名（v1.1+）</a></td></tr>
+        <tr><td>关键决策</td><td>Windows 是<b>可选</b>（plan 已明示）── 若 M3-N1..N4 + N6 已用完时间预算，可把 N5 推 v1.1；若决定上 N5，<b>不</b>追求 "看上去和 macOS 一样"，按 Windows 原生交互习惯做</td></tr>
+        <tr><td>常见坑</td><td>cocoa 调用在 Windows 不编译 ── 用 <code>#[cfg(target_os = "macos")]</code> 隔离；global-shortcut 在 Windows 无需 Accessibility 权限，行为差异要 spec/07 § 5 已记；ICO 必须含 16/32/48 三个尺寸，缺一项资源管理器显示糊</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.6</span>M3-N6 · README + 演示 GIF + v1.0 发布</h3>
+
+    <table>
+      <thead><tr><th>项</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>关键交付物</td><td>README.md 重写：1 段产品介绍 + Screenshot (light / dark 各一) + 3 段演示 GIF（呼出 / 格式化 / AI Fix）+ Install 区（dmg 下载链接，v1.1+ 加 brew）+ License + Build from source；GitHub Releases <code>v1.0.0</code> 发布；release notes 从 CHANGELIST 截取</td></tr>
+        <tr><td>对接 spec</td><td>无（README 是仓库根，不在 spec 内）</td></tr>
+        <tr><td>关键决策</td><td>GIF 用 <code>kap.app</code> 或 <code>licecap</code> 录；每段 ≤ 5 s + ≤ 500 KB；首页只放 macOS 截图（Windows v1.0 阶段不主推）；v1.0 release notes 用<b>用户视角</b>不是 commit log</td></tr>
+        <tr><td>常见坑</td><td>GitHub 上 GIF &gt; 5 MB 加载慢 ── 用 webp 或外链 imgur；release tag 一旦 publish 不能改 ── tag 前最后一遍跑 M3-A1..A13</td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>三 · 验收 & 测试</b></p>
+
+    <h2><span class="h2-num">4</span>M3 验收用例</h2>
+
+    <h3><span class="h3-num">4.1</span>主题 / 动效 / Empty State</h3>
+
+    <table>
+      <thead><tr><th>用例 ID</th><th>步骤</th><th>判据</th></tr></thead>
+      <tbody>
+        <tr><td>M3-A1</td><td>Settings theme = System；macOS 切深色模式</td><td>&lt; 100 ms 内 UI 全切完，无 FOUC</td></tr>
+        <tr><td>M3-A2</td><td>macOS 系统设置 → 辅助功能 → 开"减少动态效果"</td><td>所有 fade-in / fade-out ≤ 1 ms（肉眼无动画）</td></tr>
+        <tr><td>M3-A3</td><td>触发 6 处 Empty State 逐个看</td><td>每处都有图标 + 文案 + CTA，无 placeholder 文字</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.2</span>i18n</h3>
+
+    <table>
+      <thead><tr><th>用例 ID</th><th>步骤</th><th>判据</th></tr></thead>
+      <tbody>
+        <tr><td>M3-A4</td><td>Settings → Language = English；浏览整 UI</td><td>0 中文文案残留</td></tr>
+        <tr><td>M3-A5</td><td>切到 Language = 简体中文</td><td>立即切，所有 UI 中文；浮窗 / 设置 / 历史 / 错误 Toast 全中文</td></tr>
+        <tr><td>M3-A6</td><td>关闭 App + 删 settings.locale → 重启（macOS 系统语言 = 中文）</td><td>启动后 UI 自动是中文（locale 检测 fallback）</td></tr>
+        <tr><td>M3-A7</td><td>settings.locale = en-US；macOS 系统语言 = 中文 → 重启</td><td>UI 是英文（用户偏好优先）</td></tr>
+        <tr><td>M3-A8</td><td>粘 <code>{"姓名":"张三","年龄":30}</code></td><td>编辑器 + 树视图 CJK 字符正常，无方框 / tofu</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.3</span>a11y</h3>
+
+    <table>
+      <thead><tr><th>用例 ID</th><th>步骤</th><th>判据</th></tr></thead>
+      <tbody>
+        <tr><td>M3-A9</td><td>开 VoiceOver；按 <kbd>⌘⇧J</kbd> 呼出</td><td>VO 朗读 "Jsonita window opened" 或本地化等价</td></tr>
+        <tr><td>M3-A10</td><td>VO 开 + 粘 invalid JSON</td><td>VO 朗读 "JSON parse error at line X, column Y"</td></tr>
+        <tr><td>M3-A11</td><td>VO 开 + AI Fix 完成</td><td>VO 朗读 "AI Fix applied"</td></tr>
+        <tr><td>M3-A12</td><td>拔鼠标；纯键盘走：呼出 → 粘 → Tab 切 → 历史 → 设置 → AI Fix → Quit</td><td>每一步可达；无键盘陷阱</td></tr>
+        <tr><td>M3-A13</td><td>macOS 显示设置 → 字号"更大"（200%）</td><td>Settings Modal / 历史列表 / 浮窗布局不破</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.4</span>跨版本 / 多屏</h3>
+
+    <table>
+      <thead><tr><th>用例 ID</th><th>步骤</th><th>判据</th></tr></thead>
+      <tbody>
+        <tr><td>M3-A14</td><td>macOS 11 Intel 跑 M0-A1..A4</td><td>启动 / 呼出 / 格式化 / 退出 OK</td></tr>
+        <tr><td>M3-A15</td><td>macOS 14 Apple Silicon 跑 M1-A1..A11 核心</td><td>OK</td></tr>
+        <tr><td>M3-A16</td><td>macOS 15 跑 M2-A10..A14 AI Fix</td><td>OK</td></tr>
+        <tr><td>M3-A17</td><td>外接 4K 屏 + 内置屏 + Stage Manager 开</td><td>呼出在鼠标所在屏；Stage Manager group 切换浮窗跟随</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.5</span>Windows（可选）</h3>
+
+    <table>
+      <thead><tr><th>用例 ID</th><th>步骤</th><th>判据</th></tr></thead>
+      <tbody>
+        <tr><td>M3-A18</td><td>Windows 11 装 .exe → 启动 → 任务栏角落出现图标</td><td>OK</td></tr>
+        <tr><td>M3-A19</td><td><kbd>Ctrl+Shift+J</kbd> 呼出</td><td>窗口出现，无 Accessibility 权限要求</td></tr>
+        <tr><td>M3-A20</td><td>粘 JSON 格式化</td><td>OK；AI Fix 也可跑（需用户填 key）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">5</span>测试覆盖（M3 范围）</h2>
+
+    <table>
+      <thead><tr><th>测试类型</th><th>M3 覆盖</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>i18n</td><td>不写自动化；用 grep + lint 在 CI 检 hardcode 英文</td><td>CLAUDE.md § 7.2 ── UI 验收走手动 M3-A4..A8</td></tr>
+        <tr><td>a11y</td><td>不写自动化；手动 VoiceOver + 键盘 Tab</td><td>同上</td></tr>
+        <tr><td>跨版本</td><td>不写自动化；macOS 三机回归</td><td>spec/12 删除前的 A-COMPAT 矩阵已迁移到 M3-A14..A17</td></tr>
+        <tr><td>Windows</td><td>仅手动 smoke test（M3-A18..A20）</td><td>v1.0 可选；CI 跑 Windows build 留 v1.1</td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>四 · 风险 & spec 反馈</b></p>
+
+    <h2><span class="h2-num">6</span>已识别的实施风险</h2>
+
+    <table>
+      <thead><tr><th>风险</th><th>触发场景</th><th>规避 / 应急</th></tr></thead>
+      <tbody>
+        <tr><td>VoiceOver 在 NSPanel <code>nonactivatingPanel</code> 模式下朗读异常</td><td>NSPanel 不抢焦点 → VO 不知道焦点切换</td><td>呼出后立即 <code>NSAccessibilityPostNotification</code> 触发 VO 关注；若仍有问题，呼出时<b>临时</b>切回普通窗口模式（仅 VO 开时）</td></tr>
+        <tr><td>翻译过程发现某 UI 文案中英长度差 &gt; 2× 错位</td><td>"Settings" 8 字符 vs "设置" 2 字符 → 导航栏过宽留白</td><td>组件用 <code>flex</code> + <code>min-width</code>；M3-N1 完成时 Empty State 已经响应式 → 不应大面积出问题</td></tr>
+        <tr><td>macOS 11 Big Sur 上 NSPanel 部分 styleMask 行为不一致</td><td>11 是 minimum 支持版本，cocoa API 有差异</td><td>plan/04 NFR § 5 兼容性是<b>硬要求</b>；若 11 上某个细节做不到，记到本 progress § 6 + 回改 spec/06 加 cfg 标注</td></tr>
+        <tr><td>Windows 端 cocoa 隔离不完全导致编译失败</td><td>遗漏 <code>#[cfg(target_os)]</code> 包裹</td><td>CI 加 Windows target build（即使 v1.0 不发，编译过保证下一步可启用）</td></tr>
+        <tr><td>v1.0 发布前最后一刻发现性能回归</td><td>M3 polish 期间无意引入</td><td>M3 末尾<b>必跑</b>全 Phase 性能基线回归（NFR § 1 启动 / § 6 呼出 / § 6 format / § 6 FTS）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
+
+    <table>
+      <thead><tr><th>节点</th><th>对应 spec 章节</th><th>关键小节</th></tr></thead>
+      <tbody>
+        <tr><td>M3-N1 主题 / 动效</td><td><a href="../spec/03_design_tokens.html">03 design tokens</a> · <a href="../spec/01_mockups.html">01 § 9</a></td><td>03 § 4 主题切换 / § 8 动效 / 01 § 9 Empty States</td></tr>
+        <tr><td>M3-N2 中文 UI</td><td><a href="../spec/14_i18n_a11y.html">14 i18n</a> · <a href="../spec/03_design_tokens.html">03 § 6.1 字体</a></td><td>14 § 5-8</td></tr>
+        <tr><td>M3-N3 a11y</td><td><a href="../spec/14_i18n_a11y.html">14 § 9-10</a> · <a href="../spec/04_components.html">04 组件</a></td><td>aria 要求 + screen reader 流</td></tr>
+        <tr><td>M3-N4 macOS 多版本</td><td><a href="../spec/12_packaging.html">12 § 1 minimumSystemVersion</a> · plan/04 NFR § 5</td><td>—</td></tr>
+        <tr><td>M3-N5 Windows</td><td><a href="../spec/05_icons_theme.html">05 § 5</a> · <a href="../spec/07_menubar.html">07 § 5</a></td><td>跨平台差异表</td></tr>
+        <tr><td>M3-N6 README + release</td><td>仓库根 README.md（不在 spec）</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">NEXT</span>
+      <div class="callout-body">
+        <p>M3 全过 → <code>git tag 1.0.0</code> → GitHub Releases <code>v1.0.0</code> 上线 → 切 <a href="05_v11_distribution.html">05 v1.1+ Distribution</a> 为 <code>active</code>（或留 <code>planned</code> 等用户反馈聚集再起）。v1.0 是<b>项目核心目标的达成点</b>，v1.1+ 是扩展。</p>
+      </div>
+    </div>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

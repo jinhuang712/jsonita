@@ -316,25 +316,8 @@ pub enum Locale { EnUs, ZhCn }   // serialize: "en-us" | "zh-cn"</code></pre>
       <li><b>AI Fix 完成</b>：Toast <code>role="status"</code> → 朗读"AI Fix applied"；DiffView Accept/Reject 按钮可 Tab</li>
     </ol>
 
-    <p class="section-divider"><b>五 · 测试 & 收尾</b></p>
 
-    <h2><span class="h2-num">9</span>测试 checklist</h2>
-
-    <ul>
-      <li>所有 UI 文案出现在 <code>useTranslation</code> 中，无 hardcode 英文字符串（grep <code>"[A-Z][a-z]+ [A-Z]"</code> 等）</li>
-      <li>启动时 settings.locale 未设 + navigator.language=zh-CN → 解析为 zh-CN（M3 验证）</li>
-      <li>启动时 settings.locale=en-US + navigator.language=zh-CN → 仍解析为 en-US（用户偏好优先）</li>
-      <li>设置面板切换语言 → 全应用文案立即变化，不需 reload</li>
-      <li>错误 Toast 通过 kind → t() 映射，不再展示英文 raw</li>
-      <li>编辑器中粘贴含 CJK 的 JSON → 字符正常渲染，无方框（验证 mono 字体回退）</li>
-      <li>VoiceOver 朗读：呼出浮窗 / parse 错误 / AI Fix 完成三条流</li>
-      <li>键盘 Tab 序：浮窗内所有交互元素可达，无键盘陷阱</li>
-      <li>UI 缩放 200% 不破布局（Modal / 设置面板 / 历史列表）</li>
-      <li><code>prefers-reduced-motion: reduce</code> 下所有 fade-in / fade-out 时长 ≤ 1 ms</li>
-      <li><code>document.documentElement.lang</code> 与 settings.locale 一致</li>
-    </ul>
-
-    <h2><span class="h2-num">10</span>与其他章节对接</h2>
+    <h2><span class="h2-num">9</span>与其他章节对接</h2>
 
     <table>
       <thead><tr><th>章节</th><th>对接点</th></tr></thead>

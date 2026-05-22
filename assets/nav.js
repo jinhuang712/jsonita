@@ -39,7 +39,13 @@ const SECTIONS = {
   },
   progress: {
     label: 'Progress',
-    chapters: []
+    chapters: [
+      { num: '01', slug: 'm0_skeleton',      title: 'M0 Skeleton' },
+      { num: '02', slug: 'm1_core_json',     title: 'M1 Core JSON' },
+      { num: '03', slug: 'm2_ai_settings',   title: 'M2 AI + Settings' },
+      { num: '04', slug: 'm3_polish_cross',  title: 'M3 Polish + Cross' },
+      { num: '05', slug: 'v11_distribution', title: 'v1.1+ Distribution' }
+    ]
   }
 };
 
