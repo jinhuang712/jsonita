@@ -6,6 +6,46 @@
 
 ## [Unreleased]
 
+### M0 实施期 · 0.3.0-m0 路线开工
+
+#### M0-N1 · 工程脚手架（done · pending-user-verification）
+
+新增文件：
+
+- `src-tauri/Cargo.toml` ── Tauri 2.x · `tauri` / `tauri-build` v2 · `serde` / `serde_json` v1（scaffold 默认依赖，<b>未引</b> M1+ 业务依赖如 rusqlite / reqwest / security-framework / CodeMirror）；`profile.release` 锁定 `lto=true` + `codegen-units=1` + `opt-level="s"` + `strip=true`（对齐 plan/04 NFR § 6 dmg &lt; 15 MB 红线）
+- `src-tauri/build.rs` ── 调 `tauri_build::build()`，Tauri 2.x 必需
+- `src-tauri/src/main.rs` ── 最小 builder：`tauri::Builder::default().run(generate_context!())`；不含菜单栏 / 窗口 / 快捷键 / 日志等（属 M0-N2…N5）
+- `src-tauri/tauri.conf.json` ── 关键字段锁死：`identifier=com.jsonita.app`（<b>发版后不可改</b>，影响 Keychain service id）/ `productName=Jsonita` / `version=0.3.0-m0` / `bundle.targets=["dmg","app"]` / `minimumSystemVersion=11.0`；`bundle.icon=[]`（M0-N7 填）
+- `src-tauri/capabilities/default.json` ── Tauri 2.x 必需的最小 capability：仅 `core:default`（M2-N5+ 扩展 shortcut / clipboard 等，spec/12 § 2 完整版）
+- `package.json` ── React 18 + TypeScript 5 + Vite 5 + `@tauri-apps/api` / `@tauri-apps/cli` v2；`engines: node ≥ 20 / pnpm ≥ 9`；`packageManager: pnpm@9.12.0`
+- `tsconfig.json` ── strict + `noUnusedLocals` + `noUnusedParameters` + path alias `@/*` → `./src/*` + `types: ['vite/client']`
+- `vite.config.ts` ── `root: 'src'` + `build.outDir: '../dist'`（关键决策：让 React app 的 `index.html` 放进 `src/`，避免与项目根的 docs `index.html` 冲突）；strict port 5173；忽略 `**/src-tauri/**` watch
+- `src/index.html` ── Vite 入口（mount `<div id="root">`）
+- `src/main.tsx` ── React 18 `createRoot` + StrictMode
+- `src/App.tsx` ── 占位组件（"Jsonita · M0-N1 scaffold" 一行字），M0-N2 起替换
+
+修改文件：
+
+- `.gitignore` ── 追加 `!src-tauri/Cargo.lock` 例外（Rust app 惯例：可执行项目要 commit lockfile，保证 M0-N7 dmg / M2-N6 sign+notarize / D-N1 brew tap 的 reproducible build）
+
+关键决策记录：
+
+- **Vite root = `src/`** 而非项目根：项目根 `index.html` 是文档导航入口（plan / spec / progress），不能被 Tauri React 覆盖；Vite 支持 `root` 配置，clean 共存
+- **identifier `com.jsonita.app` 一次锁死**：发版后不可改（Keychain service id / macOS bundle id 长期合约）
+- **未 commit Cargo.lock 例外加在 `.gitignore`**：偏离原始 .gitignore"忽略全部 Cargo.lock"的策略，符合 Rust 应用层 best practice
+
+待用户本机验证（agent 不替跑 install / build · CLAUDE.md § 2.3）：
+
+- `pnpm install` ── 装 React / Vite / Tauri CLI
+- `pnpm tsc --noEmit` ── 类型检查 0 错
+- `cargo check --manifest-path src-tauri/Cargo.toml` ── Rust 编译过
+- `pnpm tauri dev` ── 起 ~5 min 后看空白窗口"Jsonita · M0-N1 scaffold"
+
+进度状态：
+
+- `progress/manifest.json` M0-N1 `status: completed`
+- `progress/01_m0_skeleton.html#m0-n1-scaffold` status: `done · pending-user-verification`
+
 ### Agent 控制面改造（实施期 SOP）
 
 > **未 commit** ── 本段工作尚未由用户 review；prompt 明示"不要提交 git commit 除非用户明确要求"。

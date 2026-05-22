@@ -31,6 +31,9 @@ dist-ssr/
 target/
 **/*.rs.bk
 Cargo.lock
+# Tauri app is a binary (not a library): commit src-tauri/Cargo.lock for reproducible
+# builds — required by M0-N7 dmg / M2-N6 sign+notarize / D-N1 brew tap.
+!src-tauri/Cargo.lock
 src-tauri/target/
 src-tauri/gen/
 src-tauri/.build/
