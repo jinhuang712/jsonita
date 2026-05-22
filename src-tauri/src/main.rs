@@ -79,6 +79,9 @@ fn main() {
                 }
             }
 
+            // Settings store ── M1-N8 起 default 占位；M2-N1 加 load(settings.json)
+            app.manage(store::SettingsStore::new());
+
             menubar::build(app.handle())?;
             window::setup(app.handle())?;
 
