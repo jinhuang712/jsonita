@@ -128,9 +128,9 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td><code>src-tauri/src/shortcuts/mod.rs</code> · <code>src-tauri/Cargo.toml</code>（<code>tauri-plugin-global-shortcut</code>）· <code>src/permissions/AccessibilityModal.tsx</code></td></tr>
-        <tr><td>verification</td><td>M0-A9 / A10：清空 Accessibility 权限 → 引导 Modal 自动弹；授权后无需重启即可呼出</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/Cargo.toml</code>（<code>tauri-plugin-global-shortcut</code>）· <code>src-tauri/src/shortcuts/mod.rs</code>（register_defaults + 3 个 IPC 命令 shortcut_status / shortcut_retry / open_accessibility_settings）· <code>src-tauri/src/main.rs</code>（plugin + invoke_handler + setup hook）· <code>src-tauri/capabilities/default.json</code>（global-shortcut:default）· <code>src/permissions/AccessibilityModal.tsx</code>（mockup § 9 视觉对齐）· <code>src/App.tsx</code>（mount 查 status + listen permission event + 2s 轮询 retry）</td></tr>
+        <tr><td>verification</td><td>agent 端：shortcuts 模块就位 ✓ · main 接 plugin + handler ✓ · capability 添加 global-shortcut:default ✓ · Modal 视觉对齐 spec/01 § 9 ✓ · 链接校验 0 broken ✓；<b>待用户本机跑</b>：(M0-A9) 系统设置移除 Jsonita 辅助功能权限 → 启动看 Modal 自动弹 (M0-A10) 授权后回 Jsonita，2s 内 Modal 自动关 + ⌘⇧J 可呼出 · 测 Safari/终端/Finder 各按 ⌘⇧J 都能呼出 · 任何前台 App 下浮窗不抢焦点（M0-A4 与 N3 配合）</td></tr>
         <tr><td>commit / tag</td><td><code>feat(m0-n4): global shortcut + accessibility guide modal</code></td></tr>
         <tr><td>blocked_by</td><td><code>m0-n2-tray</code>, <code>m0-n3-nspanel</code></td></tr>
         <tr><td>关键交付物</td><td><code>tauri-plugin-global-shortcut</code> 注册 <kbd>⌘⇧J</kbd>；macOS Accessibility 权限缺失时弹引导 Modal（指引"系统设置 → 隐私 → 辅助功能 → 添加 Jsonita"）；权限到位后无需重启即可生效</td></tr>

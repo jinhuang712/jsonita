@@ -8,6 +8,35 @@
 
 ### M0 实施期 · 0.3.0-m0 路线开工
 
+#### M0-N4 · 全局快捷键 + 权限引导（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src-tauri/src/shortcuts/mod.rs` ── 全局快捷键：硬编码 ⌘⇧J（macOS）/ Ctrl⇧J（其他）→ `window::toggle`；权限缺失走 emit `permission:accessibility_missing` event；3 个 IPC 命令暴露给前端：`shortcut_status`（查注册状态）/ `shortcut_retry`（重试，用户授权后调）/ `open_accessibility_settings`（macOS 跳系统设置 → 隐私 → 辅助功能）
+- `src-tauri/src/main.rs` ── 注册 plugin + invoke_handler 3 命令；setup hook 调 `shortcuts::register_defaults` ── 失败不阻塞启动（事件 + 前端 Modal 兜底）
+- `src-tauri/Cargo.toml` ── 加 `tauri-plugin-global-shortcut = "2"`
+- `src-tauri/capabilities/default.json` ── 加 `global-shortcut:default` 权限
+- `src/permissions/AccessibilityModal.tsx` ── macOS 权限引导 Modal：视觉对齐 spec/01 § 9（⌨️ icon + title + 文案 + Later/Open System Settings 二按钮）；文案<b>暂硬编码英文</b>，M0-N6 i18n 接入后改 `t()`
+- `src/App.tsx` ── 三层防护：(a) mount 调 `shortcut_status` 决定要不要弹 Modal；(b) listen `permission:accessibility_missing` event 应对 Rust 启动期的 emit；(c) Modal 打开期间每 2 s 调 `shortcut_retry` 自动检测用户是否已授权 → 成功后自动 close（满足 M0-A10 "授权后无需重启"）
+
+关键决策：
+
+- **3 IPC 命令命名**：`shortcut_status` / `shortcut_retry` / `open_accessibility_settings`（spec/02 § 4 snake_case 规范）
+- **失败不阻塞启动**：macOS 首次启动 Accessibility 必缺；用 `eprintln!` 记日志 + emit event + 不 panic
+- **2 s 周期轮询而非用户点 Retry**：UX 更自然（用户从设置回来 Modal 自动消失）；2s 间隔对 CPU/资源压力小
+- **Modal 文案先英文**：M0-N6 i18n 框架装好后才上 `useTranslation`；本节避免循环依赖（N4 不能 import N6）
+
+待用户本机验证：
+
+- M0-A9 ── 系统设置 → 隐私与安全 → 辅助功能 → 移除 Jsonita（如有），启动 Jsonita 看 Modal 自动弹
+- M0-A10 ── 点 "Open System Settings" 跳到正确页 → 添加 Jsonita 授权 → 回 Jsonita，<b>不重启</b>，2s 内 Modal 自动关 + ⌘⇧J 可呼出
+- 测多个前台 App（Safari / 终端 / Finder）下 ⌘⇧J 都能呼出
+
+进度状态：
+
+- `progress/manifest.json` M0-N4 `status: completed`
+- `progress/01_m0_skeleton.html#m0-n4-shortcut` status: `done · pending-user-verification`
+
 #### M0-N3 · 浮窗 POC（NSPanel-like 行为）（done · pending-user-verification）
 
 新增 / 修改文件：
