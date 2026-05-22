@@ -15,10 +15,28 @@
 - 不要替用户决定章节切分、精简力度、字段命名等"看上去合理"的选项
 - 一次问 ≤ 3 个核心问题；用 preview 字段展示直观差异
 
-### 1.3 完成工作必须同步 TODO.md
-- 每次 task 完成或新需求加入，**立刻** Edit `TODO.md`
-- TODO.md 是用户能直接读的进度面板，**不是** 我内部状态
-- `TaskCreate` ≠ 同步 TODO.md，两者必须双轨
+### 1.3 完成工作必须多轨同步
+- 每次 task 完成 / 新需求 / 章节新增删改 → **立刻 + 一定要** 同步：
+  1. **`TODO.md`** ── 完成项**删除该行**（见 § 1.4），不只是打勾
+  2. **`CHANGELIST.md`** ── Unreleased 段追加 bullet（行数 / 新增图 / 关键决策）
+  3. **`index.html`** ── (a) Plan/Spec/Progress 列新增章节链接；(b) `<script id="src-todo">` 与 TODO.md 一致；(c) `<script id="src-changelist">` 与 CHANGELIST.md 一致；(d) `<script id="src-readme">` 若 README.md 改了同步
+  4. **`progress/0N_*.html`**（进入实施期）── 当前 active Phase 的节点状态同步
+  5. **`assets/nav.js`** ── 新增 / 删除章节时同步章节列表
+- 这些都是<b>用户能直接打开浏览器看到的项目面板</b>，不是我内部状态
+- `TaskCreate` ≠ 同步；`TaskUpdate(completed)` ≠ 同步；要分别动手
+
+### 1.4 TODO 完成项必须删除（不是打勾）
+- 任务做完 → **从 TODO.md 删除该行**，不留 `[x]` 项
+- 整个 Phase 全部完成 → 删除整段（标题 + 所有项）
+- Phase 进入 progress 跟踪后 → TODO 对应段也删（防止与 progress 重复）
+- TODO 永远只回答"还剩什么"；历史归 CHANGELIST.md（那里允许堆叠）
+
+### 1.5 完成小节点必须 git commit（但不主动 push）
+- "小节点" = 一组逻辑相关的改动（一个 spec 章节重写完 / 一个 progress 子任务完 / 一次 mermaid 修 batch）
+- 完成后<b>立即 git commit</b>（按既有 commit message 风格），方便阶段回退与 git log 追溯
+- <b>不要主动 git push</b> ── 除非用户明确说"push"。这是用户偏好（本地先稳定，再统一推）
+- commit 前的清单：(a) git status 看是否有遗漏；(b) git diff 看改动是否对齐 commit message；(c) 涉及 spec/plan/progress 改动须先按 § 1.3 完成多轨同步再 commit
+- 例外：纯调试 / 失败的中间态不 commit；待整理的 WIP 用 git stash
 
 ## 二、执行禁令
 
@@ -41,7 +59,7 @@
 
 ### 3.1 章节切分（已固定）
 - **plan/** 00-04 共 5 篇 ── 产品边界
-- **spec/** 00-12 共 13 篇 ── 技术设计
+- **spec/** 00-15 共 16 篇 ── 技术设计
   - `00_architecture` 系统架构
   - `01_mockups` 原型图 & 交互细节 ← **visual source of truth**
   - `02_ipc` IPC 合约
@@ -55,7 +73,15 @@
   - `10_storage` 存储 & 会话
   - `11_ai_client` AI 客户端
   - `12_packaging` 打包、签名、验收
-- **progress/** 待 spec 完结后启动
+  - `13_schemas` 数据模型参考（Rust / TS / SQL / config schema 唯一权威）
+  - `14_i18n_a11y` 国际化 & 无障碍
+  - `15_logging` 日志 & 可观测性
+- **progress/** 实施跟踪（5 篇对齐 Phase 1-5）
+  - `01_m0_skeleton` Tauri 脚手架 + tray + 浮窗 POC + 全局快捷键 + dmg 跑通
+  - `02_m1_core_json` CodeMirror + Formatter + TreeView + 历史 + 会话 + 嵌套解开 + 单窗
+  - `03_m2_ai_settings` DeepSeek + Keychain + 设置面板 + 自定义快捷键 + 签名公证
+  - `04_m3_polish_cross` 主题动效 + Empty State + 中文 UI + a11y 验收 + Windows
+  - `05_v11_distribution` brew tap + npm wrapper + 自动更新 + 日志导出
 
 ### 3.2 mockups 是唯一权威
 - `spec/01_mockups.html` 是所有 UI 视觉的**唯一权威**
@@ -91,6 +117,20 @@
 - 重复同质化 IPC command 实现（保留一个 + 表格列其他）
 - 完整 React component 实现（保留 props interface）
 
+### 4.5 spec 内容禁区（用户多次反馈"不必要的废话"）
+- ❌ **"发布 checklist"清单**（cargo test / git tag / pnpm build 等命令清单） ── 这是过程性 runbook，归 progress / README，不归 spec
+- ❌ **"承上启下"小作文段尾**（"本章是 spec 终点" / "下一阶段进入 progress" / 列举下游章节关系） ── spec 各章本身有跨章 link，13/14/15 已有"对接表"，不需要小尾巴
+- ❌ **"会话总结"式段尾**（"以上是…的设计" / "至此完成…"） ── 内容已经讲完，不需要总结
+- ❌ **事实错误的"宏观断言"**（"此章是 spec 终点" 但其实后面还有章 / "v1 仅 macOS" 但 plan/04 § 7 已含 Windows） ── 写之前用 ls / grep 验证现状
+- ❌ **重复 mockups 的视觉描述**（每章节自己画一遍 UI）── 链 01 § X 即可（§ 3.2）
+- ✅ 允许的"对接"形式：在章末或合适位置用<b>表格</b>列"本章与 13 schemas 哪节对应 / 与 02 IPC 哪个 command 对应"── 信息密度高，不算废话
+
+### 4.6 mermaid 写法
+- 所有节点 label 用 `["..."]` 引号包裹（含 `:` `/` `*` `(` `)` 等字符必须）
+- edge label 用 `|"..."|` 引号包裹；<b>不放</b> `→` `/` `*` `（）`
+- stateDiagram-v2 transition label 用 `<br/>` 换行，不用 `→`
+- 详细规则见 memory `mermaid-safe-syntax`
+
 ## 五、记忆与同步
 
 ### 5.1 每次会话开头
@@ -105,8 +145,66 @@
 3. 必要时 AskUserQuestion 对齐
 4. **再** 动手
 
-### 5.3 完成工作时
-1. TaskUpdate(completed)
-2. Edit TODO.md 同步进度
-3. 必要时 Edit CHANGELIST.md
-4. 必要时 Edit `index.html` 内嵌 README/TODO/CHANGELIST 同步
+### 5.3 完成小节点时（强制 5 步，不允许跳）
+1. **TaskUpdate(completed)** ── 单个动作完成
+2. **Edit `TODO.md`** ── 删除完成项行（不打勾）；新需求加在对应 Phase 段
+3. **Edit `CHANGELIST.md`** ── Unreleased 段加 bullet（行数 / 关键决策）
+4. **Edit `index.html` 多处**：
+   - 若新增 / 删除章节 → 改 Plan / Spec / Progress 列 `<li>` 链接
+   - `<script id="src-todo">` 与 TODO.md 一致
+   - `<script id="src-changelist">` 与 CHANGELIST.md 一致
+   - `<script id="src-readme">` 若 README.md 改了同步
+   - 同步 `assets/nav.js` 章节列表（若新增/删除章节）
+5. **git commit**（按 § 1.5）── <b>不</b> push
+
+> 第 3-5 步过去常被略过，导致用户多次反问"index 没更新哦" / "完成项没清掉" / "怎么没 commit"。**强制 5 步**。
+
+## 六、Progress 迭代规则
+
+详见 memory `progress-iteration-rules`（10 条）。CLAUDE 要点：
+
+### 6.1 progress 的边界
+- 仅规划"该阶段完成什么 + 验收 + 测试"，<b>不</b>写实现 / commits / 代码
+- 绝对不含新需求 / 新功能 ── 新需求一律回 spec / plan 改，再回 progress 反映
+- 不拆很细 ── 5 篇对齐 Phase 1-5，每篇 5-10 个里程碑节点
+
+### 6.2 状态与切换
+- 每篇 progress 顶部明示状态：`planned` / `active` / `completed`
+- 退出条件第一节明文写"达到什么算完成"（否则"完成不改"形同虚设）
+- <b>同时刻只 1 个 active Phase</b>；M0 → M1 → M2 → M3 顺序锁定
+- completed Phase 视为档案，<b>不再修改</b>
+
+### 6.3 Tasks 必须细于 Progress
+- progress 节点 = 里程碑 / 交付物（粗）
+- `TaskCreate` = 实施具体步骤（细，一个 progress 节点通常对应多个 task）
+
+### 6.4 spec ↔ progress 双向同步
+- 实施发现 spec 错 → <b>先回改 spec + CHANGELIST</b>，再继续 coding
+- progress 加链接"spec/XX 在 M1 实施中发现 Y 问题 → 已更新到 vN"
+- 防止 spec 变成"半年前的化石"
+
+## 七、测试策略
+
+### 7.1 核心边界（必须单测）
+- **Rust `engine::*` 纯函数**：format / minify / unwrap (walk + 超时) / json_to_string / string_to_json / unescape / sort_keys_recursive / error_loc::map ── 这些是 JSON 引擎核心，单测护住
+- **Rust `ai::validate::extract_json`** ── 3 个 case 必须单测
+- **前端 utility**（如 `panes/diff.ts` 的 `computeDiff` / `tree/jsonpath.ts` 的 path 计算）── 若是纯函数也单测
+
+### 7.2 不写单测的范围（手动验收）
+- UI 交互（点击 / 拖拽 / 键盘）── spec 各章末尾 "测试 checklist" 是手动验收清单
+- IPC handler（薄层 wrapper）── 集成测试 / 手动呼出走一遍
+- DB CRUD（rusqlite 已经被它自己的测试 cover）
+- AI HTTP（reqwest）── 手动测一次连通即可，不 mock
+- 窗口 / 菜单栏 / 系统快捷键 ── 平台 API，无法 mock，只能手动
+
+### 7.3 CI（GitHub Actions）跑什么
+- `cargo test`（engine + validate 单测）
+- `cargo build --release`（验证编译通过）
+- `pnpm tsc --noEmit`（类型检查）
+- `pnpm lint`（代码风格）
+- <b>不</b>跑 UI e2e / Playwright（投入产出比低）
+
+### 7.4 Phase 完成 = 跑全量手动 checklist + 打 git tag
+- 每 Phase 完成时：跑当前 Phase 验收清单 + 之前 Phase 的回归 checklist
+- `git tag 0.x.0-mN`（对齐 CHANGELIST 版本表）
+- 不主动 push（§ 1.5）

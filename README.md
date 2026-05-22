@@ -48,7 +48,8 @@ open index.html
 - [x] 项目骨架 & git init
 - [x] 根 `index.html` 文档导航
 - [x] `plan/00-04_*.html` 5 篇产品设计（聚焦产品边界）
-- [x] `spec/00-13_*.html` 14 篇技术设计（含架构 / 原型图集 / IPC / tokens / 组件 / 图标 / runtime / 编辑器 / 引擎 / 存储 / AI / 打包验收 / 数据模型参考）
+- [x] `spec/00-15_*.html` 16 篇技术设计（含架构 / 原型图集 / IPC / tokens / 组件 / 图标 / runtime / 编辑器 / 引擎 / 存储 / AI / 打包验收 / 数据模型参考 / **i18n & a11y** / **日志 & 可观测性**）
+- [x] Spec 重构 design-first：00/02/03/06/09/10/11 七章按"先讲设计 → 再讲机制 → 再给契约 → 最后数字"重写；13_schemas 集中所有数据模型；04 视觉契约统一指向 01 mockups；14 i18n 与 15 logging 为 NFR 锁定补章
 - [ ] `progress/*.html` 进度跟踪（含里程碑、看板、日志、风险）
 - [ ] M0 Skeleton —— Tauri 脚手架 + 菜单栏图标 + 全局快捷键
 

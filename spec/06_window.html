@@ -17,243 +17,250 @@
     <div class="doc-header">
       <span class="doc-tag">SPEC · 章节 06</span>
       <h1 class="doc-title">窗口 runtime</h1>
-      <p class="doc-subtitle">浮窗的创建、定位、显隐、失焦、动效、生命周期 ── 包含 macOS NSPanel-like 实现细节。</p>
+      <p class="doc-subtitle">浮窗的创建、定位、显隐、失焦、动效、生命周期 ── 先讲设计决策，再用决策图与状态机讲机制，最后给契约。</p>
     </div>
 
-    <h2><span class="h2-num">1</span>窗口能力一览</h2>
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
+      <div class="callout-body">
+        <p>本章描述<b>窗口 runtime 设计与机制</b>；<code>ContentMetrics</code> / <code>WindowResizedPayload</code> 等 IPC payload 见 <a href="13_schemas.html">13 § 3.5</a>；<code>window.json</code> 持久化字段见 <a href="13_schemas.html">13 § 5.2</a>；窗口命令签名见 <a href="02_ipc.html">02 § 6.1.6</a>；视觉效果见 <a href="01_mockups.html">01 § 11 智能宽度</a>。</p>
+      </div>
+    </div>
+
+    <p class="section-divider"><b>一 · 设计</b></p>
+
+    <h2><span class="h2-num">1</span>能力清单与 plan 锚定</h2>
 
     <table>
       <thead><tr><th>能力</th><th>plan 锁定</th><th>本章解决</th></tr></thead>
       <tbody>
         <tr><td>始终置顶 + 不抢焦点</td><td><a href="../plan/02_interaction.html">02 § 1</a></td><td>§ 3 NSPanel-like</td></tr>
-        <tr><td>呼出 &lt; 500 ms</td><td><a href="../plan/04_nfr.html">04 § 1</a></td><td>§ 4 复用 + 预热</td></tr>
-        <tr><td>定位到光标屏中央偏上</td><td>02 § 1</td><td>§ 5 多屏 API</td></tr>
+        <tr><td>呼出 &lt; 500 ms</td><td><a href="../plan/04_nfr.html">04 § 1</a></td><td>§ 2.1 预热 + § 8 生命周期</td></tr>
+        <tr><td>定位到光标屏中央偏上</td><td>02 § 1</td><td>§ 4 多屏定位</td></tr>
         <tr><td>失焦自动隐藏（可关）</td><td>02 § 1</td><td>§ 6 失焦监听</td></tr>
-        <tr><td>关闭浮窗保存 last_session</td><td>plan/01 F8</td><td>§ 7 关闭流程</td></tr>
-        <tr><td>150 ms 淡入 / 200 ms 淡出</td><td>02 § 3</td><td>§ 8 动效</td></tr>
-        <tr><td>记忆大小（不记忆位置）</td><td>02 § 1</td><td>§ 9 持久化</td></tr>
+        <tr><td>关闭浮窗保存 last_session</td><td>plan/01 F8</td><td>§ 5 关闭事件路由</td></tr>
+        <tr><td>150 ms 淡入 / 200 ms 淡出</td><td>02 § 3</td><td>§ 8 动效（CSS only）</td></tr>
+        <tr><td>记忆大小（不记忆位置）</td><td>02 § 1</td><td>§ 7 智能宽度 / 持久化</td></tr>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>窗口配置（tauri.conf.json）</h2>
+    <h2><span class="h2-num">2</span>关键设计决策</h2>
 
-    <pre><code>{
-  "app": {
-    "windows": [
-      {
-        "label": "main",
-        "url": "index.html",
-        "title": "Jsonita",
-        "width":  860,
-        "height": 560,
-        "minWidth":  720,
-        "minHeight": 480,
-        "resizable":  true,
-        "decorations": false,         // 自定义 chrome（无系统标题栏）
-        "transparent": true,          // 圆角 + 阴影需要透明
-        "shadow": true,
-        "alwaysOnTop": true,
-        "visible": false,             // 启动不显示，等待呼出
-        "skipTaskbar": false,         // Windows 任务栏可见
-        "focus": false,               // 创建时不抢焦点
-        "fileDropEnabled": false,     // 不接收 drag-drop
-        "center": true,
-        "titleBarStyle": "Overlay",   // macOS：保留 traffic light 浮在内容上
-        "hiddenTitle": true,          // macOS：隐藏标题文字但保留 traffic light
-        "acceptFirstMouse": true      // macOS：未聚焦时也响应首次点击
-      }
-    ]
-  }
-}</code></pre>
+    <h3><span class="h3-num">2.1</span>WebView 预热：呼出时只 show，不 build</h3>
 
-    <div class="callout callout-warn">
-      <span class="callout-icon">WARN</span>
-      <div class="callout-body">
-        <p>Tauri 2 的 <code>"alwaysOnTop": true</code> 在 macOS 等同于普通 NSWindow 的 <code>setLevel(.floating)</code>，但<b>会抢焦点</b>。要做到"始终置顶 + 不抢焦点"，必须升级为 <b>NSPanel</b>（见 § 3）。</p>
-      </div>
-    </div>
+    <p>启动时就 <code>WebViewWindowBuilder.build()</code>（<code>visible: false</code>），把 DOM / CodeMirror / React 全部就绪。后续 <code>⌘⇧J</code> 只调 <code>window.show()</code> + 定位 ── 亚毫秒级。代价是稳态占 ~80 MB 内存，但换来呼出 &lt; 500 ms 体验，对工具类应用是正确取舍（详见 <a href="00_architecture.html">00 § 2</a>）。</p>
 
-    <h2><span class="h2-num">3</span>NSPanel-like 行为（macOS）</h2>
+    <h3><span class="h3-num">2.2</span>NSPanel 而不是 NSWindow（macOS）</h3>
 
-    <p>NSWindow 强制 <code>canBecomeKey()</code> 时会抢系统焦点（切应用），用户的 <kbd>⌘Tab</kbd> 切换其他 App 会让浮窗隐没。需要把 NSWindow 替换为 NSPanel + 关键标志位。</p>
+    <p>Tauri 默认 <code>alwaysOnTop: true</code> 在 macOS 等同 <code>NSWindow.setLevel(.floating)</code> ── 但会<b>抢焦点</b>。用户的 <code>⌘Tab</code> 切走会让浮窗一同隐没。NSPanel 配合 <code>nonactivatingPanel</code> styleMask 是唯一可靠方案 ── panel 可接收点击但不切换应用焦点。详见 § 3。</p>
 
-    <h3><span class="h3-num">3.1</span>实现方案：cocoa crate 直调</h3>
+    <h3><span class="h3-num">2.3</span>关闭 = hide 而非 close</h3>
 
-    <pre><code>// src-tauri/src/system/window_panel.rs
-//
-// 在 Tauri WebviewWindow 创建后立即调用 promote_to_nspanel()，
-// 把底层 NSWindow 替换为 NSPanel + 设置以下标志：
-//
-//   styleMask:           [.nonactivatingPanel, .titled, .fullSizeContentView]
-//   level:               .floating
-//   collectionBehavior:  [.canJoinAllSpaces,
-//                         .stationary,
-//                         .fullScreenAuxiliary,
-//                         .ignoresCycle]
-//   isMovable:           true
-//   isMovableByWindowBackground: false
-//
-// .nonactivatingPanel 是关键：让 panel 接受点击但不切换应用焦点
+    <p>红色 traffic light / <code>Esc</code> / <code>⌘W</code> 全部映射为 <code>window.hide()</code>，进程保留 ── 这样下次呼出依然是亚毫秒级。<b>只有</b> <code>⌘Q</code> 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。</p>
 
-#[cfg(target_os = "macos")]
-pub fn promote_to_nspanel(window: &amp;tauri::WebviewWindow) -&gt; Result&lt;(), JsonitaError&gt; {
-    use cocoa::appkit::{
-        NSWindow, NSWindowStyleMask, NSWindowCollectionBehavior,
-    };
-    use cocoa::base::id;
-    use objc::{msg_send, sel, sel_impl};
+    <h3><span class="h3-num">2.4</span>定位到光标所在屏，不记忆位置</h3>
 
-    let ns_window = window.ns_window()? as id;
+    <p>多屏用户的鼠标当下在哪屏，浮窗就出现在哪屏 ── 这是工具类应用的常识。<b>大小</b>可以记忆（用户拖宽后下次保持），但<b>位置</b>永远按当前鼠标算 ── 避免"上次在外接屏 → 现在没接外接屏 → 浮窗看不见"。详见 § 4。</p>
+
+    <h3><span class="h3-num">2.5</span>动效全部 CSS / 前端实现</h3>
+
+    <p>Rust 端只管 <code>show()</code> / <code>hide()</code>，不参与动效。淡入淡出由 CSS keyframes + React 加 <code>.enter</code> / <code>.exit</code> 类驱动，对应 <a href="03_design_tokens.html">03 § 9.2</a> 的 <code>window-fade-in</code> / <code>window-fade-out</code> 动画 token。这样动效预算 / 缓动曲线属于设计 token，跨章节统一。</p>
+
+    <p class="section-divider"><b>二 · 工作机制</b></p>
+
+    <h2><span class="h2-num">3</span>NSPanel-like 实现</h2>
+
+    <h3><span class="h3-num">3.1</span>关键标志位</h3>
+
+    <p>把底层 NSWindow 替换为 NSPanel 后，设置以下标志位 ── 每一位都解决一个具体问题：</p>
+
+    <table>
+      <thead><tr><th>标志位</th><th>值</th><th>解决的问题</th></tr></thead>
+      <tbody>
+        <tr><td colspan="3"><b>styleMask</b></td></tr>
+        <tr><td><code>.nonactivatingPanel</code></td><td>1 &lt;&lt; 7</td><td><b>关键</b>：让 panel 接收点击但不切换应用焦点</td></tr>
+        <tr><td><code>.titled</code></td><td>1 &lt;&lt; 0</td><td>需要 title bar 容器（即使隐藏标题文字）</td></tr>
+        <tr><td><code>.fullSizeContentView</code></td><td>1 &lt;&lt; 15</td><td>WebView 内容占满整个窗口（含 title bar 区域）</td></tr>
+        <tr><td colspan="3"><b>collectionBehavior</b></td></tr>
+        <tr><td><code>.canJoinAllSpaces</code></td><td>1 &lt;&lt; 0</td><td>切 Space 后浮窗仍可见</td></tr>
+        <tr><td><code>.stationary</code></td><td>1 &lt;&lt; 4</td><td>Mission Control 视图中不被作为窗口堆叠</td></tr>
+        <tr><td><code>.fullScreenAuxiliary</code></td><td>1 &lt;&lt; 8</td><td>在其他 App fullscreen 上方仍可见</td></tr>
+        <tr><td colspan="3"><b>其他</b></td></tr>
+        <tr><td>level</td><td>3 (<code>.floating</code>)</td><td>常驻置顶</td></tr>
+        <tr><td>isMovableByWindowBackground</td><td>false</td><td>禁止拖动整个浮窗（拖动通过 title bar 区）</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.2</span>调用骨架（~15 行）</h3>
+
+    <p>实际实现走 <code>cocoa</code> crate + <code>objc</code> msg_send；保留<b>关键 3 个 setter 调用</b>，标志位组合见 § 3.1。完整代码在 <code>src-tauri/src/system/window_panel.rs</code>。</p>
+
+    <pre><code>#[cfg(target_os = "macos")]
+pub fn promote_to_nspanel(win: &amp;tauri::WebviewWindow) -&gt; Result&lt;(), JsonitaError&gt; {
+    let ns_window = win.ns_window()? as id;
     unsafe {
-        // 设置 style mask 添加 nonactivatingPanel (1 &lt;&lt; 7)
+        // styleMask（含关键的 .nonactivatingPanel = 1 &lt;&lt; 7）
         let mask = NSWindowStyleMask::NSTitledWindowMask
             | NSWindowStyleMask::NSFullSizeContentViewWindowMask
             | NSWindowStyleMask::from_bits_unchecked(1 &lt;&lt; 7);
         ns_window.setStyleMask_(mask);
-
-        // collection behavior
-        let behavior =
-              NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
-            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary
-            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorFullScreenAuxiliary;
-        ns_window.setCollectionBehavior_(behavior);
-
+        // collectionBehavior（多 Space + Mission Control + fullscreen 协作）
+        ns_window.setCollectionBehavior_(JOINS_ALL_SPACES | STATIONARY | FULLSCREEN_AUX);
         // 提升到 floating level
-        let _: () = msg_send![ns_window, setLevel: 3i64];  // NSFloatingWindowLevel
+        let _: () = msg_send![ns_window, setLevel: 3i64];
     }
     Ok(())
 }</code></pre>
 
-    <p>v1 直接维护此小段 unsafe；v2 可换 <a href="https://crates.io/crates/tauri-nspanel"><code>tauri-nspanel</code></a> 社区插件（一行替换）。</p>
+    <h3><span class="h3-num">3.3</span>Windows 端的对应行为</h3>
 
-    <h3><span class="h3-num">3.2</span>Windows 端的对应行为</h3>
+    <p>Windows 10/11 不需要类似 NSPanel：<code>"alwaysOnTop": true</code> + <code>"focus": false</code> 已能做到始终置顶；显示用 <code>ShowWindow(hwnd, SW_SHOWNOACTIVATE)</code> 不抢焦点；无需 unsafe。v2 跨平台时只需在 macOS 上额外调本节代码。</p>
 
-    <p>Windows 10/11 不需要等价 NSPanel：</p>
+    <h2><span class="h2-num">4</span>多屏定位</h2>
 
-    <ul>
-      <li><code>"alwaysOnTop": true</code> + <code>"focus": false</code> 已能做到始终置顶</li>
-      <li><code>ShowWindow(hwnd, SW_SHOWNOACTIVATE)</code> 显示不抢焦点</li>
-      <li>无需 unsafe 调 cocoa</li>
-    </ul>
+    <h3><span class="h3-num">4.1</span>决策流程</h3>
 
-    <h2><span class="h2-num">4</span>启动与预热</h2>
+    <p>呼出时按"光标所在屏"定位 ── 不是主屏，不是上次屏。优雅处理鼠标在屏外、单屏断开等边界：</p>
 
-    <p>为了呼出 &lt; 500 ms，<b>主进程启动时就创建好 WebView 窗口并 hide</b>，后续 <code>window.show()</code> 是亚毫秒级。</p>
+    <div class="mermaid">
+graph TD
+    Start[呼出触发] --> CP[读 cursor_position 全局坐标]
+    CP --> Check{鼠标在<br/>哪屏 work_area?}
+    Check -->|"在某屏 N"| UseN[使用屏 N 的<br/>work_area]
+    Check -->|"鼠标在屏外<br/>(屏断开等边界)"| Fallback[使用 primary monitor]
+    UseN --> Calc[计算坐标:<br/>x = mx + (mw - ww) / 2<br/>y = my + (mh - wh) / 3]
+    Fallback --> Calc
+    Calc --> SetPos[window.set_position]
 
-    <pre><code>// src-tauri/src/main.rs（节选）
-fn main() {
-    tauri::Builder::default()
-        .setup(|app| {
-            // 1. 初始化基础设施
-            store::db::init(app.handle())?;
-            system::tray::build(app.handle())?;
-            system::shortcuts::register_defaults(app.handle())?;
+    classDef step fill:#EFF6FF,stroke:#057AF3
+    classDef cond fill:#FFF7ED,stroke:#FA9B10
+    class CP,UseN,Fallback,Calc,SetPos step
+    class Check cond
+    </div>
 
-            // 2. 创建主浮窗（visible: false，已在 conf 设）
-            let win = WebviewWindowBuilder::from_config(
-                app.handle(),
-                app.config().app.windows.iter()
-                    .find(|w| w.label == "main").unwrap().clone(),
-            )?.build()?;
+    <h3><span class="h3-num">4.2</span>关键参数</h3>
 
-            // 3. 应用 NSPanel-like
-            #[cfg(target_os = "macos")]
-            system::window_panel::promote_to_nspanel(&amp;win)?;
+    <table>
+      <thead><tr><th>参数</th><th>值</th><th>设计意图</th></tr></thead>
+      <tbody>
+        <tr><td>x</td><td><code>mx + (mw - ww) / 2</code></td><td>水平中央</td></tr>
+        <tr><td>y</td><td><code>my + (mh - wh) / 3</code></td><td><b>上 1/3</b> 而不是中央 ── 避免遮挡用户当前关注的窗口区域</td></tr>
+        <tr><td>work_area</td><td>排除 dock + menubar</td><td>避免浮窗压到 menubar / dock 上</td></tr>
+        <tr><td>scale_factor</td><td>取 cursor 所在屏的</td><td>Retina 屏物理 px ≠ 逻辑 px，需除以 scale 转 LogicalPosition</td></tr>
+      </tbody>
+    </table>
 
-            // 4. 注册关闭拦截
-            register_close_intercept(&amp;win);
+    <h3><span class="h3-num">4.3</span>核心调用（~10 行）</h3>
 
-            // 5. macOS：从 Dock 隐藏（菜单栏 only）── 可选，需要用户设置
-            #[cfg(target_os = "macos")]
-            if app.state::&lt;Settings&gt;().hide_dock_icon {
-                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-            }
+    <pre><code>// src-tauri/src/system/cursor.rs ── 核心循环
+let cursor = app.cursor_position()?;
+let monitor = app.available_monitors()?.into_iter()
+    .find(|m| {
+        let (p, s) = (m.position(), m.size());
+        cursor.x &gt;= p.x as f64 &amp;&amp; cursor.x &lt; (p.x + s.width  as i32) as f64
+            &amp;&amp; cursor.y &gt;= p.y as f64 &amp;&amp; cursor.y &lt; (p.y + s.height as i32) as f64
+    })
+    .or_else(|| app.primary_monitor().ok().flatten())
+    .ok_or_else(|| JsonitaError::Io("no monitor".into()))?;
 
-            Ok(())
-        })
-        .invoke_handler(tauri::generate_handler![/* all commands */])
-        .run(tauri::generate_context!())
-        .expect("error running Jsonita");
-}</code></pre>
+// LogicalPosition 计算（含 scale），详见源码
+let (x, y) = compute_centered_top_third(&amp;monitor, win.outer_size()?);
+window.set_position(tauri::LogicalPosition::new(x, y))?;</code></pre>
 
-    <h2><span class="h2-num">5</span>多屏定位</h2>
+    <h2><span class="h2-num">5</span>关闭事件路由</h2>
 
-    <h3><span class="h3-num">5.1</span>规则</h3>
+    <p>"关闭"这个动作来自 6 个来源，分别走 <b>hide</b> 或 <b>真 close + quit</b>。下图是完整路由：</p>
 
-    <p>呼出时定位到<b>光标所在屏</b>（不是主屏，不是上次屏）的中央偏上 1/3 处。</p>
+    <div class="mermaid">
+graph TD
+    subgraph Sources["关闭来源"]
+        E[Esc 键]
+        W[⌘W]
+        B["失焦 (hide_on_blur=true)"]
+        TL["红 traffic light"]
+        TQ["tray → Quit"]
+        Q[⌘Q]
+    end
 
-    <pre><code>// 伪代码
-let cursor_pos = system::cursor_position();              // 全局坐标
-let screen = system::available_monitors()
-    .find(|m| m.contains(cursor_pos))
-    .unwrap_or_else(|| system::primary_monitor());
+    E --> CR[CloseRequested<br/>WindowEvent]
+    W --> CR
+    B --> Blur[on_window_event<br/>Focused false]
+    TL --> CR
+    TQ --> Quit[app.exit]
+    Q --> Quit
 
-let win_size = (saved_width.unwrap_or(860), saved_height.unwrap_or(560));
-let screen_work_area = screen.work_area();               // 排除 dock / menubar
+    Blur --> CheckBlur{settings<br/>.hide_on_blur?}
+    CheckBlur -->|true| Hide
+    CheckBlur -->|false| NoOp[no-op]
 
-let x = screen_work_area.x + (screen_work_area.w - win_size.0) / 2;
-let y = screen_work_area.y + (screen_work_area.h - win_size.1) / 3;  // 上 1/3
+    CR --> Intercept[api.prevent_close<br/>拦截关闭]
+    Intercept --> Save[invoke<br/>session_save_last]
+    Save --> Fade[加 .floating-window-exit<br/>200 ms 淡出]
+    Fade --> Hide[window.hide<br/>+ emit window:hidden]
 
-window.set_position(LogicalPosition::new(x, y))?;</code></pre>
+    Quit --> SaveQ[最后一次<br/>session_save_last]
+    SaveQ --> Exit[app.exit<br/>+ emit app:will_quit]
 
-    <h3><span class="h3-num">5.2</span>具体 API</h3>
+    classDef src fill:#EFF6FF,stroke:#057AF3
+    classDef act fill:#FFF7ED,stroke:#FA9B10
+    classDef end1 fill:#ECFDF5,stroke:#06B78F
+    classDef end2 fill:#FEF2F2,stroke:#DC2626
+    class E,W,B,TL,TQ,Q src
+    class CR,Blur,Intercept,Save,Fade,Quit,SaveQ,CheckBlur,NoOp act
+    class Hide end1
+    class Exit end2
+    </div>
 
-    <pre><code>// src-tauri/src/system/cursor.rs
-use tauri::{Manager, Monitor};
+    <h3><span class="h3-num">5.1</span>来源 → 路由对照</h3>
 
-pub fn locate_window(app: &amp;tauri::AppHandle, label: &amp;str) -&gt; Result&lt;(), JsonitaError&gt; {
-    let window = app.get_webview_window(label)
-        .ok_or_else(|| JsonitaError::Io("window not found".into()))?;
+    <table>
+      <thead><tr><th>来源</th><th>路由</th><th>是否保存 session</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Esc</kbd></td><td>hide</td><td>是</td></tr>
+        <tr><td><kbd>⌘W</kbd></td><td>hide</td><td>是</td></tr>
+        <tr><td>失焦（hide_on_blur=true）</td><td>hide</td><td>是</td></tr>
+        <tr><td>红 traffic light 点击</td><td>hide（拦截 close → hide）</td><td>是</td></tr>
+        <tr><td>menubar → Quit</td><td>close + app exit</td><td>是（quit 前最后一次）</td></tr>
+        <tr><td><kbd>⌘Q</kbd></td><td>close + app exit</td><td>是</td></tr>
+      </tbody>
+    </table>
 
-    let cursor = app.cursor_position()?;     // Tauri 2.x API
-    let monitor = app.available_monitors()?
-        .into_iter()
-        .find(|m| {
-            let p = m.position();
-            let s = m.size();
-            cursor.x &gt;= p.x as f64
-                &amp;&amp; cursor.x &lt; (p.x + s.width as i32) as f64
-                &amp;&amp; cursor.y &gt;= p.y as f64
-                &amp;&amp; cursor.y &lt; (p.y + s.height as i32) as f64
-        })
-        .or_else(|| app.primary_monitor().ok().flatten())
-        .ok_or_else(|| JsonitaError::Io("no monitor".into()))?;
+    <h3><span class="h3-num">5.2</span>close interceptor（~6 行）</h3>
 
-    let win_size = window.outer_size()?;
-    let scale = monitor.scale_factor();
-
-    let mx = monitor.position().x as f64 / scale;
-    let my = monitor.position().y as f64 / scale;
-    let mw = monitor.size().width  as f64 / scale;
-    let mh = monitor.size().height as f64 / scale;
-
-    let ww = win_size.width  as f64 / scale;
-    let wh = win_size.height as f64 / scale;
-
-    let x = mx + (mw - ww) / 2.0;
-    let y = my + (mh - wh) / 3.0;            // 上 1/3
-
-    window.set_position(tauri::LogicalPosition::new(x, y))?;
-    Ok(())
+    <pre><code>// 把红 traffic light / Esc / ⌘W 触发的 CloseRequested 改写为 hide
+fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
+    let w = win.clone();
+    win.on_window_event(move |event| {
+        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            api.prevent_close();
+            let _ = w.hide();
+        }
+    });
 }</code></pre>
 
     <h2><span class="h2-num">6</span>失焦自动隐藏</h2>
 
-    <h3><span class="h3-num">6.1</span>逻辑</h3>
+    <h3><span class="h3-num">6.1</span>触发与例外</h3>
 
-    <pre><code>// src-tauri/src/system/window_panel.rs (continued)
-pub fn install_blur_hide(win: &amp;tauri::WebviewWindow, app: &amp;tauri::AppHandle) {
+    <table>
+      <thead><tr><th>场景</th><th>是否触发隐藏</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td>用户切到其他 App</td><td><b>是</b>（hide_on_blur=true 时）</td><td>核心场景</td></tr>
+        <tr><td>用户打开 React 内的 Settings / History modal</td><td>否</td><td>同窗口 React modal，window 不失焦</td></tr>
+        <tr><td>用户右键唤起系统 menu</td><td>否</td><td>macOS NSMenu 不触发 WindowEvent::Focused(false)</td></tr>
+        <tr><td>用户 ⌘Tab 切到自己另一个 Space</td><td>取决于 NSPanel collectionBehavior</td><td>已加 <code>canJoinAllSpaces</code>（§ 3.1）→ 不触发</td></tr>
+        <tr><td>系统弹出系统级 dialog（权限请求）</td><td>有可能触发</td><td>用户可设 hide_on_blur=false 兜底</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.2</span>监听核心（~10 行）</h3>
+
+    <pre><code>pub fn install_blur_hide(win: &amp;tauri::WebviewWindow, app: &amp;tauri::AppHandle) {
     let app_handle = app.clone();
     let win_label  = win.label().to_string();
-
     win.on_window_event(move |event| {
         if let tauri::WindowEvent::Focused(false) = event {
-            let settings = app_handle.state::&lt;SettingsStore&gt;();
-            if !settings.get().hide_on_blur { return; }
-
-            // 用户可能切到设置 modal 或 history modal ──
-            // 这俩是同一窗口内的 React modal，不会失焦；
-            // 失焦一定是切了别的应用 → hide
+            if !app_handle.state::&lt;SettingsStore&gt;().get().hide_on_blur { return; }
             if let Some(w) = app_handle.get_webview_window(&amp;win_label) {
                 let _ = w.hide();
                 let _ = app_handle.emit_to(&amp;win_label, "window:hidden", ());
@@ -262,231 +269,64 @@ pub fn install_blur_hide(win: &amp;tauri::WebviewWindow, app: &amp;tauri::AppHan
     });
 }</code></pre>
 
-    <h3><span class="h3-num">6.2</span>例外</h3>
+    <h2><span class="h2-num">7</span>智能宽度（plan F10 · 4 层逻辑）</h2>
 
-    <table>
-      <thead><tr><th>场景</th><th>是否触发隐藏</th></tr></thead>
-      <tbody>
-        <tr><td>用户切到其他 App</td><td>是（hide_on_blur=true 时）</td></tr>
-        <tr><td>用户打开 React 内的 Settings / History modal</td><td>否（同窗口，不失焦）</td></tr>
-        <tr><td>用户右键唤起系统 menu</td><td>否（macOS NSMenu 不触发 WindowEvent::Focused(false)）</td></tr>
-        <tr><td>用户 ⌘Tab 切到自己另一个 macOS Space</td><td>取决于 NSPanel collectionBehavior（已加 canJoinAllSpaces）</td></tr>
-        <tr><td>系统弹出系统级 dialog（权限请求）</td><td>有可能触发，需 settings hide_on_blur=false 兜底</td></tr>
-      </tbody>
-    </table>
+    <h3><span class="h3-num">7.1</span>4 层决策</h3>
 
-    <h2><span class="h2-num">7</span>关闭流程</h2>
+    <p>用户输入大 JSON 时，自动按内容宽度扩窗 ── 但要尊重 5 种"不该扩"的情况。决策图：</p>
 
-    <h3><span class="h3-num">7.1</span>关闭来源</h3>
+    <div class="mermaid">
+graph TD
+    Trigger[内容变化<br/>触发 window_resize_for_content] --> L1{user_dragged<br/>true?}
+    L1 -->|是| NoOp1[no-op<br/>锁定，不自动扩]
+    L1 -->|否| L2{soft_wrap<br/>开启?}
+    L2 -->|是| NoOp2[no-op<br/>已换行不溢出]
+    L2 -->|否| L3{smart_width<br/>设置开启?}
+    L3 -->|否| NoOp3[no-op<br/>用户关了智能扩宽]
+    L3 -->|是| L4{max_line_chars<br/>&gt; 80?}
+    L4 -->|否| NoOp4[no-op<br/>行长够窄无需扩]
+    L4 -->|是| Calc["needed = max_line_chars × 8 + 64<br/>ideal = clamp(needed, 720, min(1400, screen×70%))"]
+    Calc --> Animate[animate set_size<br/>150 ms]
 
-    <table>
-      <thead><tr><th>来源</th><th>是 hide 还是 close</th></tr></thead>
-      <tbody>
-        <tr><td><kbd>Esc</kbd></td><td>hide</td></tr>
-        <tr><td><kbd>⌘W</kbd></td><td>hide</td></tr>
-        <tr><td>失焦（hide_on_blur=true）</td><td>hide</td></tr>
-        <tr><td>红 traffic light 点击</td><td>hide ── 拦截 close → hide（见 § 7.2）</td></tr>
-        <tr><td>menubar → Quit</td><td>close + 应用 quit</td></tr>
-        <tr><td><kbd>⌘Q</kbd></td><td>close + 应用 quit</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">7.2</span>拦截 close event</h3>
-
-    <pre><code>fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
-    let win_clone = win.clone();
-    win.on_window_event(move |event| {
-        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-            api.prevent_close();          // 阻止真关闭
-            let _ = win_clone.hide();
-        }
-    });
-}</code></pre>
-
-    <h3><span class="h3-num">7.3</span>关闭时序（前端 + 后端）</h3>
-
-    <div class="flow-steps">
-      <div class="flow-step">
-        <div class="flow-step-num">STEP 01</div>
-        <div class="flow-step-title">用户触发</div>
-        <div class="flow-step-desc">Esc / 失焦 / ⌘W</div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step">
-        <div class="flow-step-num">STEP 02</div>
-        <div class="flow-step-title">前端拦截</div>
-        <div class="flow-step-desc">ui_store.onCloseRequest → 保存当前内容</div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step">
-        <div class="flow-step-num">STEP 03</div>
-        <div class="flow-step-title">写 last_session</div>
-        <div class="flow-step-desc">invoke session_save_last({ content, opType, savedAt })</div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step">
-        <div class="flow-step-num">STEP 04</div>
-        <div class="flow-step-title">淡出</div>
-        <div class="flow-step-desc">React 加 .floating-window-exit 类，200 ms 后</div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step">
-        <div class="flow-step-num">STEP 05</div>
-        <div class="flow-step-title">invoke hide</div>
-        <div class="flow-step-desc">window_hide() → Rust window.hide()</div>
-      </div>
+    classDef cond fill:#FFF7ED,stroke:#FA9B10
+    classDef noop fill:#F5F5F7,stroke:#9CA3AF
+    classDef act  fill:#ECFDF5,stroke:#06B78F
+    class L1,L2,L3,L4 cond
+    class NoOp1,NoOp2,NoOp3,NoOp4 noop
+    class Calc,Animate act
     </div>
 
-    <h2><span class="h2-num">8</span>动效</h2>
-
-    <p>所有动效仅前端 CSS 实现，Rust 端只调 show/hide。</p>
-
-    <pre><code>/* src/shell/FloatingWindow.module.css */
-
-.floatingWindow {
-  /* 透明背景 + 圆角 + 浮窗大阴影 */
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.floatingWindow.enter {
-  animation: floating-in var(--dur-base) var(--ease-out);
-}
-
-.floatingWindow.exit {
-  animation: floating-out var(--dur-slow) var(--ease-in);
-  animation-fill-mode: forwards;
-}
-
-@keyframes floating-in {
-  from { opacity: 0; transform: translateY(-4px) scale(0.985); }
-  to   { opacity: 1; transform: none; }
-}
-
-@keyframes floating-out {
-  to { opacity: 0; transform: translateY(-2px) scale(0.99); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .floatingWindow.enter, .floatingWindow.exit { animation-duration: 1ms; }
-}</code></pre>
-
-    <h3><span class="h3-num">8.1</span>淡出后调 hide 的同步</h3>
-
-    <pre><code>// src/shell/FloatingWindow.tsx
-export function FloatingWindow() {
-  const [phase, setPhase] = useState&lt;'idle' | 'exiting'&gt;('idle');
-
-  const handleClose = useCallback(async () =&gt; {
-    await ipc.sessionSaveLast({
-      content: editor.content,
-      opType:  editor.opType,
-      savedAt: Date.now(),
-    });
-    setPhase('exiting');
-    await sleep(200);                    // 等淡出动画完成
-    await ipc.windowHide();
-    setPhase('idle');
-  }, [editor.content, editor.opType]);
-
-  return &lt;div className={cx(styles.floatingWindow,
-                            phase === 'exiting' ? styles.exit : styles.enter)}&gt;
-    /* ... */
-  &lt;/div&gt;;
-}</code></pre>
-
-    <h2><span class="h2-num">9</span>窗口大小持久化 & 智能宽度</h2>
-
-    <p>实现 <a href="../plan/01_features.html#f10">plan F10 浮窗智能宽度</a> 的 4 层逻辑。用户拖拽 resize 后记忆大小（不记忆位置 ── 位置永远按当前光标屏定）。</p>
-
-    <h3><span class="h3-num">9.1</span>状态模型</h3>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th><th>说明</th><th>持久化</th></tr></thead>
-      <tbody>
-        <tr><td><code>saved_width</code></td><td>Option&lt;u32&gt;</td><td>用户上次拖动 / 智能扩宽后的宽度</td><td><code>window.json</code></td></tr>
-        <tr><td><code>saved_height</code></td><td>Option&lt;u32&gt;</td><td>同上</td><td><code>window.json</code></td></tr>
-        <tr><td><code>user_dragged</code></td><td>bool</td><td>用户是否手动拖动过 ── 是则锁定，自动扩宽跳过</td><td><code>window.json</code></td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">9.2</span>4 层逻辑落地</h3>
+    <h3><span class="h3-num">7.2</span>4 层逻辑落地</h3>
 
     <table>
       <thead><tr><th>层</th><th>触发点</th><th>实现位置</th></tr></thead>
       <tbody>
         <tr><td>1 · 首次呼出宽度</td><td><code>window_show</code> 前</td><td><code>system::window_state::resolve_initial_size</code></td></tr>
-        <tr><td>2 · 粘贴自动扩宽</td><td>编辑器 onChange 首次填充 → <code>window_resize_for_content</code></td><td>前端 editor store + <code>commands::window::window_resize_for_content</code></td></tr>
-        <tr><td>3 · 手动拖动</td><td><code>WindowEvent::Resized</code></td><td><code>install_size_persist</code>（见 § 9.4）</td></tr>
-        <tr><td>4 · soft-wrap</td><td>纯前端 EditorView.lineWrapping toggle（08 章）</td><td>不涉及窗口</td></tr>
+        <tr><td>2 · 粘贴自动扩宽</td><td>编辑器 onChange 首次填充 → 前端调 <code>window_resize_for_content</code></td><td>前端 editor store + Rust <code>cmds::window</code></td></tr>
+        <tr><td>3 · 手动拖动</td><td><code>WindowEvent::Resized</code></td><td><code>install_size_persist</code>（§ 7.4）</td></tr>
+        <tr><td>4 · soft-wrap</td><td>纯前端 EditorView.lineWrapping toggle</td><td>不涉及窗口（详见 <a href="08_editor.html">08</a>）</td></tr>
       </tbody>
     </table>
 
-    <h3><span class="h3-num">9.3</span>智能宽度算法（关键）</h3>
+    <h3><span class="h3-num">7.3</span>持久化字段（<a href="13_schemas.html">13 § 5.2 window.json</a>）</h3>
 
-    <pre><code>// 输入：内容指标 + 设置项 + 当前窗口状态
-// 输出：理想宽度（u32 px）。若与 current 相同则 no-op。
+    <table>
+      <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>width / height</code></td><td>u32</td><td>用户拖动 / 智能扩宽后的尺寸</td></tr>
+        <tr><td><code>userDragged</code></td><td>bool</td><td>true 则锁定（层 1 / 层 3）</td></tr>
+      </tbody>
+    </table>
 
-fn compute_ideal_width(
-    metrics:    &amp;ContentMetrics,
-    settings:   &amp;Settings,
-    state:      &amp;WindowState,        // saved_*, user_dragged
-    screen_w:   u32,
-    current_w:  u32,
-) -&gt; u32 {
-    // ① 用户已拖动 → 锁定，不自动扩
-    if state.user_dragged { return current_w; }
+    <h3><span class="h3-num">7.4</span>用户拖动监听</h3>
 
-    // ② soft-wrap 开启 → 无需扩宽（已经换行不溢出）
-    if metrics.soft_wrap_on { return current_w; }
+    <p>监听 <code>WindowEvent::Resized</code> → debounce 500 ms → 写 <code>window.json</code> + 设 <code>userDragged = true</code> + emit <code>window:resized { source: "user" }</code>。<b>智能扩宽内部</b> <code>set_size()</code> 时通过"操作前后 sentinel 标志"或 <code>source: "auto"</code> 区分，避免误标 <code>userDragged</code>。</p>
 
-    // ③ 用户在设置里关了"智能扩宽"
-    if !settings.smart_width { return current_w; }
+    <h3><span class="h3-num">7.5</span>重置入口</h3>
 
-    // ④ 阈值：行长 ≤ 80 字符不触发
-    if metrics.max_line_chars &lt;= 80 { return current_w; }
+    <p>设置面板 General "重置浮窗尺寸" 按钮 → 调 <code>window_reset_size</code> command → 删除 <code>window.json</code> → 下次呼出回到首次状态。</p>
 
-    // ⑤ 估算 ── 8 px/字符（mono 13px 平均）+ 64 px padding（行号+左右）
-    let needed = metrics.max_line_chars * 8 + 64;
-
-    // ⑥ 区间：[720, min(1400, screen_w × 70%)]
-    let max = (screen_w as f32 * 0.7).min(1400.0) as u32;
-    needed.clamp(720, max)
-}</code></pre>
-
-    <h3><span class="h3-num">9.4</span>用户拖动监听 + 落盘</h3>
-
-    <pre><code>// 监听 WindowEvent::Resized → debounce 500ms → store + set user_dragged
-// 实现位置：src-tauri/src/system/window_state.rs
-fn install_size_persist(win: &amp;WebviewWindow, app: &amp;AppHandle);
-// 副作用：
-//   1. window.json.{width,height,user_dragged=true}
-//   2. emit "window:resized" { width, height, source: "user" }
-//
-// 触发源区分：智能扩宽内部调 set_size 时不应误标 user_dragged ──
-//   通过 "操作前后 sentinel 标志" 或 "对比 source: auto vs user" 区分</code></pre>
-
-    <h3><span class="h3-num">9.5</span>初始宽度解析</h3>
-
-    <pre><code>fn resolve_initial_size(state: &amp;WindowState, settings: &amp;Settings) -&gt; (u32, u32) {
-    if let (Some(w), Some(h)) = (state.saved_width, state.saved_height) {
-        (w, h)                    // 沿用上次（含用户拖动）
-    } else {
-        (settings.initial_width,  // 默认 920，用户可选 720 / 860 / 920 / 1080
-         560)                      // 高度首版固定
-    }
-}</code></pre>
-
-    <h3><span class="h3-num">9.6</span>重置入口</h3>
-
-    <p>设置 General "重置浮窗尺寸" 按钮 → 调 <code>window_reset_size</code> command → 删除 <code>window.json</code> → 下次呼出回到首次状态。</p>
-
-    <h2><span class="h2-num">10</span>窗口生命周期总结</h2>
+    <h2><span class="h2-num">8</span>窗口生命周期</h2>
 
     <div class="mermaid">
 stateDiagram-v2
@@ -502,25 +342,80 @@ stateDiagram-v2
     Quitting --> [*]: emit "app:will_quit"<br/>最后一次 session_save_last
     </div>
 
+    <h3><span class="h3-num">8.1</span>动效（前端 CSS only）</h3>
+
+    <p>Rust 端只调 <code>show() / hide()</code>；淡入淡出由 CSS keyframes 驱动，对应 <a href="03_design_tokens.html">03 § 9.2</a> 的动画 token。</p>
+
+    <table>
+      <thead><tr><th>阶段</th><th>React 类名</th><th>动画</th><th>时长 / 缓动</th></tr></thead>
+      <tbody>
+        <tr><td>挂载</td><td><code>.floating-window-enter</code></td><td><code>window-fade-in</code></td><td><code>--dur-base</code>（150ms）/ <code>--ease-out</code></td></tr>
+        <tr><td>关闭前</td><td><code>.floating-window-exit</code></td><td><code>window-fade-out</code></td><td><code>--dur-slow</code>（200ms）/ <code>--ease-in</code></td></tr>
+        <tr><td>reduced-motion</td><td>—</td><td>animation-duration: 1ms</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>淡出后再调 hide 的同步</b>：React 加 <code>.floating-window-exit</code> → <code>await sleep(200)</code> → <code>invoke window_hide</code>。这样用户看到完整动效再窗口消失。</p>
+
+    <p class="section-divider"><b>三 · 契约</b></p>
+
+    <h2><span class="h2-num">9</span>tauri.conf.json 关键字段</h2>
+
+    <p>完整配置文件维护在 <code>src-tauri/tauri.conf.json</code>；下表是<b>窗口章节相关的关键字段</b>，每个都有具体原因：</p>
+
+    <table>
+      <thead><tr><th>字段</th><th>值</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td>label</td><td><code>"main"</code></td><td>所有 window_* command 通过 label 路由</td></tr>
+        <tr><td>width / height</td><td>860 / 560</td><td>默认尺寸（用户可改成 720 / 920 / 1080）</td></tr>
+        <tr><td>minWidth / minHeight</td><td>720 / 480</td><td>最小尺寸，避免拖太小</td></tr>
+        <tr><td>resizable</td><td>true</td><td>允许用户拖动 resize（智能宽度兼容）</td></tr>
+        <tr><td>decorations</td><td>false</td><td>无系统标题栏 → 自定义 chrome</td></tr>
+        <tr><td>transparent</td><td>true</td><td>圆角 + 大阴影需要</td></tr>
+        <tr><td>shadow</td><td>true</td><td>系统阴影（dark 模式下额外加亮边，03 § 8）</td></tr>
+        <tr><td>alwaysOnTop</td><td>true</td><td>常驻置顶（macOS 上 NSPanel 进一步加强）</td></tr>
+        <tr><td>visible</td><td><b>false</b></td><td>启动不显示，预建好等待呼出</td></tr>
+        <tr><td>focus</td><td>false</td><td>创建时不抢焦点</td></tr>
+        <tr><td>fileDropEnabled</td><td>false</td><td>v1 不读 fs，禁止 drag-drop</td></tr>
+        <tr><td>titleBarStyle</td><td>"Overlay"</td><td>macOS：traffic light 浮在内容上，无 title 文字</td></tr>
+        <tr><td>hiddenTitle</td><td>true</td><td>macOS：隐藏标题文字但保留 traffic light</td></tr>
+        <tr><td>acceptFirstMouse</td><td>true</td><td>macOS：未聚焦时也响应首次点击</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">10</span>命令 / 事件接口</h2>
+
+    <p>窗口章节涉及的 IPC 接口（完整签名见 <a href="02_ipc.html">02 § 6.1.6 / § 7</a>）：</p>
+
+    <table>
+      <thead><tr><th>接口</th><th>类型</th><th>触发</th></tr></thead>
+      <tbody>
+        <tr><td><code>window_show / hide / toggle</code></td><td>command</td><td>UI 显隐控制（快捷键 / tray / 关闭按钮）</td></tr>
+        <tr><td><code>window_resize_for_content(metrics)</code></td><td>command</td><td>智能宽度（§ 7）；metrics: ContentMetrics</td></tr>
+        <tr><td><code>window_reset_size</code></td><td>command</td><td>清掉 window.json 记忆</td></tr>
+        <tr><td><code>window:shown</code></td><td>event</td><td>show 完成（含 clipboard / lastSession / source）</td></tr>
+        <tr><td><code>window:hidden</code></td><td>event</td><td>hide 完成（前端清 transient state）</td></tr>
+        <tr><td><code>window:resized</code></td><td>event</td><td>用户拖动 / 智能扩宽后；source = user / auto</td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>四 · 测试 & 收尾</b></p>
+
     <h2><span class="h2-num">11</span>测试 checklist</h2>
 
     <ul>
-      <li>[ ] 在两台显示器之间移动鼠标后按 ⌘⇧J，浮窗出现在<b>鼠标所在屏</b></li>
-      <li>[ ] ⌘Tab 切到另一应用，浮窗仍可见在原位（不被覆盖）</li>
-      <li>[ ] 浮窗显示时主应用焦点未被抢走（验证 nonactivatingPanel）</li>
-      <li>[ ] resize 浮窗后关闭再呼出，大小被记忆</li>
-      <li>[ ] 关闭浮窗后立即重新呼出，内容自动恢复（5 分钟内）</li>
-      <li>[ ] hide_on_blur=false 时切应用浮窗不消失</li>
-      <li>[ ] 启动 → 第一次 ⌘⇧J 间隔 &lt; 500 ms</li>
-      <li>[ ] 浮窗在 macOS fullscreen App 上仍可见（fullScreenAuxiliary）</li>
-    </ul>
-
-    <h2><span class="h2-num">12</span>承上启下</h2>
-
-    <ul>
-      <li><b>06 菜单栏 & 快捷键</b> ── 注册的 <code>⌘⇧J</code> 触发 window_show()</li>
-      <li><b>07 编辑器</b> ── 浮窗 visible 后接收 window:shown 事件并 focus 编辑器</li>
-      <li><b>09 存储 & 会话</b> ── session_save_last 的实际写入逻辑</li>
+      <li>在两台显示器之间移动鼠标后按 ⌘⇧J，浮窗出现在<b>鼠标所在屏</b></li>
+      <li>⌘Tab 切到另一应用，浮窗仍可见在原位（验证 nonactivatingPanel）</li>
+      <li>浮窗显示时主应用焦点未被抢走（验证 nonactivatingPanel + focus:false）</li>
+      <li>resize 浮窗后关闭再呼出，大小被记忆（验证 userDragged 标志）</li>
+      <li>关闭浮窗后立即重新呼出，内容自动恢复（5 分钟内，验证 session）</li>
+      <li>hide_on_blur=false 时切应用浮窗不消失</li>
+      <li>启动 → 第一次 ⌘⇧J 间隔 &lt; 500 ms（验证预热）</li>
+      <li>浮窗在 macOS fullscreen App 上仍可见（验证 fullScreenAuxiliary）</li>
+      <li>粘贴长行 JSON（&gt; 80 chars/行）触发智能扩宽到 ideal_w</li>
+      <li>用户手动拖动后再粘贴长行，宽度不变（验证 userDragged 锁定）</li>
+      <li>soft_wrap 开启时粘贴长行不触发扩宽</li>
+      <li>红 traffic light 点击触发 hide 而非 quit（验证 close interceptor）</li>
     </ul>
 
     <nav class="pagination" id="pagination"></nav>

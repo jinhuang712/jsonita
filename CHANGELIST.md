@@ -21,6 +21,48 @@
 - 全局清理 ASCII box-drawing：组件/菜单栏改成指向 01 mockups 链接；状态机改用 mermaid stateDiagram
 - 新建项目级 `CLAUDE.md` 写定硬规则（不 cd · 先 TaskCreate+AskUserQuestion · mockups 唯一权威 · 代码密度规则）
 
+#### Design-first 重写（4 章 spec，2202 → 1635 行，-26%）
+- 锁定章节内部顺序规则：**先讲设计意图与工作机制 → 再给代码 / 样例 / schema**；写入项目 memory 作为后续硬约束
+- **02 IPC**（622 → 480 行，-23%）重写为四段 ── 一·设计（目标 / 命令分组职责 / 错误传播模型 / 命名同步幂等大小）/ 二·机制（3 张关键时序 mermaid 提前到第 5 段）/ 三·契约速查（Commands / Events / TS 监听 / 错误矩阵）/ 四·运行时数字。所有 struct / enum / payload（17 个）删除，链 13 § N
+- **09 JSON 引擎**（471 → 370 行，-21%）新增 § 2 "为何用 serde_json 而非 nom/pest/手写" 选型对比 + 模块划分；保留 8 个 ≤ 20 行核心算法（sort_keys 递归 / error_loc::map / walk / unescape / auto_unwrap command 集成等）
+- **10 存储 & 会话**（578 → 386 行，-33%）新增 § 2 介质分工选型理由 + § 3 6 条不变量；提前 § 4 SQLite 设计（表 / 索引 / FTS5 / migration / WAL 选型 + max_size=4 理由）；保留状态机 mermaid + RestoreTimer 接口
+- **11 AI 客户端**（531 → 399 行，-25%）新增 § 1 五条设计原则展开 + § 2 "为何选 DeepSeek" 选型对比；prompt 5 条规则的设计意图独立成节；保留 prompt 模板 + extract_json 三个 case + diff 算法等核心 ~25 行
+- **04 组件库**（395 → 341 行，-14%）删除完整 cva button.tsx + Toast 实现 + global.css；修 4 处 "12 §" 失效链接 → "01 §"；补 6 个组件指向 01 mockup 的视觉链接（TabBar / StatusBar / Toast / ShortcutInput / ApiKeyInput / DiffView）
+- assets/style.css 新增 `.section-divider` 类做"一 · 设计 / 二 · 机制 / 三 · 契约 / 四 · 数字"四段视觉分隔
+
+#### Design-first v2 — 补 graphs + 拆 code（用户二次反馈：缺图 + 代码太多）
+- 强化 memory `spec-design-first-code-last`：加入两条新硬规则 ── (a) 讲系统 / 模块 / 状态 / 流程的章节<b>必须 ≥ 1 张 mermaid 图</b>（目录树代码块 / flow-steps 卡片不能替代）；(b) 代码块严格 ≤ 20 行，必须是不可替代的核心算法或接口签名
+- **00 架构**（414 → 476 行，+15%）**新增 8 张 mermaid 图** ── 双进程拓扑 graph TB / 进程生命周期 stateDiagram-v2 / 启动时序 sequenceDiagram / 呼出时序 sequenceDiagram / format 数据流 sequenceDiagram / 错误传播 graph LR / Rust 模块依赖 graph TD / TypeScript 模块结构 graph TD；删完整 src-tauri/src 目录树 + 完整 src/ 目录树 + JsonitaError Rust enum + TS type 镜像（13 § 1 已唯一权威）+ 完整项目根目录树
+- **03 design tokens**（624 → 559 行，-10%）将原 § 2.2 / 2.3 light + dark `:root { ... }` 60+ 行 CSS 块拆为 token 取值表（4 列：token / light / dark / 设计意图）；字号 / 字重 / 行高 / 圆角 / 边框 / 阴影 / 时长 / 缓动 / Z-index 均改表；新增主题切换 graph TB（4 数据源 + 3 处订阅 + 1 FOUC 避免）；Tailwind 完整 config 70 行压为映射规则表 + ~18 行核心 extend；保留 4 个 ≤ 20 行 `<pre>`（resolve+apply / FOUC inline / Rust theme watch / Tailwind 骨架）
+- **06 窗口**（534 → 428 行，-20%）cocoa NSPanel 完整 unsafe 实现压为标志位表（styleMask × 3 / collectionBehavior × 3 / 其他 × 2 + 调用骨架 ≤ 15 行）；tauri.conf.json 完整 30 行压为关键字段表（含每个字段的"原因"列）；locate_window 完整 40 行 → 算法步骤表 + 核心循环 ≤ 10 行；**新增 4 张 graph** ── 多屏定位决策 graph TD / 关闭事件路由 graph TD（6 来源 → hide vs close 决策）/ 智能宽度 4 层 graph TD / 窗口生命周期 stateDiagram；保留 4 个 ≤ 20 行 `<pre>`（NSPanel 调用骨架 / locate 核心循环 / close interceptor / blur hide）
+
+#### Spec 完整性补 — 新增 2 章（NFR 锁定但散落）
+- **新章 14 国际化 & 无障碍**（357 行 / 3 张 mermaid / 4 个 ≤ 20 行 `<pre>`）── 为 NFR § 3 "M3 中文 UI" 做架构准备 + a11y 清单。设计部分：lib 选型 react-i18next（vs lingui / react-intl / 自写 4 行对比表）/ 资源按章节模块 namespace 拆（shell / panes / settings / history / errors / about / common 7 组）/ locale 检测 3 层 fallback / Rust 错误不翻译策略 / mono 字体 CJK 字符回退；机制部分：3 张 mermaid（locale 检测决策 / 加载与切换流程 / 字体回退决策树）；契约部分：资源目录组织 + JSON 示例 + initI18n / useTranslation API + settings.locale 字段补充；a11y 部分：10 项强制要求 + 3 条 screen reader 关键流
+- **新章 15 日志 & 可观测性**（367 行 / 2 张 mermaid / 3 个 ≤ 20 行 `<pre>`）── 为 NFR § 6 "本地滚动日志 + 不上报 + 不记 JSON 内容" 做完整 spec。设计部分：5 条硬约束（不上报 / 不记敏感 / 双进程合流 / 用户可审计 / 资源可控）/ Rust 日志框架选型 tracing+tracing-appender（vs log+env_logger / slog 对比表）/ 双进程合流策略（Rust 唯一写者，WebView 经 log_write IPC 转发）/ 4 级策略（DEBUG 默认关）/ 隐私脱敏字段黑白名单；机制部分：2 张 mermaid（日志写入路径 graph LR / 隐私脱敏决策树 graph TD）+ 关键事件 catalog 19 个 event（含每个 event 的级别 / 触发 / 字段，明确"哪些可记 / 哪些禁记"）；契约部分：JSON Lines 格式 + 必填字段表 + 文件路径 / 滚动策略 / 保留 7 天 / 权限 0600 + 黑白名单表 + RedactLayer 核心 ~20 行 + WebView 端 logger.ts 薄层 ~20 行 + 新 IPC <code>log_write</code> 命令；测试部分：12 条 checklist 含 "API key 不入日志 / JSON 内容不入日志 / 用户名不入日志" 三项审计专项
+- 同步：<code>assets/nav.js</code> 加 14 / 15 章节项；<code>index.html</code> Spec 列加 14 / 15 链接（spec 总数 14 → 16 章）
+
+#### 工作流规则
+- CLAUDE.md 升级：§ 1.3 "完成工作必须三轨同步：TODO + CHANGELIST + index.html"（之前只写 TODO，导致漏同步）；§ 5.3 把"必要时"改为强制 4 步；§ 3.1 同步 spec 16 章列表
+- 新 memory `todo-cleanup-rule`：TODO 完成项必须从 TODO.md 删除（不只是打勾），TODO 只保留未完成；历史归 CHANGELIST.md。后续会话执行
+- TODO.md 大清理：删除 Phase 0 / 0.5 / 0.6 全部已完成段（30+ 项 [x]），只保留 Phase 1-5 实施期任务 ── 让用户打开 TODO 直接看到"还剩什么"；同时把 spec/14 / 15 锁定的新工作（日志框架接入 / i18n 框架接入 / a11y 验收 / zh-CN 解锁 / 日志导出 zip）补入对应 Phase
+
+#### Spec stale 清理 + mermaid syntax 修
+- 删 spec/12 § 10 发布 checklist（cargo test / git tag / pnpm build 等过程性 runbook 不归 spec）+ § 12 "承上启下 ── 此章是 Spec 终点"（事实错误，13/14/15 在后面）
+- 删除 5 章末尾的"承上启下"小作文段：00 § 11 / 05 § 8 / 07 § 7 / 08 § 9 / 12 § 12（已被 13 § 9 / 14 § 10 / 15 § 12 等"对接表"覆盖，不需小尾巴）
+- 修 mermaid syntax error：spec/14 § 4 字体回退图（节点 label 含 `→` `/` 没引号包裹，渲染失败）；批量加引号修复 7 个高风险节点（00 § 1 / § 7 / 03 § 11 / 15 § 2.4 / 15 § 3 中含 `/` `:` `*` 在 label 里的）
+- 新 memory `mermaid-safe-syntax`：节点 label 强制 `["..."]` 引号包裹；edge label 禁 `→` `/` `*` `（）`；stateDiagram-v2 transition label 用 `<br/>` 换行不用 `→`
+
+#### CLAUDE.md v3 大改（progress + 测试 + git commit + 内容禁区）
+- 新增 § 1.4 "TODO 完成项必须删除（不是打勾）"硬规则；§ 1.5 "完成小节点必须 git commit 但不主动 push"
+- § 1.3 同步范围扩展：TODO + CHANGELIST + index.html + progress + nav.js 共 5 轨
+- § 3.1 加入 progress/ 5 篇章节列表（01_m0_skeleton ... 05_v11_distribution）
+- 新增 § 4.5 "spec 内容禁区"：禁发布 checklist / 承上启下小作文段 / 会话总结式段尾 / 事实错误的宏观断言 / 重复 mockups 视觉描述
+- 新增 § 4.6 mermaid 写法精简版（细则指向 memory `mermaid-safe-syntax`）
+- § 5.3 升级强制 4 步 → 强制 5 步（加 git commit）
+- 新增 § 六 "Progress 迭代规则"：边界 / 状态切换 / Tasks 细于 Progress / spec ↔ progress 双向同步 4 段（细则指向 memory `progress-iteration-rules` 10 条）
+- 新增 § 七 "测试策略"：核心 JSON 引擎单测 + 手动验收 + CI 跑什么 + Phase 完成打 tag 4 段
+- 新 memory `progress-iteration-rules`：用户 6 条 + Claude 补 4 条 = 10 条 progress 迭代硬规则汇总
+
 ### Spec Phase · 0.5 起草
 - 完成 12 章技术设计 `spec/00-11_*.html`：
   - 00 系统架构（进程模型 · 模块边界 Rust + TS · 数据流 · 错误传播 · 不变量）
