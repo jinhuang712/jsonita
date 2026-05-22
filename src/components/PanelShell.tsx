@@ -1,10 +1,13 @@
+import { useTranslation } from 'react-i18next';
+
 /**
- * M0-N3 浮窗外壳 placeholder。
+ * M0-N3 浮窗外壳 placeholder（M0-N6 改 useTranslation）。
  *
  * 视觉锚：spec/01_mockups.html § 1 主浮窗 6 态 + § 10.1 Empty States · 浮窗无内容。
  * 当前阶段仅占位文本；M1-N4 起被 SplitPane + TabBar + StatusBar 替换。
  */
 export function PanelShell() {
+  const { t } = useTranslation('panes');
   return (
     <div
       style={{
@@ -26,8 +29,8 @@ export function PanelShell() {
       }}
     >
       <div style={{ fontSize: 22, color: '#9CA3AF' }}>{'{ }'}</div>
-      <div style={{ fontSize: 13 }}>Paste JSON to start</div>
-      <div style={{ fontSize: 10.5, color: '#9CA3AF' }}>M0-N3 NSPanel POC</div>
+      <div style={{ fontSize: 13 }}>{t('empty.title')}</div>
+      <div style={{ fontSize: 10.5, color: '#9CA3AF' }}>{t('empty.phaseLabel')}</div>
     </div>
   );
 }

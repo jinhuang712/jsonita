@@ -1,0 +1,11 @@
+{
+  "title": "Settings",
+  "groups": {
+    "general": "General",
+    "shortcuts": "Shortcuts",
+    "ai": "AI",
+    "history": "History",
+    "jsonTransform": "JSON Transform",
+    "about": "About"
+  }
+}

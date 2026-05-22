@@ -1,11 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 
 /**
  * macOS Accessibility / Input Monitoring 权限引导 Modal。
  *
  * 视觉锚：spec/01_mockups.html § 9 macOS 权限引导 Modal。
  * 触发：App.tsx 检测 shortcut_status === false / 收到 `permission:accessibility_missing` event。
- * v1 文案先硬编码英文；M0-N6 i18n 接入后改 `t()`。
+ * M0-N6：文案全走 i18n（errors + common namespace）。
  */
 
 interface Props {
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function AccessibilityModal({ onClose }: Props) {
+  const { t } = useTranslation('errors');
+  const { t: tc } = useTranslation('common');
+
   return (
     <div
       style={{
@@ -39,7 +43,7 @@ export function AccessibilityModal({ onClose }: Props) {
       >
         <div style={{ fontSize: 30, marginBottom: 8 }}>⌨️</div>
         <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
-          Accessibility permission needed
+          {t('accessibilityRequired.title')}
         </div>
         <div
           style={{
@@ -49,12 +53,11 @@ export function AccessibilityModal({ onClose }: Props) {
             marginBottom: 16,
           }}
         >
-          Global shortcut <kbd style={kbdStyle}>⌘⇧J</kbd> needs Input Monitoring permission to work
-          in any frontmost app. Add Jsonita in System Settings → Privacy & Security → Accessibility.
+          {t('accessibilityRequired.body', { key: '⌘⇧J' })}
         </div>
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
           <button onClick={onClose} style={btnGhost}>
-            Later
+            {tc('later')}
           </button>
           <button
             onClick={async () => {
@@ -62,23 +65,13 @@ export function AccessibilityModal({ onClose }: Props) {
             }}
             style={btnPrimary}
           >
-            Open System Settings
+            {tc('openSystemSettings')}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
-const kbdStyle: React.CSSProperties = {
-  display: 'inline-block',
-  padding: '0 4px',
-  background: '#F5F5F7',
-  border: '1px solid #D1D5DB',
-  borderRadius: 4,
-  fontSize: 11,
-  fontFamily: '"SF Mono", Menlo, monospace',
-};
 
 const btnGhost: React.CSSProperties = {
   padding: '6px 14px',

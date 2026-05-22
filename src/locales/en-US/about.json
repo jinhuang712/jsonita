@@ -1,0 +1,6 @@
+{
+  "appName": "Jsonita",
+  "tagline": "Tiny menu-bar JSON toolkit",
+  "version": "Version {{version}}",
+  "openLogDir": "Open Log Directory"
+}

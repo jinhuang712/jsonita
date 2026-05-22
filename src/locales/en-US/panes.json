@@ -1,0 +1,15 @@
+{
+  "empty": {
+    "title": "Paste JSON to start",
+    "shortcutLabel": "⌘V",
+    "phaseLabel": "M0-N3 NSPanel POC"
+  },
+  "tab": {
+    "format": "Format",
+    "minify": "Minify",
+    "tree": "Tree",
+    "jsonToStr": "→Str",
+    "strToJson": "→JSON",
+    "aiFix": "AI Fix"
+  }
+}

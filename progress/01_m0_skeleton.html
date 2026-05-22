@@ -162,9 +162,9 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td><code>src/i18n/{index.ts,types.ts}</code> · <code>src/locales/en-US/{shell,panes,settings,history,errors,about,common}.json</code> · <code>src/main.tsx</code>（i18n init）</td></tr>
-        <tr><td>verification</td><td>M0-A13：grep src/ 找 hardcode 英文 0 命中；<code>useTranslation</code> 在 Modal / tray 已用</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>package.json</code>（i18next 23 + react-i18next 15 + browser-languagedetector 8）· <code>src/i18n/{index.ts,types.ts}</code>（init + LanguageDetector + TS resources 类型增强）· <code>src/locales/en-US/{shell,panes,settings,history,errors,about,common}.json</code>（7 namespace 全建）· <code>src/main.tsx</code>（<code>await initI18n()</code> before React mount）· <code>src/components/PanelShell.tsx</code> + <code>src/permissions/AccessibilityModal.tsx</code>（改 useTranslation）</td></tr>
+        <tr><td>verification</td><td>agent 端：7 namespace 齐 ✓ · grep 0 hardcode 英文（不含 locale + i18n 模块）✓ · 链接 0 broken ✓；<b>待用户本机跑</b>：(M0-A13) <code>grep -rE '"[A-Z][a-z]+ [A-Z][a-z]+"' src/ --include="*.tsx" --include="*.ts" | grep -v src/locales | grep -v src/i18n</code> 0 命中 · <code>pnpm tsc --noEmit</code> 0 错（含 <code>t('key')</code> 自动补全）· <code>pnpm tauri dev</code> 看 DevTools console <code>i18next.languages === ['en-US']</code> + <code>document.documentElement.lang === 'en-US'</code></td></tr>
         <tr><td>commit / tag</td><td><code>feat(m0-n6): react-i18next + 7 namespaces (en-US only)</code></td></tr>
         <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td><code>i18next</code> + <code>react-i18next</code> 接入；<code>src/locales/en-US/{shell,panes,settings,history,errors,about,common}.json</code> 7 个 namespace 骨架；<code>useTranslation</code> 在权限引导 Modal / tray menu label 上已经在用</td></tr>

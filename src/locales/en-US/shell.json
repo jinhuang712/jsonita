@@ -1,0 +1,11 @@
+{
+  "tray": {
+    "toggle": "Toggle Jsonita",
+    "settings": "Settings…",
+    "quit": "Quit Jsonita"
+  },
+  "statusBar": {
+    "valid": "Valid JSON",
+    "empty": "Paste JSON to start"
+  }
+}
