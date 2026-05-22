@@ -195,3 +195,53 @@ pub struct WindowResizedPayload {
     pub height: u32,
     pub source: &'static str, // "user" | "auto"
 }
+
+// ──────────── § 3.3 设置（M2-N1 真实化前 default） ────────────
+
+/// Settings 全字段权威定义 ── spec/13 § 3.3。
+/// M1-N8 仅以 default 形态注入 SettingsStore；M2-N1 起从 settings.json 加载 + patch + 落盘。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Settings {
+    pub launch_at_login: bool,
+    pub show_in_menubar: bool,
+    pub auto_paste_clipboard: bool,
+    pub hide_on_blur: bool,
+    pub single_pane_mode: bool,
+    pub theme: ThemeMode,
+    pub restore_window: RestoreWindow,
+    pub initial_width: InitialWidth,
+    pub smart_width: bool,
+    pub shortcut_toggle: String,
+    pub shortcut_restore_last: String,
+    pub ai_enabled: bool,
+    pub ai_model_id: String,
+    pub history_limit: u32,
+    pub auto_unwrap: bool,
+    pub unwrap_timeout_ms: u64,
+    pub editor_soft_wrap: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings {
+            launch_at_login: true,
+            show_in_menubar: true,
+            auto_paste_clipboard: true,
+            hide_on_blur: true,
+            single_pane_mode: false,
+            theme: ThemeMode::System,
+            restore_window: RestoreWindow::Min5,
+            initial_width: InitialWidth::W920,
+            smart_width: true,
+            shortcut_toggle: "CmdOrCtrl+Shift+J".to_string(),
+            shortcut_restore_last: "CmdOrCtrl+Shift+L".to_string(),
+            ai_enabled: false,
+            ai_model_id: "deepseek-chat".to_string(),
+            history_limit: 100,
+            auto_unwrap: true,
+            unwrap_timeout_ms: 200,
+            editor_soft_wrap: true,
+        }
+    }
+}

@@ -191,10 +191,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A5 / A6 + cargo test 200ms 超时</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/types.rs</code> 加 Settings struct（17 字段 + Default impl spec/13 § 3.3 对齐）；<code>src-tauri/src/store/settings.rs</code> SettingsStore (Arc&lt;RwLock&lt;Settings&gt;&gt;)；<code>src-tauri/src/cmds/json.rs</code> json_format 接 State&lt;SettingsStore&gt;：auto_unwrap=true 时先调 engine::unwrap::unwrap 再 format；<code>src-tauri/src/main.rs</code> setup 注入 SettingsStore::new()</td></tr>
+        <tr><td>verification</td><td>agent 端：engine::unwrap 接入 json_format 链路 ✓；<b>待用户本机跑</b>：粘 Golang proto 嵌套 stringified JSON → format tab 应一次性全展开（auto_unwrap=true 默认）；切 settings.auto_unwrap=false（M2-N1 后可改）则保留原貌；极端嵌套 200ms 内返 UnwrapTimeout（M1-N2 单测已验）</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n8): integrate engine::unwrap into json_format via settings.auto_unwrap</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n2-engine</code></td></tr>
         <tr><td>关键交付物</td><td>engine <code>auto_unwrap_all</code>：walk JSON value 树，遇 String 且能 parse 成 JSON 时递归展开；<b>无</b>层数硬限；单次调用 200 ms 全局超时（用 <code>Instant::now()</code> 全程传）；超时返回 <code>UnwrapTimeout { ms, depth }</code></td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/09_json_engine.html">09 § 6 嵌套 stringified JSON 全量解开</a>（含 walk 算法核心 ~20 行）</td></tr>

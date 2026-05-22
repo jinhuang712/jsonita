@@ -6,5 +6,7 @@
 pub mod db;
 pub mod history;
 pub mod session;
+pub mod settings;
 
 pub use db::Db;
+pub use settings::SettingsStore;
