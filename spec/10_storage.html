@@ -360,22 +360,6 @@ rm -rf "$HOME/Library/Logs/Jsonita"
 security delete-generic-password -s "com.jsonita.app" -a "deepseek_api_key" 2&gt;/dev/null
 echo "Done. (Application itself is at /Applications/Jsonita.app, rm manually.)"</code></pre>
 
-    <h2><span class="h2-num">11</span>测试 checklist</h2>
-
-    <ul>
-      <li>migration 在空数据库 + 已有 schema_version=1 数据库上都跑通</li>
-      <li>同内容多次写入只有一条 history 记录（I-1）</li>
-      <li>history_clear() 不删 pinned / starred（I-6）</li>
-      <li>FTS5 中文搜索可工作（unicode61 tokenizer）</li>
-      <li>last_session 单行约束生效（重复插入返回 1 行）（I-2）</li>
-      <li>Keychain set → get round-trip 一致</li>
-      <li>Keychain 删除不存在 entry 不报错</li>
-      <li>settings.patch 触发 settings:changed event 给所有窗口</li>
-      <li>5 分钟窗口期：5 min 内呼出恢复，5+1 min 后不恢复</li>
-      <li>应用 Quit + 重启后 ⌘⇧L 仍能找回（sqlite 持久化）</li>
-      <li>API key 不出现于 log / event payload / error message（I-4 审计）</li>
-    </ul>
-
     <nav class="pagination" id="pagination"></nav>
 
   </article>

@@ -338,19 +338,6 @@ useHotkeys('meta+,',   () =&gt; setSettingsOpen(true));</code></pre>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">6</span>测试 checklist</h2>
-
-    <ul>
-      <li>[ ] 全局 <kbd>⌘⇧J</kbd> 即使焦点在其他 App 也能呼出浮窗</li>
-      <li>[ ] 自定义快捷键后立即生效（不需重启）</li>
-      <li>[ ] 自定义快捷键冲突时显示 Tooltip 警告，不破坏旧绑定</li>
-      <li>[ ] 改 <code>shortcut_toggle</code> 后菜单栏 menu 里的 accelerator 文字也更新</li>
-      <li>[ ] menubar template 图标在 light / dark menubar 下都自动反色</li>
-      <li>[ ] 关闭 <code>show_in_menubar</code> 后 tray 立刻消失</li>
-      <li>[ ] 关闭 <code>show_in_menubar</code> + <code>hide_dock_icon</code> 同时 → 阻止操作（提示需保留一个入口）</li>
-      <li>[ ] Quit 之前发出 <code>app:will_quit</code>，前端能完成最后一次 session_save_last</li>
-    </ul>
-
     <nav class="pagination" id="pagination"></nav>
 
   </article>

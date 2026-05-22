@@ -323,26 +323,7 @@ export const logger = {
       <li><b>反馈引导</b>：<code>AiInvalidJson</code> Modal / <code>Sqlite</code> Toast 等错误 UI 加 "Report issue" 链接 → 跳 GitHub Issues 模板（预填 OS / version / 引导用户附最近 1 日日志）</li>
     </ul>
 
-    <p class="section-divider"><b>四 · 测试 & 收尾</b></p>
-
-    <h2><span class="h2-num">11</span>测试 checklist</h2>
-
-    <ul>
-      <li><b>审计：API key 不入日志</b> ── 故意调 <code>ai_set_api_key("sk-test")</code> 失败 / 成功各一次，<code>grep -r "sk-" ~/Library/Logs/Jsonita/</code> 必须无命中</li>
-      <li><b>审计：JSON 内容不入日志</b> ── 故意输入包含 "TopSecret" 字符串的 JSON 触发 parse 错和 AI 调用，grep 必须无命中（只能见 sha256 前缀）</li>
-      <li><b>审计：用户名不入日志</b> ── 启动事件中 <code>app_data_dir</code> 应为 <code>~/Library/Application Support/Jsonita</code>，不含真实用户名</li>
-      <li>滚动：手动改系统时间到次日 → 自动开新文件 <code>jsonita-YYYY-MM-DD.log</code></li>
-      <li>5 MB 上限：人造 5 MB 日志 → 自动开 <code>.1.log</code> 分片</li>
-      <li>保留 7 天：放 9 天前的旧文件 → 启动后被删</li>
-      <li>WebView 日志合流：前端 <code>logger.error('web::test', 'foo')</code> → 同一日志文件能看到 <code>"target":"web::test"</code> 行</li>
-      <li>panic：人造 panic 触发 → ERROR <code>panic</code> event 记录到文件（含 backtrace，不含内联数据）</li>
-      <li>权限：日志文件权限 0600（仅当前用户可读）</li>
-      <li>DEBUG 默认关：默认启动后 grep <code>"level":"DEBUG"</code> 必须 0 命中</li>
-      <li><code>RUST_LOG=jsonita=debug</code> 启动 → DEBUG event 进入文件</li>
-      <li>导出最近 7 日 zip：包含 ≤ 7 个 daily 文件 + 1 个 metadata.json（含 app version / OS / 导出时间）</li>
-    </ul>
-
-    <h2><span class="h2-num">12</span>与其他章节对接</h2>
+    <h2><span class="h2-num">11</span>与其他章节对接</h2>
 
     <table>
       <thead><tr><th>章节</th><th>对接点</th></tr></thead>

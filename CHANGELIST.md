@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+### Progress Phase · 0.6.x 起步
+
+#### progress/ 5 篇规划文档（统一结构：前置 / 退出 / 节点 / 验收 / 测试 / 风险 / 跨章速查）
+- 新增 `progress/01_m0_skeleton.html` (**active**) M0 Skeleton ── 7 节点 + 7 退出条件 + 13 验收用例（A1-A13）；从 `pnpm create tauri-app` 到本地 dmg 跑通；含日志框架 / i18n 框架的早期接入
+- 新增 `progress/02_m1_core_json.html` (planned) M1 Core JSON ── 9 节点 + 12 退出条件 + 22 验收用例；核心价值落地（Formatter / Tree / String 互转 / 历史 / 会话 / 嵌套 unwrap / 智能宽度 / 单窗）
+- 新增 `progress/03_m2_ai_settings.html` (planned) M2 AI Fix + Settings ── 6 节点 + 12 退出条件 + 21 验收用例；DeepSeek + Keychain + 设置面板 + 自定义快捷键 + macOS code signing & notarization
+- 新增 `progress/04_m3_polish_cross.html` (planned) M3 Polish + Cross ── 6 节点 + 13 退出条件 + 20 验收用例；主题 / 中文 UI 解锁 / a11y 完整验收 / macOS 多版本回归 / Windows 实验构建 / v1.0 GitHub Releases 发布
+- 新增 `progress/05_v11_distribution.html` (planned) v1.1+ Distribution ── 5 独立节点（brew tap / npm 启动器 / 自动更新 / Windows EV 签名 + winget / 日志导出 zip）；推荐 v1.1 / v1.2 / v1.3 滚动发布节奏；首个"非串行" Phase
+
+#### spec 清理（用户反馈"checklist 都删掉"）
+- 删除 8 章末尾"测试 checklist"段：`spec/06 § 11` · `07 § 6` · `08 § 8` · `09 § 11` · `10 § 11` · `11 § 12` · `14 § 9` · `15 § 11`（共 ~80 个 li 验收项）
+- 删除 `spec/12 § 9 验收标准（对齐 plan NFR）` 整段（含 9.1 性能 / 9.2 隐私 / 9.3 可用性 / 9.4 兼容性 / 9.5 可靠性 5 张 A-PERF / A-PRIV / A-UX / A-COMPAT / A-REL 用例表）
+- 14 / 15 / 12 后续节自动重编号（§ 10→9 / § 12→11 / § 10→9）
+- 删除后 spec 各章末尾改由 progress 验收用例承接；spec 回归"技术设计"边界，progress 承接"实施期对照"
+
+#### 项目面板同步（CLAUDE.md § 1.3 / § 5.3 强制 5 步）
+- `index.html` Progress 列从"待 Spec 完成后生成" 改为 5 个章节链接
+- `assets/nav.js` `progress.chapters` 从空数组填入 5 章节定义（M0 / M1 / M2 / M3 / v1.1+）
+- 大清理 `TODO.md`：删 Phase 1-5 全段（30 项 [ ] 任务全转入 progress）；只留"未分到 Phase 的疑似工作" 2 条；恢复 TODO 单一职责"列未完成"
+
 ### Planning Phase
 - 项目立项、命名 `Jsonita`（西语小化后缀 -ita，"小巧的 JSON 工具"）
 - 完成查重：GitHub / npm / crates.io / PyPI 均无重名
