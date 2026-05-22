@@ -1,36 +1,37 @@
 import { useTranslation } from 'react-i18next';
+import { Editor } from '../editor/Editor';
+import { useEditorStore } from '../store/editor';
 
 /**
- * M0-N3 浮窗外壳 placeholder（M0-N6 改 useTranslation）。
+ * 浮窗外壳 — M1-N3 内嵌 CodeMirror Editor 实例。
  *
- * 视觉锚：spec/01_mockups.html § 1 主浮窗 6 态 + § 10.1 Empty States · 浮窗无内容。
- * 当前阶段仅占位文本；M1-N4 起被 SplitPane + TabBar + StatusBar 替换。
+ * 视觉锚：spec/01_mockups.html § 1 主浮窗 6 态。
+ * M1-N4 起：拆 SplitPane 左右双栏 + TabBar / StatusBar 真实化（当前仅单栏 Editor 起步）。
  */
 export function PanelShell() {
   const { t } = useTranslation('panes');
+  const content = useEditorStore((s) => s.content);
+  const setContent = useEditorStore((s) => s.setContent);
+
   return (
     <div
       style={{
         height: '100%',
-        background: 'rgba(255, 255, 255, 0.96)',
+        background: 'var(--bg-card)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: 10,
-        boxShadow: '0 12px 36px rgba(0,0,0,0.12)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
-        color: '#6B7280',
-        gap: 6,
+        borderRadius: 'var(--radius-xl)',
+        boxShadow: 'var(--shadow-lg)',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ fontSize: 22, color: '#9CA3AF' }}>{'{ }'}</div>
-      <div style={{ fontSize: 13 }}>{t('empty.title')}</div>
-      <div style={{ fontSize: 10.5, color: '#9CA3AF' }}>{t('empty.phaseLabel')}</div>
+      <Editor
+        theme="light"
+        value={content}
+        onChange={setContent}
+        softWrap={true}
+        placeholderText={t('empty.title')}
+      />
     </div>
   );
 }

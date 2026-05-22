@@ -1,0 +1,32 @@
+/**
+ * 全局基础 — body 透明（NSPanel 兼容），字体 / 颜色继承 tokens。
+ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+#root {
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+kbd {
+  display: inline-block;
+  padding: 0 4px;
+  background: var(--bg-code);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text);
+}

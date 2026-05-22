@@ -310,7 +310,7 @@
         {
           "node": "M1-N3",
           "title": "CodeMirror 6 集成",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n3-codemirror",
           "task_file": null,
           "spec_refs": [
