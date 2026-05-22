@@ -8,6 +8,35 @@
 
 ### M0 实施期 · 0.3.0-m0 路线开工
 
+#### M0-N5 · 日志框架（tracing）（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src-tauri/src/logging/mod.rs` ── `init()` 函数串：(1) `unsafe libc::umask(0o077)` 强制新文件 0600（spec/15 § 6 权限要求）→ (2) 解析 log_dir（macOS `~/Library/Logs/Jsonita/`；其他 `~/.local/share/Jsonita/logs/`）→ (3) `create_dir_all` → (4) 7 日 purge（启动时清 mtime &lt; 7d 的旧文件）→ (5) `set_permissions(0o600)` chmod 已存在文件（umask 不影响）→ (6) `RollingFileAppender::builder()` daily rotation + prefix=jsonita + suffix=log → (7) `tracing_subscriber::registry().with(env_filter).with(RedactLayer).with(fmt_layer.json())` 装链 → (8) return `WorkerGuard` 让 main bind 防 drop
+- `src-tauri/src/logging/redact.rs` ── `RedactLayer` 实现 `Layer<S>` trait；M0 placeholder 不做变换；M2-N3 接 API key 时填 DENY / HASH 列表（spec/15 § 7.3 RedactLayer 核心 ~20 行）
+- `src-tauri/src/main.rs` ── `let _log_guard = logging::init();` 头一行；`tracing::info!(version, os, arch, "app.start")` 第一条事件；shortcuts 注册成功 / 失败也都走 tracing
+- `src-tauri/Cargo.toml` ── 加 tracing 0.1 / tracing-subscriber 0.3 [env-filter+json] / tracing-appender 0.2 / dirs 5；新 `[target.'cfg(unix)']` 段加 libc 0.2
+- `src/services/logger.ts` ── 前端日志薄封装：4 级（error/warn/info/debug）+ target + event + fields；M0 仅 `console.*`；M1 起加 `invoke('log_write', ...)` 转发到 Rust 合流
+
+关键决策：
+
+- **umask 0077 而非 OpenOptions::mode**：tracing-appender 内部 file open 不暴露 mode；改在进程级 umask 全局生效（影响所有后续 file 创建，包括 rotate 新文件）
+- **JSON Lines 字段轻微偏离 spec/15 § 5.1**：tracing-subscriber 默认字段 `timestamp/level/target/message` 而非 spec 期望的 `ts/level/target/event`；功能等价，可读性可接受；M2 起若需严格对齐再换自定义 formatter
+- **`jsonita.YYYY-MM-DD.log` 而非 `jsonita-YYYY-MM-DD.log`**：tracing-appender 0.2 Builder 用 `.` 作 prefix/suffix 分隔符；微调名称与 spec/15 § 6 略差异 ── 无功能影响
+- **5 MB 单文件分片留 M1**：tracing-appender 0.2 不内置 size-based rotation；M0 暂仅 daily（spec/15 § 6 提了 5MB 上限 → 极端场景 ── M1 加自定义 wrap）
+- **RedactLayer M0 空规则**：占位安装在 subscriber chain；M2-N3 引入 API key 时填 DENY/HASH 名单（spec/15 § 7.3 核心 ~20 行）
+
+待用户本机验证：
+
+- M0-A11 ── `ls -l ~/Library/Logs/Jsonita/` 应见 `jsonita.YYYY-MM-DD.log` + 权限 `-rw-------` (0600)
+- M0-A12 ── `tail -n 1 ~/Library/Logs/Jsonita/jsonita.*.log` 应见 JSON Lines 含 `"level":"INFO"` + `"message":"app.start"` + `"version":"0.3.0-m0"`
+- 临时开 DEBUG：`RUST_LOG=jsonita=debug pnpm tauri dev` 然后 grep `"level":"DEBUG"` 应有命中
+
+进度状态：
+
+- `progress/manifest.json` M0-N5 `status: completed`
+- `progress/01_m0_skeleton.html#m0-n5-logging` status: `done · pending-user-verification`
+
 #### M0-N4 · 全局快捷键 + 权限引导（done · pending-user-verification）
 
 新增 / 修改文件：

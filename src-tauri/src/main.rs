@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod logging;
 mod menubar;
 mod shortcuts;
 mod window;
@@ -7,6 +8,16 @@ mod window;
 use tauri::{Listener, Manager};
 
 fn main() {
+    // 日志先起 ── _guard 留 main local 直到 run() 返回，drop 触发 flush
+    let _log_guard = logging::init();
+
+    tracing::info!(
+        version = env!("CARGO_PKG_VERSION"),
+        os = std::env::consts::OS,
+        arch = std::env::consts::ARCH,
+        "app.start"
+    );
+
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -33,7 +44,9 @@ fn main() {
 
             // 注册 ⌘⇧J；失败不阻塞启动（M0-N4：权限缺失走前端引导 Modal）
             if let Err(e) = shortcuts::register_defaults(app.handle()) {
-                eprintln!("[shortcuts] register_defaults failed: {}", e);
+                tracing::warn!(error = %e, "shortcut.register_failed");
+            } else {
+                tracing::info!(action = "toggle-window", "shortcut.registered");
             }
 
             Ok(())
