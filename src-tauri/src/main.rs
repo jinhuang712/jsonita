@@ -6,6 +6,7 @@ mod error;
 mod logging;
 mod menubar;
 mod shortcuts;
+mod store;
 mod types;
 mod window;
 
@@ -63,6 +64,19 @@ fn main() {
             {
                 use tauri::ActivationPolicy;
                 let _ = app.set_activation_policy(ActivationPolicy::Accessory);
+            }
+
+            // SQLite store ── M1-N6 起注入 Db state（cmds 走 State<Db>）
+            if let Some(db_path) = store::db::default_db_path() {
+                match store::Db::open(&db_path) {
+                    Ok(db) => {
+                        app.manage(db);
+                        tracing::info!(path = %db_path.display(), "db.open");
+                    }
+                    Err(e) => {
+                        tracing::error!(error = %e, path = %db_path.display(), "db.open.failed");
+                    }
+                }
             }
 
             menubar::build(app.handle())?;

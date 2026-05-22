@@ -157,10 +157,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A12 / A13 / A14</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td>Cargo.toml + rusqlite 0.32 bundled + r2d2 0.8 + r2d2_sqlite 0.25 + sha2 0.10 + hex 0.4；<code>src-tauri/migrations/0001_init.sql</code>（5 表 + 3 索引 + FTS5 + 3 trigger）；<code>src-tauri/src/store/{mod,db,history,session}.rs</code>（Db pool + migrate + history CRUD + session CRUD）；<code>src-tauri/src/cmds/history.rs</code> 替换 stub 为真实 State&lt;Db&gt; 调用；<code>src-tauri/src/main.rs</code> setup 注入 Db state（~/Library/Application Support/Jsonita/history.db）</td></tr>
+        <tr><td>verification</td><td>agent 端：DDL + Db pool + history CRUD + FTS5 search ✓；<b>待用户本机跑</b>：<code>cargo build</code> 应过；启动后 <code>ls ~/Library/Application\ Support/Jsonita/</code> 看 history.db；DevTools 调 <code>invoke('history_list', {opts: {limit: 50}})</code> 应回 [] 空数组（M1-N6 未挂入 add 钩子）；session_save_last + load_last 也可单独调通</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n6): sqlite store with history fts5 + r2d2 pool + migrations</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n1-store-ipc</code></td></tr>
         <tr><td>关键交付物</td><td>rusqlite + WAL 模式 + migration 框架（schema_version 表）；<code>history</code> + <code>history_fts</code>（FTS5 unicode61）双表；commands：<code>history_list</code> / <code>history_search</code> / <code>history_pin</code> / <code>history_star</code> / <code>history_clear</code>；自动 trim 至 100 条（pinned / starred 不动）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/10_storage.html">10 § 4 SQLite 设计 § 8 索引 § 9 性能 § 10 升级</a> · <a href="../spec/13_schemas.html">13 § 2 SQL DDL</a></td></tr>
