@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Style 修复
+
+#### H2 / section-divider 字号平衡（用户反馈"H1 H2 大小明显失衡"）
+- `assets/style.css` H2：24px → 21px；删 `linear-gradient` 背景 + `border-left` + `border-radius` + 横向 padding；改加 `border-bottom: 1px solid var(--border)` ── H2 从"重背景卡片"变"净文字 + 底部细线"，与 H3 17px / section-divider banner 18px 形成顺畅阶梯
+- `h2 .h2-num` 字号 16px → 14px / `min-width` 28px → 22px（编号跟随 H2 缩小）
+- `.section-divider` 整段 11px → 13px；`.section-divider b` 加 `font-size: 16px` + `letter-spacing` 0.12 → 0.08em（大段"一·设计 / 二·机制"banner 不再"看着像 tag"）
+- 改动仅在 `assets/style.css` 内，HTML / nav.js 不变；全 spec / plan / progress / index 页面共享样式自动跟进
+
 ### Progress Phase · 0.6.x 起步
 
 #### progress/ 5 篇规划文档（统一结构：前置 / 退出 / 节点 / 验收 / 测试 / 风险 / 跨章速查）
