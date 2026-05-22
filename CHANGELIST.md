@@ -8,6 +8,40 @@
 
 ### M0 实施期 · 0.3.0-m0 路线开工
 
+#### M0-N3 · 浮窗 POC（NSPanel-like 行为）（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src-tauri/src/window/mod.rs` ── window runtime 入口：`setup()`（启动调一次，promote + 装事件钩子）/ `toggle()`（由 tray:toggle 与 M0-N4 全局快捷键调）；合并 `CloseRequested` + `Focused(false)` 进单 callback（spec/06 § 4-5 状态机）
+- `src-tauri/src/window/nspanel.rs` ── cocoa `unsafe` 升级 NSWindow → NSPanel：styleMask（titled + fullSizeContentView + <b>nonactivatingPanel</b>）/ collectionBehavior（canJoinAllSpaces + stationary + <b>fullScreenAuxiliary</b>）/ level=3（floating）；全 `#[cfg(target_os = "macos")]` 包（spec/06 § 3.1 标志位表对齐）
+- `src-tauri/src/window/locate.rs` ── 多屏定位：`cursor_position` → 找鼠标所在 monitor → 水平居中 + 垂直上 1/3；fallback primary monitor；统一用 `PhysicalPosition` 避免 scale_factor 错位（spec/06 § 4 算法）
+- `src-tauri/src/main.rs` ── setup hook 串：activation policy → menubar::build → window::setup → `app.listen("tray:toggle", ...)`；M0-N2 emit 的事件这里 close loop
+- `src-tauri/Cargo.toml` ── 加 `[target.'cfg(target_os = "macos")'.dependencies]`：`cocoa = "0.26"` + `objc = "0.2"`（仅 macOS）
+- `src-tauri/tauri.conf.json` ── window 字段更新：`visible: false`（预建隐藏）/ `focus: false`（不抢焦点）/ `decorations: false` / `transparent: true` / `alwaysOnTop: true` / `titleBarStyle: "Overlay"` / `hiddenTitle: true` / `acceptFirstMouse: true` / `app.macOSPrivateApi: true`（spec/06 § 9 tauri.conf 关键字段表）
+- `src/components/PanelShell.tsx` ── 浮窗 placeholder：`rgba(255,255,255,0.96)` 半透明 + `backdrop-filter: blur(20px)` + 圆角 10 + `box-shadow` 大阴影；显示 `{ }` + "Paste JSON to start"（spec/01 § 10.1 Empty State 视觉锚）
+- `src/App.tsx` ── 替换 M0-N1 占位为 `<PanelShell />`
+- `src/index.html` ── `<style>` 加 `html, body { background: transparent; }` 让 NSPanel 真透明（M0-N1 文件向 M0-N3 扩展，必要基础设施）
+
+关键决策：
+
+- **cocoa 直接调而非 plugin**：NSPanel 非 Tauri 默认行为，必须 unsafe cocoa 调用；spec/06 § 3.2 决策已锁
+- **合并 close + blur 钩子单 callback**：`on_window_event` 只接收最后一次注册的 callback，必须合并（Tauri 2.x API 行为）
+- **PhysicalPosition 统一**：cursor_position + monitor.position 都是 physical，避开 scale_factor 转换错位
+- **expect 而非 Result<Error>**：tauri::Error enum 变体不稳定，主窗口缺失是 setup bug 不是 runtime → panic 即可
+- **`backdrop-filter: blur(20px)`**：macOS Vibrancy 风格的快速实现（M3-N1 主题打磨时换正式 token）
+
+待用户本机验证（M0-A4/A6/A7/A8 4 个用例）：
+
+- M0-A4 ── Safari 前台时按 ⌘⇧J（M0-N4 装好后），浮窗弹出 Safari 仍前台
+- M0-A6 ── 点 Safari 任意位置，浮窗自动消失
+- M0-A7 ── Safari 全屏下按 ⌘⇧J，浮窗仍可见在 fullscreen 之上
+- M0-A8 ── 鼠标在外接屏按 ⌘⇧J，浮窗出现在外接屏
+
+进度状态：
+
+- `progress/manifest.json` M0-N3 `status: completed`
+- `progress/01_m0_skeleton.html#m0-n3-nspanel` status: `done · pending-user-verification`
+
 #### M0-N2 · 菜单栏 tray + 图标（done · pending-user-verification）
 
 新增 / 修改文件：

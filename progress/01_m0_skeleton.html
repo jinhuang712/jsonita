@@ -111,9 +111,9 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td><code>src-tauri/src/window/{mod.rs,nspanel.rs,locate.rs}</code> · <code>src/components/PanelShell.tsx</code></td></tr>
-        <tr><td>verification</td><td>M0-A4 / A6 / A7 / A8：⌘⇧J 呼出 + Safari 仍前台 + 失焦自动隐藏 + fullscreen App 上仍可见</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/window/{mod.rs,nspanel.rs,locate.rs}</code>（NSPanel promote + 失焦/close 路由 + 多屏定位）· <code>src-tauri/src/main.rs</code>（接 window::setup + listen tray:toggle）· <code>src-tauri/tauri.conf.json</code>（window：visible/focus false · decorations/transparent · titleBarStyle Overlay · macOSPrivateApi）· <code>src-tauri/Cargo.toml</code>（cocoa 0.26 + objc 0.2 仅 macOS target）· <code>src/components/PanelShell.tsx</code>（浮窗 placeholder + 圆角 + blur）· <code>src/App.tsx</code>（接 PanelShell）· <code>src/index.html</code>（body transparent）</td></tr>
+        <tr><td>verification</td><td>agent 端：3 个 Rust 模块就位 ✓ · cocoa NSWindowStyleMask::NSNonactivatingPanelMask + NSWindowCollectionBehaviorFullScreenAuxiliary set 已写 ✓ · main.rs listen tray:toggle 已接 ✓ · 链接校验 0 broken ✓；<b>待用户本机跑</b>：<code>pnpm tauri dev</code> 看 (M0-A4) Safari 仍前台 (M0-A6) 失焦自动 hide (M0-A7) Safari fullscreen 上仍可见 (M0-A8) 多屏鼠标所在屏</td></tr>
         <tr><td>commit / tag</td><td><code>feat(m0-n3): nspanel-like floating window (cocoa unsafe)</code></td></tr>
         <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td>Rust 端通过 <code>cocoa</code> crate 把 Tauri 主窗口转为 NSPanel（<code>nonactivatingPanel</code> + <code>fullScreenAuxiliary</code> + <code>HUDWindow</code> styleMask）；前端空白 React 组件占位；失焦事件触发 <code>window.hide()</code></td></tr>
