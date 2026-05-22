@@ -107,10 +107,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M2-A10..A14 + extract_json 3 case 单测</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · minimal · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td>reqwest 0.12 [json,rustls-tls] + uuid v4 + tokio；<code>src-tauri/src/ai/{mod,prompt,validate,deepseek}.rs</code>（5 prompt 规则 + 3-case extract + POST 流程 + 状态码分支）；<code>cmds/ai.rs</code> ai_fix 真实化；<code>main.rs</code> 注册 mod ai + ai_fix</td></tr>
+        <tr><td>verification</td><td>agent 端：3 ai 模块 + 8 unit tests（prompt 3 + extract 5）；M2-N4 起加 DiffView/Accept/Reject UI + progress event + history 写入；<b>待用户验证</b>：设置真实 sk- key + ai_enabled → DevTools <code>invoke('ai_fix', { req: { text: '{a:1}', requestId: crypto.randomUUID() } })</code> → 应回 AiFixResp.fixed</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m2-n3): deepseek http client + system prompt + extract_json 3-case validate</code></td></tr>
         <tr><td>blocked_by</td><td><code>m2-n2-keychain</code></td></tr>
         <tr><td>关键交付物</td><td>reqwest async client；prompt 模板（system + user）按 <a href="../spec/11_ai_client.html">11 § 4</a> 5 条规则；<code>extract_json</code> 三 case 函数（pure JSON / markdown fenced / 文本夹缝 + 单测）；429 透传 + <code>retry-after</code> header 解析；500 ms 心跳 <code>ai:progress</code> event</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/11_ai_client.html">11 § 4 prompt § 5 extract_json § 7 错误透传</a></td></tr>
