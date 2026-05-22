@@ -89,10 +89,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M1-A1..A8 + cargo test 8 函数覆盖</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/engine/{mod,error_loc,json,unwrap,stringify}.rs</code>（5 文件 + 18 inline #[test]）；<code>src-tauri/Cargo.toml</code> serde_json features=["preserve_order"]；<code>src-tauri/src/cmds/json.rs</code> 替换 stubs 为 spawn_blocking + engine::*；<code>src-tauri/src/main.rs</code> mod engine + invoke_handler 加 json_parse；<code>src/ipc/commands.ts</code> 加 json.parse 暴露</td></tr>
+        <tr><td>verification</td><td>agent 端：engine 5 文件 + 18 单测 ✓ · spawn_blocking 不阻塞主进程 (I-4) ✓ · 链接 0 broken；<b>待用户本机跑</b>：<code>cargo test --manifest-path src-tauri/Cargo.toml</code> 应全 pass · DevTools <code>invoke('json_format', {text: '{"z":1,"a":2}', opts: {indent:'spaces2', sortKeys:true}})</code> 应回 sorted 输出 · invalid JSON 应回 <code>{kind:'Parse', data:{line,col,msg}}</code></td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n2): json engine core (format/minify/unwrap/stringify) + 18 unit tests</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n1-store-ipc</code></td></tr>
         <tr><td>关键交付物</td><td><code>src-tauri/src/engine/</code>：<code>format.rs</code>（serde_json + preserve_order）· <code>sort.rs</code>（递归字典序）· <code>unwrap.rs</code>（walk + 200ms timeout）· <code>convert.rs</code>（string ↔ json）· <code>error_loc.rs</code>（line/col 1-indexed 映射）；<code>cargo test</code> 覆盖每个</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/09_json_engine.html">09 § 3-8</a>（模块划分 / format / 错误定位 / unwrap 算法 / string 互转 / 组合）</td></tr>
