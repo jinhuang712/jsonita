@@ -91,7 +91,7 @@
         {
           "node": "M0-N3",
           "title": "浮窗 POC (NSPanel-like)",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n3-nspanel",
           "task_file": "progress/tasks/M0-N3_nspanel_poc.md",
           "spec_refs": [
