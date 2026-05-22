@@ -6,6 +6,64 @@
 
 ## [Unreleased]
 
+### M1 实施期 · 0.4.0-m1 路线起手
+
+#### M1-N1 · 状态管理 + IPC 骨架（done · pending-user-verification）
+
+Rust 端（8 个新文件）：
+
+- `src-tauri/src/error.rs` ── `JsonitaError` 8 变体（Parse / UnwrapTimeout / Sqlite / Keychain / Http / AiInvalidJson / RateLimit / Io），`#[serde(tag="kind", content="data")]` 跨 IPC 序列化；From&lt;std::io::Error&gt; + From&lt;tauri::Error&gt;（其他 crate-specific From 在引入时加）；spec/13 § 1.1 对齐
+- `src-tauri/src/types.rs` ── 8 enum（IndentMode / QuoteStyle / OpType / ThemeMode / RestoreWindow / ShortcutAction / InitialWidth / ShowSource，全 `rename_all="kebab-case"`）+ 11 个 IPC payload struct（FormatOpts / UnwrapOpts / StringifyOpts / HistoryRow / ListOpts / LastSession / WindowShown / ClipboardSniff / ContentMetrics / WindowResizedPayload + 各 default helper），全 `rename_all="camelCase"`；spec/13 § 2-3 对齐
+- `src-tauri/src/cmds/mod.rs` ── re-exports
+- `src-tauri/src/cmds/json.rs` ── 4 stubs（json_format / json_minify / json_unwrap_stringified / json_stringify）返回 input unchanged 作 mock；M1-N2 起接 engine::*
+- `src-tauri/src/cmds/history.rs` ── 5 stubs（list/search/pin/star/clear）返回 Vec::new()/Ok(())；M1-N6 起接 rusqlite
+- `src-tauri/src/cmds/session.rs` ── 3 stubs（save_last/load_last/clear_last）返回 None/Ok(())；M1-N7 起接 SQLite + RestoreTimer
+- `src-tauri/src/cmds/window.rs` ── 5 命令（show/hide/toggle 接 M0-N3 既有 window 模块；resize_for_content 返 mock (860,560)；reset_size Ok(())）；M1-N9 起替换智能宽度真实算法
+- `src-tauri/src/cmds/system.rs` ── 4 命令（clipboard_read 返空 sniff；open_log_dir + open_db_path 调 `open` 命令打开 Finder；quit_app 调 app.exit(0)）
+
+Rust 入口：
+
+- `src-tauri/src/main.rs` ── invoke_handler 注册 21 个 stubs + 3 个 M0-N4 既有命令；setup hook 等保持不变
+- `src-tauri/Cargo.toml` ── 加 `thiserror = "1"`（JsonitaError 实现）
+
+TS 端（8 个新文件）：
+
+- `src/types/error.ts` ── `JsonitaError` discriminated union + `isJsonitaError` type guard
+- `src/types/enums.ts` ── 8 enum 字面量类型镜像
+- `src/types/commands.ts` ── 11 个 interface 镜像（含 default `?` 字段对应 Rust `#[serde(default)]`）
+- `src/types/events.ts` ── EventMap 类型表（含 M0-N2 既有 `tray:toggle` + M0-N4 `permission:accessibility_missing`）
+- `src/ipc/error.ts` ── re-export type guard
+- `src/ipc/commands.ts` ── 5 个 namespace 对象（json/history/session/win/system）封装 typed invoke
+- `src/ipc/events.ts` ── 泛型 `on<K>(name, handler)` typed listen 封装（spec/02 § 7.1）
+- `src/store/editor.ts` ── zustand slice 起步：content/outputText/status/error/bytes/lines + 5 actions；ui/history/session slice 留 M1-N4+ 加
+
+依赖：
+
+- `package.json` ── 加 `zustand = "^5.0.1"`
+
+关键决策：
+
+- **stubs 全 mock 返回**（input unchanged / empty vec / None）：让 M1-N3 起前端 UI 能独立开发；M1-N2..N9 增量替换真实实现
+- **window stubs 接入 M0-N3 既有 window 模块**：避免重复实现 show/hide/toggle
+- **`#[serde(rename_all = "camelCase")]` 在 struct 级**：Rust snake_case ↔ TS camelCase 自动转换（spec/13 § 7）
+- **`#[serde(default)]` 大量使用**：让前端可省略可选字段（如 sortKeys/trailingNewline/onlyPinned）
+- **JsonitaError 的 RateLimit 单 variant 加 `#[serde(rename_all = "camelCase")]`**：retry_after_sec → retryAfterSec 同步 TS 类型
+- **store 仅 editor slice 先做**：M1-N4 布局起手时再加 ui slice；M1-N6 起 history slice；M1-N7 起 session slice ── 减少 M1-N1 文件吞吐
+
+待用户本机验证：
+
+- `pnpm install`（首次会同时装 zustand）
+- `cargo check --manifest-path src-tauri/Cargo.toml` 0 错
+- `pnpm tsc --noEmit` 0 错（含跨进程类型 mirror）
+- DevTools console 调任意 stub：<code>invoke('json_format', { text: '{}', opts: { indent: 'spaces2' } })</code> 应回 <code>'{}'</code>
+
+进度状态：
+
+- `progress/manifest.json` M1-N1 `status: completed`
+- `progress/02_m1_core_json.html#m1-n1-store-ipc` status: `done · pending-user-verification`
+
+---
+
 ### M0 实施期 · 0.3.0-m0 路线开工
 
 #### M0 Phase 收口（agent-side 全完成）

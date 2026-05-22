@@ -283,7 +283,7 @@
         {
           "node": "M1-N1",
           "title": "状态管理 + IPC 骨架",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n1-store-ipc",
           "task_file": null,
           "spec_refs": [
