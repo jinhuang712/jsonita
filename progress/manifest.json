@@ -418,7 +418,7 @@
         {
           "node": "M2-N1",
           "title": "设置面板 UI + 6 分组",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/03_m2_ai_settings.html#m2-n1-settings-ui",
           "task_file": null,
           "spec_refs": [
