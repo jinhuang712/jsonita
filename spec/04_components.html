@@ -17,7 +17,14 @@
     <div class="doc-header">
       <span class="doc-tag">SPEC · 章节 04</span>
       <h1 class="doc-title">组件库映射</h1>
-      <p class="doc-subtitle">shadcn/ui 复用清单 + 自定义组件清单 + 每个组件的 token / props / 状态完整定义。</p>
+      <p class="doc-subtitle">shadcn/ui 复用 + 自定义组件清单 + props 契约。所有视觉效果（颜色 / 布局 / 状态截图）见 <a href="01_mockups.html">01 mockups</a>；颜色 token 见 <a href="03_design_tokens.html">03 design tokens</a>。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
+      <div class="callout-body">
+        <p>本章是<b>组件契约</b>（props / 状态 / 关键交互规则）；视觉权威在 <a href="01_mockups.html">01 mockups</a>；颜色 / 间距 / 圆角 / 阴影 token 权威在 <a href="03_design_tokens.html">03 design tokens</a>。本章不重复绘制视觉、不重复列举颜色 token。</p>
+      </div>
     </div>
 
     <h2><span class="h2-num">1</span>策略</h2>
@@ -49,34 +56,18 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">2.1</span>shadcn 覆写模式</h3>
+    <h3><span class="h3-num">2.1</span>shadcn 覆写规则</h3>
 
-    <p>每个 shadcn 组件拷过来后<b>立刻</b>替换它默认的 Tailwind class，让所有颜色 / 字号 / 圆角都过 token：</p>
+    <p>每个 shadcn 组件拷过来后立刻把默认 Tailwind class 替换为<b>过 token 的语义类</b>（如 <code>bg-primary</code> / <code>text-text-muted</code>）。规则：</p>
 
-    <pre><code>// src/ui/button.tsx（节选）
-const buttonVariants = cva(
-  // 基础
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap " +
-  "rounded-md text-base font-medium transition-colors " +
-  "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 " +
-  "disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-white hover:bg-primary/90",
-        outline: "border border-border bg-bg-card hover:bg-primary-soft hover:text-primary",
-        ghost:   "hover:bg-primary-soft hover:text-primary",
-        danger:  "bg-danger text-white hover:bg-danger/90",
-      },
-      size: {
-        sm: "h-7 px-3 text-sm",
-        md: "h-8 px-3.5",
-        lg: "h-9 px-4 text-md",
-      },
-    },
-    defaultVariants: { variant: "default", size: "md" },
-  }
-);</code></pre>
+    <ul>
+      <li><b>所有颜色经 token</b>：禁止出现 <code>bg-blue-500</code> / <code>text-gray-700</code> 等 Tailwind 调色板原始类</li>
+      <li><b>所有尺寸经 token</b>：圆角 <code>rounded-md</code>（= <code>--radius-md</code>）/ 间距 <code>p-3</code> / 字号 <code>text-sm</code>，禁止 <code>rounded-[6px]</code> 这种魔法值</li>
+      <li><b>focus-visible 而非 focus</b>：避免鼠标点击也出现 focus ring</li>
+      <li><b>variants 用 cva</b>：每个组件至少有 <code>variant: default/outline/ghost/danger</code> 与 <code>size: sm/md/lg</code> 两组维度</li>
+    </ul>
+
+    <p>详见 <code>src/ui/*.tsx</code>，约定与 shadcn 上游对齐。</p>
 
     <h2><span class="h2-num">3</span>自定义组件清单</h2>
 
@@ -103,7 +94,7 @@ const buttonVariants = cva(
 
     <h3><span class="h3-num">4.1</span>TabBar</h3>
 
-    <p>顶部 6 个 Tab：Format / Minify / Tree / →Str / →JSON /（+ AI Fix 仅错误）。</p>
+    <p>顶部 6 个 Tab：Format / Minify / Tree / →Str / →JSON /（+ AI Fix 仅错误）。视觉见 <a href="01_mockups.html#1.1">01 § 1.1-1.5</a>（默认 / 各 Tab 切换 / AI Fix 出现）。</p>
 
     <pre><code>// src/shell/TabBar.tsx
 export type Pane = 'format' | 'minify' | 'tree' | 'json-to-str' | 'str-to-json' | 'ai-fix';
@@ -114,20 +105,17 @@ interface TabBarProps {
   onChange: (p: Pane) =&gt; void;
 }</code></pre>
 
-    <table>
-      <thead><tr><th>状态</th><th>样式</th></tr></thead>
-      <tbody>
-        <tr><td>default</td><td>bg <code>--bg-card</code> · text <code>--text-muted</code> · border <code>--border</code> · radius <code>--radius-md</code> · h 26px · px 10px · fs <code>--fs-xs</code></td></tr>
-        <tr><td>hover</td><td>bg <code>--primary-soft</code> · text <code>--primary</code></td></tr>
-        <tr><td>active</td><td>bg <code>--primary</code> · text white · border <code>--primary</code></td></tr>
-        <tr><td>focus</td><td>+ box-shadow <code>--shadow-focus</code></td></tr>
-        <tr><td>ai variant</td><td>bg <code>linear-gradient(135deg, #FFEDD5, #FED7AA)</code>（light）/ <code>rgba(251,164,58,0.18)</code>（dark）· text <code>--accent</code></td></tr>
-      </tbody>
-    </table>
+    <p><b>关键契约</b>：</p>
 
-    <p><b>键盘</b>：聚焦 TabBar 后 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环；<kbd>Enter</kbd> 或 <kbd>Space</kbd> 切换。不绑 <kbd>⌘1-6</kbd>（见 <a href="../plan/02_interaction.html">plan/02 § 1.1</a>）。</p>
+    <ul>
+      <li><b>AI Fix Tab 条件渲染</b>：仅 <code>showAiFix = true</code>（编辑器 parse error）时渲染；从 idle 到出现走 fade-in 150ms</li>
+      <li><b>ai variant 视觉</b>：橙色渐变背景 ── 与其他 Tab 视觉上明显区分，提示这是"修复"入口（颜色用 <code>--accent</code> 系列 token）</li>
+      <li><b>键盘</b>：聚焦后 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向；<kbd>Enter</kbd> / <kbd>Space</kbd> 切换。<b>不绑</b> <kbd>⌘1-6</kbd>（见 <a href="../plan/02_interaction.html">plan/02 § 1.1</a>）</li>
+    </ul>
 
     <h3><span class="h3-num">4.2</span>StatusBar</h3>
+
+    <p>底部状态栏。4 态完整视觉见 <a href="01_mockups.html#2">01 § 2 状态栏 4 态对照</a>。</p>
 
     <pre><code>interface StatusBarProps {
   status: 'valid' | 'error' | 'empty' | 'large';
@@ -139,29 +127,27 @@ interface TabBarProps {
 }</code></pre>
 
     <table>
-      <thead><tr><th>status</th><th>左侧呈现</th><th>圆点色</th></tr></thead>
+      <thead><tr><th>status</th><th>左侧文案</th></tr></thead>
       <tbody>
-        <tr><td><code>valid</code></td><td>"● Valid JSON · X lines · Y bytes"</td><td><code>--ok</code></td></tr>
-        <tr><td><code>error</code></td><td>"● Line X, Col Y: {msg}"</td><td><code>--danger</code></td></tr>
-        <tr><td><code>empty</code></td><td>"—"</td><td>无</td></tr>
-        <tr><td><code>large</code></td><td>"● Large file · X bytes"</td><td><code>--warn</code></td></tr>
+        <tr><td><code>valid</code></td><td>"● Valid JSON · X lines · Y bytes"</td></tr>
+        <tr><td><code>error</code></td><td>"● Line X, Col Y: {msg}"（msg 截 80 字符）</td></tr>
+        <tr><td><code>empty</code></td><td>"—"（无圆点）</td></tr>
+        <tr><td><code>large</code></td><td>"● Large file · X bytes"</td></tr>
       </tbody>
     </table>
 
-    <p>右侧：<code>History ({n}) · ⚙ Settings</code> ── 两个按钮（<code>Button variant=ghost size=sm</code>）。</p>
+    <p>右侧固定两个按钮：<code>History ({n}) · ⚙ Settings</code>（均 <code>Button variant=ghost size=sm</code>）。</p>
 
     <h3><span class="h3-num">4.3</span>Toast</h3>
 
-    <p>基于 <code>sonner</code> 封装，四 variant 对应四种状态色：</p>
+    <p>基于 <code>sonner</code> 封装。四 variant 的视觉（light/dark 双版）见 <a href="01_mockups.html#7">01 § 7 Toast 4 variant</a>；颜色 token 见 <a href="03_design_tokens.html">03 § state colors</a>。</p>
 
-    <pre><code>// src/shell/Toast.tsx
-import { toast as sonnerToast } from 'sonner';
-
+    <pre><code>// src/shell/Toast.tsx ── API 契约
 export const toast = {
-  info:    (m: string, opts?: ToastOpts) =&gt; sonnerToast(m, { ...opts, className: 'toast-info' }),
-  ok:      (m: string, opts?: ToastOpts) =&gt; sonnerToast.success(m, { ...opts, className: 'toast-ok' }),
-  warn:    (m: string, opts?: ToastOpts) =&gt; sonnerToast.warning(m, { ...opts, className: 'toast-warn' }),
-  danger:  (m: string, opts?: ToastOpts) =&gt; sonnerToast.error(m, { ...opts, className: 'toast-danger' }),
+  info:    (m: string, opts?: ToastOpts) =&gt; void;
+  ok:      (m: string, opts?: ToastOpts) =&gt; void;
+  warn:    (m: string, opts?: ToastOpts) =&gt; void;
+  danger:  (m: string, opts?: ToastOpts) =&gt; void;
 };
 
 interface ToastOpts {
@@ -170,24 +156,11 @@ interface ToastOpts {
   duration?: number;        // 默认 5000；带 action 时 8000
 }</code></pre>
 
-    <p>样式（global.css）：</p>
-
-    <pre><code>.toast-info    { background: var(--info-bg);   border-color: var(--info);   color: var(--info); }
-.toast-ok      { background: var(--ok-bg);     border-color: var(--ok);     color: var(--ok); }
-.toast-warn    { background: var(--warn-bg);   border-color: var(--warn);   color: var(--warn); }
-.toast-danger  { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
-[data-sonner-toast] {
-  border-radius: var(--radius-md);
-  border-width: 1px;
-  border-style: solid;
-  font-size: var(--fs-sm);
-  padding: var(--sp-3) var(--sp-4);
-  box-shadow: var(--shadow-md);
-}</code></pre>
+    <p>每个 variant 对应一个 className（<code>toast-info / toast-ok / toast-warn / toast-danger</code>），样式由全局 CSS 注入。Position 固定 <code>bottom-right</code>；同时最多 3 个堆叠，超出旧的自动 dismiss。</p>
 
     <h3><span class="h3-num">4.4</span>RestoreBar</h3>
 
-    <p>窗口顶部条带（浮窗内 H ≈ 32px），出现在恢复上次会话时。</p>
+    <p>窗口顶部条带（H ≈ 32px），出现在恢复上次会话时。视觉见 <a href="01_mockups.html#6">01 § 6 RestoreBar</a>。</p>
 
     <pre><code>interface RestoreBarProps {
   sinceText: string;       // "5 min ago" 等
@@ -195,19 +168,16 @@ interface ToastOpts {
   autoFadeMs?: number;     // 默认 5000，5s 后淡出
 }</code></pre>
 
-    <table>
-      <thead><tr><th>变体</th><th>样式</th></tr></thead>
-      <tbody>
-        <tr><td>default</td><td>bg <code>--info-bg</code> · text <code>--info</code> · border-bottom <code>--info</code> 2px · fs <code>--fs-sm</code></td></tr>
-        <tr><td>fading-out</td><td>opacity 0 over var(--dur-slow)</td></tr>
-      </tbody>
-    </table>
-
-    <p>视觉与布局：见 <a href="01_mockups.html#7">12 § 7 RestoreBar</a>。</p>
+    <p><b>行为契约</b>：</p>
+    <ul>
+      <li>挂载时淡入（200ms），<code>autoFadeMs</code> 后淡出（<code>--dur-slow</code>）── 不阻塞用户</li>
+      <li>用户点击 Discard → 调 <code>onDiscard</code> 后立即移除（不等淡出）</li>
+      <li>用户在编辑器输入任意字符 → 自动隐藏（视为接受恢复后继续工作）</li>
+    </ul>
 
     <h3><span class="h3-num">4.5</span>HistoryModal + HistoryItem</h3>
 
-    <p>Dialog 内布局：上方搜索框 + 筛选 chips（All / Pinned / Starred）+ 下方 ScrollArea 包列表。</p>
+    <p>Dialog 整体布局：上方搜索框 + 筛选 chips（All / Pinned / Starred）+ 下方 ScrollArea 包列表。视觉与布局见 <a href="01_mockups.html#5">01 § 5 历史 Modal</a>；单行高度 h=56px。</p>
 
     <pre><code>interface HistoryItemProps {
   row: HistoryRow;
@@ -218,39 +188,23 @@ interface ToastOpts {
   onDelete: (id: number) =&gt; void;
 }</code></pre>
 
-    <p>单行高度 h=56px ── 视觉与布局：见 <a href="01_mockups.html#6">12 § 6 历史 Modal</a>。</p>
-
-    <table>
-      <thead><tr><th>状态</th><th>样式</th></tr></thead>
-      <tbody>
-        <tr><td>default</td><td>bg <code>--bg-card</code> · border-bottom <code>--border</code></td></tr>
-        <tr><td>hover</td><td>bg <code>--primary-soft</code> · 显示操作按钮</td></tr>
-        <tr><td>selected</td><td>+ border-left 3px <code>--primary</code></td></tr>
-        <tr><td>pinned</td><td>op-type chip 旁边加 📌（用 icon 不 emoji）</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>op-type chip 配色</b>：</p>
-
-    <table>
-      <thead><tr><th>op</th><th>chip bg</th><th>chip text</th></tr></thead>
-      <tbody>
-        <tr><td>format</td><td><code>--primary-soft</code></td><td><code>--primary</code></td></tr>
-        <tr><td>minify</td><td><code>--primary-soft</code></td><td><code>--primary</code></td></tr>
-        <tr><td>tree</td><td><code>--info-bg</code></td><td><code>--info</code></td></tr>
-        <tr><td>str-to-json</td><td><code>--ok-bg</code></td><td><code>--ok</code></td></tr>
-        <tr><td>json-to-str</td><td><code>--ok-bg</code></td><td><code>--ok</code></td></tr>
-        <tr><td>ai-fix</td><td><code>--accent-soft</code></td><td><code>--accent</code></td></tr>
-      </tbody>
-    </table>
+    <p><b>关键契约</b>：</p>
+    <ul>
+      <li><b>op-type chip</b>：每行左侧显示 op_type 的色彩 chip（format/minify 用 primary 色 / tree 用 info 色 / str-json 互转用 ok 色 / ai-fix 用 accent 色） ── 让用户扫一眼就能识别操作类型</li>
+      <li><b>hover 显示操作按钮</b>：default 状态只显示内容；hover / focused 时右侧出现 pin / star / delete 三个图标按钮</li>
+      <li><b>pinned 视觉</b>：op-type chip 旁加 pin 图标（svg，不用 emoji）</li>
+      <li><b>键盘导航</b>：<kbd>↑↓</kbd> 选择，<kbd>Enter</kbd> 载入，<kbd>Cmd+P</kbd> pin，<kbd>Cmd+S</kbd> star，<kbd>Delete</kbd> 删除</li>
+    </ul>
 
     <h3><span class="h3-num">4.6</span>SettingsModal</h3>
 
-    <p>Dialog 整体 W 720 × H 540（最大）。左侧 nav（W 180）+ 右侧 panel + 底部 footer（Done / Reset）。视觉与布局：见 <a href="01_mockups.html#5">12 § 5 设置 Modal</a>。</p>
+    <p>Dialog 整体 W 720 × H 540（最大）。左侧 nav（W 180）+ 右侧 panel + 底部 footer（Done / Reset）。视觉与布局见 <a href="01_mockups.html#4">01 § 4 设置 Modal</a>。</p>
 
-    <p><b>规则</b>：所有改动<b>即时生效</b>（不需要 Done 按钮提交）。Done 仅关闭 Modal。Reset 弹二次确认 Dialog。</p>
+    <p><b>规则</b>：所有改动<b>即时生效</b>（不需要 Done 按钮提交，每个 Switch / Select 变化立刻 <code>settings_set</code>）。Done 仅关闭 Modal。Reset 弹二次确认 Dialog。</p>
 
     <h3><span class="h3-num">4.7</span>ShortcutInput</h3>
+
+    <p>设置面板 Shortcuts 分组内的录入控件，视觉嵌入 <a href="01_mockups.html#4">01 § 4 设置 Modal</a> 的 Shortcuts panel。</p>
 
     <pre><code>interface ShortcutInputProps {
   value: string;            // "Cmd+Shift+J" 风格
@@ -270,6 +224,8 @@ interface ToastOpts {
 
     <h3><span class="h3-num">4.8</span>ApiKeyInput</h3>
 
+    <p>设置面板 AI 分组内的 API key 录入 + 测试连接控件。视觉嵌入 <a href="01_mockups.html#4">01 § 4 设置 Modal</a>。</p>
+
     <pre><code>interface ApiKeyInputProps {
   hasKey: boolean;          // 已存 Keychain 时为 true
   onSubmit: (key: string) =&gt; Promise&lt;void&gt;;
@@ -282,12 +238,12 @@ interface ToastOpts {
       <li>已有 key：输入框显示 <code>••••••••</code>（mask），右侧 [Replace] 和 [Test] 按钮</li>
       <li>无 key：placeholder "sk-..."，右侧 [Save] + [Test]</li>
       <li>Test 中：按钮 spinner；返回后 Toast(ok/danger)</li>
-      <li>Test 不消耗存好的 key：直接输入框的当前值传给 <code>ai_test_connection</code>（如果已 mask 则用 Keychain 里的）</li>
+      <li>Test 不消耗存好的 key：直接输入框的当前值传给 <code>ai_test_connection</code>（详见 <a href="11_ai_client.html">11 § 9</a>）</li>
     </ul>
 
     <h3><span class="h3-num">4.9</span>TreeView（含 Hover 复制）</h3>
 
-    <p>JSON 树视图。视觉：见 <a href="01_mockups.html#1.3">01 § 1.3 Tree Tab</a>。实现细节：<a href="08_editor.html">08 § 4</a>。</p>
+    <p>JSON 树视图。视觉：见 <a href="01_mockups.html#1.3">01 § 1.3 Tree Tab</a> + <a href="01_mockups.html#12">01 § 12 hover 复制</a>。实现细节：<a href="08_editor.html">08 § 4.5</a>。</p>
 
     <pre><code>interface TreeViewProps {
   data: unknown;                   // 解析后的 JSON
@@ -313,7 +269,7 @@ interface CopyNodeInfo {
 
     <h3><span class="h3-num">4.10</span>DiffView</h3>
 
-    <p>AI Fix 应用前的 diff 展示，双栏。简化实现：用 <code>diff</code> 库计算行级 diff，按行染色（增=绿底，删=红底）。</p>
+    <p>AI Fix 应用前的 diff 展示。视觉（双栏 / 行染色 light+dark）见 <a href="01_mockups.html#8">01 § 8 AI Fix DiffView</a>；diff 算法实现见 <a href="11_ai_client.html">11 § 8</a>。</p>
 
     <pre><code>interface DiffViewProps {
   before: string;
@@ -322,14 +278,12 @@ interface CopyNodeInfo {
   onReject: () =&gt; void;
 }</code></pre>
 
-    <table>
-      <thead><tr><th>行类型</th><th>light bg</th><th>dark bg</th></tr></thead>
-      <tbody>
-        <tr><td>unchanged</td><td>transparent</td><td>transparent</td></tr>
-        <tr><td>added</td><td><code>rgba(6,183,143,0.10)</code></td><td><code>rgba(40,217,168,0.16)</code></td></tr>
-        <tr><td>removed</td><td><code>rgba(220,38,38,0.08)</code></td><td><code>rgba(248,113,113,0.16)</code></td></tr>
-      </tbody>
-    </table>
+    <p><b>关键契约</b>：</p>
+    <ul>
+      <li>使用 npm <code>diff</code> 库的 <code>diffLines</code>，输出 <code>{ type: 'eq'|'add'|'del', text }[]</code></li>
+      <li>不引 monaco-diff（300 KB 太重）</li>
+      <li>Accept 按钮 = primary variant；Reject = outline variant；位置见 mockup</li>
+    </ul>
 
     <h2><span class="h2-num">5</span>布局组件清单（无业务）</h2>
 
@@ -375,14 +329,6 @@ interface CopyNodeInfo {
       <li><b>Banner / Announcement</b> ── 无 PM 渠道发公告</li>
       <li><b>Avatar / 用户系统</b> ── 不登录</li>
       <li><b>Drag & Drop file</b> ── v1 不读 fs，仅剪贴板</li>
-    </ul>
-
-    <h2><span class="h2-num">8</span>承上启下</h2>
-
-    <ul>
-      <li><b>05 窗口</b> ── 用 FloatingWindow 这个壳</li>
-      <li><b>07 编辑器</b> ── 用 Editor + StatusBar</li>
-      <li><b>09 存储</b> ── 设置 / 历史 UI 与 Modal 组件接</li>
     </ul>
 
     <nav class="pagination" id="pagination"></nav>

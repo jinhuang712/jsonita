@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 14 国际化 & 无障碍</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="14">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 14</span>
+      <h1 class="doc-title">国际化 & 无障碍</h1>
+      <p class="doc-subtitle">i18n 架构准备（v1 英文 → M3 中文）+ a11y 清单 ── 先讲设计与回退策略，再列资源结构与 a11y 要求。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
+      <div class="callout-body">
+        <p>本章是<b>横切关注章节</b>：v1 仅交付英文 UI（<a href="../plan/04_nfr.html">plan/04 NFR § 3</a>），但 v1 实施期就要锁定 lib 选型、资源结构、切换机制 ── 否则 M3 中文 UI 会引发大量返工（key 拆分 / 文案外移 / 字体回退调整）。<code>settings.locale</code> 字段补充见 <a href="13_schemas.html">13 § 3.3</a>；字体栈见 <a href="03_design_tokens.html">03 § 6.1</a>。</p>
+      </div>
+    </div>
+
+    <p class="section-divider"><b>一 · 设计</b></p>
+
+    <h2><span class="h2-num">1</span>设计目标与边界</h2>
+
+    <p>i18n 在 Jsonita 是<b>架构准备</b>而不是 v1 功能 ── 五条硬约束：</p>
+
+    <table>
+      <thead><tr><th>原则</th><th>含义</th><th>实现影响</th></tr></thead>
+      <tbody>
+        <tr><td><b>v1 实施期 lock</b></td><td>v1 仅交付英文，但所有 UI 文案<b>必须经</b> <code>t()</code> 函数 ── 不允许 hardcode 英文字符串</td><td>M0 起就引 react-i18next，所有组件按规范写</td></tr>
+        <tr><td><b>Rust 端不翻译</b></td><td>Rust 返回的错误 <code>JsonitaError</code> 永远是英文 + <code>kind</code>；翻译在前端按 kind 映射</td><td>跨 IPC 协议稳定，不受语言切换影响；<code>error.kind</code> 是契约的一部分（<a href="13_schemas.html">13 § 1</a>）</td></tr>
+        <tr><td><b>JSON 内容不受 i18n 影响</b></td><td>用户输入的 JSON 中含 CJK / 阿语 / 表情 ── 永远透传，编辑器渲染由 CodeMirror 处理</td><td>i18n 只影响 chrome（菜单 / 按钮 / 状态栏 / Modal / Toast）</td></tr>
+        <tr><td><b>实时切换</b></td><td>用户切语言 → React 全量 re-render，<b>无需</b> reload 窗口</td><td>所有文案经 hook 订阅 store，避免硬编码 prop drilling</td></tr>
+        <tr><td><b>包内置不下载</b></td><td>语言包打入 bundle（不从远程拉）── 离线可用，且符合 v1 "不联网" 约束</td><td>v1 / M3 都是 2 个 locale (en-US / zh-CN)，bundle 体积可控（每 locale ~10 KB）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">2</span>关键设计决策</h2>
+
+    <h3><span class="h3-num">2.1</span>i18n lib 选型</h3>
+
+    <table>
+      <thead><tr><th>方案</th><th>体积</th><th>类型友好</th><th>命名空间</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td><b>react-i18next</b>（选）</td><td>~30 KB gzipped</td><td>TS plugin 提供 key 自动补全</td><td>原生 namespace + 懒加载</td><td>生态最熟；与 zustand 兼容；fallback chain 内置</td></tr>
+        <tr><td>lingui</td><td>~15 KB</td><td>编译期提取 key（macro）</td><td>需自己组织</td><td>体积小但 macro 增加 build 复杂度；ICU MessageFormat 对我们简单场景过度</td></tr>
+        <tr><td>react-intl (FormatJS)</td><td>~50 KB（含 ICU runtime）</td><td>OK</td><td>需自己组织</td><td>体积偏大；ICU 强大但 Jsonita 不需要复数 / 性别变体等高级特性</td></tr>
+        <tr><td>自写</td><td>~2 KB</td><td>无</td><td>无</td><td>省体积但要自维护 fallback / 复数 / 格式化 / TS 类型 ── 性价比低</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">2.2</span>资源 namespace 划分</h3>
+
+    <p>按<b>章节模块</b>拆 namespace，而非按"类型"（按钮 / 标签 / 错误）拆。理由：组件改名 / 移位时改文案文件位置和组件位置一致，定位快。</p>
+
+    <table>
+      <thead><tr><th>namespace</th><th>覆盖范围</th><th>典型 key</th></tr></thead>
+      <tbody>
+        <tr><td><code>shell</code></td><td>FloatingWindow / TabBar / StatusBar / Toast / RestoreBar</td><td><code>shell.tabBar.format</code> · <code>shell.statusBar.valid</code></td></tr>
+        <tr><td><code>panes</code></td><td>5 个功能面板的标题、placeholder、empty state</td><td><code>panes.tree.emptyState</code> · <code>panes.aiFix.acceptButton</code></td></tr>
+        <tr><td><code>settings</code></td><td>设置 Modal + 6 个分组 + 字段标签</td><td><code>settings.general.launchAtLogin</code> · <code>settings.ai.testConnection</code></td></tr>
+        <tr><td><code>history</code></td><td>历史 Modal + Item + 筛选 chip</td><td><code>history.filterPinned</code> · <code>history.confirmClear</code></td></tr>
+        <tr><td><code>errors</code></td><td><code>JsonitaError</code> 8 个 kind 映射 + UI 行动文案</td><td><code>errors.parse.title</code> · <code>errors.rateLimit.retryAfter</code></td></tr>
+        <tr><td><code>about</code></td><td>About 页（版本 / 链接 / 致谢）</td><td><code>about.version</code> · <code>about.openSourceCredits</code></td></tr>
+        <tr><td><code>common</code></td><td>跨 namespace 通用词（OK / Cancel / Confirm / 12 个 base）</td><td><code>common.ok</code> · <code>common.cancel</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">2.3</span>locale 检测与切换</h3>
+
+    <p>三层 fallback chain，<b>显式优先于隐式</b>：</p>
+
+    <div class="mermaid">
+graph TD
+    Boot["应用启动"] --> S1{"settings.locale<br/>已设置?"}
+    S1 -->|"是"| Use1["使用 settings.locale"]
+    S1 -->|"否 首次启动或 reset"| S2{"navigator.language<br/>匹配支持的 locale?"}
+    S2 -->|"zh-CN 或 zh 系变体"| Use2["使用 zh-CN"]
+    S2 -->|"其他或不匹配"| Use3["使用 en-US<br/>作为 fallback"]
+    Use1 --> Apply
+    Use2 --> Apply
+    Use3 --> Apply
+    Apply["i18n.changeLanguage locale<br/>+ document.documentElement.lang"] --> Render["React 全量 re-render"]
+
+    classDef cond fill:#FFF7ED,stroke:#FA9B10
+    classDef use  fill:#EFF6FF,stroke:#057AF3
+    classDef act  fill:#ECFDF5,stroke:#06B78F
+    class S1,S2 cond
+    class Use1,Use2,Use3 use
+    class Apply,Render act
+    </div>
+
+    <p><b>切换时机</b>：用户在 Settings → General → Language 改 locale → <code>settings_set({ locale: 'zh-CN' })</code> → Rust emit <code>settings:changed</code> → 前端 store update → <code>i18n.changeLanguage</code> → React 重渲染。无需 reload 窗口。</p>
+
+    <h3><span class="h3-num">2.4</span>Rust 错误为何不翻译</h3>
+
+    <ul>
+      <li><b>kind 是契约</b>：<code>JsonitaError.kind</code> 是跨 IPC 的稳定标识符（<a href="13_schemas.html">13 § 1</a>），用于 UI 分级响应（<a href="02_ipc.html">02 § 3.3</a>）。若 Rust 翻译，前端按 kind 映射文案的链路就被打破</li>
+      <li><b>错误日志稳定</b>：日志和 issue 报告中错误信息都是英文 + kind，便于跨语言用户提交 bug</li>
+      <li><b>前端单源</b>：所有用户文案都在 <code>errors.*</code> namespace，集中维护</li>
+    </ul>
+
+    <p><b>映射示例</b>：Rust 返 <code>{ kind: 'RateLimit', data: { retry_after_sec: 30 } }</code> → 前端 <code>t('errors.rateLimit.retryAfter', { sec: 30 })</code> → 中文显示"请 30 秒后重试"。</p>
+
+    <p class="section-divider"><b>二 · 工作机制</b></p>
+
+    <h2><span class="h2-num">3</span>加载与切换数据流</h2>
+
+    <div class="mermaid">
+graph TB
+    subgraph Boot["启动加载"]
+        B1[index.html bootstrap]
+        B2[settings_get_all]
+        B3["resolve locale<br/>(§ 2.3 fallback)"]
+        B4[i18n.init<br/>动态 import locale 资源]
+        B5[ReactDOM.render]
+    end
+    B1 --> B2 --> B3 --> B4 --> B5
+
+    subgraph Runtime["运行时切换"]
+        U[用户改 locale] --> SS[settings_set locale]
+        SS --> EV[Rust emit<br/>settings:changed]
+        EV --> ST[settings store update]
+        ST --> CH[i18n.changeLanguage]
+        CH --> RR[React re-render<br/>所有 useTranslation hooks]
+    end
+
+    subgraph Components["所有文案订阅"]
+        H[useTranslation hook]
+        T["t namespace.key params"]
+        H -.- T
+    end
+
+    B5 --> H
+    RR --> H
+
+    classDef boot fill:#FFF7ED,stroke:#FA9B10
+    classDef rt fill:#EFF6FF,stroke:#057AF3
+    classDef comp fill:#ECFDF5,stroke:#06B78F
+    class B1,B2,B3,B4,B5 boot
+    class U,SS,EV,ST,CH,RR rt
+    class H,T comp
+    </div>
+
+    <h3><span class="h3-num">3.1</span>资源懒加载</h3>
+
+    <p>启动只加载<b>当前 locale</b> 的全部 namespace（en-US 或 zh-CN）。切换到另一 locale 时 dynamic <code>import()</code>，首次切换会有一次 ~10 KB 异步加载 ── 用户感知不到（&lt; 50 ms）。</p>
+
+    <h2><span class="h2-num">4</span>字体回退机制</h2>
+
+    <p>这是 i18n 章节里<b>最容易翻车</b>的设计点 ── mono 字体（SF Mono / JetBrains Mono / Cascadia Code）<b>都不含 CJK 字符</b>。处理不当会让中文 chrome 渲染成方框或回退到衬线字体（视觉不一致）。</p>
+
+    <h3><span class="h3-num">4.1</span>三种字符场景</h3>
+
+    <div class="mermaid">
+graph TD
+    Char["字符出现位置"] --> C1{"在 chrome UI<br/>menu, button, label?"}
+    C1 -->|"是"| F1["font-sans 栈<br/>SF Pro 优先<br/>+ PingFang SC<br/>+ Microsoft YaHei UI"]
+    C1 -->|"否"| C2{"在 mono 区域<br/>编辑器, 树, code?"}
+    C2 -->|"是"| C3{"是否 CJK 字符?"}
+    C3 -->|"否 ASCII 或 latin"| F2["font-mono 栈<br/>SF Mono 等"]
+    C3 -->|"是 CJK"| F3["font-mono 栈末尾追加<br/>PingFang SC + Microsoft YaHei UI<br/>浏览器逐字符回退"]
+    F1 --> R1["正常渲染"]
+    F2 --> R2["等宽渲染"]
+    F3 --> R3["CJK 字符变宽<br/>但行高一致, 视觉可接受"]
+
+    classDef cond fill:#FFF7ED,stroke:#FA9B10
+    classDef act fill:#EFF6FF,stroke:#057AF3
+    classDef ok fill:#ECFDF5,stroke:#06B78F
+    class C1,C2,C3 cond
+    class F1,F2,F3 act
+    class R1,R2,R3 ok
+    </div>
+
+    <h3><span class="h3-num">4.2</span>关键调整</h3>
+
+    <p>03 § 6.1 字体栈已基本覆盖此场景（已含 <code>PingFang SC</code> / <code>Microsoft YaHei UI</code> 在 sans 栈末尾）。<b>需要在 14 章新增</b> 的事：</p>
+
+    <ul>
+      <li><code>--font-mono</code> 栈末尾追加 <code>"PingFang SC", "Microsoft YaHei UI"</code> ── CJK 字符在编辑器 / 树视图也能 fallback 渲染（不出现方框）</li>
+      <li>JSON 树视图 fs 微调：tree-view 当字符包含 CJK 时整行高度可能略升 ── 不调，让 line-height 1.7 自然吸收</li>
+      <li>错误信息中包含 CJK：state bar fs 12.5 px + line-height 1.4 → CJK 字符勉强可读，<b>不需要</b>另开 fs；如视觉差再升 fs-sm（13）</li>
+      <li>placeholder 文案 i18n：所有 <code>&lt;input placeholder="..."&gt;</code> 必须用 <code>t()</code>，不能 hardcode</li>
+    </ul>
+
+    <p class="section-divider"><b>三 · 契约</b></p>
+
+    <h2><span class="h2-num">5</span>资源结构</h2>
+
+    <h3><span class="h3-num">5.1</span>目录组织</h3>
+
+    <table>
+      <thead><tr><th>路径</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td><code>src/i18n/index.ts</code></td><td>i18n.init() + 配置 + 类型增强（让 TS 推 key autocomplete）</td></tr>
+        <tr><td><code>src/i18n/en-US/{shell,panes,settings,history,errors,about,common}.json</code></td><td>7 个 namespace × 1 个 locale = 7 个文件</td></tr>
+        <tr><td><code>src/i18n/zh-CN/{...}.json</code></td><td>同上 7 个 namespace（M3 添加）</td></tr>
+        <tr><td><code>src/types/i18n.d.ts</code></td><td><code>declare module 'react-i18next'</code> 的 resources 类型增强（基于 en-US 推 key 类型）</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">5.2</span>资源 JSON 示例</h3>
+
+    <pre><code>// src/i18n/en-US/errors.json ── 部分
+{
+  "parse": {
+    "title": "JSON parse error",
+    "atLineCol": "Line {{line}}, Col {{col}}: {{msg}}",
+    "actionAiFix": "Try AI Fix"
+  },
+  "rateLimit": {
+    "title": "Rate limited",
+    "retryAfter": "Please retry in {{sec}}s",
+    "actionWait": "Waiting…"
+  },
+  "aiInvalidJson": {
+    "title": "AI returned invalid JSON",
+    "actionCopyRaw": "Copy raw",
+    "actionRetry": "Retry"
+  }
+}</code></pre>
+
+    <h3><span class="h3-num">5.3</span>初始化骨架（≤ 20 行）</h3>
+
+    <pre><code>// src/i18n/index.ts
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+const NS = ['shell', 'panes', 'settings', 'history', 'errors', 'about', 'common'];
+
+export async function initI18n(locale: 'en-US' | 'zh-CN') {
+  const resources = Object.fromEntries(
+    await Promise.all(NS.map(async (ns) =&gt; [
+      ns, (await import(`./${locale}/${ns}.json`)).default,
+    ]))
+  );
+  await i18n.use(initReactI18next).init({
+    lng: locale, fallbackLng: 'en-US',
+    resources: { [locale]: resources },
+    interpolation: { escapeValue: false },  // React 已自动 escape
+    ns: NS, defaultNS: 'common',
+  });
+}</code></pre>
+
+    <h3><span class="h3-num">5.4</span>组件使用示例（≤ 15 行）</h3>
+
+    <pre><code>// src/shell/StatusBar.tsx ── 使用 useTranslation
+import { useTranslation } from 'react-i18next';
+
+export function StatusBar({ status, errorLoc }: StatusBarProps) {
+  const { t } = useTranslation('shell');  // namespace = shell
+  if (status === 'error' &amp;&amp; errorLoc) {
+    return &lt;span&gt;
+      ● {t('statusBar.errorAtLineCol', {
+            line: errorLoc.line, col: errorLoc.col, msg: errorLoc.msg
+          })}
+    &lt;/span&gt;;
+  }
+  return &lt;span&gt;● {t('statusBar.valid')}&lt;/span&gt;;
+}</code></pre>
+
+    <h2><span class="h2-num">6</span>settings 字段补充</h2>
+
+    <p><a href="13_schemas.html">13 § 3.3</a> Settings struct 需要新增字段（M0 起就支持，v1 只允许 <code>en-US</code> ── M3 解锁 <code>zh-CN</code>）：</p>
+
+    <table>
+      <thead><tr><th>字段</th><th>类型</th><th>默认</th><th>UI 位置</th></tr></thead>
+      <tbody>
+        <tr><td><code>locale</code></td><td><code>'en-US' | 'zh-CN'</code></td><td>auto-detect（§ 2.3）</td><td>设置 General → Language Select</td></tr>
+      </tbody>
+    </table>
+
+    <p>对应 Rust enum：</p>
+
+    <pre><code>// src-tauri/src/types.rs ── 同步加入
+#[derive(Serialize, Deserialize, Clone, Copy)]
+#[serde(rename_all = "kebab-case")]
+pub enum Locale { EnUs, ZhCn }   // serialize: "en-us" | "zh-cn"</code></pre>
+
+    <p class="section-divider"><b>四 · a11y 清单</b></p>
+
+    <h2><span class="h2-num">7</span>a11y 强制要求</h2>
+
+    <table>
+      <thead><tr><th>类别</th><th>要求</th><th>实现位置</th></tr></thead>
+      <tbody>
+        <tr><td><b>键盘可达</b></td><td>所有交互元素可通过 Tab 序列到达；无键盘陷阱</td><td>shadcn 默认满足；自定义组件须保持（<a href="04_components.html">04 各组件 props</a>）</td></tr>
+        <tr><td><b>focus-visible</b></td><td>只在键盘聚焦时显示 focus ring，不在鼠标点击时显示</td><td>所有组件用 <code>:focus-visible</code> 而非 <code>:focus</code>（<a href="04_components.html">04 § 6</a>）</td></tr>
+        <tr><td><b>ARIA labels</b></td><td>纯图标按钮（pin / star / delete / settings）必须有 <code>aria-label</code></td><td>HistoryItem / 状态栏按钮</td></tr>
+        <tr><td><b>ARIA live regions</b></td><td>Toast / 状态栏动态变化用 <code>role="status"</code> 或 <code>aria-live="polite"</code> 让屏阅器朗读</td><td>Toast / StatusBar</td></tr>
+        <tr><td><b>语义化 HTML</b></td><td>用 <code>&lt;button&gt;</code> 不用 <code>&lt;div onClick&gt;</code>；用 <code>&lt;nav&gt;</code> / <code>&lt;main&gt;</code> 等 landmark</td><td>所有自写组件</td></tr>
+        <tr><td><b>对比度</b></td><td>所有正文文本 ≥ AA（4.5:1）；body text ≥ AAA</td><td>已核验，见 <a href="03_design_tokens.html">03 § 5</a></td></tr>
+        <tr><td><b>reduced motion</b></td><td><code>prefers-reduced-motion: reduce</code> 时动画时长 → 1 ms</td><td>已实现，见 <a href="03_design_tokens.html">03 § 9.1</a></td></tr>
+        <tr><td><b>高对比度模式</b></td><td>v1 不专门支持 Windows 高对比模式；macOS Increase Contrast 通过 token 设计满足</td><td>—</td></tr>
+        <tr><td><b>缩放</b></td><td>UI 至 200% zoom 不破布局</td><td>所有间距 / 字号用 px（不用 vw / vh）</td></tr>
+        <tr><td><b>语言声明</b></td><td><code>&lt;html lang="..."&gt;</code> 随 locale 切换</td><td>i18n.changeLanguage 时同步</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">8</span>screen reader 关键流</h2>
+
+    <p>三条核心交互必须通过 screen reader（VoiceOver）测试：</p>
+
+    <ol>
+      <li><b>呼出浮窗 → 编辑器获焦</b>：用户应听到"JSON editor, edit text" + tabBar 当前激活 Tab 名</li>
+      <li><b>parse 错误</b>：状态栏 <code>aria-live="polite"</code> → 自动朗读 "Line 3, Col 12: unexpected token"</li>
+      <li><b>AI Fix 完成</b>：Toast <code>role="status"</code> → 朗读"AI Fix applied"；DiffView Accept/Reject 按钮可 Tab</li>
+    </ol>
+
+    <p class="section-divider"><b>五 · 测试 & 收尾</b></p>
+
+    <h2><span class="h2-num">9</span>测试 checklist</h2>
+
+    <ul>
+      <li>所有 UI 文案出现在 <code>useTranslation</code> 中，无 hardcode 英文字符串（grep <code>"[A-Z][a-z]+ [A-Z]"</code> 等）</li>
+      <li>启动时 settings.locale 未设 + navigator.language=zh-CN → 解析为 zh-CN（M3 验证）</li>
+      <li>启动时 settings.locale=en-US + navigator.language=zh-CN → 仍解析为 en-US（用户偏好优先）</li>
+      <li>设置面板切换语言 → 全应用文案立即变化，不需 reload</li>
+      <li>错误 Toast 通过 kind → t() 映射，不再展示英文 raw</li>
+      <li>编辑器中粘贴含 CJK 的 JSON → 字符正常渲染，无方框（验证 mono 字体回退）</li>
+      <li>VoiceOver 朗读：呼出浮窗 / parse 错误 / AI Fix 完成三条流</li>
+      <li>键盘 Tab 序：浮窗内所有交互元素可达，无键盘陷阱</li>
+      <li>UI 缩放 200% 不破布局（Modal / 设置面板 / 历史列表）</li>
+      <li><code>prefers-reduced-motion: reduce</code> 下所有 fade-in / fade-out 时长 ≤ 1 ms</li>
+      <li><code>document.documentElement.lang</code> 与 settings.locale 一致</li>
+    </ul>
+
+    <h2><span class="h2-num">10</span>与其他章节对接</h2>
+
+    <table>
+      <thead><tr><th>章节</th><th>对接点</th></tr></thead>
+      <tbody>
+        <tr><td>03 design tokens § 6.1</td><td>需要在 mono 字体栈末尾追加 <code>"PingFang SC", "Microsoft YaHei UI"</code></td></tr>
+        <tr><td>13 schemas § 3.3</td><td>Settings struct 加 <code>locale</code> 字段（同步新增 <code>Locale</code> enum）</td></tr>
+        <tr><td>04 components</td><td>各组件 props 加可选 <code>aria-label</code> / <code>aria-describedby</code>；StatusBar / Toast 加 <code>aria-live</code> region</td></tr>
+        <tr><td>02 IPC § 2.1.4 settings</td><td><code>settings.locale</code> 改动触发 <code>settings:changed</code> 事件 → 前端 i18n.changeLanguage</td></tr>
+        <tr><td>11 AI client § 7</td><td>错误透传不变，UI 层按 <code>errors.*</code> namespace 翻译</td></tr>
+      </tbody>
+    </table>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

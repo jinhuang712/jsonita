@@ -17,416 +17,180 @@
     <div class="doc-header">
       <span class="doc-tag">SPEC · 章节 10</span>
       <h1 class="doc-title">存储 & 会话</h1>
-      <p class="doc-subtitle">SQLite schema · migration · Keychain · 设置项 store · last_session 时序。</p>
+      <p class="doc-subtitle">SQLite · Keychain · settings store · last_session ── 先讲分层设计与状态机，再列 schema 速查。</p>
     </div>
 
-    <h2><span class="h2-num">1</span>存储介质分工</h2>
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
+      <div class="callout-body">
+        <p>SQLite 表结构（字段 / 索引 / PRAGMA）见 <a href="13_schemas.html">13 § 4</a>；Keychain entry 见 <a href="13_schemas.html">13 § 6</a>；settings 字段表见 <a href="13_schemas.html">13 § 3.3</a>；window.json 见 <a href="13_schemas.html">13 § 5.2</a>。本章不重复 DDL，只讲<b>为何这么设计 + 怎么工作</b>。</p>
+      </div>
+    </div>
+
+    <p class="section-divider"><b>一 · 设计</b></p>
+
+    <h2><span class="h2-num">1</span>设计目标与边界</h2>
+
+    <p>存储层承担三件事：<b>持久化用户数据</b>（历史 / 设置）/ <b>恢复短期工作状态</b>（last_session）/ <b>隔离敏感凭证</b>（API key）。设计原则：</p>
+
+    <ul>
+      <li><b>数据全本地</b>：依 <a href="../plan/00_overview.html">plan/00 must-have</a>，所有用户数据不上传；这也意味着不需要 schema 版本迁移到云端 / 跨设备同步</li>
+      <li><b>关停即安全</b>：API key 走 macOS Keychain，应用进程崩溃也不会泄漏；JSON 历史走 SQLite 文件，权限是用户家目录默认权限</li>
+      <li><b>卸载干净</b>：能用一条 <code>rm -rf ~/Library/Application Support/Jsonita</code> + <code>security delete-generic-password</code> 完全清理（脚本见 § 10.2）</li>
+      <li><b>恢复优于警告</b>：意外关闭后再呼出，恢复内容比"你刚才编辑了 X 行，是否找回"友好 ── 但提供 ⌘K 让用户主动放弃</li>
+    </ul>
+
+    <h2><span class="h2-num">2</span>存储介质分工</h2>
+
+    <p>四种介质，按<b>数据特征</b>分工：</p>
 
     <table>
-      <thead><tr><th>介质</th><th>承载</th><th>路径</th></tr></thead>
+      <thead><tr><th>介质</th><th>承载</th><th>选型理由</th><th>路径</th></tr></thead>
       <tbody>
-        <tr><td>SQLite</td><td>历史记录 · 上次会话</td><td><code>~/Library/Application Support/Jsonita/history.db</code></td></tr>
-        <tr><td>tauri-plugin-store (JSON)</td><td>设置项 · 窗口大小</td><td><code>~/Library/Application Support/Jsonita/settings.json</code> · <code>window.json</code></td></tr>
-        <tr><td>macOS Keychain</td><td>DeepSeek API key</td><td>service=<code>com.jsonita.app</code> · account=<code>deepseek_api_key</code></td></tr>
-        <tr><td>本地日志</td><td>error / warn</td><td><code>~/Library/Logs/Jsonita/app.log</code>（按天滚动，保留 7 天）</td></tr>
+        <tr><td><b>SQLite</b></td><td>历史记录 + last_session</td><td>需要 FTS5 全文搜索 / pinned-starred 索引 / 事务原子性</td><td><code>~/Library/Application Support/Jsonita/history.db</code></td></tr>
+        <tr><td><b>tauri-plugin-store (JSON)</b></td><td>设置项 · window.json 尺寸记忆</td><td>纯 KV 配置 + 启动一次加载 ── 不值得开 SQLite 连接池</td><td><code>~/Library/Application Support/Jsonita/{settings,window}.json</code></td></tr>
+        <tr><td><b>macOS Keychain</b></td><td>DeepSeek API key（plain text）</td><td>系统级加密 + 解锁授权 + 卸载不残留</td><td>service=<code>com.jsonita.app</code> / account=<code>deepseek_api_key</code></td></tr>
+        <tr><td><b>本地日志文件</b></td><td>error / warn 级别日志</td><td>调试反馈用；不放 SQLite 是因为日志写入频繁 + 不需要查询</td><td><code>~/Library/Logs/Jsonita/app.log</code>（按天滚动，保留 7 天）</td></tr>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>SQLite schema</h2>
+    <p><b>为何不全用 SQLite</b>：设置项是<b>读密集 + 写稀疏 + 全量加载</b>的小 KV，开 SQLite 反而是过度工程；JSON 文件一次 <code>fs::read</code> 进内存即可，write 用 tauri-plugin-store 自动节流。</p>
 
-    <h3><span class="h3-num">2.1</span>表结构</h3>
+    <h2><span class="h2-num">3</span>不变量与数据策略</h2>
 
-    <pre><code>-- migrations/0001_init.sql
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous  = NORMAL;
-PRAGMA foreign_keys = ON;
+    <p>"数据写到哪 / 留多久 / 谁可读"的规则，<b>新代码必须遵守</b>：</p>
 
-CREATE TABLE history (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at    INTEGER NOT NULL,                 -- unix ms
-  content       TEXT    NOT NULL,
-  summary       TEXT    NOT NULL,                 -- content 前 80 字符
-  content_hash  TEXT    NOT NULL,                 -- sha256 hex
-  op_type       TEXT    NOT NULL                  -- 'format' | 'minify' | 'tree' | ...
-                CHECK (op_type IN ('format','minify','tree','str-to-json','json-to-str','ai-fix')),
-  pinned        INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0,1)),
-  starred       INTEGER NOT NULL DEFAULT 0 CHECK (starred IN (0,1)),
-  tags          TEXT                              -- 预留 JSON array of strings
-);
+    <table>
+      <thead><tr><th>不变量</th><th>规则</th><th>违反后果</th></tr></thead>
+      <tbody>
+        <tr><td>I-1 history 去重</td><td><code>content_hash</code>（sha256）唯一索引 ── 同内容多次操作合并为一条（更新 created_at + op_type）</td><td>历史爆满 + 用户困惑同条目多份</td></tr>
+        <tr><td>I-2 last_session 单行</td><td><code>CHECK (id = 1)</code> ── 整张表只能 1 行</td><td>恢复时不知道用哪条</td></tr>
+        <tr><td>I-3 写入原子</td><td>所有 DB 写在单一事务（<code>rusqlite::Transaction</code>），失败回滚</td><td>半成品数据 / FTS 与主表不一致</td></tr>
+        <tr><td>I-4 凭证隔离</td><td>API key <b>不出现于</b>任何 fs 文件 / 日志 / event payload / 报错信息</td><td>泄漏</td></tr>
+        <tr><td>I-5 设置单一入口</td><td>所有 settings.json 读 / 写经过 <code>SettingsStore</code>，其他模块禁止直接打开文件</td><td>缓存不一致 / 设置事件丢失</td></tr>
+        <tr><td>I-6 滚动裁剪</td><td>history 写入触发 DELETE 保留 pinned + starred + 最近 <code>settings.history_limit</code> 条</td><td>无限增长</td></tr>
+      </tbody>
+    </table>
 
-CREATE UNIQUE INDEX idx_history_hash ON history (content_hash);
-CREATE INDEX        idx_history_pinned_created ON history (pinned DESC, created_at DESC);
-CREATE INDEX        idx_history_starred ON history (starred);
+    <p class="section-divider"><b>二 · 机制</b></p>
 
--- FTS5 虚拟表用于搜索
-CREATE VIRTUAL TABLE history_fts USING fts5(
-  content,
-  summary,
-  content='history',
-  content_rowid='id',
-  tokenize = 'unicode61 remove_diacritics 2'
-);
--- 触发器同步主表 ↔ FTS
+    <h2><span class="h2-num">4</span>SQLite 设计</h2>
+
+    <h3><span class="h3-num">4.1</span>表设计要点</h3>
+
+    <p>完整 DDL 见 <a href="13_schemas.html">13 § 4</a>，这里讲<b>每张表为什么这么设计</b>：</p>
+
+    <ul>
+      <li><b><code>history</code></b>：主键 AUTOINCREMENT；<code>content_hash</code> 加 UNIQUE 实现 UPSERT 去重；<code>op_type</code> 加 CHECK 约束防写错值；<code>pinned</code> / <code>starred</code> 用 0/1 + CHECK（SQLite 没原生 bool）；<code>tags</code> 预留为 NULL JSON array，v2 加标签时不用改 schema</li>
+      <li><b><code>last_session</code></b>：<code>CHECK (id = 1)</code> 强制单行 ── 比"每次先 DELETE 再 INSERT"原子且省一次 round trip，用 UPSERT 直接覆盖</li>
+      <li><b><code>app_meta</code></b>：KV 形态（key TEXT PRIMARY KEY），承载 <code>schema_version</code> / <code>install_at</code> 等元数据 ── 不开新表，让 v2 加新元数据时零迁移成本</li>
+      <li><b><code>schema_version</code></b>：独立单字段表（v INTEGER），不放 app_meta 的原因是 <code>MAX(v)</code> 查询比 KV 解析快，且语义更明确</li>
+    </ul>
+
+    <h3><span class="h3-num">4.2</span>索引设计</h3>
+
+    <table>
+      <thead><tr><th>索引</th><th>覆盖的查询</th><th>设计要点</th></tr></thead>
+      <tbody>
+        <tr><td><code>idx_history_hash</code></td><td>UPSERT 去重</td><td>UNIQUE，触发 ON CONFLICT 走 update 分支</td></tr>
+        <tr><td><code>idx_history_pinned_created</code></td><td>list 默认排序</td><td>复合索引 (pinned DESC, created_at DESC) ── 一次扫描就能给前端"置顶在上 + 时间倒序"的视图</td></tr>
+        <tr><td><code>idx_history_starred</code></td><td>筛选 Starred Tab</td><td>稀疏索引（大多数行 starred=0），但筛选时极快</td></tr>
+        <tr><td><code>history_fts</code>（FTS5）</td><td>history_search 全文匹配</td><td>详见 § 4.3</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.3</span>FTS5 索引与触发器</h3>
+
+    <p>FTS5 虚拟表 + 3 个 trigger（insert / update / delete）保证主表与索引同步。tokenizer 用 <code>unicode61 remove_diacritics 2</code> ── <b>这是中文搜索可用的关键</b>：unicode61 按 Unicode 字符切词，不依赖空格；remove_diacritics 把"é → e"等变体归一。</p>
+
+    <pre><code>-- 索引同步 trigger（完整 SQL 见 13 § 4 / migrations/0001_init.sql）
 CREATE TRIGGER history_ai AFTER INSERT ON history BEGIN
-  INSERT INTO history_fts (rowid, content, summary) VALUES (new.id, new.content, new.summary);
-END;
-CREATE TRIGGER history_ad AFTER DELETE ON history BEGIN
-  INSERT INTO history_fts (history_fts, rowid, content, summary)
-    VALUES('delete', old.id, old.content, old.summary);
-END;
-CREATE TRIGGER history_au AFTER UPDATE ON history BEGIN
-  INSERT INTO history_fts (history_fts, rowid, content, summary)
-    VALUES('delete', old.id, old.content, old.summary);
-  INSERT INTO history_fts (rowid, content, summary) VALUES (new.id, new.content, new.summary);
+  INSERT INTO history_fts (rowid, content, summary)
+    VALUES (new.id, new.content, new.summary);
 END;
 
--- 上次会话（单行）
-CREATE TABLE last_session (
-  id          INTEGER PRIMARY KEY CHECK (id = 1),  -- 强制单行
-  content     TEXT    NOT NULL,
-  op_type     TEXT    NOT NULL,
-  saved_at    INTEGER NOT NULL                     -- unix ms
-);
+-- delete / update 类似（先 'delete' tombstone，再 insert 新版）</code></pre>
 
--- 应用元数据（版本 / 启动次数等）
-CREATE TABLE app_meta (
-  key   TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-INSERT INTO app_meta (key, value) VALUES
-  ('schema_version', '1'),
-  ('install_at',     strftime('%s','now') * 1000);</code></pre>
+    <p><b>注意</b>：FTS5 是<b>external content</b> 表（<code>content='history'</code> + <code>content_rowid='id'</code>），不存第二份内容；只索引。这让 SQLite 文件大小可控。</p>
 
-    <h3><span class="h3-num">2.2</span>migration 框架</h3>
+    <h3><span class="h3-num">4.4</span>migration 框架</h3>
 
-    <pre><code>// src-tauri/src/store/db.rs
-use rusqlite::{Connection, params};
-use std::path::PathBuf;
-use crate::error::JsonitaError;
+    <p>策略：<b>单调递增版本号 + 顺序 apply + 启动时同步执行</b>。简单到不需要回滚（v1 不支持 down-migration）。</p>
 
-pub struct Db { conn: Connection }
+    <ul>
+      <li>每个 migration 是一个 <code>.sql</code> 文件，<code>include_str!</code> 编译进二进制 ── 用户不需要管 migration 文件</li>
+      <li>启动时读 <code>schema_version.MAX(v)</code>，未达到的逐一 apply，全部在单一事务里执行</li>
+      <li>任一 migration 失败 → 事务回滚 + 备份 <code>history.db.backup-{ts}</code> + 弹 Modal "存储升级失败，已备份原数据"</li>
+    </ul>
 
-impl Db {
-    pub fn open(app: &amp;tauri::AppHandle) -&gt; Result&lt;Self, JsonitaError&gt; {
-        let path = db_path(app)?;
-        std::fs::create_dir_all(path.parent().unwrap()).ok();
-        let mut conn = Connection::open(&amp;path)
-            .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-        migrate(&amp;mut conn)?;
-        Ok(Self { conn })
-    }
-}
-
+    <pre><code>// src-tauri/src/store/db.rs ── 核心 ~20 行
 const MIGRATIONS: &amp;[(u32, &amp;str)] = &amp;[
     (1, include_str!("migrations/0001_init.sql")),
     // future: (2, include_str!("migrations/0002_xxx.sql")),
 ];
 
 fn migrate(conn: &amp;mut Connection) -&gt; Result&lt;(), JsonitaError&gt; {
-    conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (v INTEGER NOT NULL)")
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+    conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (v INTEGER NOT NULL)")?;
     let current: u32 = conn.query_row(
-        "SELECT COALESCE(MAX(v), 0) FROM schema_version", [],
-        |r| r.get(0),
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-
-    let tx = conn.transaction().map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+        "SELECT COALESCE(MAX(v), 0) FROM schema_version", [], |r| r.get(0))?;
+    let tx = conn.transaction()?;
     for (v, sql) in MIGRATIONS {
         if *v &gt; current {
-            tx.execute_batch(sql).map_err(|e| JsonitaError::Sqlite(format!("migration {}: {}", v, e)))?;
-            tx.execute("INSERT INTO schema_version (v) VALUES (?1)", params![v])
-              .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+            tx.execute_batch(sql).map_err(|e|
+                JsonitaError::Sqlite(format!("migration {}: {}", v, e)))?;
+            tx.execute("INSERT INTO schema_version (v) VALUES (?1)", params![v])?;
         }
     }
-    tx.commit().map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-    Ok(())
-}
-
-fn db_path(app: &amp;tauri::AppHandle) -&gt; Result&lt;PathBuf, JsonitaError&gt; {
-    app.path().app_data_dir()
-        .map(|p| p.join("history.db"))
-        .map_err(|e| JsonitaError::Io(e.to_string()))
-}</code></pre>
-
-    <h3><span class="h3-num">2.3</span>history CRUD</h3>
-
-    <pre><code>// src-tauri/src/store/history.rs
-use rusqlite::params;
-use sha2::{Digest, Sha256};
-use crate::commands::history::{HistoryRow, OpType, ListOpts};
-use crate::error::JsonitaError;
-
-pub fn add(conn: &amp;rusqlite::Connection, content: &amp;str, op_type: OpType,
-           settings_limit: u32) -&gt; Result&lt;(), JsonitaError&gt; {
-    let hash = sha256_hex(content);
-    let summary: String = content.chars().take(80).collect();
-    let now = chrono::Utc::now().timestamp_millis();
-
-    // UPSERT 去重（同 hash 已存在则更新 created_at + op_type）
-    conn.execute(
-        "INSERT INTO history (created_at, content, summary, content_hash, op_type)
-         VALUES (?1, ?2, ?3, ?4, ?5)
-         ON CONFLICT(content_hash) DO UPDATE SET
-            created_at = excluded.created_at,
-            op_type    = excluded.op_type",
-        params![now, content, summary, hash, op_type.as_str()],
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-
-    // 滚动裁剪：保留 pinned + starred + 最近 N 条
-    conn.execute(
-        "DELETE FROM history
-         WHERE id NOT IN (
-            SELECT id FROM history
-            WHERE pinned = 1 OR starred = 1
-            UNION ALL
-            SELECT id FROM history
-            WHERE pinned = 0 AND starred = 0
-            ORDER BY created_at DESC
-            LIMIT ?1
-         )",
-        params![settings_limit],
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-    Ok(())
-}
-
-pub fn list(conn: &amp;rusqlite::Connection, opts: ListOpts) -&gt; Result&lt;Vec&lt;HistoryRow&gt;, JsonitaError&gt; {
-    // pinned 优先，其次 created_at DESC
-    let mut stmt = conn.prepare(
-        "SELECT id, created_at, content, summary, content_hash, op_type, pinned, starred
-         FROM history
-         WHERE (?1 IS NULL OR pinned   = ?1)
-           AND (?2 IS NULL OR starred  = ?2)
-         ORDER BY pinned DESC, created_at DESC
-         LIMIT ?3 OFFSET ?4",
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-
-    let rows = stmt.query_map(
-        params![opts.only_pinned, opts.only_starred, opts.limit, opts.offset],
-        row_to_history,
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-
-    rows.collect::&lt;Result&lt;_,_&gt;&gt;()
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))
-}
-
-pub fn search(conn: &amp;rusqlite::Connection, query: &amp;str, limit: u32)
-    -&gt; Result&lt;Vec&lt;HistoryRow&gt;, JsonitaError&gt; {
-    let mut stmt = conn.prepare(
-        "SELECT h.id, h.created_at, h.content, h.summary, h.content_hash,
-                h.op_type, h.pinned, h.starred
-         FROM history_fts f JOIN history h ON h.id = f.rowid
-         WHERE history_fts MATCH ?1
-         ORDER BY rank
-         LIMIT ?2",
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-    let rows = stmt.query_map(params![query, limit], row_to_history)
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-    rows.collect::&lt;Result&lt;_,_&gt;&gt;()
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))
-}
-
-fn sha256_hex(s: &amp;str) -&gt; String {
-    let mut h = Sha256::new();
-    h.update(s.as_bytes());
-    format!("{:x}", h.finalize())
-}</code></pre>
-
-    <h3><span class="h3-num">2.4</span>last_session CRUD</h3>
-
-    <pre><code>// src-tauri/src/store/session.rs
-use rusqlite::params;
-use crate::commands::session::LastSession;
-use crate::error::JsonitaError;
-
-pub fn save(conn: &amp;rusqlite::Connection, s: &amp;LastSession) -&gt; Result&lt;(), JsonitaError&gt; {
-    conn.execute(
-        "INSERT INTO last_session (id, content, op_type, saved_at)
-         VALUES (1, ?1, ?2, ?3)
-         ON CONFLICT(id) DO UPDATE SET
-            content = excluded.content,
-            op_type = excluded.op_type,
-            saved_at = excluded.saved_at",
-        params![s.content, s.op_type.as_str(), s.saved_at],
-    ).map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-    Ok(())
-}
-
-pub fn load(conn: &amp;rusqlite::Connection) -&gt; Result&lt;Option&lt;LastSession&gt;, JsonitaError&gt; {
-    let r = conn.query_row(
-        "SELECT content, op_type, saved_at FROM last_session WHERE id = 1",
-        [],
-        |row| Ok(LastSession {
-            content:  row.get(0)?,
-            op_type:  OpType::from_str(&amp;row.get::&lt;_, String&gt;(1)?).unwrap_or(OpType::Format),
-            saved_at: row.get(2)?,
-        }),
-    );
-    match r {
-        Ok(s) =&gt; Ok(Some(s)),
-        Err(rusqlite::Error::QueryReturnedNoRows) =&gt; Ok(None),
-        Err(e) =&gt; Err(JsonitaError::Sqlite(e.to_string())),
-    }
-}
-
-pub fn clear(conn: &amp;rusqlite::Connection) -&gt; Result&lt;(), JsonitaError&gt; {
-    conn.execute("DELETE FROM last_session WHERE id = 1", [])
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+    tx.commit()?;
     Ok(())
 }</code></pre>
 
-    <h2><span class="h2-num">3</span>连接池（rusqlite + r2d2）</h2>
+    <h3><span class="h3-num">4.5</span>连接池：WAL 模式 + r2d2</h3>
 
-    <pre><code>// src-tauri/src/store/db.rs (continued)
-use r2d2::Pool;
-use r2d2_sqlite::SqliteConnectionManager;
+    <p>SQLite 默认 rollback journal 不支持读 / 写并发；<b>WAL 模式</b>允许"任意多 reader + 1 writer"同时进行，对桌面应用是关键 ── 比如 history_list 不会被 history_add 阻塞。</p>
 
-pub type DbPool = Pool&lt;SqliteConnectionManager&gt;;
+    <pre><code>// PRAGMA 必须在每个新连接初始化时执行（连接级而非数据库级）
+let mgr = SqliteConnectionManager::file(path).with_init(|c| {
+    c.execute_batch("
+        PRAGMA journal_mode = WAL;       -- 读 / 写并发
+        PRAGMA synchronous  = NORMAL;     -- WAL 下安全 + 快
+        PRAGMA foreign_keys = ON;         -- 预防未来表关系
+        PRAGMA busy_timeout = 5000;       -- 避免 lock 失败
+    ")?; Ok(())
+});
+Pool::builder().max_size(4).build(mgr)?</code></pre>
 
-pub fn build_pool(app: &amp;tauri::AppHandle) -&gt; Result&lt;DbPool, JsonitaError&gt; {
-    let path = db_path(app)?;
-    let mgr = SqliteConnectionManager::file(path)
-        .with_init(|c| { c.execute_batch("
-            PRAGMA journal_mode = WAL;
-            PRAGMA synchronous  = NORMAL;
-            PRAGMA foreign_keys = ON;
-            PRAGMA busy_timeout = 5000;
-        ")?; Ok(()) });
-    Pool::builder()
-        .max_size(4)
-        .build(mgr)
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))
-}</code></pre>
+    <p><b>为何 max_size = 4</b>：v1 是单进程 + tokio runtime 默认几个 worker，4 个连接足够；调高反而增加内存（每连接 ~50 KB SQLite cache）。</p>
 
-    <p><b>WAL 模式</b>下读 / 写并发安全，max_size=4 已足够（v1 单进程 + 异步运行时几个 worker）。</p>
+    <h2><span class="h2-num">5</span>last_session 状态机</h2>
 
-    <h2><span class="h2-num">4</span>Keychain 封装</h2>
+    <h3><span class="h3-num">5.1</span>设计动机</h3>
 
-    <pre><code>// src-tauri/src/system/keychain.rs
-use keyring::Entry;
-use crate::error::JsonitaError;
+    <p>用户场景：<b>打开浮窗 → 编辑 30s → 切走应用 → 5 min 后回来</b>。我们希望第二次呼出能直接接续，而不是从空白开始。但又要保留"主动放弃"出口（⌘K）。</p>
 
-const SERVICE: &amp;str = "com.jsonita.app";
+    <p><b>双重存储</b>是关键设计：</p>
 
-pub struct KeyStore;
+    <ul>
+      <li><b>SQLite <code>last_session</code></b>：长期保留 ── 即使应用 Quit + 重启，用户按 <code>⌘⇧L</code> 仍可找回</li>
+      <li><b>内存 RestoreTimer</b>：短期"窗口期"概念 ── 默认 5 min 内呼出自动恢复 + 显示 RestoreBar；超时后需用户主动按 <code>⌘⇧L</code></li>
+    </ul>
 
-impl KeyStore {
-    pub fn set(account: &amp;str, value: &amp;str) -&gt; Result&lt;(), JsonitaError&gt; {
-        let entry = Entry::new(SERVICE, account)
-            .map_err(|e| JsonitaError::Keychain(e.to_string()))?;
-        entry.set_password(value).map_err(|e| JsonitaError::Keychain(e.to_string()))
-    }
+    <p><b>为何不只用 SQLite + 时间戳判断</b>：内存 timer 是<b>状态机的显式句柄</b>，未来扩展（如"窗口期内每次呼出延长 timer"）有挂载点；现在只是 sleep，但语义清晰。</p>
 
-    pub fn get(account: &amp;str) -&gt; Result&lt;Option&lt;String&gt;, JsonitaError&gt; {
-        let entry = Entry::new(SERVICE, account)
-            .map_err(|e| JsonitaError::Keychain(e.to_string()))?;
-        match entry.get_password() {
-            Ok(s) =&gt; Ok(Some(s)),
-            Err(keyring::Error::NoEntry) =&gt; Ok(None),
-            Err(e) =&gt; Err(JsonitaError::Keychain(e.to_string())),
-        }
-    }
-
-    pub fn delete(account: &amp;str) -&gt; Result&lt;(), JsonitaError&gt; {
-        let entry = Entry::new(SERVICE, account)
-            .map_err(|e| JsonitaError::Keychain(e.to_string()))?;
-        match entry.delete_credential() {
-            Ok(()) =&gt; Ok(()),
-            Err(keyring::Error::NoEntry) =&gt; Ok(()),
-            Err(e) =&gt; Err(JsonitaError::Keychain(e.to_string())),
-        }
-    }
-}</code></pre>
-
-    <p><b>account 列表</b>：</p>
+    <h3><span class="h3-num">5.2</span>三种呼出场景</h3>
 
     <table>
-      <thead><tr><th>account</th><th>值类型</th></tr></thead>
+      <thead><tr><th>场景</th><th>行为</th><th>UI</th></tr></thead>
       <tbody>
-        <tr><td><code>deepseek_api_key</code></td><td>plain text · DeepSeek API key</td></tr>
-        <tr><td>（v2 预留）<code>openai_api_key</code></td><td>—</td></tr>
+        <tr><td>关闭后<b>窗口期内</b>呼出（默认 5 min）</td><td>自动恢复 + RestoreBar 显示「上次会话 · 5 秒前」</td><td><a href="01_mockups.html">01 § RestoreBar mockup</a></td></tr>
+        <tr><td>关闭后<b>超过窗口期</b> / 应用 Quit 后重启</td><td>空白浮窗，无 RestoreBar</td><td>等用户操作</td></tr>
+        <tr><td>用户主动按 <code>⌘⇧L</code> 找回</td><td>读 sqlite last_session → setEditorContent + 显示 RestoreBar</td><td>RestoreBar</td></tr>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">5</span>设置项 store</h2>
+    <h3><span class="h3-num">5.3</span>状态机</h3>
 
-    <p>用 <code>tauri-plugin-store</code>（KV JSON 文件）。一次性加载到内存，所有 read 走缓存，write 触发 emit 事件。</p>
-
-    <pre><code>// src-tauri/src/store/settings.rs
-use parking_lot::RwLock;
-use std::sync::Arc;
-use serde::{Serialize, Deserialize};
-use crate::error::JsonitaError;
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase", default)]
-pub struct Settings { /* 见 01_ipc § 2.1.4 */ }
-
-impl Default for Settings { /* 默认值 */ }
-
-pub struct SettingsStore {
-    cache: Arc&lt;RwLock&lt;Settings&gt;&gt;,
-    app:   tauri::AppHandle,
-}
-
-impl SettingsStore {
-    pub fn load(app: &amp;tauri::AppHandle) -&gt; Result&lt;Self, JsonitaError&gt; {
-        let store = app.store("settings.json")
-            .map_err(|e| JsonitaError::Io(e.to_string()))?;
-        let v: Settings = match store.get("settings") {
-            Some(v) =&gt; serde_json::from_value(v).unwrap_or_default(),
-            None    =&gt; Settings::default(),
-        };
-        Ok(Self {
-            cache: Arc::new(RwLock::new(v)),
-            app:   app.clone(),
-        })
-    }
-
-    pub fn get(&amp;self) -&gt; Settings { self.cache.read().clone() }
-
-    pub fn patch(&amp;self, patch: serde_json::Map&lt;String, serde_json::Value&gt;)
-        -&gt; Result&lt;Settings, JsonitaError&gt;
-    {
-        let mut current = self.cache.write();
-        let mut as_value = serde_json::to_value(&amp;*current).unwrap();
-        let obj = as_value.as_object_mut().unwrap();
-        for (k, v) in patch { obj.insert(k, v); }
-        let updated: Settings = serde_json::from_value(as_value)
-            .map_err(|e| JsonitaError::Io(e.to_string()))?;
-        *current = updated.clone();
-
-        // 落盘
-        let store = self.app.store("settings.json")
-            .map_err(|e| JsonitaError::Io(e.to_string()))?;
-        store.set("settings", serde_json::to_value(&amp;updated).unwrap());
-        store.save().map_err(|e| JsonitaError::Io(e.to_string()))?;
-
-        // 广播
-        let _ = self.app.emit("settings:changed", updated.clone());
-        Ok(updated)
-    }
-}</code></pre>
-
-    <h2><span class="h2-num">6</span>last_session 完整时序</h2>
-
-    <h3><span class="h3-num">6.1</span>设置项</h3>
-
-    <p>恢复窗口期：<code>settings.restore_window</code> ∈ <code>Off | Min1 | Min5 | Min15 | Hour1</code>，默认 <code>Min5</code>。</p>
-
-    <h3><span class="h3-num">6.2</span>三种触发场景</h3>
-
-    <table>
-      <thead><tr><th>场景</th><th>行为</th></tr></thead>
-      <tbody>
-        <tr><td>关闭后窗口期内呼出</td><td>自动恢复 + RestoreBar</td></tr>
-        <tr><td>关闭后超过窗口期 / 应用 Quit 后重启</td><td>空白，等用户按 ⌘⇧L 找回</td></tr>
-        <tr><td>用户按 ⌘⇧L</td><td>读 sqlite last_session → setEditorContent</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">6.3</span>状态机</h3>
-
-    <p>点击图卡可放大查看细节：</p>
+    <p>点击图卡可放大查看细节。</p>
 
     <div class="mermaid">
 stateDiagram-v2
@@ -453,61 +217,120 @@ stateDiagram-v2
     end note
     </div>
 
-    <p><b>状态说明</b>：</p>
-
     <table>
       <thead><tr><th>状态</th><th>含义</th></tr></thead>
       <tbody>
-        <tr><td><b>HiddenIdle</b></td><td>浮窗不可见 · 无活跃计时器（应用启动后 / 窗口期超时后）</td></tr>
+        <tr><td><b>HiddenIdle</b></td><td>浮窗不可见 · 无活跃计时器（应用启动 / 窗口期超时后）</td></tr>
         <tr><td><b>VisibleFresh</b></td><td>浮窗可见 · 当前编辑器是用户新输入的内容</td></tr>
         <tr><td><b>VisibleRestored</b></td><td>浮窗可见 · 当前编辑器内容来自 last_session（显示 RestoreBar）</td></tr>
         <tr><td><b>HiddenArmed</b></td><td>浮窗不可见 · 计时器进行中（在窗口期内）</td></tr>
       </tbody>
     </table>
 
-    <h3><span class="h3-num">6.4</span>"窗口期" 内存计时器实现</h3>
+    <h3><span class="h3-num">5.4</span>内存计时器接口</h3>
 
-    <pre><code>// src-tauri/src/system/restore_timer.rs
-use tokio::sync::Mutex;
-use tokio::task::JoinHandle;
-use std::sync::Arc;
-use std::time::Duration;
+    <p>RestoreTimer 只暴露 2 个动作：<code>arm(ms)</code> / <code>disarm()</code>。<b>不需要 timer fire 回调</b> ── 是否"在窗口期内"由 <code>window:shown</code> 触发时 Rust 端读 last_session.saved_at + 比较当前时间决定。timer 仅作为"窗口期生命周期"概念的状态承载。</p>
 
-pub struct RestoreTimer {
-    inner: Arc&lt;Mutex&lt;Option&lt;JoinHandle&lt;()&gt;&gt;&gt;,
-}
+    <pre><code>// 接口签名（实现见 src-tauri/src/system/restore_timer.rs）
+pub struct RestoreTimer { /* Arc&lt;Mutex&lt;Option&lt;JoinHandle&gt;&gt;&gt; */ }
 
 impl RestoreTimer {
-    pub fn new() -&gt; Self { Self { inner: Default::default() } }
-
-    pub async fn arm(&amp;self, ms: u64) {
-        let mut lock = self.inner.lock().await;
-        if let Some(prev) = lock.take() { prev.abort(); }
-        // 注意：我们不需要 timer fire 时做任何事 ──
-        // load_last 时通过比较 now - saved_at 即可判断是否过期
-        // timer 仅用于内存中 "知道窗口期开始的时刻" 这个抽象
-        // 真正的过期判定在 React listen window:shown 时由 Rust 端判断
-        let task = tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(ms)).await;
-        });
-        *lock = Some(task);
-    }
-
-    pub async fn disarm(&amp;self) {
-        let mut lock = self.inner.lock().await;
-        if let Some(prev) = lock.take() { prev.abort(); }
-    }
+    pub fn new() -&gt; Self;
+    pub async fn arm(&amp;self, ms: u64);   // 取消旧 timer + spawn 新的 sleep task
+    pub async fn disarm(&amp;self);          // 取消当前 timer（⌘K / 重新呼出时调用）
 }</code></pre>
 
-    <p><b>注意</b>：实际"是否在窗口期内"由 <code>window:shown</code> 触发时 Rust 端读 last_session + 比较时间戳决定，timer 只是显式建模"窗口期生命周期"概念，方便未来扩展（如增加"窗口期内每次呼出延长 timer"等行为）。</p>
+    <h2><span class="h2-num">6</span>Keychain 封装</h2>
 
-    <h2><span class="h2-num">7</span>性能与并发</h2>
+    <h3><span class="h3-num">6.1</span>设计要点</h3>
+
+    <ul>
+      <li><b>统一 service 名</b>：<code>com.jsonita.app</code> ── 与 bundle identifier 一致，方便钥匙串管理器辨识</li>
+      <li><b>按 account 区分多 key</b>：v1 只有 <code>deepseek_api_key</code>；预留 <code>openai_api_key</code> / <code>claude_api_key</code> 等以备 v2 多 AI 后端</li>
+      <li><b>"不存在" 不是错误</b>：<code>get</code> 返回 <code>Result&lt;Option&lt;String&gt;&gt;</code>，<code>NoEntry</code> 映射为 <code>Ok(None)</code> ── 让首次启动正常走"AI 未配置"路径</li>
+      <li><b>删除幂等</b>：<code>delete</code> 不存在的 entry 也返回 <code>Ok(())</code>，方便卸载脚本</li>
+    </ul>
+
+    <h3><span class="h3-num">6.2</span>Account 清单（见 <a href="13_schemas.html">13 § 6</a>）</h3>
+
+    <table>
+      <thead><tr><th>account</th><th>值</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td><code>deepseek_api_key</code></td><td>plain text · DeepSeek API key</td><td>v1 唯一项</td></tr>
+        <tr><td><code>openai_api_key</code></td><td>—</td><td>v2 预留</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.3</span>接口</h3>
+
+    <pre><code>// src-tauri/src/system/keychain.rs ── 接口签名
+pub struct KeyStore;
+impl KeyStore {
+    pub fn set(account: &amp;str, value: &amp;str)    -&gt; Result&lt;(), JsonitaError&gt;;
+    pub fn get(account: &amp;str)                  -&gt; Result&lt;Option&lt;String&gt;, JsonitaError&gt;;
+    pub fn delete(account: &amp;str)               -&gt; Result&lt;(), JsonitaError&gt;;   // 幂等
+}</code></pre>
+
+    <p>所有方法把 <code>keyring::Error</code> 映射为 <code>JsonitaError::Keychain</code>，例外是 <code>NoEntry</code>（get 返 None / delete 返 Ok）。</p>
+
+    <h2><span class="h2-num">7</span>settings store</h2>
+
+    <h3><span class="h3-num">7.1</span>设计动机</h3>
+
+    <p>settings 是<b>读密集 + 写稀疏</b>的小 KV（每次编辑器输入都要读 <code>auto_unwrap</code> / <code>indent</code> 等），所以走<b>启动加载到内存 + write-through 落盘</b> 的策略：</p>
+
+    <ul>
+      <li>启动时 <code>SettingsStore::load</code> 把 JSON 文件读进 <code>Arc&lt;RwLock&lt;Settings&gt;&gt;</code></li>
+      <li>所有 <code>get()</code> 走内存（RwLock read，~0.1 ms）</li>
+      <li>所有 <code>patch()</code> 同时改内存 + 落盘 + emit <code>settings:changed</code> 事件给所有窗口</li>
+      <li>I-5 不变量：其他模块不允许绕过 SettingsStore 读写 JSON 文件</li>
+    </ul>
+
+    <h3><span class="h3-num">7.2</span>patch 算法核心</h3>
+
+    <p>支持 partial update（只传 1-2 个字段即可），用 <code>serde_json::Value</code> 做中间格式做合并：</p>
+
+    <pre><code>// 核心 ~10 行
+pub fn patch(&amp;self, patch: serde_json::Map&lt;String, serde_json::Value&gt;)
+    -&gt; Result&lt;Settings, JsonitaError&gt;
+{
+    let mut current = self.cache.write();
+    let mut as_value = serde_json::to_value(&amp;*current).unwrap();
+    let obj = as_value.as_object_mut().unwrap();
+    for (k, v) in patch { obj.insert(k, v); }              // shallow merge
+    let updated: Settings = serde_json::from_value(as_value)?;
+    *current = updated.clone();
+    self.persist(&amp;updated)?;                                // 落盘 + emit
+    Ok(updated)
+}</code></pre>
+
+    <p><b>注意</b>：shallow merge 即可 ── settings 是扁平结构（无嵌套对象），不需要 deep merge。如果 v2 引入嵌套（如 <code>ai: { provider, model }</code>），改用 <code>jsonptr</code> 或自定义 deep merge。</p>
+
+    <p class="section-divider"><b>三 · 契约速查</b></p>
+
+    <h2><span class="h2-num">8</span>schema 索引</h2>
+
+    <table>
+      <thead><tr><th>资源</th><th>定义位置</th></tr></thead>
+      <tbody>
+        <tr><td>SQLite 表（history / last_session / app_meta / schema_version）</td><td><a href="13_schemas.html">13 § 4.1-4.4</a></td></tr>
+        <tr><td>SQLite PRAGMA</td><td><a href="13_schemas.html">13 § 4.5</a></td></tr>
+        <tr><td>settings.json schema</td><td><a href="13_schemas.html">13 § 3.3 + § 5.1</a></td></tr>
+        <tr><td>window.json schema</td><td><a href="13_schemas.html">13 § 5.2</a></td></tr>
+        <tr><td>Keychain entry</td><td><a href="13_schemas.html">13 § 6</a></td></tr>
+        <tr><td><code>HistoryRow</code> / <code>ListOpts</code> / <code>LastSession</code> Rust struct</td><td><a href="13_schemas.html">13 § 3.2</a></td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>四 · 运行时数字 & 收尾</b></p>
+
+    <h2><span class="h2-num">9</span>性能与并发</h2>
 
     <table>
       <thead><tr><th>操作</th><th>P50</th><th>P95</th><th>实现细节</th></tr></thead>
       <tbody>
         <tr><td>history_list（50 条）</td><td>5 ms</td><td>15 ms</td><td>idx_history_pinned_created 覆盖</td></tr>
-        <tr><td>history_search（FTS5）</td><td>8 ms</td><td>25 ms</td><td>FTS5 unicode61 tokenizer</td></tr>
+        <tr><td>history_search（FTS5）</td><td>8 ms</td><td>25 ms</td><td>unicode61 tokenizer</td></tr>
         <tr><td>history_add（含裁剪）</td><td>4 ms</td><td>12 ms</td><td>单事务 UPSERT + DELETE</td></tr>
         <tr><td>session_save_last</td><td>2 ms</td><td>8 ms</td><td>单行 UPSERT</td></tr>
         <tr><td>settings_get_all</td><td>0.1 ms</td><td>0.5 ms</td><td>纯内存读 RwLock</td></tr>
@@ -515,57 +338,42 @@ impl RestoreTimer {
       </tbody>
     </table>
 
-    <h2><span class="h2-num">8</span>数据迁移 / 卸载</h2>
+    <h2><span class="h2-num">10</span>升级与卸载</h2>
 
-    <h3><span class="h3-num">8.1</span>应用升级</h3>
+    <h3><span class="h3-num">10.1</span>升级</h3>
 
     <ul>
-      <li>启动时跑 <code>migrate()</code>，按 schema_version 自动 apply 缺失迁移</li>
-      <li>迁移失败 → 备份原文件到 <code>history.db.backup-{timestamp}</code> + 弹 Modal 提示用户报告</li>
-      <li>v1 不允许 down-migration</li>
+      <li>启动时跑 <code>migrate()</code>，按 <code>schema_version</code> 自动 apply 缺失的 migration</li>
+      <li>失败 → 备份原文件 <code>history.db.backup-{timestamp}</code> + Modal 提示报告</li>
+      <li>v1 不支持 down-migration</li>
     </ul>
 
-    <h3><span class="h3-num">8.2</span>卸载清理脚本</h3>
+    <h3><span class="h3-num">10.2</span>卸载脚本</h3>
+
+    <p>放在 <code>scripts/uninstall.sh</code>，同步在 README 提供。用户也可手动跑：</p>
 
     <pre><code>#!/bin/sh
-# scripts/uninstall.sh ── 用户手动运行（也在 README 提供）
+# scripts/uninstall.sh
 echo "Removing Jsonita data..."
 rm -rf "$HOME/Library/Application Support/Jsonita"
 rm -rf "$HOME/Library/Logs/Jsonita"
 security delete-generic-password -s "com.jsonita.app" -a "deepseek_api_key" 2&gt;/dev/null
 echo "Done. (Application itself is at /Applications/Jsonita.app, rm manually.)"</code></pre>
 
-    <h2><span class="h2-num">9</span>不变量</h2>
+    <h2><span class="h2-num">11</span>测试 checklist</h2>
 
     <ul>
-      <li><b>I-1</b>：history.content_hash 唯一 ── 同内容多次操作合并为一条（更新 op_type / created_at）</li>
-      <li><b>I-2</b>：last_session 至多一行（CHECK (id = 1)）</li>
-      <li><b>I-3</b>：所有 DB 写在单一事务（rusqlite::Transaction），避免半成品</li>
-      <li><b>I-4</b>：API key 不出现于任何 fs 文件 / 日志 / event payload</li>
-      <li><b>I-5</b>：所有 settings.json 读 / 写经过 SettingsStore，不允许其他模块直接打开</li>
-    </ul>
-
-    <h2><span class="h2-num">10</span>测试 checklist</h2>
-
-    <ul>
-      <li>[ ] migration 在空数据库 + 已有 schema_version=1 数据库上都跑通</li>
-      <li>[ ] 同内容多次写入只有一条 history 记录</li>
-      <li>[ ] history_clear() 不删 pinned / starred</li>
-      <li>[ ] FTS5 中文搜索可工作（unicode61 tokenizer）</li>
-      <li>[ ] last_session 单行约束生效（重复插入返回 1 行）</li>
-      <li>[ ] Keychain set → get round-trip 一致</li>
-      <li>[ ] Keychain 删除不存在 entry 不报错</li>
-      <li>[ ] settings.patch 触发 settings:changed event</li>
-      <li>[ ] 5 分钟窗口期：5 min 内呼出恢复，5+1 min 后不恢复</li>
-      <li>[ ] 应用 Quit + 重启后 ⌘⇧L 仍能找回（sqlite 持久化）</li>
-    </ul>
-
-    <h2><span class="h2-num">11</span>承上启下</h2>
-
-    <ul>
-      <li><b>05 窗口</b> ── 关闭时调 session_save_last</li>
-      <li><b>06 菜单栏</b> ── ⌘⇧L 触发 session_load_last</li>
-      <li><b>10 AI 客户端</b> ── 通过 KeyStore::get("deepseek_api_key") 取 key</li>
+      <li>migration 在空数据库 + 已有 schema_version=1 数据库上都跑通</li>
+      <li>同内容多次写入只有一条 history 记录（I-1）</li>
+      <li>history_clear() 不删 pinned / starred（I-6）</li>
+      <li>FTS5 中文搜索可工作（unicode61 tokenizer）</li>
+      <li>last_session 单行约束生效（重复插入返回 1 行）（I-2）</li>
+      <li>Keychain set → get round-trip 一致</li>
+      <li>Keychain 删除不存在 entry 不报错</li>
+      <li>settings.patch 触发 settings:changed event 给所有窗口</li>
+      <li>5 分钟窗口期：5 min 内呼出恢复，5+1 min 后不恢复</li>
+      <li>应用 Quit + 重启后 ⌘⇧L 仍能找回（sqlite 持久化）</li>
+      <li>API key 不出现于 log / event payload / error message（I-4 审计）</li>
     </ul>
 
     <nav class="pagination" id="pagination"></nav>

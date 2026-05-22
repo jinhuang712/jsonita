@@ -32,7 +32,9 @@ const SECTIONS = {
       { num: '10', slug: 'storage',       title: '存储 & 会话' },
       { num: '11', slug: 'ai_client',     title: 'AI 客户端' },
       { num: '12', slug: 'packaging',     title: '打包、签名、验收' },
-      { num: '13', slug: 'schemas',       title: '数据模型参考' }
+      { num: '13', slug: 'schemas',       title: '数据模型参考' },
+      { num: '14', slug: 'i18n_a11y',     title: '国际化 & 无障碍' },
+      { num: '15', slug: 'logging',       title: '日志 & 可观测性' }
     ]
   },
   progress: {

@@ -17,451 +17,131 @@
     <div class="doc-header">
       <span class="doc-tag">SPEC · 章节 02</span>
       <h1 class="doc-title">IPC 合约</h1>
-      <p class="doc-subtitle">前后端通信契约：所有 commands / events 的完整签名表，含错误分支与时序。</p>
+      <p class="doc-subtitle">Rust ↔ React 通信契约 ── 先讲设计意图与工作机制，再列签名速查。所有 payload 数据模型见 <a href="13_schemas.html">13 数据模型参考</a>。</p>
     </div>
 
-    <h2><span class="h2-num">1</span>设计原则</h2>
-
-    <ul>
-      <li><b>命名</b>：Rust 命令用 snake_case（<code>json_format</code>）；前端调用时同名。事件用冒号分隔（<code>window:shown</code> / <code>ai:progress</code>）</li>
-      <li><b>同步语义</b>：所有 command <b>async</b>；前端可放心 <code>await invoke()</code>。CPU 密集操作内部用 <code>spawn_blocking</code></li>
-      <li><b>错误统一</b>：所有 command 返回 <code>Result&lt;T, JsonitaError&gt;</code>，error 类型见 <a href="00_architecture.html">00 § 6</a></li>
-      <li><b>大小限制</b>：command payload &lt; 4 MB；&gt; 4 MB 改用 event 流式分块（v1 未触发，预留）</li>
-      <li><b>幂等性</b>：所有 read 操作幂等；write 操作通过 <code>request_id</code> 字段去重（v1 仅 <code>ai_fix</code> 用到）</li>
-    </ul>
-
-    <h2><span class="h2-num">2</span>Commands 总表</h2>
-
-    <table>
-      <thead><tr><th>分组</th><th>命令</th><th>幂等</th><th>P95 耗时</th><th>描述</th></tr></thead>
-      <tbody>
-        <tr><td rowspan="4"><b>json_ops</b></td>
-            <td><code>json_format</code></td><td>✓</td><td>&lt; 50 ms</td><td>格式化（缩进 / sort_keys / minify）</td></tr>
-        <tr><td><code>json_minify</code></td><td>✓</td><td>&lt; 30 ms</td><td>压缩为单行</td></tr>
-        <tr><td><code>json_unwrap_stringified</code></td><td>✓</td><td>&lt; 200 ms</td><td>递归解开嵌套 stringified JSON（含超时）</td></tr>
-        <tr><td><code>json_stringify</code></td><td>✓</td><td>&lt; 20 ms</td><td>JSON → 转义字符串字面量</td></tr>
-
-        <tr><td rowspan="5"><b>history</b></td>
-            <td><code>history_list</code></td><td>✓</td><td>&lt; 30 ms</td><td>分页 + 排序（pinned 优先）</td></tr>
-        <tr><td><code>history_search</code></td><td>✓</td><td>&lt; 30 ms</td><td>FTS 子串匹配 content / summary</td></tr>
-        <tr><td><code>history_pin</code></td><td>—</td><td>&lt; 10 ms</td><td>置顶 / 取消</td></tr>
-        <tr><td><code>history_star</code></td><td>—</td><td>&lt; 10 ms</td><td>收藏 / 取消</td></tr>
-        <tr><td><code>history_clear</code></td><td>—</td><td>&lt; 50 ms</td><td>一键清空（不删 pinned / starred）</td></tr>
-
-        <tr><td rowspan="3"><b>session</b></td>
-            <td><code>session_save_last</code></td><td>—</td><td>&lt; 10 ms</td><td>覆盖式写 last_session</td></tr>
-        <tr><td><code>session_load_last</code></td><td>✓</td><td>&lt; 10 ms</td><td>读 last_session</td></tr>
-        <tr><td><code>session_clear_last</code></td><td>—</td><td>&lt; 10 ms</td><td>清空 last_session（⌘K 触发）</td></tr>
-
-        <tr><td rowspan="3"><b>settings</b></td>
-            <td><code>settings_get_all</code></td><td>✓</td><td>&lt; 10 ms</td><td>读全量设置</td></tr>
-        <tr><td><code>settings_set</code></td><td>—</td><td>&lt; 20 ms</td><td>按 key 写；触发 <code>settings:changed</code> 事件</td></tr>
-        <tr><td><code>settings_reset</code></td><td>—</td><td>&lt; 20 ms</td><td>恢复出厂；触发 <code>settings:changed</code></td></tr>
-
-        <tr><td rowspan="3"><b>ai</b></td>
-            <td><code>ai_fix</code></td><td>—</td><td>P50 3 s / P95 8 s</td><td>调 DeepSeek 修复 JSON</td></tr>
-        <tr><td><code>ai_test_connection</code></td><td>—</td><td>&lt; 3 s</td><td>测 API key + 模型可用</td></tr>
-        <tr><td><code>ai_set_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>写 Keychain（masked 显示前端）</td></tr>
-
-        <tr><td rowspan="3"><b>window</b></td>
-            <td><code>window_show</code></td><td>—</td><td>&lt; 200 ms</td><td>显示浮窗（含定位 + focus）</td></tr>
-        <tr><td><code>window_hide</code></td><td>—</td><td>&lt; 100 ms</td><td>隐藏浮窗（保持进程）</td></tr>
-        <tr><td><code>window_toggle</code></td><td>—</td><td>&lt; 200 ms</td><td>show / hide 切换</td></tr>
-
-        <tr><td rowspan="5"><b>system</b></td>
-            <td><code>shortcut_register</code></td><td>—</td><td>&lt; 50 ms</td><td>注册新快捷键（检测冲突）</td></tr>
-        <tr><td><code>clipboard_read</code></td><td>—</td><td>&lt; 20 ms</td><td>读剪贴板 + JSON sniff</td></tr>
-        <tr><td><code>open_log_dir</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 ~/Library/Logs/Jsonita/</td></tr>
-        <tr><td><code>open_db_path</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 history.db 所在目录</td></tr>
-        <tr><td><code>quit_app</code></td><td>—</td><td>—</td><td>正常退出（不弹确认）</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">2.1</span>详细签名（按分组）</h2>
-
-    <h3><span class="h3-num">2.1.1</span>json_ops</h3>
-
-    <pre><code>// ===== Rust =====
-#[derive(Deserialize)]
-pub struct FormatOpts {
-    pub indent: IndentMode,          // Spaces2 | Spaces4 | Tab
-    pub sort_keys: bool,
-    pub trailing_newline: bool,      // 默认 true
-}
-
-#[tauri::command]
-pub async fn json_format(
-    text: String,
-    opts: FormatOpts,
-) -> Result&lt;String, JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn json_minify(text: String) -> Result&lt;String, JsonitaError&gt;;
-
-#[derive(Deserialize)]
-pub struct UnwrapOpts {
-    pub timeout_ms: u64,             // 默认 200
-    pub max_depth: Option&lt;u32&gt;,   // None = 无层数限制
-}
-
-#[tauri::command]
-pub async fn json_unwrap_stringified(
-    text: String,
-    opts: UnwrapOpts,
-) -> Result&lt;String, JsonitaError&gt;;
-
-#[derive(Deserialize)]
-pub struct StringifyOpts {
-    pub quote: QuoteStyle,           // Double | Single
-    pub escape_unicode: bool,
-}
-
-#[tauri::command]
-pub async fn json_stringify(
-    text: String,
-    opts: StringifyOpts,
-) -> Result&lt;String, JsonitaError&gt;;</code></pre>
-
-    <pre><code>// ===== TypeScript（src/ipc/commands.ts）=====
-export type IndentMode = 'spaces2' | 'spaces4' | 'tab';
-export type QuoteStyle = 'double' | 'single';
-
-export interface FormatOpts {
-  indent: IndentMode;
-  sortKeys: boolean;
-  trailingNewline: boolean;
-}
-
-export interface UnwrapOpts {
-  timeoutMs: number;
-  maxDepth?: number;
-}
-
-export interface StringifyOpts {
-  quote: QuoteStyle;
-  escapeUnicode: boolean;
-}
-
-export async function jsonFormat(text: string, opts: FormatOpts): Promise&lt;string&gt; {
-  return invoke('json_format', { text, opts });
-}
-export async function jsonMinify(text: string): Promise&lt;string&gt; {
-  return invoke('json_minify', { text });
-}
-export async function jsonUnwrapStringified(text: string, opts: UnwrapOpts): Promise&lt;string&gt; {
-  return invoke('json_unwrap_stringified', { text, opts });
-}
-export async function jsonStringify(text: string, opts: StringifyOpts): Promise&lt;string&gt; {
-  return invoke('json_stringify', { text, opts });
-}</code></pre>
-
-    <div class="callout callout-warn">
-      <span class="callout-icon">WARN</span>
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
       <div class="callout-body">
-        <p><b>命名约定</b>：Rust 字段 snake_case；TS 通过 <code>serde(rename_all = "camelCase")</code> 在 struct 上声明，前端就能用 camelCase。所有 IPC 类型都按此规则。</p>
+        <p>本章描述<b>调用契约</b>与<b>工作机制</b>；<b>所有 struct / enum / payload 字段定义</b>统一在 <a href="13_schemas.html">13 § 1-3</a>，本章只链 § N，不重复定义。</p>
       </div>
     </div>
 
-    <h3><span class="h3-num">2.1.2</span>history</h3>
+    <p class="section-divider"><b>一 · 设计</b></p>
 
-    <pre><code>// ===== Rust =====
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HistoryRow {
-    pub id: i64,
-    pub created_at: i64,             // unix ms
-    pub content: String,
-    pub summary: String,             // 前 80 字符
-    pub content_hash: String,        // sha256 hex
-    pub op_type: OpType,             // 见 enum
-    pub pinned: bool,
-    pub starred: bool,
-}
+    <h2><span class="h2-num">1</span>设计目标与边界</h2>
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum OpType { Format, Minify, Tree, StrToJson, JsonToStr, AiFix }
+    <p>IPC 在 Jsonita 里同时承担三个角色：<b>权限边界</b>（控制 React 能做什么）、<b>类型契约</b>（Rust 与 TS 双向类型一致）、<b>性能护栏</b>（CPU 与 IO 在 Rust 端集中调度）。</p>
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ListOpts {
-    pub limit: u32,                  // 默认 50
-    pub offset: u32,                 // 默认 0
-    pub only_pinned: Option&lt;bool&gt;,
-    pub only_starred: Option&lt;bool&gt;,
-}
+    <ul>
+      <li><b>唯一通道</b>：React 不允许绕过 Rust 访问 SQLite / Keychain / 系统快捷键 / Finder ── 不仅是约定，Tauri 默认关掉了 WebView 对应能力</li>
+      <li><b>类型契约</b>：Rust 端 enum/struct 通过 serde 序列化为 JSON 跨进程；TS 端镜像同名 interface，编译期捕捉签名漂移（v1 手工镜像，体量上来再换 ts-rs）</li>
+      <li><b>关注的事</b>：状态修改（SQLite / Keychain / 设置）/ 系统调用（快捷键 / 剪贴板 / Finder）/ 外网请求（DeepSeek）/ 窗口管理</li>
+      <li><b>不关注的事</b>：纯 UI 渲染（mermaid 图、CodeMirror 内部操作）、DOM/CSS、前端路由 ── WebView 内部处理，不消耗 IPC 信道</li>
+    </ul>
 
-#[tauri::command]
-pub async fn history_list(opts: ListOpts) -> Result&lt;Vec&lt;HistoryRow&gt;, JsonitaError&gt;;
+    <p><b>为何不用 HTTP / WebSocket</b>：Tauri 内置 <code>invoke</code> 走 IPC pipe（同进程消息队列），单次序列化 + 直接进程内传递。HTTP 需要本地端口（macOS 防火墙弹窗 / 端口冲突）+ 两次序列化（请求 JSON / 响应 JSON）+ 鉴权层 ── 单进程桌面应用没必要付这些税。</p>
 
-#[tauri::command]
-pub async fn history_search(
-    query: String,
-    limit: u32,
-) -> Result&lt;Vec&lt;HistoryRow&gt;, JsonitaError&gt;;
+    <h2><span class="h2-num">2</span>命令分组与职责</h2>
 
-#[tauri::command]
-pub async fn history_pin(id: i64, pinned: bool) -> Result&lt;(), JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn history_star(id: i64, starred: bool) -> Result&lt;(), JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn history_clear() -> Result&lt;u32, JsonitaError&gt;;  // 返回删除条数</code></pre>
-
-    <pre><code>// ===== TypeScript =====
-export interface HistoryRow {
-  id: number;
-  createdAt: number;
-  content: string;
-  summary: string;
-  contentHash: string;
-  opType: 'format' | 'minify' | 'tree' | 'str-to-json' | 'json-to-str' | 'ai-fix';
-  pinned: boolean;
-  starred: boolean;
-}</code></pre>
-
-    <h3><span class="h3-num">2.1.3</span>session</h3>
-
-    <pre><code>#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LastSession {
-    pub content: String,
-    pub op_type: OpType,
-    pub saved_at: i64,               // unix ms
-}
-
-#[tauri::command]
-pub async fn session_save_last(s: LastSession) -> Result&lt;(), JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn session_load_last() -> Result&lt;Option&lt;LastSession&gt;, JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn session_clear_last() -> Result&lt;(), JsonitaError&gt;;</code></pre>
-
-    <h3><span class="h3-num">2.1.4</span>settings</h3>
-
-    <p>全量设置类型：</p>
-
-    <pre><code>#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Settings {
-    // General
-    pub launch_at_login: bool,           // 默认 true
-    pub show_in_menubar: bool,           // 默认 true
-    pub auto_paste_clipboard: bool,      // 默认 true
-    pub hide_on_blur: bool,              // 默认 true
-    pub single_pane_mode: bool,          // 默认 false
-    pub theme: ThemeMode,                // System | Light | Dark
-    pub restore_window: RestoreWindow,   // Off | Min1 | Min5 | Min15 | Hour1（默认 Min5）
-
-    // Shortcuts
-    pub shortcut_toggle: String,         // 默认 "Cmd+Shift+J"
-    pub shortcut_restore_last: String,   // 默认 "Cmd+Shift+L"
-
-    // AI
-    pub ai_enabled: bool,                // 默认 false
-    pub ai_model_id: String,             // 默认 "deepseek-chat"
-
-    // History
-    pub history_limit: u32,              // 10 / 50 / 100 / 200（默认 100）
-
-    // JSON Transform
-    pub auto_unwrap: bool,               // F3.3 默认 true
-    pub unwrap_timeout_ms: u64,          // 默认 200
-}
-
-#[tauri::command]
-pub async fn settings_get_all() -> Result&lt;Settings, JsonitaError&gt;;
-
-#[derive(Deserialize)]
-pub struct SettingsPatch(serde_json::Map&lt;String, serde_json::Value&gt;);
-
-#[tauri::command]
-pub async fn settings_set(patch: SettingsPatch) -> Result&lt;Settings, JsonitaError&gt;;
-// 副作用：写入完成后 emit `settings:changed` 事件给所有窗口
-
-#[tauri::command]
-pub async fn settings_reset() -> Result&lt;Settings, JsonitaError&gt;;</code></pre>
-
-    <h3><span class="h3-num">2.1.5</span>ai</h3>
-
-    <pre><code>#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AiFixReq {
-    pub text: String,
-    pub error_line: Option&lt;u32&gt;,
-    pub error_col: Option&lt;u32&gt;,
-    pub error_msg: Option&lt;String&gt;,
-    pub request_id: String,          // UUID v4，幂等去重
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AiFixResp {
-    pub fixed: String,               // 已验证为合法 JSON
-    pub model: String,
-    pub tokens_in: u32,
-    pub tokens_out: u32,
-    pub elapsed_ms: u64,
-}
-
-#[tauri::command]
-pub async fn ai_fix(req: AiFixReq) -> Result&lt;AiFixResp, JsonitaError&gt;;
-// 错误分支：Http / RateLimit / AiInvalidJson / Keychain
-
-#[tauri::command]
-pub async fn ai_test_connection(
-    api_key: String,                 // 测试时直接传，不存 Keychain
-    model_id: String,
-) -> Result&lt;TestConnectionResp, JsonitaError&gt;;
-
-#[derive(Serialize)]
-pub struct TestConnectionResp {
-    pub ok: bool,
-    pub latency_ms: u64,
-    pub model_echoed: String,
-}
-
-#[tauri::command]
-pub async fn ai_set_api_key(api_key: String) -> Result&lt;(), JsonitaError&gt;;</code></pre>
-
-    <h3><span class="h3-num">2.1.6</span>window</h3>
+    <p>所有 IPC 命令按<b>资源归属</b>切分为 7 组，每组对应一个 Rust 模块（<code>src-tauri/src/cmds/{json,history,session,settings,ai,window,system}.rs</code>）。这种切分的好处是<b>"谁能写谁不能写" grep 一下模块就清楚</b>，避免出现"utils.rs 里写跨领域操作"的灰色地带。</p>
 
     <table>
-      <thead><tr><th>command</th><th>用途</th></tr></thead>
+      <thead><tr><th>分组</th><th>关注领域</th><th>状态归属</th><th>典型副作用</th></tr></thead>
       <tbody>
-        <tr><td><code>window_show()</code></td><td>显示浮窗（含定位 + focus）</td></tr>
-        <tr><td><code>window_hide()</code></td><td>隐藏浮窗</td></tr>
-        <tr><td><code>window_toggle()</code></td><td>show / hide 切换</td></tr>
-        <tr><td><code>window_resize_for_content(metrics)</code></td><td>按内容指标算理想宽度并 set_size（详见 plan F10 智能宽度 · 06 § 智能宽度算法）</td></tr>
-        <tr><td><code>window_reset_size()</code></td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
+        <tr><td><b>json_ops</b></td><td>纯计算（format / minify / unwrap / stringify）</td><td><b>无状态</b></td><td>无</td></tr>
+        <tr><td><b>history</b></td><td>SQLite <code>history</code> 表 + FTS5 索引</td><td>SQLite</td><td>写入后 emit <code>history:updated</code></td></tr>
+        <tr><td><b>session</b></td><td>SQLite <code>last_session</code> 单行 + 内存恢复 timer</td><td>SQLite + 内存</td><td>写入 + arm / 销毁 restoreWindow 计时</td></tr>
+        <tr><td><b>settings</b></td><td>tauri-plugin-store JSON 文件</td><td>JSON 文件 + 内存缓存</td><td>写入后 emit <code>settings:changed</code></td></tr>
+        <tr><td><b>ai</b></td><td>DeepSeek HTTP + Keychain 读</td><td>Keychain + 内存 inflight 表</td><td>外网调用 + 每 500ms emit <code>ai:progress</code></td></tr>
+        <tr><td><b>window</b></td><td>NSPanel 状态 + 智能宽度记忆</td><td>window.json + 内存 flag</td><td>show / hide / resize UI 动作 + emit <code>window:resized</code></td></tr>
+        <tr><td><b>system</b></td><td>全局快捷键 / 剪贴板 / 日志路径</td><td>系统级注册表</td><td>注册 / 释放快捷键 / Finder reveal</td></tr>
       </tbody>
     </table>
 
-    <pre><code>#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ContentMetrics {
-    pub max_line_chars: u32,         // 编辑器最长行字符数（用于估算理想宽度）
-    pub line_count:     u32,
-    pub bytes:          u64,
-    pub soft_wrap_on:   bool,        // 若开启，跳过本次自动扩宽
+    <p><b>分组的硬约束</b>：</p>
+
+    <ul>
+      <li>命令<b>不能跨分组直接读写状态</b>。例：<code>history_*</code> 不直接读 <code>last_session</code> 表；需要联动则通过事件（如 <code>history:updated</code>）解耦</li>
+      <li>纯计算分组（json_ops）<b>不持有任何状态</b>，可任意并发 ── 默认在 CPU 池 <code>spawn_blocking</code> 跑</li>
+      <li>外网分组（ai）<b>不写 SQLite</b>，只读 Keychain；命令返回后由前端决定是否落历史。这样 ai 模块可以被替换（换成 OpenAI / Claude）而不影响历史模型</li>
+      <li><b>window 分组</b>不感知业务（不知道有 JSON / 历史 / AI），只接收 React 推来的 ContentMetrics 算尺寸 ── 这样窗口逻辑可独立测试</li>
+    </ul>
+
+    <h2><span class="h2-num">3</span>错误传播模型</h2>
+
+    <p>所有 command 返回 <code>Result&lt;T, JsonitaError&gt;</code>，<code>JsonitaError</code> 是<b>全局单一错误 enum</b>（定义见 <a href="13_schemas.html">13 § 1</a>，8 个变体）。</p>
+
+    <h3><span class="h3-num">3.1</span>为什么是单一 enum 而不是 anyhow / 每模块自带 Error</h3>
+
+    <ul>
+      <li><b>前端只需一个类型守卫</b>：<code>parseJsonitaError(e)</code> 返回 discriminated union，TS exhaustive switch 静态保证覆盖所有 kind ── 漏处理一个变体编译报错</li>
+      <li><b>UI 分级响应集中实现</b>：在 <code>handleIpcError(e)</code> 一处映射 kind → Toast / Modal / 状态栏，避免每个 invoke 调用点重复写 try/catch 分支</li>
+      <li><b>跨 IPC 不丢类型</b>：<code>anyhow::Error</code> 跨进程会退化为 String；自定义 enum 通过 serde tag/content 保留 enum + payload 结构</li>
+      <li><b>变体可控（8 个，不爆炸）</b>：每加一个变体都要权衡是否真的需要分类，强制保持错误"扁平"易处理</li>
+    </ul>
+
+    <h3><span class="h3-num">3.2</span>跨 IPC 边界的序列化形态</h3>
+
+    <p>Rust 端 enum 加 <code>#[serde(tag = "kind", content = "data")]</code>，序列化为对象而非 Rust adjacent 风格：</p>
+
+    <pre><code>// Rust enum 变体：JsonitaError::Parse { line: 3, col: 12, msg: "..." }
+//   ↓ serde
+// 跨 IPC JSON：    { "kind": "Parse", "data": { "line": 3, "col": 12, "msg": "..." } }
+//   ↓ Tauri invoke reject
+// TS 端拿到：       { kind: 'Parse', data: { line, col, msg } }</code></pre>
+
+    <p>TS 端统一拦截：</p>
+
+    <pre><code>// src/ipc/error.ts
+export function isJsonitaError(e: unknown): e is JsonitaError {
+  return typeof e === 'object' &amp;&amp; e !== null &amp;&amp; 'kind' in e;
 }
 
-#[tauri::command]
-pub async fn window_resize_for_content(metrics: ContentMetrics)
-    -> Result&lt;(u32, u32), JsonitaError&gt;;  // 返回 (width, height)
+// 调用点：
+try { return await invoke('json_format', { text, opts }); }
+catch (e) {
+  if (isJsonitaError(e)) handleIpcError(e);   // 集中分发 Toast/Modal/状态栏
+  else throw e;                                // Tauri 自身错误（如反序列化失败）
+}</code></pre>
 
-// 算法（详见 06 § 智能宽度）：
-//   if user_dragged_before:      return current_size (no-op)
-//   if soft_wrap_on:              return current_size
-//   if max_line_chars <= 80:      return current_size
-//   ideal_w  = clamp(max_line_chars * 8 + 64, 720, min(1400, screen_w * 0.7))
-//   animate to (ideal_w, current_h) over 150ms</code></pre>
+    <h3><span class="h3-num">3.3</span>UI 分级响应原则</h3>
 
-    <h3><span class="h3-num">2.1.7</span>system</h3>
+    <p>错误按"用户能否立刻继续工作"分 3 级（完整 kind × command 映射见 § 8）：</p>
 
-    <pre><code>#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ShortcutRegisterReq {
-    pub action: ShortcutAction,      // ToggleWindow | RestoreLast
-    pub accelerator: String,         // "Cmd+Shift+J" 风格
-}
+    <ul>
+      <li><b>状态栏（轻）</b>：能让用户边输入边解决的，如 <code>Parse</code> ── 标红 + 高亮位置，不打断打字</li>
+      <li><b>Toast（中）</b>：操作失败但应用可继续用，如 <code>Http</code> / <code>RateLimit</code> / <code>UnwrapTimeout</code> ── 横幅 + 重试按钮 / 倒计时</li>
+      <li><b>Modal（重）</b>：必须用户决策才能继续，如 <code>Keychain</code> 权限被拒 / <code>AiInvalidJson</code> 拿到 raw 需用户决定 ── 阻塞输入</li>
+    </ul>
 
-#[derive(Serialize)]
-pub enum ShortcutRegisterResp {
-    Ok,
-    Conflict { with_app: Option&lt;String&gt; },  // 已被系统 / 其他应用占用
-}
+    <h2><span class="h2-num">4</span>命名、同步语义、幂等、大小</h2>
 
-#[tauri::command]
-pub async fn shortcut_register(req: ShortcutRegisterReq)
-    -> Result&lt;ShortcutRegisterResp, JsonitaError&gt;;
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClipboardSniff {
-    pub text: String,
-    pub looks_like_json: bool,       // 首尾 trim 后以 { [ " 起 / 以 } ] " 结
-}
-
-#[tauri::command]
-pub async fn clipboard_read() -> Result&lt;ClipboardSniff, JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn open_log_dir() -> Result&lt;(), JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn open_db_path() -> Result&lt;(), JsonitaError&gt;;
-
-#[tauri::command]
-pub async fn quit_app() -> Result&lt;(), JsonitaError&gt;;</code></pre>
-
-    <h2><span class="h2-num">3</span>Events 总表（Rust → 前端）</h2>
+    <p>这些是<b>所有命令必须遵守的横向规则</b>，写新命令时核对一遍。</p>
 
     <table>
-      <thead><tr><th>事件名</th><th>触发时机</th><th>payload 类型</th><th>消费方</th></tr></thead>
+      <thead><tr><th>维度</th><th>规则</th><th>原因</th></tr></thead>
       <tbody>
-        <tr><td><code>window:shown</code></td><td><code>window_show</code> 完成后 / tray 点击 / 快捷键</td><td><code>WindowShown</code></td><td>shell/FloatingWindow（聚焦编辑器 + 剪贴板 sniff）</td></tr>
-        <tr><td><code>window:hidden</code></td><td>失焦 / Esc / ⌘W</td><td><code>{}</code></td><td>shell（清 transient state）</td></tr>
-        <tr><td><code>shortcut:restore_last</code></td><td>⌘⇧L 触发</td><td><code>{}</code></td><td>shell（调 <code>session_load_last</code>）</td></tr>
-        <tr><td><code>settings:changed</code></td><td><code>settings_set</code> / <code>settings_reset</code> 后</td><td><code>Settings</code></td><td>store/settings（更新本地缓存 + 重渲染）</td></tr>
-        <tr><td><code>ai:progress</code></td><td>AI Fix HTTP 各阶段</td><td><code>AiProgress</code></td><td>panes/AiFixPane（loading 文案切换）</td></tr>
-        <tr><td><code>history:updated</code></td><td>history_clear / 新 entry 写入</td><td><code>{}</code></td><td>history/HistoryModal（重 list）</td></tr>
-        <tr><td><code>theme:system_changed</code></td><td>macOS 切换 light/dark（仅 theme=System 时转发）</td><td><code>{ mode: "light" | "dark" }</code></td><td>theme/ThemeProvider</td></tr>
-        <tr><td><code>app:will_quit</code></td><td>Quit 前 200 ms</td><td><code>{}</code></td><td>shell（最后一次保存 last_session）</td></tr>
-        <tr><td><code>window:resized</code></td><td>用户拖动窗口边缘（debounce 500ms）</td><td><code>{ width, height, source: "user" | "auto" }</code></td><td>shell（更新内存 user_dragged flag）+ store（落盘 window.json）</td></tr>
+        <tr><td>命令命名</td><td>snake_case，如 <code>json_format</code></td><td>Rust 风格；invoke 字符串直接对应函数名</td></tr>
+        <tr><td>事件命名</td><td>namespace:name，如 <code>window:shown</code></td><td>方便前端按 prefix 过滤监听 / 调试</td></tr>
+        <tr><td>Rust struct 字段</td><td>snake_case</td><td>Rust 风格</td></tr>
+        <tr><td>JSON / TS 字段</td><td>camelCase</td><td>JS/TS 风格；通过 <code>#[serde(rename_all = "camelCase")]</code> 自动转换（统一规则见 <a href="13_schemas.html">13 § 7</a>）</td></tr>
+        <tr><td>同步语义</td><td>所有 command 一律 <code>async</code></td><td>前端永远 <code>await invoke()</code>；CPU 密集内部走 <code>spawn_blocking</code></td></tr>
+        <tr><td>幂等性</td><td>read 全幂等；write 通过 <code>request_id</code>（UUID v4）去重 ── v1 仅 <code>ai_fix</code> 用</td><td>双击 / 重试不重复扣 token</td></tr>
+        <tr><td>大小上限</td><td>payload &lt; 4 MB</td><td>Tauri IPC 单次序列化上限；超出预留 event 流式分块（v1 未触发）</td></tr>
+        <tr><td>类型同步</td><td>改 Rust struct → 同步改 <code>src/types/*.ts</code> + 13 § N 字段表 → PR 模板复选框检查</td><td>v1 手工，详流程见 <a href="13_schemas.html">13 § 8</a></td></tr>
       </tbody>
     </table>
 
-    <pre><code>// Payload 类型
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct WindowShown {
-    pub clipboard: Option&lt;ClipboardSniff&gt;,  // 仅在 settings.auto_paste_clipboard = true 时填
-    pub last_session: Option&lt;LastSession&gt;,  // 仅在窗口期内呼出才填
-    pub source: ShowSource,                  // Hotkey | Tray | Manual
-}
+    <p class="section-divider"><b>二 · 工作机制</b></p>
 
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase", tag = "phase", content = "data")]
-pub enum AiProgress {
-    Started,
-    Waiting { elapsed_ms: u64 },             // 每 500 ms 推一次
-    Received { tokens: u32 },
-    Validating,
-    Done,
-}</code></pre>
+    <h2><span class="h2-num">5</span>关键时序图</h2>
 
-    <h3><span class="h3-num">3.1</span>TS 监听封装</h3>
+    <p>三张时序图覆盖<b>最容易实现错的链路</b>，是理解上面分组职责的最佳入口。<b>点击图卡放大</b>，放大后支持滚轮缩放 + 拖动平移 + <kbd>Esc</kbd> 关闭。</p>
 
-    <pre><code>// src/ipc/events.ts
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+    <h3><span class="h3-num">5.1</span>呼出（快捷键路径）</h3>
 
-type EventMap = {
-  'window:shown':            WindowShown;
-  'window:hidden':           Record&lt;string, never&gt;;
-  'shortcut:restore_last':   Record&lt;string, never&gt;;
-  'settings:changed':        Settings;
-  'ai:progress':             AiProgress;
-  'history:updated':         Record&lt;string, never&gt;;
-  'theme:system_changed':    { mode: 'light' | 'dark' };
-  'app:will_quit':           Record&lt;string, never&gt;;
-};
-
-export function on&lt;K extends keyof EventMap&gt;(
-  name: K,
-  handler: (payload: EventMap[K]) =&gt; void,
-): Promise&lt;UnlistenFn&gt; {
-  return listen&lt;EventMap[K]&gt;(name, (e) =&gt; handler(e.payload));
-}</code></pre>
-
-    <h2><span class="h2-num">4</span>关键时序图</h2>
-
-    <p>三张时序图覆盖最常被实现错的链路。<b>点击图卡放大</b>，放大后支持滚轮缩放 + 拖动平移 + <kbd>Esc</kbd> 关闭。</p>
-
-    <h3><span class="h3-num">4.1</span>呼出（快捷键路径）</h3>
+    <p>从 <code>⌘⇧J</code> 按下到 React 接到 <code>window:shown</code>。关键点：<b>定位算法在 Rust 端完成</b>（多屏感知），React 拿事件时窗口已就位 → 避免闪烁。</p>
 
     <div class="mermaid">
 sequenceDiagram
@@ -489,7 +169,9 @@ sequenceDiagram
     Note over User,React: 总耗时 P95 < 500ms（已驻留 WebView）
     </div>
 
-    <h3><span class="h3-num">4.2</span>AI Fix（含错误透传）</h3>
+    <h3><span class="h3-num">5.2</span>AI Fix（含错误透传）</h3>
+
+    <p>调 DeepSeek 期间每 500ms 推一次进度；错误按 3 类分支处理（200 成功 / 429 限流 / 其他 HTTP 错）。<code>AiInvalidJson</code> 单独 Modal 是因为返回的 raw 需要用户决定是否提交 issue 反馈。</p>
 
     <div class="mermaid">
 sequenceDiagram
@@ -537,7 +219,9 @@ sequenceDiagram
     end
     </div>
 
-    <h3><span class="h3-num">4.3</span>关闭浮窗 → 会话写入</h3>
+    <h3><span class="h3-num">5.3</span>关闭浮窗 → 会话写入</h3>
+
+    <p>关闭路径同时<b>持久化（SQLite）</b>+<b>启动恢复 timer（内存）</b>。两套数据共存的设计动机见 <a href="10_storage.html">10 § last_session 状态机</a>。</p>
 
     <div class="mermaid">
 sequenceDiagram
@@ -569,7 +253,197 @@ sequenceDiagram
     end
     </div>
 
-    <h2><span class="h2-num">5</span>错误处理矩阵</h2>
+    <p class="section-divider"><b>三 · 契约速查（schema 区）</b></p>
+
+    <h2><span class="h2-num">6</span>Commands 总表</h2>
+
+    <p>速查表 ── 20 个命令按 7 组排列。所有命令返回 <code>Result&lt;T, JsonitaError&gt;</code>；幂等列「✓」表示同样输入多次调用结果一致且无副作用。</p>
+
+    <table>
+      <thead><tr><th>分组</th><th>命令</th><th>幂等</th><th>P95 耗时</th><th>描述</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4"><b>json_ops</b></td>
+            <td><code>json_format</code></td><td>✓</td><td>&lt; 50 ms</td><td>格式化（缩进 / sort_keys / minify）</td></tr>
+        <tr><td><code>json_minify</code></td><td>✓</td><td>&lt; 30 ms</td><td>压缩为单行</td></tr>
+        <tr><td><code>json_unwrap_stringified</code></td><td>✓</td><td>&lt; 200 ms</td><td>递归解开嵌套 stringified JSON（含超时）</td></tr>
+        <tr><td><code>json_stringify</code></td><td>✓</td><td>&lt; 20 ms</td><td>JSON → 转义字符串字面量</td></tr>
+
+        <tr><td rowspan="5"><b>history</b></td>
+            <td><code>history_list</code></td><td>✓</td><td>&lt; 30 ms</td><td>分页 + 排序（pinned 优先）</td></tr>
+        <tr><td><code>history_search</code></td><td>✓</td><td>&lt; 30 ms</td><td>FTS 子串匹配 content / summary</td></tr>
+        <tr><td><code>history_pin</code></td><td>—</td><td>&lt; 10 ms</td><td>置顶 / 取消</td></tr>
+        <tr><td><code>history_star</code></td><td>—</td><td>&lt; 10 ms</td><td>收藏 / 取消</td></tr>
+        <tr><td><code>history_clear</code></td><td>—</td><td>&lt; 50 ms</td><td>一键清空（不删 pinned / starred）</td></tr>
+
+        <tr><td rowspan="3"><b>session</b></td>
+            <td><code>session_save_last</code></td><td>—</td><td>&lt; 10 ms</td><td>覆盖式写 last_session</td></tr>
+        <tr><td><code>session_load_last</code></td><td>✓</td><td>&lt; 10 ms</td><td>读 last_session</td></tr>
+        <tr><td><code>session_clear_last</code></td><td>—</td><td>&lt; 10 ms</td><td>清空 last_session（⌘K 触发）</td></tr>
+
+        <tr><td rowspan="3"><b>settings</b></td>
+            <td><code>settings_get_all</code></td><td>✓</td><td>&lt; 10 ms</td><td>读全量设置</td></tr>
+        <tr><td><code>settings_set</code></td><td>—</td><td>&lt; 20 ms</td><td>按 key 写；触发 <code>settings:changed</code> 事件</td></tr>
+        <tr><td><code>settings_reset</code></td><td>—</td><td>&lt; 20 ms</td><td>恢复出厂；触发 <code>settings:changed</code></td></tr>
+
+        <tr><td rowspan="3"><b>ai</b></td>
+            <td><code>ai_fix</code></td><td>—</td><td>P50 3 s / P95 8 s</td><td>调 DeepSeek 修复 JSON</td></tr>
+        <tr><td><code>ai_test_connection</code></td><td>—</td><td>&lt; 3 s</td><td>测 API key + 模型可用</td></tr>
+        <tr><td><code>ai_set_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>写 Keychain（masked 显示前端）</td></tr>
+
+        <tr><td rowspan="5"><b>window</b></td>
+            <td><code>window_show</code></td><td>—</td><td>&lt; 200 ms</td><td>显示浮窗（含定位 + focus）</td></tr>
+        <tr><td><code>window_hide</code></td><td>—</td><td>&lt; 100 ms</td><td>隐藏浮窗（保持进程）</td></tr>
+        <tr><td><code>window_toggle</code></td><td>—</td><td>&lt; 200 ms</td><td>show / hide 切换</td></tr>
+        <tr><td><code>window_resize_for_content</code></td><td>—</td><td>&lt; 50 ms</td><td>按内容尺寸智能扩宽（详见 plan F10 / 06 § 9）</td></tr>
+        <tr><td><code>window_reset_size</code></td><td>—</td><td>&lt; 10 ms</td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
+
+        <tr><td rowspan="5"><b>system</b></td>
+            <td><code>shortcut_register</code></td><td>—</td><td>&lt; 50 ms</td><td>注册新快捷键（检测冲突）</td></tr>
+        <tr><td><code>clipboard_read</code></td><td>—</td><td>&lt; 20 ms</td><td>读剪贴板 + JSON sniff</td></tr>
+        <tr><td><code>open_log_dir</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 ~/Library/Logs/Jsonita/</td></tr>
+        <tr><td><code>open_db_path</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 history.db 所在目录</td></tr>
+        <tr><td><code>quit_app</code></td><td>—</td><td>—</td><td>正常退出（不弹确认）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">6.1</span>命令签名（按分组）</h2>
+
+    <p>每个签名一行 + 参数类型链接到 13 § N。命名约定见 § 4。</p>
+
+    <h3><span class="h3-num">6.1.1</span>json_ops</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>opts schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>json_format(text, opts)</code></td><td><code>String</code></td><td><a href="13_schemas.html">13 § 3.1 FormatOpts</a></td></tr>
+        <tr><td><code>json_minify(text)</code></td><td><code>String</code></td><td>—</td></tr>
+        <tr><td><code>json_unwrap_stringified(text, opts)</code></td><td><code>String</code></td><td><a href="13_schemas.html">13 § 3.1 UnwrapOpts</a></td></tr>
+        <tr><td><code>json_stringify(text, opts)</code></td><td><code>String</code></td><td><a href="13_schemas.html">13 § 3.1 StringifyOpts</a></td></tr>
+      </tbody>
+    </table>
+
+    <p>错误分支：<code>json_unwrap_stringified</code> 可能 <code>UnwrapTimeout</code>；其余通常 <code>Parse</code>。</p>
+
+    <h3><span class="h3-num">6.1.2</span>history</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>history_list(opts)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td><a href="13_schemas.html">13 § 3.2 ListOpts / HistoryRow</a></td></tr>
+        <tr><td><code>history_search(query, limit)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td>FTS5 子串匹配</td></tr>
+        <tr><td><code>history_pin(id, pinned)</code></td><td><code>()</code></td><td>—</td></tr>
+        <tr><td><code>history_star(id, starred)</code></td><td><code>()</code></td><td>—</td></tr>
+        <tr><td><code>history_clear()</code></td><td><code>u32</code></td><td>返回删除条数（不删 pinned / starred）</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.3</span>session</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>session_save_last(s)</code></td><td><code>()</code></td><td><a href="13_schemas.html">13 § 3.2 LastSession</a></td></tr>
+        <tr><td><code>session_load_last()</code></td><td><code>Option&lt;LastSession&gt;</code></td><td>—</td></tr>
+        <tr><td><code>session_clear_last()</code></td><td><code>()</code></td><td>⌘K 触发</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.4</span>settings</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>settings_get_all()</code></td><td><code>Settings</code></td><td>全量字段见 <a href="13_schemas.html">13 § 3.3</a></td></tr>
+        <tr><td><code>settings_set(patch)</code></td><td><code>Settings</code></td><td>patch 为 partial JSON 对象；副作用：emit <code>settings:changed</code></td></tr>
+        <tr><td><code>settings_reset()</code></td><td><code>Settings</code></td><td>恢复出厂；副作用同上</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.5</span>ai</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th><th>错误分支</th></tr></thead>
+      <tbody>
+        <tr><td><code>ai_fix(req)</code></td><td><code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4 AiFixReq / Resp</a></td><td>Http / RateLimit / AiInvalidJson / Keychain</td></tr>
+        <tr><td><code>ai_test_connection(apiKey, modelId)</code></td><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a>；apiKey 直接传，不入 Keychain</td><td>Http / RateLimit</td></tr>
+        <tr><td><code>ai_set_api_key(apiKey)</code></td><td><code>()</code></td><td>明文 → Keychain</td><td>Keychain</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.6</span>window</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 / 说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>window_show()</code></td><td><code>()</code></td><td>显示浮窗（含定位 + focus）</td></tr>
+        <tr><td><code>window_hide()</code></td><td><code>()</code></td><td>—</td></tr>
+        <tr><td><code>window_toggle()</code></td><td><code>()</code></td><td>show / hide 切换</td></tr>
+        <tr><td><code>window_resize_for_content(metrics)</code></td><td><code>(u32, u32)</code></td><td>metrics: <a href="13_schemas.html">13 § 3.5 ContentMetrics</a>；算法 <a href="06_window.html">06 § 9</a></td></tr>
+        <tr><td><code>window_reset_size()</code></td><td><code>()</code></td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.7</span>system</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>shortcut_register(req)</code></td><td><code>ShortcutRegisterResp</code></td><td>req: <a href="13_schemas.html">13 § 3.5</a>；resp = <code>Ok</code> | <code>Conflict { withApp? }</code></td></tr>
+        <tr><td><code>clipboard_read()</code></td><td><code>ClipboardSniff</code></td><td><a href="13_schemas.html">13 § 3.5</a></td></tr>
+        <tr><td><code>open_log_dir()</code></td><td><code>()</code></td><td>Finder 打开 <code>~/Library/Logs/Jsonita/</code></td></tr>
+        <tr><td><code>open_db_path()</code></td><td><code>()</code></td><td>Finder 打开 history.db 所在目录</td></tr>
+        <tr><td><code>quit_app()</code></td><td><code>()</code></td><td>正常退出（不弹确认）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">7</span>Events 总表（Rust → 前端）</h2>
+
+    <table>
+      <thead><tr><th>事件名</th><th>触发时机</th><th>payload 类型</th><th>消费方</th></tr></thead>
+      <tbody>
+        <tr><td><code>window:shown</code></td><td><code>window_show</code> 完成后 / tray 点击 / 快捷键</td><td><code>WindowShown</code></td><td>shell/FloatingWindow（聚焦编辑器 + 剪贴板 sniff）</td></tr>
+        <tr><td><code>window:hidden</code></td><td>失焦 / Esc / ⌘W</td><td><code>{}</code></td><td>shell（清 transient state）</td></tr>
+        <tr><td><code>window:resized</code></td><td>用户拖动窗口边缘（debounce 500ms）/ 智能扩宽完成</td><td><code>WindowResizedPayload</code></td><td>shell（更新 user_dragged flag）+ store（落盘 window.json）</td></tr>
+        <tr><td><code>shortcut:restore_last</code></td><td>⌘⇧L 触发</td><td><code>{}</code></td><td>shell（调 <code>session_load_last</code>）</td></tr>
+        <tr><td><code>settings:changed</code></td><td><code>settings_set</code> / <code>settings_reset</code> 后</td><td><code>Settings</code></td><td>store/settings（更新本地缓存 + 重渲染）</td></tr>
+        <tr><td><code>ai:progress</code></td><td>AI Fix HTTP 各阶段</td><td><code>AiProgress</code></td><td>panes/AiFixPane（loading 文案切换）</td></tr>
+        <tr><td><code>history:updated</code></td><td>history_clear / 新 entry 写入</td><td><code>{}</code></td><td>history/HistoryModal（重 list）</td></tr>
+        <tr><td><code>theme:system_changed</code></td><td>macOS 切换 light/dark（仅 theme=System 时转发）</td><td><code>{ mode: "light" | "dark" }</code></td><td>theme/ThemeProvider</td></tr>
+        <tr><td><code>app:will_quit</code></td><td>Quit 前 200 ms</td><td><code>{}</code></td><td>shell（最后一次保存 last_session）</td></tr>
+      </tbody>
+    </table>
+
+    <p>所有 payload 完整字段定义：<code>WindowShown</code> / <code>ClipboardSniff</code> / <code>LastSession</code> / <code>WindowResizedPayload</code> 见 <a href="13_schemas.html">13 § 3.2 / 3.5</a>；<code>AiProgress</code>（带 phase 区分的 5 个变体）见 <a href="13_schemas.html">13 § 3.4</a>。</p>
+
+    <h3><span class="h3-num">7.1</span>TS 监听封装</h3>
+
+    <p>所有事件用一个泛型 <code>on()</code> 监听 ── 编译期检查事件名 + payload 类型匹配。</p>
+
+    <pre><code>// src/ipc/events.ts
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+
+type EventMap = {
+  'window:shown':          WindowShown;
+  'window:hidden':         Record&lt;string, never&gt;;
+  'window:resized':        WindowResizedPayload;
+  'shortcut:restore_last': Record&lt;string, never&gt;;
+  'settings:changed':      Settings;
+  'ai:progress':           AiProgress;
+  'history:updated':       Record&lt;string, never&gt;;
+  'theme:system_changed':  { mode: 'light' | 'dark' };
+  'app:will_quit':         Record&lt;string, never&gt;;
+};
+
+export function on&lt;K extends keyof EventMap&gt;(
+  name: K,
+  handler: (payload: EventMap[K]) =&gt; void,
+): Promise&lt;UnlistenFn&gt; {
+  return listen&lt;EventMap[K]&gt;(name, (e) =&gt; handler(e.payload));
+}</code></pre>
+
+    <h2><span class="h2-num">8</span>错误矩阵（UI 视角）</h2>
+
+    <p>错误类型的完整定义（variant / payload）见 <a href="13_schemas.html">13 § 1</a>；本表是 IPC 章特有的横截视角 ── <b>什么命令在什么错误下，前端应该怎么呈现给用户</b>。</p>
 
     <table>
       <thead><tr><th>错误 kind</th><th>常见 command</th><th>UI 呈现</th><th>用户操作建议</th></tr></thead>
@@ -585,25 +459,9 @@ sequenceDiagram
       </tbody>
     </table>
 
-    <h2><span class="h2-num">6</span>类型同步策略</h2>
+    <p class="section-divider"><b>四 · 运行时数字</b></p>
 
-    <p>Rust struct 与 TS interface 手工保持镜像（v1 不引入 ts-rs 等自动生成）。</p>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">INFO</span>
-      <div class="callout-body">
-        <p>放弃自动生成的理由：本项目只有 ~30 个 struct，手写一份 <code>src/types/*.ts</code> 维护成本可控；引入 ts-rs 会增加 build 复杂度（需 cargo test 触发生成）。v2 体量上来再换。</p>
-      </div>
-    </div>
-
-    <p><b>变更流程</b>：</p>
-    <ol>
-      <li>改 Rust struct 时，同步改 <code>src/types/*.ts</code></li>
-      <li>PR 模板检查："IPC types updated?" 复选框</li>
-      <li>CI 加一个 smoke test：浮窗启动 + 调每个 command 一次，验证 (de)serialize</li>
-    </ol>
-
-    <h2><span class="h2-num">7</span>性能与限流</h2>
+    <h2><span class="h2-num">9</span>性能与限流</h2>
 
     <ul>
       <li><b>前端 debounce</b>：编辑器 onChange → format/parse 调用，统一 300 ms debounce（见 <a href="00_architecture.html">00 § 5.1</a>）</li>

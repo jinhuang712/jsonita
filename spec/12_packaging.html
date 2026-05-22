@@ -411,23 +411,7 @@ jobs:
       </tbody>
     </table>
 
-    <h2><span class="h2-num">10</span>发布 checklist</h2>
-
-    <ul>
-      <li>[ ] CHANGELIST.md 更新 [Unreleased] → [0.5.0] 段</li>
-      <li>[ ] tauri.conf.json 的 version 字段升 0.5.0</li>
-      <li>[ ] src-tauri/Cargo.toml 的 version 字段同步</li>
-      <li>[ ] package.json 的 version 字段同步</li>
-      <li>[ ] <code>pnpm icons check</code> 通过</li>
-      <li>[ ] <code>cargo test</code> + <code>pnpm test</code> 全绿</li>
-      <li>[ ] <code>cargo bench</code> 性能未回退</li>
-      <li>[ ] 验收用例 9.1-9.5 全过（至少手动 9.2 / 9.5）</li>
-      <li>[ ] 本地跑 <code>pnpm tauri build --target universal-apple-darwin</code>，验证 dmg 双击安装无警告</li>
-      <li>[ ] git tag v0.5.0 + push → GitHub Actions release workflow 自动产 release</li>
-      <li>[ ] GitHub Release 描述粘贴 CHANGELIST 对应段</li>
-    </ul>
-
-    <h2><span class="h2-num">11</span>分发渠道（plan/04 § 7 锁定）</h2>
+    <h2><span class="h2-num">10</span>分发渠道（plan/04 § 7 锁定）</h2>
 
     <table>
       <thead><tr><th>版本</th><th>macOS</th><th>Windows</th></tr></thead>
@@ -438,16 +422,6 @@ jobs:
         <tr><td>v1.x</td><td>+ <code>npx jsonita</code> npm 启动器</td><td>同上</td></tr>
       </tbody>
     </table>
-
-    <h2><span class="h2-num">12</span>承上启下 ── 此章是 Spec 终点</h2>
-
-    <p>Spec 完成 = Plan 设计全部转为可实施细节。下一阶段进入 Progress：</p>
-
-    <ul>
-      <li>新建 <code>progress/</code> 各章节追踪实施</li>
-      <li>建议起手 4 篇：<code>00_milestones</code> · <code>01_kanban</code> · <code>02_risks</code> · <code>03_log</code></li>
-      <li>M0 Skeleton 起步即用本章 § 1 tauri.conf.json 配置；引用本 Spec 各章作为实施时的"开发手册"</li>
-    </ul>
 
     <nav class="pagination" id="pagination"></nav>
 
