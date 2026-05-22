@@ -94,10 +94,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td><code>src-tauri/src/menubar/mod.rs</code> · <code>src-tauri/icons/menubar/*Template@{1,2,3}x.png</code> · <code>src-tauri/src/main.rs</code>（tray 注册段）</td></tr>
-        <tr><td>verification</td><td>启动后菜单栏出现 template icon；左键 toggle 浮窗；右键弹原生菜单（Toggle / Settings / Quit）</td></tr>
-        <tr><td>commit / tag</td><td><code>feat(m0-n2): menubar tray + template icons</code></td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/menubar/mod.rs</code>（include_bytes! 嵌入 22pt@2x template PNG，绕过运行时 resource 解析）· <code>src-tauri/src/main.rs</code>（setup hook + <code>ActivationPolicy::Accessory</code> 隐藏 Dock）· <code>src-tauri/Cargo.toml</code>（开 <code>tray-icon</code> feature）</td></tr>
+        <tr><td>verification</td><td>agent 端：menubar 模块就位 ✓ · main.rs 接入 ✓ · 链接校验 0 broken ✓；<b>待用户本机跑</b>：<code>pnpm tauri dev</code> 看 (a) 菜单栏出现 template icon (b) light/dark menubar 自动反色 (c) Dock 无图标 (d) 左键触发 <code>tray:toggle</code> event (e) 右键弹 Toggle/Settings(disabled)/Quit (f) 点 Quit 退出</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n2): menubar tray + template icons + accessory dock policy</code></td></tr>
         <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td>Rust 端 tray menu 注册；menubar template PNG（18×18 @1x / @2x / @3x）放入 <code>icons/menubar/</code>；左键 toggle 浮窗、右键弹原生菜单（Toggle / Settings / Quit）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/05_icons_theme.html">05 § 3-4</a>（图标资源） · <a href="../spec/07_menubar.html">07 § 1-3</a>（tray API + menu 结构）</td></tr>

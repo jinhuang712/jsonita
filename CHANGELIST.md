@@ -8,6 +8,30 @@
 
 ### M0 实施期 · 0.3.0-m0 路线开工
 
+#### M0-N2 · 菜单栏 tray + 图标（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src-tauri/src/menubar/mod.rs` ── tray 模块：`TrayIconBuilder` + 原生 NSMenu（3 项：Toggle / Settings disabled / Quit ⌘Q）+ 左键事件 emit `tray:toggle`（M0-N3 起监听）；icon 用 `include_bytes!` 嵌入 `jsonita-menubar-template-22@2x.png` 避开 resource 解析复杂度（spec/05 § 4.2 Option A：22pt@2x 单档兜底）
+- `src-tauri/src/main.rs` ── 接入 setup hook：调 `menubar::build(app.handle())`；macOS 设 `ActivationPolicy::Accessory` 隐藏 Dock 图标（spec/07 § 1.4 等效 LSUIElement）
+- `src-tauri/Cargo.toml` ── tauri features 增 `tray-icon`
+
+关键决策：
+
+- **icon 走 include_bytes! 而非 resource**：避免 M0-N7 dmg bundle 时再调试 resource 路径；编译期嵌入，dev + prod 一致；spec/05 § 4.2 Option A 的简化版
+- **`ActivationPolicy::Accessory` 替代 Info.plist LSUIElement**：Rust 端动态调用，无需 Info.plist patch；spec/07 § 1.4 行为等效
+- **Settings 菜单项 disabled**：M2-N1 启用；M0 阶段留位避免菜单结构后续大改（spec/07 § 1.1 menu 序锁定）
+- **左键 emit `tray:toggle` event，不直接调 window**：M0-N3 起接窗口；事件名按 spec/02 § 4 namespace:name 规范
+
+待用户本机验证：
+
+- `pnpm tauri dev` ── 看菜单栏右上出现 template icon · light/dark 模式下自动反色 · Dock 无图标 · 左键触发 `tray:toggle` event（DevTools console 可监听）· 右键弹 3 项菜单 · 点 Quit 退出
+
+进度状态：
+
+- `progress/manifest.json` M0-N2 `status: completed`
+- `progress/01_m0_skeleton.html#m0-n2-tray` status: `done · pending-user-verification`
+
 #### M0-N1 · 工程脚手架（done · pending-user-verification）
 
 新增文件：
