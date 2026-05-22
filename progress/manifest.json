@@ -433,7 +433,7 @@
         {
           "node": "M2-N2",
           "title": "API key (Keychain)",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/03_m2_ai_settings.html#m2-n2-keychain",
           "task_file": null,
           "spec_refs": [

@@ -8,6 +8,22 @@
 
 ### M2 实施期 · 0.5.0-m2 路线起手
 
+#### M2-N2 · API key Keychain（done · pending-user-verification）
+
+- `src-tauri/Cargo.toml` ── macOS target 加 `security-framework = "3"`
+- `src-tauri/src/store/keychain.rs` ── set / get(NoEntry → None) / delete(幂等) 3 方法；service=`com.jsonita.app`；macOS 走 security_framework::passwords，其他平台 stub
+- `src-tauri/src/cmds/ai.rs` ── 4 命令：ai_set_api_key (Keychain) / ai_delete_api_key (幂等) / ai_test_connection (M2-N2 mock 验 sk- 前缀；M2-N3 起接 reqwest GET /v1/models) / ai_has_api_key (前端初始化查询)
+- `src-tauri/src/cmds/mod.rs` ── re-export ai 模块
+- `src-tauri/src/main.rs` ── 注册 4 个 ai 命令
+- `src/settings/ApiKeyInput.tsx` ── input 不显示 raw key（type="password"）+ Test/Save/Remove 按钮 + ok/err msg；key 直接传 test 不先存 Keychain（避免污染）
+- `src/settings/SettingsModal.tsx` ── AI 分组接 ApiKeyInput（modelId 由 SettingsModal 传入）
+- `src/ipc/commands.ts` ── ai namespace 4 命令封装
+
+关键决策：
+- **不存 settings.json**：spec/10 § 6 I-4 凭证隔离；key 仅在 Keychain
+- **test 用 input 现值而非 Keychain 已存值**：spec/11 § 9，避免"测试失败时已存 key 被覆盖"
+- **service id `com.jsonita.app` 锁定**：与 tauri.conf identifier 一致；卸载时 `security delete-generic-password -s com.jsonita.app -a deepseek_api_key` 一行清
+
 #### M2-N1 · 设置面板（done · minimal · pending-user-verification）
 
 - `src-tauri/src/store/settings.rs` ── load(settings.json) → default 兜底；patch(shallow merge) → serde_json::Value 中转合并 → from_value 重构 Settings → 立即落盘；reset() 恢复 default + 落盘
