@@ -32,19 +32,19 @@
 
     <p class="section-divider"><b>一 · 进入与退出</b></p>
 
-    <h2><span class="h2-num">1</span>进入此 Phase 的前置</h2>
+    <h2 id="entry-criteria"><span class="h2-num">1</span>进入此 Phase 的前置</h2>
 
     <table>
       <thead><tr><th>前置项</th><th>状态来源</th></tr></thead>
       <tbody>
-        <tr><td>M1 12 条退出条件全过</td><td><a href="02_m1_core_json.html#h-2">M1 § 2</a></td></tr>
+        <tr><td>M1 12 条退出条件全过</td><td><a href="02_m1_core_json.html#exit-criteria">M1 § 2</a></td></tr>
         <tr><td><code>git tag 0.4.0-m1</code> 已打</td><td>本地 git tag</td></tr>
         <tr><td>用户已申请 Apple Developer ID 证书</td><td>用户本机 Keychain（M2-N6 前置；可与其他节点并行）</td></tr>
         <tr><td>用户已拿到 DeepSeek API key（用于自测；分发不带）</td><td>用户本机 Keychain</td></tr>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>退出条件（M2 完成的标志）</h2>
+    <h2 id="exit-criteria"><span class="h2-num">2</span>退出条件（M2 完成的标志）</h2>
 
     <table>
       <thead><tr><th>#</th><th>退出条件</th><th>验证方式</th></tr></thead>
@@ -66,13 +66,18 @@
 
     <p class="section-divider"><b>二 · 里程碑节点</b></p>
 
-    <h2><span class="h2-num">3</span>里程碑节点（6 个，建议按顺序）</h2>
+    <h2 id="milestones"><span class="h2-num">3</span>里程碑节点（6 个，建议按顺序）</h2>
 
-    <h3><span class="h3-num">3.1</span>M2-N1 · 设置面板 UI + 6 分组</h3>
+    <h3 id="m2-n1-settings-ui"><span class="h3-num">3.1</span>M2-N1 · 设置面板 UI + 6 分组</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M2-A1..A4</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td>M1 全部 exit-criteria</td></tr>
         <tr><td>关键交付物</td><td>Settings Modal（覆盖浮窗居中，不离开浮窗）；左侧 6 分组导航：General / Shortcuts / AI / History / JSON Transform / About；每项 checkbox / select / input 与 <a href="../spec/13_schemas.html">13 § 3 Settings struct</a> 字段一一对应；IPC <code>settings_get</code> / <code>settings_patch</code> 接通；<code>settings:changed</code> event 广播到所有窗口</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/01_mockups.html">01 § 6 Settings Modal</a> · <a href="../spec/04_components.html">04 Settings + ShortcutInput + ApiKeyInput</a> · <a href="../spec/10_storage.html">10 § 7 settings store</a></td></tr>
         <tr><td>关键决策</td><td>settings 落 <code>~/Library/Application Support/Jsonita/settings.json</code>（非 SQLite），便于用户审计；patch 走 deep merge 而非整文件覆盖（避免并发写丢字段）</td></tr>
@@ -80,11 +85,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.2</span>M2-N2 · API key 管理（Keychain）</h3>
+    <h3 id="m2-n2-keychain"><span class="h3-num">3.2</span>M2-N2 · API key 管理（Keychain）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M2-A5..A9</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m2-n1-settings-ui</code></td></tr>
         <tr><td>关键交付物</td><td><code>security-framework</code> crate 封装 Keychain set / get / delete（service = <code>com.jsonita.app</code>，account = <code>deepseek_api_key</code>）；命令 <code>ai_set_api_key</code> / <code>ai_test_connection</code> / <code>ai_delete_api_key</code>；UI 端 <code>ApiKeyInput</code>（显示 sk-***last4，点击眼睛切显隐）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/10_storage.html">10 § 6 Keychain 封装</a> · <a href="../spec/04_components.html">04 ApiKeyInput 组件</a> · <a href="../spec/11_ai_client.html">11 § 6 key 落 Keychain</a></td></tr>
         <tr><td>关键决策</td><td><b>绝对不</b>把 API key 放到 settings.json / SQLite / log / event payload；test_connection 失败<b>不</b>改已存 Keychain（避免误删可用 key）</td></tr>
@@ -92,11 +102,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.3</span>M2-N3 · DeepSeek 客户端 + extract_json</h3>
+    <h3 id="m2-n3-deepseek"><span class="h3-num">3.3</span>M2-N3 · DeepSeek 客户端 + extract_json</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M2-A10..A14 + extract_json 3 case 单测</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m2-n2-keychain</code></td></tr>
         <tr><td>关键交付物</td><td>reqwest async client；prompt 模板（system + user）按 <a href="../spec/11_ai_client.html">11 § 4</a> 5 条规则；<code>extract_json</code> 三 case 函数（pure JSON / markdown fenced / 文本夹缝 + 单测）；429 透传 + <code>retry-after</code> header 解析；500 ms 心跳 <code>ai:progress</code> event</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/11_ai_client.html">11 § 4 prompt § 5 extract_json § 7 错误透传</a></td></tr>
         <tr><td>关键决策</td><td>token 上限 <code>clamp(512, 8192)</code>（避免截断 / 失控扣费）；超时硬上限 30 s；不做客户端去重 / 缓存（v1 简化；幂等留 v2）</td></tr>
@@ -104,11 +119,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.4</span>M2-N4 · AI Fix 流程（Tab + DiffView + 写历史）</h3>
+    <h3 id="m2-n4-ai-fix"><span class="h3-num">3.4</span>M2-N4 · AI Fix 流程（Tab + DiffView + 写历史）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M2-A10..A14</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m2-n3-deepseek</code></td></tr>
         <tr><td>关键交付物</td><td>StatusBar invalid 时 AI Fix Tab 自动出现（M1 已占位）；点击触发 IPC <code>ai_fix</code>；Loading 期间 progress 心跳更新；成功后 DiffView（M1 已有占位）显示左右对比；Accept → 替换 input + 写 history op_type='ai-fix' + ⌘Z 单窗模式下能 undo（M1 已锁）；Reject → 关闭 Tab 保留原文</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/11_ai_client.html">11 § 3 调用流程</a> · <a href="../spec/01_mockups.html">01 § 8 AI Fix DiffView</a> · <a href="../spec/04_components.html">04 DiffView 组件</a></td></tr>
         <tr><td>关键决策</td><td>无 API key 时点 AI Fix → Toast.warn 跳转设置（不卡死）；<code>ai_enabled=false</code> 时整个 Tab 隐藏（不只是 disable 按钮）</td></tr>
@@ -116,23 +136,33 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.5</span>M2-N5 · 自定义快捷键 + 冲突检测</h3>
+    <h3 id="m2-n5-shortcuts"><span class="h3-num">3.5</span>M2-N5 · 自定义快捷键 + 冲突检测</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>关键交付物</td><td>Settings → Shortcuts 分组用 <code>ShortcutInput</code> 组件：按下组合键自动捕获；冲突检测对照（a）系统级保留快捷键白名单 + （b）当前已绑定的 Jsonita 内部快捷键；冲突时 Tooltip 警告并<b>不</b>提交 patch（保留旧绑定）；改 <code>shortcut_toggle</code> 后立即重新注册 + 菜单栏 menu accelerator 文字同步</td></tr>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M2-A15 / A16 / A17 / A17b</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m2-n1-settings-ui</code></td></tr>
+        <tr><td>关键交付物</td><td>Settings → Shortcuts 分组用 <code>ShortcutInput</code> 组件：按下组合键自动捕获；冲突检测对照（a）系统级保留快捷键白名单 + （b）当前已绑定的 Jsonita 内部快捷键；冲突时 Tooltip 警告 + <b>默认阻塞 patch 提交</b>（保留旧绑定）；如需 override 走<b>二次确认 Modal</b>（标题"我知道与系统快捷键冲突，仍然绑定"，含 [取消] / [仍然绑定] 二按钮）方可提交；改 <code>shortcut_toggle</code> 后立即重新注册 + 菜单栏 menu accelerator 文字同步</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/07_menubar.html">07 § 4 global-shortcut</a> · <a href="../spec/04_components.html">04 ShortcutInput</a> · <a href="../spec/01_mockups.html">01 § 6.2 ShortcutInput 视觉</a></td></tr>
-        <tr><td>关键决策</td><td>系统级保留白名单从 macOS 公开列表抄过来（<kbd>⌘Tab</kbd> / <kbd>⌘Space</kbd> / <kbd>⌘Q</kbd> 等）；冲突<b>仅警告不阻塞</b> ── 用户硬要绑就让绑（极小概率）</td></tr>
+        <tr><td>关键决策</td><td>系统级保留白名单从 macOS 公开列表抄过来（<kbd>⌘Tab</kbd> / <kbd>⌘Space</kbd> / <kbd>⌘Q</kbd> 等）；冲突<b>默认阻塞</b>提交防误绑；override 路径走<b>显式二次确认</b>留给极少数 power user（如 Karabiner 重映场景）；override 成功后在 Settings 该项尾部显示 ⚠ 角标标识"用户主动覆盖系统冲突"</td></tr>
         <tr><td>常见坑</td><td>tauri-plugin-global-shortcut 热替换需要先 unregister 再 register；某些组合键在 macOS 上需要 Accessibility 权限二次确认（重置权限缓存可能要重启）</td></tr>
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.6</span>M2-N6 · macOS 签名 + 公证 + CI</h3>
+    <h3 id="m2-n6-signing"><span class="h3-num">3.6</span>M2-N6 · macOS 签名 + 公证 + CI</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M2-A18..A21</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m2-n4-ai-fix</code>, <code>m2-n5-shortcuts</code></td></tr>
         <tr><td>关键交付物</td><td>本地：用 Developer ID Application 证书签 .app + .dmg；<code>xcrun notarytool</code> 提交公证 + staple；<code>spctl --assess</code> 应通过。CI：GitHub Actions secrets 注入证书 p12 + Apple ID password；release workflow 自动 sign + notarize + 上传 artifact</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 3 entitlements § 5 macOS 签名 + notarization § 7 CI</a></td></tr>
         <tr><td>关键决策</td><td>用 <code>notarytool</code>（不用旧 <code>altool</code>）；entitlements 关闭 sandbox（<code>app-sandbox=false</code>）但保留 hardened runtime（<code>hardened-runtime=true</code>）；CI 跑全套耗时 ~15-25 min（可接受）</td></tr>
@@ -142,7 +172,7 @@
 
     <p class="section-divider"><b>三 · 验收 & 测试</b></p>
 
-    <h2><span class="h2-num">4</span>M2 验收用例</h2>
+    <h2 id="acceptance"><span class="h2-num">4</span>M2 验收用例</h2>
 
     <h3><span class="h3-num">4.1</span>设置面板 + 立即生效</h3>
 
@@ -189,7 +219,8 @@
       <tbody>
         <tr><td>M2-A15</td><td>Shortcuts → 把 <code>shortcut_toggle</code> 改为 <kbd>⌘⇧K</kbd> → 关 Settings</td><td><b>不</b>重启即可用 <kbd>⌘⇧K</kbd> 呼出；<kbd>⌘⇧J</kbd> 不再生效</td></tr>
         <tr><td>M2-A16</td><td>菜单栏 menu 检查</td><td>Toggle 项 accelerator 文字已变为 ⌘⇧K</td></tr>
-        <tr><td>M2-A17</td><td>故意改成 <kbd>⌘C</kbd>（系统保留）</td><td>Tooltip 警告"与系统快捷键冲突"；patch <b>不</b>提交；旧 <kbd>⌘⇧K</kbd> 仍可用</td></tr>
+        <tr><td>M2-A17</td><td>故意改成 <kbd>⌘C</kbd>（系统保留）</td><td>Tooltip 警告"与系统快捷键冲突"；patch <b>默认阻塞</b>；旧 <kbd>⌘⇧K</kbd> 仍可用</td></tr>
+        <tr><td>M2-A17b</td><td>M2-A17 后点 Tooltip 内 [override] 链接 → 弹二次确认 Modal → 点"仍然绑定"</td><td>patch 落入 settings.json；新冲突快捷键生效；Settings 中该项尾部 ⚠ 角标可见</td></tr>
       </tbody>
     </table>
 
@@ -205,7 +236,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">5</span>测试覆盖（M2 范围）</h2>
+    <h2 id="testing"><span class="h2-num">5</span>测试覆盖（M2 范围）</h2>
 
     <table>
       <thead><tr><th>测试类型</th><th>M2 覆盖</th><th>说明</th></tr></thead>
@@ -219,7 +250,7 @@
 
     <p class="section-divider"><b>四 · 风险 & spec 反馈</b></p>
 
-    <h2><span class="h2-num">6</span>已识别的实施风险</h2>
+    <h2 id="risks"><span class="h2-num">6</span>已识别的实施风险</h2>
 
     <table>
       <thead><tr><th>风险</th><th>触发场景</th><th>规避 / 应急</th></tr></thead>
@@ -232,7 +263,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
+    <h2 id="spec-map"><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
 
     <table>
       <thead><tr><th>节点</th><th>对应 spec 章节</th><th>关键小节</th></tr></thead>
@@ -252,6 +283,41 @@
         <p>M2 全过 → <code>git tag 0.5.0-m2</code> → 切 <a href="04_m3_polish_cross.html">04 M3 Polish + Cross-platform</a> 为 <code>active</code>。M2 完成时<b>已具备分发能力</b> ── M3 是打磨 + 中文 UI + a11y + Windows 实验。</p>
       </div>
     </div>
+
+    <p class="section-divider"><b>五 · 实施记录</b></p>
+
+    <h2 id="verification-log"><span class="h2-num">8</span>Verification Log (M2)</h2>
+
+    <p>每完成一个 M2 节点时<b>必须</b>追加一行（<a href="../AGENT_RUNBOOK.md">AGENT_RUNBOOK</a> § 7）。下方表格首行是占位示例 ── 实施时复制再改。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>date</th>
+          <th>node</th>
+          <th>commit</th>
+          <th>machine / OS</th>
+          <th>commands run</th>
+          <th>manual passed</th>
+          <th>manual failed</th>
+          <th>logs / screenshots</th>
+          <th>notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i>YYYY-MM-DD</i></td>
+          <td><code>M2-N?</code></td>
+          <td><code>abc1234</code></td>
+          <td><i>macOS 14.5 / M1 Pro</i></td>
+          <td><code>cargo test</code>, <code>pnpm tsc --noEmit</code></td>
+          <td><i>M2-A1, A4 / E1 E3</i></td>
+          <td>—</td>
+          <td>—</td>
+          <td><i>（占位示例）</i></td>
+        </tr>
+      </tbody>
+    </table>
 
     <nav class="pagination" id="pagination"></nav>
 

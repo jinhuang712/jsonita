@@ -32,18 +32,18 @@
 
     <p class="section-divider"><b>一 · 进入与退出</b></p>
 
-    <h2><span class="h2-num">1</span>进入此 Phase 的前置</h2>
+    <h2 id="entry-criteria"><span class="h2-num">1</span>进入此 Phase 的前置</h2>
 
     <table>
       <thead><tr><th>前置项</th><th>状态来源</th></tr></thead>
       <tbody>
-        <tr><td>M0 7 条退出条件全过</td><td><a href="01_m0_skeleton.html#h-2">M0 § 2 退出条件</a></td></tr>
+        <tr><td>M0 7 条退出条件全过</td><td><a href="01_m0_skeleton.html#exit-criteria">M0 § 2 退出条件</a></td></tr>
         <tr><td><code>git tag 0.3.0-m0</code> 已打</td><td>本地 git tag</td></tr>
         <tr><td>本 progress 状态切到 <code>active</code></td><td>本文件顶部 callout</td></tr>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>退出条件（M1 完成的标志）</h2>
+    <h2 id="exit-criteria"><span class="h2-num">2</span>退出条件（M1 完成的标志）</h2>
 
     <table>
       <thead><tr><th>#</th><th>退出条件</th><th>验证方式</th></tr></thead>
@@ -65,13 +65,18 @@
 
     <p class="section-divider"><b>二 · 里程碑节点</b></p>
 
-    <h2><span class="h2-num">3</span>里程碑节点（9 个，建议按顺序）</h2>
+    <h2 id="milestones"><span class="h2-num">3</span>里程碑节点（9 个，建议按顺序）</h2>
 
-    <h3><span class="h3-num">3.1</span>M1-N1 · 状态管理 + IPC 骨架</h3>
+    <h3 id="m1-n1-store-ipc"><span class="h3-num">3.1</span>M1-N1 · 状态管理 + IPC 骨架</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A1 / 单测覆盖 02 IPC 桩函数</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td>M0 全部 exit-criteria</td></tr>
         <tr><td>关键交付物</td><td>Zustand store 拆 4 个 slice（input / output / tabs / settings 占位）；Rust 端 02 § 6.1 commands 桩函数全部注册（暂返 mock 数据）；TS 端 <code>invoke()</code> 薄封装 + 错误矩阵映射</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/02_ipc.html">02 § 2 命令分组</a> · <a href="../spec/02_ipc.html">02 § 6.1 命令签名</a> · <a href="../spec/13_schemas.html">13 § 1 错误类型 / § 3 settings struct</a></td></tr>
         <tr><td>关键决策</td><td>store 4-slice 拆分按 02 IPC 命令分组镜像；M1 只接通<b>需要</b>的 command（engine / history / session / window），settings / ai 留 M2</td></tr>
@@ -79,11 +84,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.2</span>M1-N2 · JSON 引擎核心（engine 模块 + 单测）</h3>
+    <h3 id="m1-n2-engine"><span class="h3-num">3.2</span>M1-N2 · JSON 引擎核心（engine 模块 + 单测）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A1..A8 + cargo test 8 函数覆盖</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n1-store-ipc</code></td></tr>
         <tr><td>关键交付物</td><td><code>src-tauri/src/engine/</code>：<code>format.rs</code>（serde_json + preserve_order）· <code>sort.rs</code>（递归字典序）· <code>unwrap.rs</code>（walk + 200ms timeout）· <code>convert.rs</code>（string ↔ json）· <code>error_loc.rs</code>（line/col 1-indexed 映射）；<code>cargo test</code> 覆盖每个</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/09_json_engine.html">09 § 3-8</a>（模块划分 / format / 错误定位 / unwrap 算法 / string 互转 / 组合）</td></tr>
         <tr><td>关键决策</td><td>9 § 9 列的 8 个函数签名按原样实现；不引入 nom / pest / 手写（9 § 2 选型对比已锁）；<code>preserve_order</code> feature 必开（用户粘的 key 顺序要保留）</td></tr>
@@ -91,11 +101,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.3</span>M1-N3 · CodeMirror 6 集成</h3>
+    <h3 id="m1-n3-codemirror"><span class="h3-num">3.3</span>M1-N3 · CodeMirror 6 集成</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A1 / 切主题正常 + 12 项扩展可用</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n1-store-ipc</code></td></tr>
         <tr><td>关键交付物</td><td>CodeMirror 6 装入；<a href="../spec/08_editor.html">08 § 1.4</a> 12 项标配扩展全开（lineWrapping / bracketMatching / indentationMarkers / foldGutter+codeFolding / lineNumbers / highlightActiveLine / search / multipleSelections / history / autocompletion / placeholder / 自定义 keymap）；<code>@codemirror/lang-json</code> 接入；light / dark theme extension 切换跟系统</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/08_editor.html">08 § 1 编辑器 § 2 错误标注 § 3 状态栏联动</a> · <a href="../spec/03_design_tokens.html">03 § 1-3</a>（颜色 / 字号 / token）</td></tr>
         <tr><td>关键决策</td><td>不用 Monaco（150KB vs 5MB；03 章选型已锁）；linter 用自定义 plugin 调 engine.format 的 error_loc ── 不引第三方 JSON linter</td></tr>
@@ -103,11 +118,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.4</span>M1-N4 · 布局 / Tab / StatusBar</h3>
+    <h3 id="m1-n4-layout"><span class="h3-num">3.4</span>M1-N4 · 布局 / Tab / StatusBar</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>双栏 / 单窗切换 / TabBar / StatusBar 四态</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n3-codemirror</code></td></tr>
         <tr><td>关键交付物</td><td>双栏布局（input | output 可拖动分隔）；TabBar 切（Formatter / Tree / String / AI 占位）；StatusBar 四态（valid / invalid / parsing / ai-busy 占位）；单窗模式开关（F7.1 settings 字段读，但 UI 切换走<b>整体</b> in-place 替换）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/01_mockups.html">01 § 1-5 主浮窗 6 态 + 单窗模式</a> · <a href="../spec/04_components.html">04 TabBar / StatusBar 组件映射</a></td></tr>
         <tr><td>关键决策</td><td>布局走 CSS Grid（不用 react-resizable-panels；约定的 split position 持久化到 window.json）；单窗与双栏共享同一 Editor 实例（避免切换时 state 丢失）</td></tr>
@@ -115,11 +135,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.5</span>M1-N5 · TreeView + Path 复制</h3>
+    <h3 id="m1-n5-tree"><span class="h3-num">3.5</span>M1-N5 · TreeView + Path 复制</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A9 / A10 / A11</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n4-layout</code></td></tr>
         <tr><td>关键交付物</td><td>接入 <code>react-json-view-lite</code>；自定义颜色对齐 03 design tokens；点击 key 复制 JSON Path 到剪贴板（Toast 提示）；hover 节点显示"复制值"按钮；折叠 / 展开 / 搜索全部可用</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/08_editor.html">08 § 4 JSON 树 § 4.5 hover 复制实现</a> · <a href="../spec/01_mockups.html">01 § 12 Hover 复制示例</a></td></tr>
         <tr><td>关键决策</td><td>用 react-json-view-lite（懒加载渲染）而非自写 tree；JSON Path 用<b>简写</b>语法（<code>$.a.b[0]</code>）不用 RFC 6901 pointer</td></tr>
@@ -127,11 +152,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.6</span>M1-N6 · SQLite 迁移 + 历史记录</h3>
+    <h3 id="m1-n6-sqlite-history"><span class="h3-num">3.6</span>M1-N6 · SQLite 迁移 + 历史记录</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A12 / A13 / A14</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n1-store-ipc</code></td></tr>
         <tr><td>关键交付物</td><td>rusqlite + WAL 模式 + migration 框架（schema_version 表）；<code>history</code> + <code>history_fts</code>（FTS5 unicode61）双表；commands：<code>history_list</code> / <code>history_search</code> / <code>history_pin</code> / <code>history_star</code> / <code>history_clear</code>；自动 trim 至 100 条（pinned / starred 不动）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/10_storage.html">10 § 4 SQLite 设计 § 8 索引 § 9 性能 § 10 升级</a> · <a href="../spec/13_schemas.html">13 § 2 SQL DDL</a></td></tr>
         <tr><td>关键决策</td><td>FTS5 用 unicode61 tokenizer（支持中文）；WAL 模式不开 SHM 跨进程（v1 单进程访问）；migration 仅支持<b>前向</b>升级（<a href="../spec/10_storage.html">10 § 10.1</a> 决策）</td></tr>
@@ -139,11 +169,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.7</span>M1-N7 · 会话保留 + 找回 + 清空</h3>
+    <h3 id="m1-n7-session"><span class="h3-num">3.7</span>M1-N7 · 会话保留 + 找回 + 清空</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A15..A18</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n6-sqlite-history</code></td></tr>
         <tr><td>关键交付物</td><td><code>last_session</code> 单行表（持久化）；in-memory <code>RestoreTimer</code>（hide 时 start，show 时 stop + restore，超时 clear）；<kbd>⌘⇧L</kbd> 找回（即使应用重启）；<kbd>⌘K</kbd> 清空浮窗 + 不写 last_session</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/10_storage.html">10 § 5 last_session 状态机</a>（含 stateDiagram）</td></tr>
         <tr><td>关键决策</td><td>窗口期默认 5 min；可配置 Off / 1 / 5 / 15 / 60；in-memory timer 与持久化 last_session <b>同时</b>存在 ── timer 在则用 timer 数据，timer 过期清才看 last_session</td></tr>
@@ -151,11 +186,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.8</span>M1-N8 · 嵌套 stringified JSON 全量解开</h3>
+    <h3 id="m1-n8-unwrap"><span class="h3-num">3.8</span>M1-N8 · 嵌套 stringified JSON 全量解开</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A5 / A6 + cargo test 200ms 超时</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n2-engine</code></td></tr>
         <tr><td>关键交付物</td><td>engine <code>auto_unwrap_all</code>：walk JSON value 树，遇 String 且能 parse 成 JSON 时递归展开；<b>无</b>层数硬限；单次调用 200 ms 全局超时（用 <code>Instant::now()</code> 全程传）；超时返回 <code>UnwrapTimeout { ms, depth }</code></td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/09_json_engine.html">09 § 6 嵌套 stringified JSON 全量解开</a>（含 walk 算法核心 ~20 行）</td></tr>
         <tr><td>关键决策</td><td><b>不解</b>纯数字 / bool / null 字符串（"123" "true" "null" 保留）；只解 "{...}" / "[...]" 开头的；F7.1 设置项"自动解嵌套" off 时跳过此步</td></tr>
@@ -163,11 +203,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.9</span>M1-N9 · 浮窗智能宽度 + soft-wrap</h3>
+    <h3 id="m1-n9-smart-width"><span class="h3-num">3.9</span>M1-N9 · 浮窗智能宽度 + soft-wrap</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M1-A20 / A21 / A22</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m1-n4-layout</code></td></tr>
         <tr><td>关键交付物</td><td>浮窗智能宽度 4 层逻辑：层 1 启动用 last_size · 层 2 粘长行触发扩宽到 ideal_w · 层 3 用户手动拖动 → userDragged 锁定 · 层 4 soft-wrap 开时<b>不</b>触发扩宽；新增 IPC <code>window_resize_for_content</code> + event <code>window:resized</code></td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/06_window.html">06 § 9 智能宽度</a>（含 4 层 graph TD + 算法表）· <a href="../spec/02_ipc.html">02 § 6.1.5 window</a></td></tr>
         <tr><td>关键决策</td><td>userDragged 标志写入 <code>window.json</code> 持久化；soft-wrap 开关在 F7.1 General；ideal_w 上限 = 屏幕宽 × 0.8</td></tr>
@@ -177,7 +222,7 @@
 
     <p class="section-divider"><b>三 · 验收 & 测试</b></p>
 
-    <h2><span class="h2-num">4</span>M1 验收用例（实施期对照跑一遍）</h2>
+    <h2 id="acceptance"><span class="h2-num">4</span>M1 验收用例（实施期对照跑一遍）</h2>
 
     <h3><span class="h3-num">4.1</span>JSON 核心能力</h3>
 
@@ -233,7 +278,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">5</span>测试覆盖（M1 范围）</h2>
+    <h2 id="testing"><span class="h2-num">5</span>测试覆盖（M1 范围）</h2>
 
     <table>
       <thead><tr><th>测试类型</th><th>M1 覆盖</th><th>说明</th></tr></thead>
@@ -249,7 +294,7 @@
 
     <p class="section-divider"><b>四 · 风险 & spec 反馈</b></p>
 
-    <h2><span class="h2-num">6</span>已识别的实施风险</h2>
+    <h2 id="risks"><span class="h2-num">6</span>已识别的实施风险</h2>
 
     <div class="callout callout-warn">
       <span class="callout-icon">RISK</span>
@@ -269,7 +314,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
+    <h2 id="spec-map"><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
 
     <table>
       <thead><tr><th>节点</th><th>对应 spec 章节</th><th>关键小节</th></tr></thead>
@@ -292,6 +337,41 @@
         <p>M1 全过 → <code>git tag 0.4.0-m1</code> → 切 <a href="03_m2_ai_settings.html">03 M2 AI + Settings</a> 为 <code>active</code>。本 progress 改 <code>completed</code>。</p>
       </div>
     </div>
+
+    <p class="section-divider"><b>五 · 实施记录</b></p>
+
+    <h2 id="verification-log"><span class="h2-num">8</span>Verification Log (M1)</h2>
+
+    <p>每完成一个 M1 节点时<b>必须</b>追加一行（<a href="../AGENT_RUNBOOK.md">AGENT_RUNBOOK</a> § 7）。下方表格首行是占位示例 ── 实施时复制再改。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>date</th>
+          <th>node</th>
+          <th>commit</th>
+          <th>machine / OS</th>
+          <th>commands run</th>
+          <th>manual passed</th>
+          <th>manual failed</th>
+          <th>logs / screenshots</th>
+          <th>notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i>YYYY-MM-DD</i></td>
+          <td><code>M1-N?</code></td>
+          <td><code>abc1234</code></td>
+          <td><i>macOS 14.5 / M1 Pro</i></td>
+          <td><code>cargo test</code>, <code>pnpm tsc --noEmit</code></td>
+          <td><i>M1-A1, A4 / E1 E3</i></td>
+          <td>—</td>
+          <td>—</td>
+          <td><i>（占位示例）</i></td>
+        </tr>
+      </tbody>
+    </table>
 
     <nav class="pagination" id="pagination"></nav>
 

@@ -32,7 +32,7 @@
 
     <p class="section-divider"><b>一 · Phase 性质与节奏</b></p>
 
-    <h2><span class="h2-num">1</span>本 Phase 与 M0-M3 的差异</h2>
+    <h2 id="phase-overview"><span class="h2-num">1</span>本 Phase 与 M0-M3 的差异</h2>
 
     <table>
       <thead><tr><th>维度</th><th>M0-M3</th><th>v1.1+ Distribution</th></tr></thead>
@@ -45,12 +45,12 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>进入此 Phase 的前置</h2>
+    <h2 id="entry-criteria"><span class="h2-num">2</span>进入此 Phase 的前置</h2>
 
     <table>
       <thead><tr><th>前置项</th><th>状态来源</th></tr></thead>
       <tbody>
-        <tr><td>M3 13 条退出条件全过 + v1.0.0 GitHub Releases 已发布</td><td><a href="04_m3_polish_cross.html#h-2">M3 § 2</a></td></tr>
+        <tr><td>M3 13 条退出条件全过 + v1.0.0 GitHub Releases 已发布</td><td><a href="04_m3_polish_cross.html#exit-criteria">M3 § 2</a></td></tr>
         <tr><td><code>git tag 1.0.0</code> 已打</td><td>本地 git tag + GitHub release</td></tr>
         <tr><td>累计 ≥ 1 周真实用户使用 v1.0（聚集分发渠道反馈）</td><td>GitHub Issues / 个人反馈</td></tr>
       </tbody>
@@ -58,13 +58,18 @@
 
     <p class="section-divider"><b>二 · 5 个独立节点</b></p>
 
-    <h2><span class="h2-num">3</span>节点细节</h2>
+    <h2 id="milestones"><span class="h2-num">3</span>节点细节</h2>
 
-    <h3><span class="h3-num">3.1</span>v11-N1 · homebrew tap（<code>brew install jsonita</code>）</h3>
+    <h3 id="d-n1-brew"><span class="h3-num">3.1</span>D-N1 · homebrew tap（<code>brew install jsonita</code>）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned (v1.1 推荐)</code></td></tr>
+        <tr><td>write scope</td><td>(发布时填)</td></tr>
+        <tr><td>verification</td><td>干净 macOS 跑 <code>brew tap ... && brew install --cask jsonita</code> 能装能起</td></tr>
+        <tr><td>commit / tag</td><td>(发布时填，可能 <code>git tag v1.1.0</code>)</td></tr>
+        <tr><td>blocked_by</td><td>M3 全部 exit-criteria</td></tr>
         <tr><td>目标版本</td><td>v1.1（推荐先做 ── macOS 用户用 brew 最自然）</td></tr>
         <tr><td>关键交付物</td><td>新建 <code>homebrew-jsonita</code> tap 仓库；<code>Casks/jsonita.rb</code> 描述（url 指向 GitHub Releases dmg + sha256 + version）；CI release workflow 加一步自动 bump tap（用 <code>actions/checkout</code> + GitHub PAT 写 tap 仓库）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 9 分发渠道</a></td></tr>
@@ -74,11 +79,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.2</span>v11-N2 · npm 启动器（<code>npx jsonita</code>）</h3>
+    <h3 id="d-n2-npm"><span class="h3-num">3.2</span>D-N2 · npm 启动器（<code>npx jsonita</code>）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned (v1.2 推荐)</code></td></tr>
+        <tr><td>write scope</td><td>(发布时填)</td></tr>
+        <tr><td>verification</td><td>干净环境 <code>npx jsonita</code> 能启动</td></tr>
+        <tr><td>commit / tag</td><td>(发布时填)</td></tr>
+        <tr><td>blocked_by</td><td>M3 全部 exit-criteria</td></tr>
         <tr><td>目标版本</td><td>v1.2（次优先 ── Node 开发者群体常用）</td></tr>
         <tr><td>关键交付物</td><td>新 npm 包 <code>jsonita</code>（独立 repo 或 monorepo 子目录）；<code>bin/jsonita.js</code> 启动脚本：检测 OS → 下载对应 platform dmg/.exe → 运行；首次运行后落本地缓存避免重复下载</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 9 分发渠道</a> v1.x 加 npm 启动器</td></tr>
@@ -89,25 +99,35 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.3</span>v11-N3 · 自动更新（<code>tauri-plugin-updater</code>）</h3>
+    <h3 id="d-n3-updater"><span class="h3-num">3.3</span>D-N3 · 自动更新（<code>tauri-plugin-updater</code>）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>目标版本</td><td>v1.1（与 N1 同期上 ── 这两个一起做能让 brew 装的用户也能收更新通知）</td></tr>
+        <tr><td>status</td><td><code>planned (v1.1 推荐)</code></td></tr>
+        <tr><td>write scope</td><td>(发布时填)</td></tr>
+        <tr><td>verification</td><td>人造从 v1.0 升 v1.1 触发 Toast；点击重启后变 v1.1；签名验证通过；brew 安装跳过 in-app</td></tr>
+        <tr><td>commit / tag</td><td>(发布时填)</td></tr>
+        <tr><td>blocked_by</td><td>M3 全部 exit-criteria</td></tr>
+        <tr><td>目标版本</td><td>v1.1（与 N1 同期上 ── DMG 用户走 in-app updater；brew 用户走 brew upgrade 路径，分发源识别见下"关键决策"行）</td></tr>
         <tr><td>关键交付物</td><td>接入 <code>tauri-plugin-updater</code>；生成 update signing key（<b>不</b>提交仓库，秘钥落本地 + GitHub Actions secrets）；CI release workflow 加 <code>signature</code> 生成 + <code>latest.json</code> 上传到 GitHub release artifact；应用启动时静默 check + 有新版时<b>非阻塞</b> Toast 提示"有新版 X，<a>点击重启更新</a>"</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 8 自动更新（v1.1+）</a></td></tr>
         <tr><td>退出判据</td><td>从 v1.0 升 v1.1（人造）能触发 Toast；点击重启后应用变 v1.1；签名验证通过</td></tr>
-        <tr><td>关键决策</td><td>update key 与 codesign 证书<b>分离</b>（两个独立密钥；前者失泄不影响后者）；更新策略 = manual（用户点 Toast 才升，不偷偷升）；brew 装的用户 update 由 brew 管，应用层<b>检测到是 brew 装的就跳过 in-app update</b>（避免双源冲突）</td></tr>
+        <tr><td>关键决策</td><td>update key 与 codesign 证书<b>分离</b>（两个独立密钥；前者失泄不影响后者）；更新策略 = manual（用户点 Toast 才升，不偷偷升）；<b>分发源识别</b>：应用启动时检测 .app 路径是否在 brew Cellar / Caskroom 下 ── 是 brew 装则<b>跳过 in-app updater</b>，最多 Toast 提示 <code>brew upgrade jsonita</code>；DMG 直装走 in-app updater 完整流（双源不冲突）</td></tr>
         <tr><td>常见坑</td><td>signing key 一旦丢失<b>所有</b>旧版本用户的 updater 永久失效 ── 必须双备份（1Password + 离线 USB）；<code>latest.json</code> 的 URL 必须用 GitHub raw + tag 不变量，不要走 release asset（asset 改名会断）</td></tr>
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.4</span>v11-N4 · Windows 完善（EV cert + winget）</h3>
+    <h3 id="d-n4-windows-signing"><span class="h3-num">3.4</span>D-N4 · Windows 完善（EV cert + winget）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned (v1.2/1.3 推荐)</code></td></tr>
+        <tr><td>write scope</td><td>(发布时填)</td></tr>
+        <tr><td>verification</td><td>Windows 11 上 <code>winget install jinhuang712.Jsonita</code> 能装；SmartScreen 不弹警告</td></tr>
+        <tr><td>commit / tag</td><td>(发布时填)</td></tr>
+        <tr><td>blocked_by</td><td>M3 全部 exit-criteria</td></tr>
         <tr><td>目标版本</td><td>v1.2 或 v1.3（受 EV 证书申请周期限制，可能比 N1 / N3 晚）</td></tr>
         <tr><td>关键交付物</td><td>EV code signing 证书（DigiCert / Sectigo）；<code>signtool</code> 签 .exe + .msi；提交 winget repo（<code>microsoft/winget-pkgs</code>）；Windows release CI workflow 加签名步</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 6 Windows 签名（v1.1+）</a></td></tr>
@@ -117,11 +137,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.5</span>v11-N5 · 日志导出 zip</h3>
+    <h3 id="d-n5-log-export"><span class="h3-num">3.5</span>D-N5 · 日志导出 zip</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned (v1.1 推荐)</code></td></tr>
+        <tr><td>write scope</td><td>(发布时填)</td></tr>
+        <tr><td>verification</td><td>Settings → About → 导出按钮触发；得 zip 含 ≤ 7 daily + metadata.json；RedactLayer 双扫无 key</td></tr>
+        <tr><td>commit / tag</td><td>(发布时填)</td></tr>
+        <tr><td>blocked_by</td><td>M3 全部 exit-criteria</td></tr>
         <tr><td>目标版本</td><td>v1.1（与 N1 / N3 同期 ── 实现成本低，对用户反馈链路价值高）</td></tr>
         <tr><td>关键交付物</td><td>Settings → About → "导出最近 7 日日志" 按钮；触发 IPC <code>logs_export_zip</code>；Rust 端 zip 含最近 7 个 daily log 文件 + <code>metadata.json</code>（app version / OS / 导出时间）；写到 <code>~/Downloads/jsonita-logs-YYYY-MM-DD.zip</code> + Finder 弹文件位置</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/15_logging.html">15 § 10 用户视角 § 11 与其他章节对接 plan/01 F7</a></td></tr>
@@ -133,7 +158,7 @@
 
     <p class="section-divider"><b>三 · 节点优先级建议</b></p>
 
-    <h2><span class="h2-num">4</span>推荐发布节奏</h2>
+    <h2 id="rollout"><span class="h2-num">4</span>推荐发布节奏</h2>
 
     <table>
       <thead><tr><th>版本</th><th>包含节点</th><th>用户价值</th></tr></thead>
@@ -153,7 +178,7 @@
 
     <p class="section-divider"><b>四 · 退出条件</b></p>
 
-    <h2><span class="h2-num">5</span>本 Phase 的退出</h2>
+    <h2 id="exit-criteria"><span class="h2-num">5</span>本 Phase 的退出</h2>
 
     <table>
       <thead><tr><th>状态</th><th>含义</th></tr></thead>
@@ -164,7 +189,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">6</span>已识别的实施风险</h2>
+    <h2 id="risks"><span class="h2-num">6</span>已识别的实施风险</h2>
 
     <table>
       <thead><tr><th>风险</th><th>触发场景</th><th>规避 / 应急</th></tr></thead>
@@ -177,16 +202,16 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
+    <h2 id="spec-map"><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
 
     <table>
       <thead><tr><th>节点</th><th>对应 spec 章节</th><th>关键小节</th></tr></thead>
       <tbody>
-        <tr><td>v11-N1 brew tap</td><td><a href="../spec/12_packaging.html">12 § 9</a></td><td>分发渠道表</td></tr>
-        <tr><td>v11-N2 npm</td><td><a href="../spec/12_packaging.html">12 § 9</a></td><td>同上</td></tr>
-        <tr><td>v11-N3 自动更新</td><td><a href="../spec/12_packaging.html">12 § 8</a></td><td>updater + signing key 分离</td></tr>
-        <tr><td>v11-N4 Windows 签名</td><td><a href="../spec/12_packaging.html">12 § 6</a> · <a href="../spec/05_icons_theme.html">05 § 5 ICO</a></td><td>EV cert 必要性</td></tr>
-        <tr><td>v11-N5 日志导出</td><td><a href="../spec/15_logging.html">15 § 10</a></td><td>导出 zip 内容 + RedactLayer</td></tr>
+        <tr><td>D-N1 brew tap</td><td><a href="../spec/12_packaging.html">12 § 9</a></td><td>分发渠道表</td></tr>
+        <tr><td>D-N2 npm</td><td><a href="../spec/12_packaging.html">12 § 9</a></td><td>同上</td></tr>
+        <tr><td>D-N3 自动更新</td><td><a href="../spec/12_packaging.html">12 § 8</a></td><td>updater + signing key 分离</td></tr>
+        <tr><td>D-N4 Windows 签名</td><td><a href="../spec/12_packaging.html">12 § 6</a> · <a href="../spec/05_icons_theme.html">05 § 5 ICO</a></td><td>EV cert 必要性</td></tr>
+        <tr><td>D-N5 日志导出</td><td><a href="../spec/15_logging.html">15 § 10</a></td><td>导出 zip 内容 + RedactLayer</td></tr>
       </tbody>
     </table>
 
@@ -196,6 +221,41 @@
         <p>v1.1+ 是<b>持续 Phase</b>，没有"打完 tag 切下一篇"的强迫节奏。完成单个节点即可对应小版本 ship；本 progress 文档随节点完成<b>滚动更新</b>，而不是一次性写死。等 5 节点全完成或决定不做时整体 archive。</p>
       </div>
     </div>
+
+    <p class="section-divider"><b>五 · 实施记录</b></p>
+
+    <h2 id="verification-log"><span class="h2-num">8</span>Verification Log (D / v1.1+)</h2>
+
+    <p>每完成一个 D / v1.1+ 节点时<b>必须</b>追加一行（<a href="../AGENT_RUNBOOK.md">AGENT_RUNBOOK</a> § 7）。下方表格首行是占位示例 ── 实施时复制再改。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>date</th>
+          <th>node</th>
+          <th>commit</th>
+          <th>machine / OS</th>
+          <th>commands run</th>
+          <th>manual passed</th>
+          <th>manual failed</th>
+          <th>logs / screenshots</th>
+          <th>notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i>YYYY-MM-DD</i></td>
+          <td><code>D-N?</code></td>
+          <td><code>abc1234</code></td>
+          <td><i>macOS 14.5 / M1 Pro</i></td>
+          <td><code>cargo test</code>, <code>pnpm tsc --noEmit</code></td>
+          <td><i>D-A1, A4 / E1 E3</i></td>
+          <td>—</td>
+          <td>—</td>
+          <td><i>（占位示例）</i></td>
+        </tr>
+      </tbody>
+    </table>
 
     <nav class="pagination" id="pagination"></nav>
 

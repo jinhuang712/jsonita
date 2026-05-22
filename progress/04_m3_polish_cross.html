@@ -32,19 +32,19 @@
 
     <p class="section-divider"><b>一 · 进入与退出</b></p>
 
-    <h2><span class="h2-num">1</span>进入此 Phase 的前置</h2>
+    <h2 id="entry-criteria"><span class="h2-num">1</span>进入此 Phase 的前置</h2>
 
     <table>
       <thead><tr><th>前置项</th><th>状态来源</th></tr></thead>
       <tbody>
-        <tr><td>M2 12 条退出条件全过 + v0.5.0-m2 已 sign + notarized</td><td><a href="03_m2_ai_settings.html#h-2">M2 § 2</a></td></tr>
+        <tr><td>M2 12 条退出条件全过 + v0.5.0-m2 已 sign + notarized</td><td><a href="03_m2_ai_settings.html#exit-criteria">M2 § 2</a></td></tr>
         <tr><td><code>git tag 0.5.0-m2</code> 已打</td><td>本地 git tag</td></tr>
         <tr><td>用户具备至少 2 台 macOS 测试机（14 + 15）；macOS 11 Intel 走云端 / 虚拟机回归</td><td>测试环境</td></tr>
         <tr><td>Windows 实验前置：Parallels / VM / Windows 物理机其一</td><td>仅 M3-N5 需要；其他节点不依赖</td></tr>
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>退出条件（M3 完成的标志 = v1.0 上线）</h2>
+    <h2 id="exit-criteria"><span class="h2-num">2</span>退出条件（M3 完成的标志 = v1.0 上线）</h2>
 
     <table>
       <thead><tr><th>#</th><th>退出条件</th><th>验证方式</th></tr></thead>
@@ -59,21 +59,33 @@
         <tr><td>E8</td><td>全键盘可达：仅键盘完成格式化 / 切 Tab / 打开历史 / 打开设置 / 调 AI Fix；Tab 序无陷阱</td><td>手动拔鼠标实测</td></tr>
         <tr><td>E9</td><td>UI 200% 缩放（macOS 显示设置 → 更大字体）下 Settings / Modal / 历史列表布局不破</td><td>手动改系统设置</td></tr>
         <tr><td>E10</td><td>macOS 11 Big Sur (Intel) + 14 (Apple Silicon) + 15 三个版本基础流走通；双显示器 + Stage Manager 行为正确</td><td>多机回归</td></tr>
-        <tr><td>E11</td><td><b>可选</b>：Windows 11 上 .exe 能装 + 启动 + 格式化 + 呼出 ── 不做签名 / winget（留 v1.1）</td><td>VM / 物理机</td></tr>
+        <tr><td>E11</td><td><b>非阻塞 · 跳过不阻塞 v1.0</b>：Windows 11 上 .exe 能装 + 启动 + 格式化 + 呼出（不做签名 / winget，留 <a href="05_v11_distribution.html#milestones">D-N4</a>）</td><td>VM / 物理机 ── 跳过时在 Verification Log 记 <code>m3_windows_decision: skip</code> + 原因</td></tr>
         <tr><td>E12</td><td>README 完整：1 段介绍 + 截图 + 演示 GIF（呼出 + 格式化 + AI Fix 三段）+ 安装 + 许可证</td><td>本地预览 + GitHub repo 主页</td></tr>
         <tr><td>E13</td><td>GitHub Releases <code>v1.0.0</code> 发布；含 macOS universal dmg artifact</td><td>GitHub release 页可见</td></tr>
       </tbody>
     </table>
 
+    <div class="callout callout-warn">
+      <span class="callout-icon">OPT</span>
+      <div class="callout-body">
+        <p><b>E11 为非阻塞可选项</b>：v1.0 主目标是 macOS（<a href="../plan/04_nfr.html">plan/04 § 7</a> 锁定）。若 M3 时间预算不允许，跳过 E11 不影响 <code>git tag 1.0.0</code>；Windows 完整支持（含 EV 签名 + winget）留到 <a href="05_v11_distribution.html#milestones">D-N4</a>。跳过决策必须记入 Verification Log（"为什么跳过"）以便后续 review。</p>
+      </div>
+    </div>
+
     <p class="section-divider"><b>二 · 里程碑节点</b></p>
 
-    <h2><span class="h2-num">3</span>里程碑节点（6 个）</h2>
+    <h2 id="milestones"><span class="h2-num">3</span>里程碑节点（6 个）</h2>
 
-    <h3><span class="h3-num">3.1</span>M3-N1 · 主题动效打磨 + Empty State</h3>
+    <h3 id="m3-n1-theme-empty"><span class="h3-num">3.1</span>M3-N1 · 主题动效打磨 + Empty State</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M3-A1 / A2 / A3</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td>M2 全部 exit-criteria</td></tr>
         <tr><td>关键交付物</td><td>主题切换走 03 design tokens 3 数据源（settings.theme / OS prefers-color-scheme / system event）；FOUC 避免：inline script 在 body 之前判断初始 theme；<code>prefers-reduced-motion</code> 检测 → 动效时长 token 改 ≤ 1 ms；Empty State 6 处真实组件（含图标 + 文案 + CTA）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/03_design_tokens.html">03 § 4 主题切换 graph TB / § 8 动效</a> · <a href="../spec/01_mockups.html">01 § 9 Empty States</a></td></tr>
         <tr><td>关键决策</td><td>3 数据源用 store + subscribe 统一管理；FOUC 用 inline script（M0 / M1 留的 placeholder 在此实化）；动效 token 直接 swap，<b>不</b>做单独 if-else</td></tr>
@@ -81,11 +93,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.2</span>M3-N2 · 中文 UI 解锁</h3>
+    <h3 id="m3-n2-zh"><span class="h3-num">3.2</span>M3-N2 · 中文 UI 解锁</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M3-A4..A8</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m3-n1-theme-empty</code></td></tr>
         <tr><td>关键交付物</td><td><code>src/locales/zh-CN/{shell,panes,settings,history,errors,about,common}.json</code> 7 个 namespace 完整翻译；Settings → Language Select 加 zh-CN 选项；切换时 <code>i18n.changeLanguage</code> + <code>document.documentElement.lang</code> 同步；mono 字体栈末尾追加 PingFang SC（03 § 6.1）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 5 namespace § 6 locale 检测 § 7-8 字体回退 + a11y</a></td></tr>
         <tr><td>关键决策</td><td>翻译<b>不</b>外包 ── 用户本人是产品作者；翻译做完跑一遍 M3-A4 看是否有英文残留；错误 Toast 走 <code>errors.*</code> namespace（不再原 raw 透传）</td></tr>
@@ -93,11 +110,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.3</span>M3-N3 · a11y 完整验收</h3>
+    <h3 id="m3-n3-a11y"><span class="h3-num">3.3</span>M3-N3 · a11y 完整验收</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M3-A9..A13</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m3-n1-theme-empty</code></td></tr>
         <tr><td>关键交付物</td><td>所有交互元素加 <code>aria-label</code> / <code>aria-describedby</code>；StatusBar / Toast 加 <code>aria-live="polite"</code>；Modal 用 focus trap；Tab 序梳理（浮窗内交互元素的 logical 顺序 = 视觉顺序）；VoiceOver 三条关键流脚本 walk-through</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 9 a11y 强制要求 § 10 screen reader 关键流</a> · <a href="../spec/04_components.html">04 所有交互组件</a></td></tr>
         <tr><td>关键决策</td><td>a11y 是 v1<b>必须</b>过的项（plan/04 NFR § 4）；不靠"M3 末尾再补"── M0/M1/M2 的组件已经加 aria 属性，M3 是<b>完整验收</b>；VoiceOver 朗读用 macOS 内置（不另装 NVDA 等）</td></tr>
@@ -105,11 +127,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.4</span>M3-N4 · macOS 多版本回归</h3>
+    <h3 id="m3-n4-macos-versions"><span class="h3-num">3.4</span>M3-N4 · macOS 多版本回归</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M3-A14..A17</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m3-n3-a11y</code></td></tr>
         <tr><td>关键交付物</td><td>三机回归矩阵：macOS 11 Big Sur (Intel) · 14 Sonoma (Apple Silicon) · 15 Sequoia；每机跑 M0-A1..A13 / M1-A1..A22 / M2-A1..A21 核心子集；记录 / fix 平台差异；Stage Manager 在 13+ 单独验</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 1 tauri.conf minimumSystemVersion</a> · plan/04 NFR § 5 兼容性</td></tr>
         <tr><td>关键决策</td><td>三个版本若发现差异，<b>优先</b>在所有版本都能用的最大公约数解；个别版本 hack 用 <code>#[cfg(...)]</code> + 详细注释</td></tr>
@@ -117,11 +144,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.5</span>M3-N5 · Windows 实验构建（可选）</h3>
+    <h3 id="m3-n5-windows"><span class="h3-num">3.5</span>M3-N5 · Windows 实验构建（可选）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned (非阻塞 ── 跳过亦可)</code></td></tr>
+        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 M3-A18..A20（可选）</td></tr>
+        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>blocked_by</td><td><code>m3-n4-macos-versions</code></td></tr>
         <tr><td>关键交付物</td><td>Tauri Windows target 编译；tray 用 Windows shell notification area（spec/07 § 5 已记跨平台差异）；菜单栏图标用 16×16 ICO；NSPanel-like 行为在 Windows 用<b>普通无边框窗口 + 失焦隐藏</b>替代；<code>.exe</code> 本地能装 + 启动 + 跑基础流；<b>不</b>做签名 / winget / 自动更新（留 v1.1+）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/05_icons_theme.html">05 § 5 Windows ICO</a> · <a href="../spec/07_menubar.html">07 § 5 跨平台</a> · <a href="../spec/12_packaging.html">12 § 6 Windows 签名（v1.1+）</a></td></tr>
         <tr><td>关键决策</td><td>Windows 是<b>可选</b>（plan 已明示）── 若 M3-N1..N4 + N6 已用完时间预算，可把 N5 推 v1.1；若决定上 N5，<b>不</b>追求 "看上去和 macOS 一样"，按 Windows 原生交互习惯做</td></tr>
@@ -129,11 +161,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.6</span>M3-N6 · README + 演示 GIF + v1.0 发布</h3>
+    <h3 id="m3-n6-release"><span class="h3-num">3.6</span>M3-N6 · README + 演示 GIF + v1.0 发布</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
+        <tr><td>verification</td><td>对应 E12 / E13</td></tr>
+        <tr><td>commit / tag</td><td>(完成时打 <code>git tag 1.0.0</code>)</td></tr>
+        <tr><td>blocked_by</td><td><code>m3-n3-a11y</code>, <code>m3-n4-macos-versions</code></td></tr>
         <tr><td>关键交付物</td><td>README.md 重写：1 段产品介绍 + Screenshot (light / dark 各一) + 3 段演示 GIF（呼出 / 格式化 / AI Fix）+ Install 区（dmg 下载链接，v1.1+ 加 brew）+ License + Build from source；GitHub Releases <code>v1.0.0</code> 发布；release notes 从 CHANGELIST 截取</td></tr>
         <tr><td>对接 spec</td><td>无（README 是仓库根，不在 spec 内）</td></tr>
         <tr><td>关键决策</td><td>GIF 用 <code>kap.app</code> 或 <code>licecap</code> 录；每段 ≤ 5 s + ≤ 500 KB；首页只放 macOS 截图（Windows v1.0 阶段不主推）；v1.0 release notes 用<b>用户视角</b>不是 commit log</td></tr>
@@ -143,7 +180,7 @@
 
     <p class="section-divider"><b>三 · 验收 & 测试</b></p>
 
-    <h2><span class="h2-num">4</span>M3 验收用例</h2>
+    <h2 id="acceptance"><span class="h2-num">4</span>M3 验收用例</h2>
 
     <h3><span class="h3-num">4.1</span>主题 / 动效 / Empty State</h3>
 
@@ -205,7 +242,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">5</span>测试覆盖（M3 范围）</h2>
+    <h2 id="testing"><span class="h2-num">5</span>测试覆盖（M3 范围）</h2>
 
     <table>
       <thead><tr><th>测试类型</th><th>M3 覆盖</th><th>说明</th></tr></thead>
@@ -219,7 +256,7 @@
 
     <p class="section-divider"><b>四 · 风险 & spec 反馈</b></p>
 
-    <h2><span class="h2-num">6</span>已识别的实施风险</h2>
+    <h2 id="risks"><span class="h2-num">6</span>已识别的实施风险</h2>
 
     <table>
       <thead><tr><th>风险</th><th>触发场景</th><th>规避 / 应急</th></tr></thead>
@@ -232,7 +269,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
+    <h2 id="spec-map"><span class="h2-num">7</span>涉及的 spec 章节速查</h2>
 
     <table>
       <thead><tr><th>节点</th><th>对应 spec 章节</th><th>关键小节</th></tr></thead>
@@ -252,6 +289,41 @@
         <p>M3 全过 → <code>git tag 1.0.0</code> → GitHub Releases <code>v1.0.0</code> 上线 → 切 <a href="05_v11_distribution.html">05 v1.1+ Distribution</a> 为 <code>active</code>（或留 <code>planned</code> 等用户反馈聚集再起）。v1.0 是<b>项目核心目标的达成点</b>，v1.1+ 是扩展。</p>
       </div>
     </div>
+
+    <p class="section-divider"><b>五 · 实施记录</b></p>
+
+    <h2 id="verification-log"><span class="h2-num">8</span>Verification Log (M3)</h2>
+
+    <p>每完成一个 M3 节点时<b>必须</b>追加一行（<a href="../AGENT_RUNBOOK.md">AGENT_RUNBOOK</a> § 7）。下方表格首行是占位示例 ── 实施时复制再改。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>date</th>
+          <th>node</th>
+          <th>commit</th>
+          <th>machine / OS</th>
+          <th>commands run</th>
+          <th>manual passed</th>
+          <th>manual failed</th>
+          <th>logs / screenshots</th>
+          <th>notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i>YYYY-MM-DD</i></td>
+          <td><code>M3-N?</code></td>
+          <td><code>abc1234</code></td>
+          <td><i>macOS 14.5 / M1 Pro</i></td>
+          <td><code>cargo test</code>, <code>pnpm tsc --noEmit</code></td>
+          <td><i>M3-A1, A4 / E1 E3</i></td>
+          <td>—</td>
+          <td>—</td>
+          <td><i>（占位示例）</i></td>
+        </tr>
+      </tbody>
+    </table>
 
     <nav class="pagination" id="pagination"></nav>
 
