@@ -16,7 +16,7 @@
         {
           "node": "M0-N1",
           "title": "工程脚手架",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n1-scaffold",
           "task_file": "progress/tasks/M0-N1_scaffold.md",
           "spec_refs": [

@@ -77,10 +77,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned (M0 起点，等用户起手 pnpm create tauri-app)</code></td></tr>
-        <tr><td>write scope</td><td><code>src-tauri/{Cargo.toml,src/main.rs,tauri.conf.json}</code> · <code>src/{main.tsx,App.tsx}</code> · <code>package.json</code> · <code>tsconfig.json</code> · <code>vite.config.ts</code> · <code>.gitignore</code></td></tr>
-        <tr><td>verification</td><td><code>pnpm tauri dev</code> 启动空白窗口；<code>pnpm tsc --noEmit</code> 通过；仓库含上述文件</td></tr>
-        <tr><td>commit / tag</td><td><code>feat(m0-n1): bootstrap tauri 2.x scaffold</code></td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/{Cargo.toml,build.rs,src/main.rs,tauri.conf.json,capabilities/default.json}</code> · <code>src/{main.tsx,App.tsx,index.html}</code> · <code>package.json</code> · <code>tsconfig.json</code> · <code>vite.config.ts</code> · <code>.gitignore</code>（追加 <code>!src-tauri/Cargo.lock</code> 例外）</td></tr>
+        <tr><td>verification</td><td>agent 端：文件结构齐 ✓ · identifier=com.jsonita.app ✓ · verify_doc_links 0 broken ✓；<b>待用户本机跑</b>：<code>pnpm install</code> → <code>pnpm tsc --noEmit</code> → <code>cargo check --manifest-path src-tauri/Cargo.toml</code> → <code>pnpm tauri dev</code> 看空白窗口</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n1): bootstrap tauri 2.x scaffold (react+ts+vite)</code></td></tr>
         <tr><td>blocked_by</td><td>—（M0 起点）</td></tr>
         <tr><td>关键交付物</td><td><code>src-tauri/</code> + <code>src/</code> 目录骨架；根 <code>package.json</code> / <code>tsconfig.json</code> / <code>vite.config.ts</code> / <code>Cargo.toml</code>；<code>.gitignore</code> 加 Rust / Node / IDE 段</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/00_architecture.html">00 § 6-7</a>（Rust / TS 模块结构图）</td></tr>
