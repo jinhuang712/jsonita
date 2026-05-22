@@ -33,7 +33,8 @@
 - UI 必须用 HTML/CSS mockup（`.mockup-window` 等组件）
 
 ### 2.3 git / 终端操作
-- git 走 `yummy` / `ym` skill（继承 global）
+- 本项目位于 `~/dev/projects/jsonita/`，**不在 `~/dev/repository/` 下**，按 global 约法三章 § 3：**直接用 `git`**（含 `git -C <abs-path>` 模式），<b>不走</b> yummy
+- yummy 仅限 `~/dev/repository/` 下的仓库
 - 不要替用户跑 `tauri build` / `cargo build` / `pnpm install` 等实际安装/构建命令
 
 ## 三、文档结构规则
