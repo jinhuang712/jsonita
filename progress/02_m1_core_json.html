@@ -123,10 +123,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M1 实施时填)</td></tr>
-        <tr><td>verification</td><td>双栏 / 单窗切换 / TabBar / StatusBar 四态</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src/store/ui.ts</code>（activePane/showAiFix/2 Modal flags + 4 setters）· <code>src/hooks/useDebouncedTransform.ts</code>（onChange 300ms debounce → 调 json.* IPC → 写 store output/error/status）· <code>src/shell/{TabBar,StatusBar,FloatingWindow}.tsx</code>（5 tab + AI Fix 条件 / 4 态文案 + history/settings 按钮 / 双栏 CSS Grid + 2 Editor 实例）· <code>src/App.tsx</code> 接 FloatingWindow；移除 <code>src/components/PanelShell.tsx</code></td></tr>
+        <tr><td>verification</td><td>agent 端：3 shell 文件 + 1 hook + ui store 就位 ✓ · TabBar 5+AI · StatusBar 4 态 · 双栏布局 ✓；<b>待用户本机跑</b>：<code>pnpm tauri dev</code> 看左右双栏 + TabBar 顶部 + StatusBar 底部；左侧粘 <code>{"a":1}</code> → 300ms 后右侧格式化输出 + 状态栏 "Valid JSON"；粘非法 JSON → AI Fix tab 出现 + 状态栏红"Line X, Col Y: ..."；切 Minify tab → 输出压缩为单行</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m1-n4): tab bar + status bar + dual-pane layout + debounced ipc</code></td></tr>
         <tr><td>blocked_by</td><td><code>m1-n3-codemirror</code></td></tr>
         <tr><td>关键交付物</td><td>双栏布局（input | output 可拖动分隔）；TabBar 切（Formatter / Tree / String / AI 占位）；StatusBar 四态（valid / invalid / parsing / ai-busy 占位）；单窗模式开关（F7.1 settings 字段读，但 UI 切换走<b>整体</b> in-place 替换）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/01_mockups.html">01 § 1-5 主浮窗 6 态 + 单窗模式</a> · <a href="../spec/04_components.html">04 TabBar / StatusBar 组件映射</a></td></tr>

@@ -8,6 +8,43 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1-N4 · 布局 / Tab / StatusBar（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src/store/ui.ts` ── UI zustand slice：activePane 6 值 + showAiFix bool + historyModalOpen + settingsModalOpen + 4 setters
+- `src/hooks/useDebouncedTransform.ts` ── core data flow：editor content 变化 → setTimeout 300 ms → 调 json.format/minify/stringify/parse 按 activePane 路由 → 成功写 setOutput+setStatus('valid')+setShowAiFix(false)；Parse 错 → setStatus('error')+setError(line/col/msg)+setShowAiFix(true)；空 → setStatus('empty')；&gt; 5MB → setStatus('large') 不调 engine（spec/08 § 3.1）
+- `src/shell/TabBar.tsx` ── 5 tab (format/minify/tree/jsonToStr/strToJson) + AI Fix 条件渲染（橙色 accent 色调，showAiFix=true 时出现）；active 用 primary-soft 背景；走 t() i18n（panes.tab.*）
+- `src/shell/StatusBar.tsx` ── 4 态文案左侧（valid 绿圆点+lines+bytes / error 红色 Line X, Col Y / large 橙色 / empty 灰）+ 右侧 History / ⚙ 按钮（onClick 触发 setHistoryModalOpen / setSettingsModalOpen）
+- `src/shell/FloatingWindow.tsx` ── TabBar + 双栏 CSS Grid (1fr 1fr) + StatusBar；左 Editor 接 content/setContent；右 Editor readOnly=true 显示 outputText；自动调 useDebouncedTransform()
+- `src/App.tsx` ── 替换 PanelShell import 为 FloatingWindow
+- 移除 `src/components/PanelShell.tsx` ── M0-N3 placeholder 完成使命，FloatingWindow 接管
+
+关键决策：
+
+- **双栏 CSS Grid `1fr 1fr`** 替代 SplitPane lib：M1-N4 静态 50/50，省 react-resizable-panels 依赖；M1-N9 智能宽度时若用户拖宽再加 ResizableHandle
+- **debounce 在 hook 内而非 store**：editor onChange 直接调 setContent；hook 监听 content 变 + 自动 schedule 300ms timer + 调 IPC；store 保持纯净不持 timer state
+- **2 个 Editor 实例**：左 input 可编辑 + 右 output readOnly；spec/00 § 2 内存预算 80 MB 紧但可接受；M3-N1 polish 时若超预算可改右侧为 `<pre>` 静态
+- **AI Fix tab 视觉**：showAiFix=true 时出现在 tab 条最右（spacer 推过去）；颜色用 accent (橙)；active 时填充 accent + 白字
+- **删除 PanelShell**：作为 M0-N3 placeholder 使命已完；FloatingWindow 是正式实现；diff 体现 M0→M1 演化
+- **str-to-json tab 调 json.parse**：M1-N2 新增的命令（spec/02 § 6.1 待追认）派上用场
+
+待用户本机验证：
+
+- `pnpm tauri dev` 看：
+  - 顶部 TabBar 5 个 tab（format 默认 active）
+  - 中间双栏 input | output
+  - 底部 StatusBar 显 "— Paste JSON to start"
+  - 左栏粘 `{"a":1,"b":[1,2]}` → 300 ms 后右栏出现格式化输出 + StatusBar 切 "● Valid JSON · 5 lines · ..."
+  - 切 Minify tab → 右栏变 single-line 压缩输出
+  - 粘 `{a:1}` (非法) → StatusBar 红 + AI Fix tab 出现在右上
+  - 点 History / ⚙ → 控制台看不到 Modal（M2-N1 才有 Modal 实现）
+
+进度状态：
+
+- `progress/manifest.json` M1-N4 `status: completed`
+- `progress/02_m1_core_json.html#m1-n4-layout` status: `done · pending-user-verification`
+
 #### M1-N3 · CodeMirror 6 集成（done · pending-user-verification）
 
 新增 / 修改文件：

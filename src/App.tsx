@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { PanelShell } from './components/PanelShell';
 import { AccessibilityModal } from './permissions/AccessibilityModal';
+import { FloatingWindow } from './shell/FloatingWindow';
 
 export function App() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,7 +45,7 @@ export function App() {
 
   return (
     <>
-      <PanelShell />
+      <FloatingWindow />
       {modalOpen && <AccessibilityModal onClose={() => setModalOpen(false)} />}
     </>
   );

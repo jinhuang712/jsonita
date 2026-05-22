@@ -1,0 +1,60 @@
+import { Editor } from '../editor/Editor';
+import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
+import { useEditorStore } from '../store/editor';
+import { StatusBar } from './StatusBar';
+import { TabBar } from './TabBar';
+
+/**
+ * 浮窗主壳 — TabBar 上 + 左右双栏（input | output）+ StatusBar 下。
+ *
+ * Spec ref: spec/01_mockups.html § 1 主浮窗 6 态 · spec/08 § 5 编辑器 ↔ 树同步
+ * M1-N4：双栏 CSS Grid 静态 50/50；M1-N9 起加智能宽度 ide_w 计算 + 可拖分隔条。
+ */
+export function FloatingWindow() {
+  const content = useEditorStore((s) => s.content);
+  const outputText = useEditorStore((s) => s.outputText);
+  const setContent = useEditorStore((s) => s.setContent);
+
+  // editor onChange → debounce 300ms → IPC → 更新 store output/error
+  useDebouncedTransform();
+
+  return (
+    <div
+      style={{
+        height: '100%',
+        background: 'var(--bg-card)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: 'var(--radius-xl)',
+        boxShadow: 'var(--shadow-lg)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <TabBar />
+      <div
+        style={{
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          minHeight: 0,
+        }}
+      >
+        <div style={{ borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
+          <Editor theme="light" value={content} onChange={setContent} softWrap={true} />
+        </div>
+        <div style={{ overflow: 'hidden' }}>
+          <Editor
+            theme="light"
+            value={outputText}
+            readOnly={true}
+            softWrap={true}
+            placeholderText="→ output"
+          />
+        </div>
+      </div>
+      <StatusBar />
+    </div>
+  );
+}

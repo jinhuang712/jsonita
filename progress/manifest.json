@@ -324,7 +324,7 @@
         {
           "node": "M1-N4",
           "title": "布局 / Tab / StatusBar",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n4-layout",
           "task_file": null,
           "spec_refs": [
