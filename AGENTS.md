@@ -1,7 +1,7 @@
-# Jsonita · 项目级硬约束（Claude 必读）
+# Jsonita · 项目级硬约束（Codex 必读）
 
-> 此文件是用户在协作中**明示给过 Claude 的硬规则**汇总。新会话每次开头读一遍。
-> 继承 `~/.claude/CLAUDE.md` 的全局约法三章（不全 grep / 不全 cat / git 走 yummy）。
+> 此文件是用户在协作中**明示给过 Codex 的硬规则**汇总。新会话每次开头读一遍。
+> 继承 `~/.Codex/AGENTS.md` 的全局约法三章（不全 grep / 不全 cat / git 走 yummy）。
 
 ## 一、协作规范
 
@@ -156,7 +156,7 @@
 
 ## 六、Progress 迭代规则
 
-详见 memory `progress-iteration-rules`（10 条）。CLAUDE 要点：
+详见 memory `progress-iteration-rules`（10 条）。Codex 要点：
 
 ### 6.1 progress 的边界
 - 仅规划"该阶段完成什么 + 验收 + 测试"，<b>不</b>写实现 / commits / 代码

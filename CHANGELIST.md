@@ -6,6 +6,39 @@
 
 ## [Unreleased]
 
+### Agent 控制面改造（实施期 SOP）
+
+> **未 commit** ── 本段工作尚未由用户 review；prompt 明示"不要提交 git commit 除非用户明确要求"。
+
+#### 新增文件
+- `AGENT_RUNBOOK.md` ── 后续 coding agent 实施期 SOP（12 段）：开工前 6 动作 / active phase 判定 / task card 选取 / Do Not Touch 红线 / spec ↔ progress 双向同步 / 完成节点 5 步同步 / Verification Log 规则 / 链接校验 / secrets 红线 / 不实现 future phase / 常见错误
+- `progress/manifest.json` ── 33 节点机器可读总表（5 phases + 全字段：status / progress_file / task_file / spec_refs / write_scope / test_commands / manual_checks / non_goals / blocked_by / tag_on_complete / secrets_required）；21 KB
+- `progress/tasks/M0-N1_scaffold.md` 至 `M0-N7_dmg_build.md` ── 7 张 M0 任务卡（统一 9 段：Goal / Context / Write Scope / Do Not Touch / Deliverables / Verification / Acceptance Mapping / Stop And Ask / Notes）
+- `docs/traceability.md` ── Feature ↔ Spec ↔ Progress ↔ Task ↔ Test ↔ Acceptance 端到端矩阵（5 Phase × ~30 features）
+- `scripts/verify_doc_links.mjs` ── Node.js 原生 fs + regex 链接校验脚本；扫 html + md；输出失效列表 + summary；外部 URL 跳过；script/style 块排除（防 inline JS 误判）
+
+#### progress/ 5 篇文档改造
+- **稳定 id**：5 篇共加 ~69 个稳定 h2/h3 id（entry-criteria / exit-criteria / milestones / acceptance / testing / risks / spec-map / verification-log + 33 节点 id 如 `m0-n1-scaffold` / `d-n3-updater`）
+- **节点状态字段**：33 节点统一加 5 字段（status / write scope / verification / commit / tag / blocked_by）；M0 实质内容，M1/M2/M3/D 占位"(实施时填)"
+- **Verification Log 模板**：5 篇末尾加 § 五·实施记录 + 9 列空表（date / node / commit / OS / commands / passed / failed / logs / notes）
+- **4 处 `#h-2` 失效锚点** → `#exit-criteria` 稳定 id
+
+#### § 八 不一致修正
+- **README.md** 当前进度反映 plan ✓ / spec ✓ / progress ✓ / M0 active；加 agent / 协作者引导段
+- **M2 快捷键策略**（03_m2_ai_settings.html）：冲突自相矛盾 → 锁定"默认阻塞 patch 提交 + override 走二次确认 Modal"；M2-A17 验收补 A17b 测 override 路径
+- **M3 Windows**（04_m3_polish_cross.html）：E11 从"可选退出条件"改成"非阻塞 · 跳过不阻塞 v1.0"；加 callout-warn 强调跳过决策记入 Verification Log
+- **v1.1+ updater/brew 策略**（05_v11_distribution.html）：N3 vs N1 冲突 → 锁"DMG 用户走 in-app updater；brew 用户检测后跳过，最多 Toast 'brew upgrade jsonita'"
+- **v11-N* → D-N*** 命名（避免读成 v11）：05 章节 10+ 处 + M3 E11 cross-link + index/nav 同步
+
+#### 顺带修复
+- `spec/01_mockups.html` h2 加 7 个数字 id（`id="2"..."10"`）── 修 spec/04 + spec/07 中 10 处 `01_mockups.html#N` pre-existing 死链
+- progress 末尾 section-divider 编号从误跳的"六"改成"五"
+- 链接校验脚本误识别 `<script>` 块内 inline JS 字符串 → 加 script/style 块预剔除
+
+#### 验证
+- `node scripts/verify_doc_links.mjs` ── **455 local links checked, 0 broken**
+- `git diff --check` ── 无 whitespace 警告
+
 ### Style 修复
 
 #### H2 / section-divider 字号平衡（用户反馈"H1 H2 大小明显失衡"）

@@ -1,0 +1,699 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-23",
+  "active_phase": "M0",
+  "notes": "本文件是节点状态总表 ── agent 读它判断当前可做的节点；改 progress html 状态字段时记得同步本文件。",
+  "phases": [
+    {
+      "phase": "M0",
+      "title": "Skeleton",
+      "status": "active",
+      "version_target": "0.3.0-m0",
+      "progress_file": "progress/01_m0_skeleton.html",
+      "exit_criteria_count": 7,
+      "acceptance_count": 13,
+      "nodes": [
+        {
+          "node": "M0-N1",
+          "title": "工程脚手架",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n1-scaffold",
+          "task_file": "progress/tasks/M0-N1_scaffold.md",
+          "spec_refs": [
+            "spec/00_architecture.html",
+            "spec/12_packaging.html",
+            "plan/03_tech_stack.html"
+          ],
+          "write_scope": [
+            "src-tauri/Cargo.toml",
+            "src-tauri/src/main.rs",
+            "src-tauri/tauri.conf.json",
+            "src/main.tsx",
+            "src/App.tsx",
+            "package.json",
+            "tsconfig.json",
+            "vite.config.ts",
+            ".gitignore"
+          ],
+          "test_commands": [
+            "pnpm tsc --noEmit",
+            "cargo check --manifest-path src-tauri/Cargo.toml"
+          ],
+          "manual_checks": [
+            "pnpm tauri dev 启动空白窗口",
+            "tauri.conf.json identifier=com.jsonita.app"
+          ],
+          "non_goals": [
+            "tray (M0-N2)",
+            "window cocoa (M0-N3)",
+            "shortcut (M0-N4)",
+            "logging (M0-N5)",
+            "i18n (M0-N6)",
+            "signing (M2-N6)"
+          ],
+          "blocked_by": []
+        },
+        {
+          "node": "M0-N2",
+          "title": "菜单栏 tray + 图标",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n2-tray",
+          "task_file": "progress/tasks/M0-N2_tray_icon.md",
+          "spec_refs": [
+            "spec/05_icons_theme.html",
+            "spec/07_menubar.html",
+            "spec/01_mockups.html"
+          ],
+          "write_scope": [
+            "src-tauri/src/menubar/mod.rs",
+            "src-tauri/icons/menubar/tray-iconTemplate*.png",
+            "src-tauri/src/main.rs",
+            "src-tauri/tauri.conf.json",
+            "src-tauri/Cargo.toml"
+          ],
+          "test_commands": [],
+          "manual_checks": [
+            "菜单栏出现 template icon",
+            "light/dark 自动反色",
+            "Dock 无图标",
+            "左键 toggle 浮窗",
+            "右键弹原生菜单"
+          ],
+          "non_goals": [
+            "浮窗本身 (M0-N3)",
+            "shortcut (M0-N4)",
+            "Settings Modal 内容 (M2-N1)"
+          ],
+          "blocked_by": [
+            "M0-N1"
+          ]
+        },
+        {
+          "node": "M0-N3",
+          "title": "浮窗 POC (NSPanel-like)",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n3-nspanel",
+          "task_file": "progress/tasks/M0-N3_nspanel_poc.md",
+          "spec_refs": [
+            "spec/06_window.html",
+            "spec/01_mockups.html"
+          ],
+          "write_scope": [
+            "src-tauri/Cargo.toml",
+            "src-tauri/src/window/mod.rs",
+            "src-tauri/src/window/nspanel.rs",
+            "src-tauri/src/window/locate.rs",
+            "src-tauri/src/main.rs",
+            "src/components/PanelShell.tsx"
+          ],
+          "test_commands": [
+            "cargo build --manifest-path src-tauri/Cargo.toml"
+          ],
+          "manual_checks": [
+            "M0-A4",
+            "M0-A6",
+            "M0-A7",
+            "M0-A8"
+          ],
+          "non_goals": [
+            "JSON 引擎 (M1-N2)",
+            "CodeMirror (M1-N3)",
+            "智能宽度 (M1-N9)",
+            "Windows 窗口 (M3-N5)"
+          ],
+          "blocked_by": [
+            "M0-N1"
+          ]
+        },
+        {
+          "node": "M0-N4",
+          "title": "全局快捷键 + 权限引导",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n4-shortcut",
+          "task_file": "progress/tasks/M0-N4_global_shortcut.md",
+          "spec_refs": [
+            "spec/07_menubar.html",
+            "spec/01_mockups.html"
+          ],
+          "write_scope": [
+            "src-tauri/Cargo.toml",
+            "src-tauri/src/shortcuts/mod.rs",
+            "src-tauri/src/main.rs",
+            "src/permissions/AccessibilityModal.tsx",
+            "src/App.tsx"
+          ],
+          "test_commands": [
+            "cargo build --manifest-path src-tauri/Cargo.toml"
+          ],
+          "manual_checks": [
+            "M0-A4",
+            "M0-A9",
+            "M0-A10"
+          ],
+          "non_goals": [
+            "自定义快捷键 UI (M2-N5)",
+            "冲突检测 (M2-N5)",
+            "Windows 快捷键 (M3-N5)"
+          ],
+          "blocked_by": [
+            "M0-N2",
+            "M0-N3"
+          ]
+        },
+        {
+          "node": "M0-N5",
+          "title": "日志框架 (tracing)",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n5-logging",
+          "task_file": "progress/tasks/M0-N5_logging.md",
+          "spec_refs": [
+            "spec/15_logging.html"
+          ],
+          "write_scope": [
+            "src-tauri/Cargo.toml",
+            "src-tauri/src/logging/mod.rs",
+            "src-tauri/src/logging/redact.rs",
+            "src-tauri/src/main.rs",
+            "src/services/logger.ts"
+          ],
+          "test_commands": [
+            "cargo build --manifest-path src-tauri/Cargo.toml"
+          ],
+          "manual_checks": [
+            "M0-A11 ls -l 权限 0600",
+            "M0-A12 JSON Lines 首行 INFO",
+            "RUST_LOG=debug 临时开"
+          ],
+          "non_goals": [
+            "前端→Rust IPC log_write 合流 (M1)",
+            "日志导出 zip (D-N5)",
+            "敏感字段实际触发 (M1/M2)"
+          ],
+          "blocked_by": [
+            "M0-N1"
+          ]
+        },
+        {
+          "node": "M0-N6",
+          "title": "i18n 框架 (react-i18next, en-US only)",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n6-i18n",
+          "task_file": "progress/tasks/M0-N6_i18n.md",
+          "spec_refs": [
+            "spec/14_i18n_a11y.html"
+          ],
+          "write_scope": [
+            "package.json",
+            "src/i18n/index.ts",
+            "src/i18n/types.ts",
+            "src/locales/en-US/{shell,panes,settings,history,errors,about,common}.json",
+            "src/main.tsx"
+          ],
+          "test_commands": [
+            "pnpm tsc --noEmit",
+            "grep -rE '\"[A-Z][a-z]+ [A-Z][a-z]+\"' src/"
+          ],
+          "manual_checks": [
+            "M0-A13 grep 0 命中",
+            "document.documentElement.lang === en-US"
+          ],
+          "non_goals": [
+            "zh-CN 资源 (M3-N2)",
+            "Settings Language Select (M2-N1 + M3-N2)",
+            "CJK 字体回退实际 (M3-N2)"
+          ],
+          "blocked_by": [
+            "M0-N1"
+          ]
+        },
+        {
+          "node": "M0-N7",
+          "title": "dmg 本地构建 + CI 雏形",
+          "status": "planned",
+          "progress_file": "progress/01_m0_skeleton.html#m0-n7-dmg",
+          "task_file": "progress/tasks/M0-N7_dmg_build.md",
+          "spec_refs": [
+            "spec/12_packaging.html",
+            "plan/04_nfr.html"
+          ],
+          "write_scope": [
+            "src-tauri/tauri.conf.json",
+            "src-tauri/entitlements.plist",
+            "src-tauri/Cargo.toml",
+            ".github/workflows/ci.yml"
+          ],
+          "test_commands": [
+            "cargo test",
+            "cargo build --release --target universal-apple-darwin",
+            "pnpm tsc --noEmit",
+            "pnpm lint"
+          ],
+          "manual_checks": [
+            "dmg 体积 < 15 MB",
+            "M0-A1 / A2 装+启动",
+            "首次启动右键打开放行 Gatekeeper",
+            "回归 M0-A1..A13 全 13 用例"
+          ],
+          "non_goals": [
+            "macOS 签名 (M2-N6)",
+            "公证 (M2-N6)",
+            "自动更新 (D-N3)",
+            "Windows (M3-N5)"
+          ],
+          "blocked_by": [
+            "M0-N2",
+            "M0-N3",
+            "M0-N4",
+            "M0-N5",
+            "M0-N6"
+          ],
+          "tag_on_complete": "0.3.0-m0"
+        }
+      ]
+    },
+    {
+      "phase": "M1",
+      "title": "Core JSON",
+      "status": "planned",
+      "version_target": "0.4.0-m1",
+      "progress_file": "progress/02_m1_core_json.html",
+      "exit_criteria_count": 12,
+      "acceptance_count": 22,
+      "nodes": [
+        {
+          "node": "M1-N1",
+          "title": "状态管理 + IPC 骨架",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n1-store-ipc",
+          "task_file": null,
+          "spec_refs": [
+            "spec/02_ipc.html",
+            "spec/13_schemas.html"
+          ],
+          "blocked_by": [
+            "M0 exit-criteria"
+          ]
+        },
+        {
+          "node": "M1-N2",
+          "title": "JSON 引擎核心",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n2-engine",
+          "task_file": null,
+          "spec_refs": [
+            "spec/09_json_engine.html"
+          ],
+          "blocked_by": [
+            "M1-N1"
+          ]
+        },
+        {
+          "node": "M1-N3",
+          "title": "CodeMirror 6 集成",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n3-codemirror",
+          "task_file": null,
+          "spec_refs": [
+            "spec/08_editor.html",
+            "spec/03_design_tokens.html"
+          ],
+          "blocked_by": [
+            "M1-N1"
+          ]
+        },
+        {
+          "node": "M1-N4",
+          "title": "布局 / Tab / StatusBar",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n4-layout",
+          "task_file": null,
+          "spec_refs": [
+            "spec/01_mockups.html",
+            "spec/04_components.html"
+          ],
+          "blocked_by": [
+            "M1-N3"
+          ]
+        },
+        {
+          "node": "M1-N5",
+          "title": "TreeView + Path 复制",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n5-tree",
+          "task_file": null,
+          "spec_refs": [
+            "spec/08_editor.html",
+            "spec/01_mockups.html"
+          ],
+          "blocked_by": [
+            "M1-N4"
+          ]
+        },
+        {
+          "node": "M1-N6",
+          "title": "SQLite + 历史记录",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n6-sqlite-history",
+          "task_file": null,
+          "spec_refs": [
+            "spec/10_storage.html",
+            "spec/13_schemas.html"
+          ],
+          "blocked_by": [
+            "M1-N1"
+          ]
+        },
+        {
+          "node": "M1-N7",
+          "title": "会话保留 + ⌘⇧L + ⌘K",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n7-session",
+          "task_file": null,
+          "spec_refs": [
+            "spec/10_storage.html"
+          ],
+          "blocked_by": [
+            "M1-N6"
+          ]
+        },
+        {
+          "node": "M1-N8",
+          "title": "嵌套 unwrap (200ms 超时)",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n8-unwrap",
+          "task_file": null,
+          "spec_refs": [
+            "spec/09_json_engine.html"
+          ],
+          "blocked_by": [
+            "M1-N2"
+          ]
+        },
+        {
+          "node": "M1-N9",
+          "title": "智能宽度 + soft-wrap",
+          "status": "planned",
+          "progress_file": "progress/02_m1_core_json.html#m1-n9-smart-width",
+          "task_file": null,
+          "spec_refs": [
+            "spec/06_window.html",
+            "spec/02_ipc.html"
+          ],
+          "blocked_by": [
+            "M1-N4"
+          ]
+        }
+      ],
+      "tag_on_complete": "0.4.0-m1"
+    },
+    {
+      "phase": "M2",
+      "title": "AI Fix + Settings",
+      "status": "planned",
+      "version_target": "0.5.0-m2",
+      "progress_file": "progress/03_m2_ai_settings.html",
+      "exit_criteria_count": 12,
+      "acceptance_count": 21,
+      "nodes": [
+        {
+          "node": "M2-N1",
+          "title": "设置面板 UI + 6 分组",
+          "status": "planned",
+          "progress_file": "progress/03_m2_ai_settings.html#m2-n1-settings-ui",
+          "task_file": null,
+          "spec_refs": [
+            "spec/01_mockups.html",
+            "spec/04_components.html",
+            "spec/10_storage.html"
+          ],
+          "blocked_by": [
+            "M1 exit-criteria"
+          ]
+        },
+        {
+          "node": "M2-N2",
+          "title": "API key (Keychain)",
+          "status": "planned",
+          "progress_file": "progress/03_m2_ai_settings.html#m2-n2-keychain",
+          "task_file": null,
+          "spec_refs": [
+            "spec/10_storage.html",
+            "spec/04_components.html",
+            "spec/11_ai_client.html"
+          ],
+          "blocked_by": [
+            "M2-N1"
+          ]
+        },
+        {
+          "node": "M2-N3",
+          "title": "DeepSeek 客户端 + extract_json",
+          "status": "planned",
+          "progress_file": "progress/03_m2_ai_settings.html#m2-n3-deepseek",
+          "task_file": null,
+          "spec_refs": [
+            "spec/11_ai_client.html"
+          ],
+          "blocked_by": [
+            "M2-N2"
+          ]
+        },
+        {
+          "node": "M2-N4",
+          "title": "AI Fix 流程 (Tab + DiffView)",
+          "status": "planned",
+          "progress_file": "progress/03_m2_ai_settings.html#m2-n4-ai-fix",
+          "task_file": null,
+          "spec_refs": [
+            "spec/11_ai_client.html",
+            "spec/01_mockups.html",
+            "spec/04_components.html"
+          ],
+          "blocked_by": [
+            "M2-N3"
+          ]
+        },
+        {
+          "node": "M2-N5",
+          "title": "自定义快捷键 + 冲突阻塞 + override 二次确认",
+          "status": "planned",
+          "progress_file": "progress/03_m2_ai_settings.html#m2-n5-shortcuts",
+          "task_file": null,
+          "spec_refs": [
+            "spec/07_menubar.html",
+            "spec/04_components.html",
+            "spec/01_mockups.html"
+          ],
+          "blocked_by": [
+            "M2-N1"
+          ]
+        },
+        {
+          "node": "M2-N6",
+          "title": "macOS sign + notarize + CI",
+          "status": "planned",
+          "progress_file": "progress/03_m2_ai_settings.html#m2-n6-signing",
+          "task_file": null,
+          "spec_refs": [
+            "spec/12_packaging.html"
+          ],
+          "blocked_by": [
+            "M2-N4",
+            "M2-N5"
+          ],
+          "secrets_required": [
+            "Apple Developer ID 证书 (p12)",
+            "Apple ID password (notarytool)"
+          ],
+          "do_not_touch_without_authorization": true
+        }
+      ],
+      "tag_on_complete": "0.5.0-m2"
+    },
+    {
+      "phase": "M3",
+      "title": "Polish + Cross-platform",
+      "status": "planned",
+      "version_target": "1.0.0",
+      "progress_file": "progress/04_m3_polish_cross.html",
+      "exit_criteria_count": 13,
+      "acceptance_count": 20,
+      "nodes": [
+        {
+          "node": "M3-N1",
+          "title": "主题动效 + Empty State",
+          "status": "planned",
+          "progress_file": "progress/04_m3_polish_cross.html#m3-n1-theme-empty",
+          "task_file": null,
+          "spec_refs": [
+            "spec/03_design_tokens.html",
+            "spec/01_mockups.html"
+          ],
+          "blocked_by": [
+            "M2 exit-criteria"
+          ]
+        },
+        {
+          "node": "M3-N2",
+          "title": "中文 UI 解锁 (zh-CN)",
+          "status": "planned",
+          "progress_file": "progress/04_m3_polish_cross.html#m3-n2-zh",
+          "task_file": null,
+          "spec_refs": [
+            "spec/14_i18n_a11y.html"
+          ],
+          "blocked_by": [
+            "M3-N1"
+          ]
+        },
+        {
+          "node": "M3-N3",
+          "title": "a11y 完整验收",
+          "status": "planned",
+          "progress_file": "progress/04_m3_polish_cross.html#m3-n3-a11y",
+          "task_file": null,
+          "spec_refs": [
+            "spec/14_i18n_a11y.html",
+            "spec/04_components.html"
+          ],
+          "blocked_by": [
+            "M3-N1"
+          ]
+        },
+        {
+          "node": "M3-N4",
+          "title": "macOS 多版本回归",
+          "status": "planned",
+          "progress_file": "progress/04_m3_polish_cross.html#m3-n4-macos-versions",
+          "task_file": null,
+          "spec_refs": [
+            "spec/12_packaging.html",
+            "plan/04_nfr.html"
+          ],
+          "blocked_by": [
+            "M3-N3"
+          ]
+        },
+        {
+          "node": "M3-N5",
+          "title": "Windows 实验构建",
+          "status": "planned",
+          "progress_file": "progress/04_m3_polish_cross.html#m3-n5-windows",
+          "task_file": null,
+          "spec_refs": [
+            "spec/05_icons_theme.html",
+            "spec/07_menubar.html",
+            "spec/12_packaging.html"
+          ],
+          "blocked_by": [
+            "M3-N4"
+          ],
+          "non_blocking": true,
+          "skip_decision_required": "在 Verification Log 记 m3_windows_decision: skip + 原因"
+        },
+        {
+          "node": "M3-N6",
+          "title": "README + 演示 GIF + v1.0 发布",
+          "status": "planned",
+          "progress_file": "progress/04_m3_polish_cross.html#m3-n6-release",
+          "task_file": null,
+          "spec_refs": [],
+          "blocked_by": [
+            "M3-N3",
+            "M3-N4"
+          ]
+        }
+      ],
+      "tag_on_complete": "1.0.0"
+    },
+    {
+      "phase": "D",
+      "title": "v1.1+ Distribution",
+      "status": "planned",
+      "version_target": "v1.1 / v1.2 / v1.3 (rolling)",
+      "progress_file": "progress/05_v11_distribution.html",
+      "exit_criteria_note": "5 节点弹性独立 ── 全 ship 或决定永不做",
+      "nodes": [
+        {
+          "node": "D-N1",
+          "title": "homebrew tap",
+          "status": "planned",
+          "progress_file": "progress/05_v11_distribution.html#d-n1-brew",
+          "task_file": null,
+          "spec_refs": [
+            "spec/12_packaging.html"
+          ],
+          "blocked_by": [
+            "M3 exit-criteria"
+          ],
+          "recommended_version": "v1.1"
+        },
+        {
+          "node": "D-N2",
+          "title": "npm 启动器",
+          "status": "planned",
+          "progress_file": "progress/05_v11_distribution.html#d-n2-npm",
+          "task_file": null,
+          "spec_refs": [
+            "spec/12_packaging.html"
+          ],
+          "blocked_by": [
+            "M3 exit-criteria"
+          ],
+          "recommended_version": "v1.2"
+        },
+        {
+          "node": "D-N3",
+          "title": "自动更新 (tauri-plugin-updater)",
+          "status": "planned",
+          "progress_file": "progress/05_v11_distribution.html#d-n3-updater",
+          "task_file": null,
+          "spec_refs": [
+            "spec/12_packaging.html"
+          ],
+          "blocked_by": [
+            "M3 exit-criteria"
+          ],
+          "recommended_version": "v1.1",
+          "secrets_required": [
+            "update signing key (与 codesign 证书分离)"
+          ],
+          "do_not_touch_without_authorization": true
+        },
+        {
+          "node": "D-N4",
+          "title": "Windows EV 签名 + winget",
+          "status": "planned",
+          "progress_file": "progress/05_v11_distribution.html#d-n4-windows-signing",
+          "task_file": null,
+          "spec_refs": [
+            "spec/12_packaging.html",
+            "spec/05_icons_theme.html"
+          ],
+          "blocked_by": [
+            "M3 exit-criteria"
+          ],
+          "recommended_version": "v1.2/v1.3",
+          "secrets_required": [
+            "EV cert (hardware USB token)"
+          ],
+          "do_not_touch_without_authorization": true
+        },
+        {
+          "node": "D-N5",
+          "title": "日志导出 zip",
+          "status": "planned",
+          "progress_file": "progress/05_v11_distribution.html#d-n5-log-export",
+          "task_file": null,
+          "spec_refs": [
+            "spec/15_logging.html"
+          ],
+          "blocked_by": [
+            "M3 exit-criteria"
+          ],
+          "recommended_version": "v1.1"
+        }
+      ]
+    }
+  ]
+}

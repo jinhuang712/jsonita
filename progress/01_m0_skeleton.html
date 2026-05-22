@@ -32,7 +32,7 @@
 
     <p class="section-divider"><b>一 · 进入与退出</b></p>
 
-    <h2><span class="h2-num">1</span>进入此 Phase 的前置</h2>
+    <h2 id="entry-criteria"><span class="h2-num">1</span>进入此 Phase 的前置</h2>
 
     <table>
       <thead><tr><th>前置项</th><th>来源</th><th>状态</th></tr></thead>
@@ -44,7 +44,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">2</span>退出条件（M0 完成的标志）</h2>
+    <h2 id="exit-criteria"><span class="h2-num">2</span>退出条件（M0 完成的标志）</h2>
 
     <div class="callout callout-ok">
       <span class="callout-icon">DONE</span>
@@ -68,15 +68,20 @@
 
     <p class="section-divider"><b>二 · 里程碑节点</b></p>
 
-    <h2><span class="h2-num">3</span>里程碑节点（7 个，建议按顺序）</h2>
+    <h2 id="milestones"><span class="h2-num">3</span>里程碑节点（7 个，建议按顺序）</h2>
 
     <p>每个节点是<b>可独立 git commit 的一组交付物</b>（CLAUDE.md § 1.5）。粒度比 <code>TaskCreate</code> 粗 ── 实施时一个节点通常拆出 3-5 个 task。</p>
 
-    <h3><span class="h3-num">3.1</span>M0-N1 · 工程脚手架</h3>
+    <h3 id="m0-n1-scaffold"><span class="h3-num">3.1</span>M0-N1 · 工程脚手架</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned (M0 起点，等用户起手 pnpm create tauri-app)</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/{Cargo.toml,src/main.rs,tauri.conf.json}</code> · <code>src/{main.tsx,App.tsx}</code> · <code>package.json</code> · <code>tsconfig.json</code> · <code>vite.config.ts</code> · <code>.gitignore</code></td></tr>
+        <tr><td>verification</td><td><code>pnpm tauri dev</code> 启动空白窗口；<code>pnpm tsc --noEmit</code> 通过；仓库含上述文件</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n1): bootstrap tauri 2.x scaffold</code></td></tr>
+        <tr><td>blocked_by</td><td>—（M0 起点）</td></tr>
         <tr><td>关键交付物</td><td><code>src-tauri/</code> + <code>src/</code> 目录骨架；根 <code>package.json</code> / <code>tsconfig.json</code> / <code>vite.config.ts</code> / <code>Cargo.toml</code>；<code>.gitignore</code> 加 Rust / Node / IDE 段</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/00_architecture.html">00 § 6-7</a>（Rust / TS 模块结构图）</td></tr>
         <tr><td>关键决策</td><td>用 <code>pnpm create tauri-app</code>（不用 cargo / npm；CLAUDE.md § 2.3 "不替用户跑 install"，由用户本机执行）；模板选 React + TypeScript + Vite</td></tr>
@@ -84,11 +89,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.2</span>M0-N2 · 菜单栏 tray + 图标</h3>
+    <h3 id="m0-n2-tray"><span class="h3-num">3.2</span>M0-N2 · 菜单栏 tray + 图标</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/menubar/mod.rs</code> · <code>src-tauri/icons/menubar/*Template@{1,2,3}x.png</code> · <code>src-tauri/src/main.rs</code>（tray 注册段）</td></tr>
+        <tr><td>verification</td><td>启动后菜单栏出现 template icon；左键 toggle 浮窗；右键弹原生菜单（Toggle / Settings / Quit）</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n2): menubar tray + template icons</code></td></tr>
+        <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td>Rust 端 tray menu 注册；menubar template PNG（18×18 @1x / @2x / @3x）放入 <code>icons/menubar/</code>；左键 toggle 浮窗、右键弹原生菜单（Toggle / Settings / Quit）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/05_icons_theme.html">05 § 3-4</a>（图标资源） · <a href="../spec/07_menubar.html">07 § 1-3</a>（tray API + menu 结构）</td></tr>
         <tr><td>关键决策</td><td>menubar template 用单色 PNG（macOS 自动反色 light / dark）；不用 .icns（仅 Dock）；图标设计师可用 SVG 出图，本节只放 PNG 资源 ── 设计稿位置链 <a href="../spec/05_icons_theme.html">05 § 2</a></td></tr>
@@ -96,11 +106,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.3</span>M0-N3 · 浮窗 POC（NSPanel-like 行为）</h3>
+    <h3 id="m0-n3-nspanel"><span class="h3-num">3.3</span>M0-N3 · 浮窗 POC（NSPanel-like 行为）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/window/{mod.rs,nspanel.rs,locate.rs}</code> · <code>src/components/PanelShell.tsx</code></td></tr>
+        <tr><td>verification</td><td>M0-A4 / A6 / A7 / A8：⌘⇧J 呼出 + Safari 仍前台 + 失焦自动隐藏 + fullscreen App 上仍可见</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n3): nspanel-like floating window (cocoa unsafe)</code></td></tr>
+        <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td>Rust 端通过 <code>cocoa</code> crate 把 Tauri 主窗口转为 NSPanel（<code>nonactivatingPanel</code> + <code>fullScreenAuxiliary</code> + <code>HUDWindow</code> styleMask）；前端空白 React 组件占位；失焦事件触发 <code>window.hide()</code></td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/06_window.html">06 § 2-5</a>（NSPanel 标志位表 + locate_window 多屏定位 + close 路由）</td></tr>
         <tr><td>关键决策</td><td>WebView 不渲染真实 UI（M0 只验证窗口行为）；多屏定位用 cocoa <code>NSScreen::screens</code> + 鼠标 location ── <a href="../spec/06_window.html">06 § 9.2</a> 算法表</td></tr>
@@ -108,11 +123,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.4</span>M0-N4 · 全局快捷键 + 权限引导</h3>
+    <h3 id="m0-n4-shortcut"><span class="h3-num">3.4</span>M0-N4 · 全局快捷键 + 权限引导</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/src/shortcuts/mod.rs</code> · <code>src-tauri/Cargo.toml</code>（<code>tauri-plugin-global-shortcut</code>）· <code>src/permissions/AccessibilityModal.tsx</code></td></tr>
+        <tr><td>verification</td><td>M0-A9 / A10：清空 Accessibility 权限 → 引导 Modal 自动弹；授权后无需重启即可呼出</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n4): global shortcut + accessibility guide modal</code></td></tr>
+        <tr><td>blocked_by</td><td><code>m0-n2-tray</code>, <code>m0-n3-nspanel</code></td></tr>
         <tr><td>关键交付物</td><td><code>tauri-plugin-global-shortcut</code> 注册 <kbd>⌘⇧J</kbd>；macOS Accessibility 权限缺失时弹引导 Modal（指引"系统设置 → 隐私 → 辅助功能 → 添加 Jsonita"）；权限到位后无需重启即可生效</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/07_menubar.html">07 § 4-5</a>（global-shortcut + 权限策略） · <a href="../spec/01_mockups.html">01 § 7</a>（权限引导 Modal 视觉）</td></tr>
         <tr><td>关键决策</td><td>默认快捷键 <kbd>⌘⇧J</kbd>（自定义留 M2）；快捷键冲突的检测在 M2 ── M0 不做</td></tr>
@@ -120,11 +140,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.5</span>M0-N5 · 日志框架（tracing）</h3>
+    <h3 id="m0-n5-logging"><span class="h3-num">3.5</span>M0-N5 · 日志框架（tracing）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/Cargo.toml</code>（<code>tracing</code> + <code>tracing-appender</code>）· <code>src-tauri/src/logging/{mod.rs,redact.rs}</code> · <code>src/services/logger.ts</code></td></tr>
+        <tr><td>verification</td><td>M0-A11 / A12：<code>~/Library/Logs/Jsonita/</code>下有 daily log；权限 0600；首条 INFO JSON Lines 可见</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n5): tracing + daily rolling + redact layer</code></td></tr>
+        <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td>Rust 端 <code>tracing</code> + <code>tracing-appender</code> daily rolling 接入；写到 <code>~/Library/Logs/Jsonita/</code>，权限 0600；<code>RedactLayer</code> 注册（即使 M0 无敏感字段也接好）；前端 <code>logger.ts</code> 薄层（M0 暂时只 console，IPC <code>log_write</code> 留 M1）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/15_logging.html">15 § 4-7</a>（4 级策略 / 路径 / 滚动 / 隐私脱敏 / RedactLayer ~20 行核心）</td></tr>
         <tr><td>关键决策</td><td>M0 先把<b>写</b>跑通 ── M1 再补<b>合流</b>（WebView → IPC <code>log_write</code> → 同一文件）；DEBUG 默认关，<code>RUST_LOG=jsonita=debug</code> 启动可打开</td></tr>
@@ -132,11 +157,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.6</span>M0-N6 · i18n 框架（react-i18next）</h3>
+    <h3 id="m0-n6-i18n"><span class="h3-num">3.6</span>M0-N6 · i18n 框架（react-i18next）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td><code>src/i18n/{index.ts,types.ts}</code> · <code>src/locales/en-US/{shell,panes,settings,history,errors,about,common}.json</code> · <code>src/main.tsx</code>（i18n init）</td></tr>
+        <tr><td>verification</td><td>M0-A13：grep src/ 找 hardcode 英文 0 命中；<code>useTranslation</code> 在 Modal / tray 已用</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m0-n6): react-i18next + 7 namespaces (en-US only)</code></td></tr>
+        <tr><td>blocked_by</td><td><code>m0-n1-scaffold</code></td></tr>
         <tr><td>关键交付物</td><td><code>i18next</code> + <code>react-i18next</code> 接入；<code>src/locales/en-US/{shell,panes,settings,history,errors,about,common}.json</code> 7 个 namespace 骨架；<code>useTranslation</code> 在权限引导 Modal / tray menu label 上已经在用</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 3-6</a>（lib 选型 / namespace 拆分 / locale 检测 / 字体回退）</td></tr>
         <tr><td>关键决策</td><td>v1 只锁 en-US 资源；zh-CN namespace 文件<b>不</b>放进 M0（M3 解锁）；locale 检测 3 层 fallback 实现但 v1 只会落 en-US</td></tr>
@@ -144,11 +174,16 @@
       </tbody>
     </table>
 
-    <h3><span class="h3-num">3.7</span>M0-N7 · dmg 本地构建（无签名）</h3>
+    <h3 id="m0-n7-dmg"><span class="h3-num">3.7</span>M0-N7 · dmg 本地构建（无签名）</h3>
 
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
+        <tr><td>status</td><td><code>planned</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/tauri.conf.json</code>（完整 bundle 段）· <code>src-tauri/entitlements.plist</code> · <code>.github/workflows/ci.yml</code>（雏形）</td></tr>
+        <tr><td>verification</td><td>M0-A1 / A2 / E7：<code>pnpm tauri build</code> 出 <code>Jsonita.dmg</code>；双击装入 /Applications；首次经 Gatekeeper 放行；CI 三项绿</td></tr>
+        <tr><td>commit / tag</td><td><code>chore(m0-n7): local dmg build + ci skeleton</code> + 完成 M0 时 <code>git tag 0.3.0-m0</code></td></tr>
+        <tr><td>blocked_by</td><td><code>m0-n2-tray</code>, <code>m0-n3-nspanel</code>, <code>m0-n4-shortcut</code>, <code>m0-n5-logging</code>, <code>m0-n6-i18n</code></td></tr>
         <tr><td>关键交付物</td><td><code>tauri.conf.json</code> 完整填写（bundle / identifier / category / minimumSystemVersion 等）；<code>entitlements.plist</code>（含 <code>com.apple.security.app-sandbox=false</code> 等关键项）；<code>pnpm tauri build</code> 出 <code>.dmg</code>；本地双击能装；首次启动经过 Gatekeeper 警告（无签名 → 右键打开放行）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 1-4</a>（tauri.conf 全文表 / capabilities / entitlements / 构建命令）</td></tr>
         <tr><td>关键决策</td><td>M0 不做签名 + 公证（留 M2）；universal binary（arm64 + x64）从 M0 就开（避免 M3 才发现 Intel 跑不通）；dmg 体积初验 &lt; 15 MB（plan/04 NFR § 6）</td></tr>
@@ -158,7 +193,7 @@
 
     <p class="section-divider"><b>三 · 验收 & 测试</b></p>
 
-    <h2><span class="h2-num">4</span>M0 验收用例（实施期对照跑一遍）</h2>
+    <h2 id="acceptance"><span class="h2-num">4</span>M0 验收用例（实施期对照跑一遍）</h2>
 
     <p>M0 完成后<b>必须</b>跑完下列用例并全部通过，才能 <code>git tag 0.3.0-m0</code> + 切 M1 active。</p>
 
@@ -207,7 +242,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">5</span>测试覆盖（M0 范围）</h2>
+    <h2 id="testing"><span class="h2-num">5</span>测试覆盖（M0 范围）</h2>
 
     <table>
       <thead><tr><th>测试类型</th><th>覆盖范围（M0）</th><th>覆盖原因 / 不覆盖原因</th></tr></thead>
@@ -220,7 +255,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">6</span>CI 雏形（GitHub Actions）</h2>
+    <h2 id="ci"><span class="h2-num">6</span>CI 雏形（GitHub Actions）</h2>
 
     <p>M0 在仓库放置 <code>.github/workflows/ci.yml</code> 雏形 ── M0 真正的 PR 用上，M1 / M2 沿用扩展。</p>
 
@@ -236,7 +271,7 @@
 
     <p class="section-divider"><b>四 · 风险 & spec 反馈</b></p>
 
-    <h2><span class="h2-num">7</span>已识别的实施风险</h2>
+    <h2 id="risks"><span class="h2-num">7</span>已识别的实施风险</h2>
 
     <div class="callout callout-warn">
       <span class="callout-icon">RISK</span>
@@ -254,7 +289,7 @@
       </tbody>
     </table>
 
-    <h2><span class="h2-num">8</span>涉及的 spec 章节速查</h2>
+    <h2 id="spec-map"><span class="h2-num">8</span>涉及的 spec 章节速查</h2>
 
     <table>
       <thead><tr><th>节点</th><th>对应 spec 章节</th><th>关键小节</th></tr></thead>
@@ -275,6 +310,41 @@
         <p>M0 7 条退出条件全过 → <code>git tag 0.3.0-m0</code>（不主动 push）→ 把本 progress 状态从 <code>active</code> 改成 <code>completed</code> → 切 <a href="02_m1_core_json.html">02 M1 Core JSON</a> 为 <code>active</code>。CLAUDE.md § 6.2 锁死"同时刻只 1 个 active Phase"。</p>
       </div>
     </div>
+
+    <p class="section-divider"><b>五 · 实施记录</b></p>
+
+    <h2 id="verification-log"><span class="h2-num">9</span>Verification Log (M0)</h2>
+
+    <p>每完成一个 M0 节点时<b>必须</b>追加一行（<a href="../AGENT_RUNBOOK.md">AGENT_RUNBOOK</a> § 7）。下方表格首行是占位示例 ── 实施时复制再改。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>date</th>
+          <th>node</th>
+          <th>commit</th>
+          <th>machine / OS</th>
+          <th>commands run</th>
+          <th>manual passed</th>
+          <th>manual failed</th>
+          <th>logs / screenshots</th>
+          <th>notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i>YYYY-MM-DD</i></td>
+          <td><code>M0-N?</code></td>
+          <td><code>abc1234</code></td>
+          <td><i>macOS 14.5 / M1 Pro</i></td>
+          <td><code>cargo test</code>, <code>pnpm tsc --noEmit</code></td>
+          <td><i>M0-A1, A4 / E1 E3</i></td>
+          <td>—</td>
+          <td>—</td>
+          <td><i>（占位示例）</i></td>
+        </tr>
+      </tbody>
+    </table>
 
     <nav class="pagination" id="pagination"></nav>
 
