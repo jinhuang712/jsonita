@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 08 编辑器 & 树 UI</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="08">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 08</span>
+      <h1 class="doc-title">编辑器 & 树 UI</h1>
+      <p class="doc-subtitle">CodeMirror 6 集成 · JSON 树渲染 · 错误标注 · 状态栏联动 · light/dark theme extension。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>编辑器 ── CodeMirror 6</h2>
+
+    <h3><span class="h3-num">1.1</span>包依赖（package.json）</h3>
+
+    <pre><code>{
+  "dependencies": {
+    "@codemirror/state":       "^6.5.0",
+    "@codemirror/view":        "^6.34.0",
+    "@codemirror/lang-json":   "^6.0.1",
+    "@codemirror/language":    "^6.10.0",
+    "@codemirror/commands":    "^6.7.0",
+    "@codemirror/search":      "^6.5.0",
+    "@codemirror/lint":        "^6.8.0",
+    "@codemirror/autocomplete":"^6.18.0",
+    "@uiw/codemirror-extensions-indentation-markers": "^4.23.0"
+  }
+}</code></pre>
+
+    <h3><span class="h3-num">1.2</span>扩展清单（必装）</h3>
+
+    <table>
+      <thead><tr><th>扩展</th><th>来源</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>lineNumbers</td><td>@codemirror/view</td><td>行号 gutter</td></tr>
+        <tr><td>highlightActiveLine / highlightActiveLineGutter</td><td>@codemirror/view</td><td>当前行高亮</td></tr>
+        <tr><td>foldGutter / codeFolding</td><td>@codemirror/language</td><td>大对象 / 大数组折叠</td></tr>
+        <tr><td>bracketMatching</td><td>@codemirror/language</td><td>光标在 { [ 时高亮配对的 } ]</td></tr>
+        <tr><td>closeBrackets</td><td>@codemirror/autocomplete</td><td>自动补 { → } / [ → ]</td></tr>
+        <tr><td>history</td><td>@codemirror/commands</td><td><kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> undo / redo</td></tr>
+        <tr><td>search</td><td>@codemirror/search</td><td><kbd>⌘F</kbd> 搜索面板</td></tr>
+        <tr><td>drawSelection</td><td>@codemirror/view</td><td>多光标选区绘制</td></tr>
+        <tr><td>EditorState.allowMultipleSelections</td><td>@codemirror/state</td><td><kbd>⌘D</kbd> 多光标</td></tr>
+        <tr><td>EditorView.lineWrapping</td><td>@codemirror/view</td><td>软换行（不出水平滚动）</td></tr>
+        <tr><td>json (lang-json)</td><td>@codemirror/lang-json</td><td>JSON 语法高亮</td></tr>
+        <tr><td>linter（自定义）</td><td>@codemirror/lint + serde 错误</td><td>错误位置标注</td></tr>
+        <tr><td>indentationMarkers</td><td>@uiw/codemirror-extensions-indentation-markers</td><td>缩进引导竖线</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">1.3</span>扩展组装</h3>
+
+    <pre><code>// src/editor/extensions.ts
+import { EditorState, type Extension } from '@codemirror/state';
+import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter,
+         drawSelection } from '@codemirror/view';
+import { foldGutter, codeFolding, bracketMatching, defaultHighlightStyle,
+         syntaxHighlighting } from '@codemirror/language';
+import { closeBrackets } from '@codemirror/autocomplete';
+import { history, defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { keymap } from '@codemirror/view';
+import { json, jsonParseLinter } from '@codemirror/lang-json';
+import { linter, lintGutter } from '@codemirror/lint';
+import { indentationMarkers } from '@uiw/codemirror-extensions-indentation-markers';
+import { jsonitaLightTheme, jsonitaDarkTheme } from './theme';
+import { jsonitaJsonHighlight } from './highlight';
+
+export interface EditorConfig {
+  theme: 'light' | 'dark';
+  readOnly?: boolean;
+  softWrap?: boolean;        // 默认 true
+  showFoldGutter?: boolean;  // 默认 true
+}
+
+export function makeExtensions(cfg: EditorConfig): Extension[] {
+  return [
+    lineNumbers(),
+    highlightActiveLine(),
+    highlightActiveLineGutter(),
+    foldGutter(),
+    codeFolding(),
+    bracketMatching(),
+    closeBrackets(),
+    history(),
+    drawSelection(),
+    highlightSelectionMatches(),
+    indentationMarkers({ thickness: 1, hideFirstIndent: true }),
+    EditorState.allowMultipleSelections.of(true),
+    cfg.softWrap !== false ? EditorView.lineWrapping : [],
+    json(),
+    linter(jsonParseLinter(), { delay: 300 }),
+    lintGutter(),
+    syntaxHighlighting(defaultHighlightStyle),
+    jsonitaJsonHighlight,
+    cfg.theme === 'dark' ? jsonitaDarkTheme : jsonitaLightTheme,
+    cfg.readOnly ? EditorState.readOnly.of(true) : [],
+    keymap.of([
+      ...defaultKeymap,
+      ...historyKeymap,
+      ...searchKeymap,
+      indentWithTab,
+    ]),
+  ];
+}</code></pre>
+
+    <h3><span class="h3-num">1.4</span>React 封装</h3>
+
+    <pre><code>// src/editor/Editor.tsx
+import { useEffect, useRef } from 'react';
+import { EditorState, type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { makeExtensions, type EditorConfig } from './extensions';
+
+interface EditorProps extends EditorConfig {
+  value: string;
+  onChange?: (v: string) =&gt; void;
+  onErrorChange?: (err: EditorError | null) =&gt; void;
+  errorMarker?: EditorError;             // 外部塞入"我已知错误位置"
+}
+
+export interface EditorError { line: number; col: number; msg: string; }
+
+export function Editor({ value, onChange, onErrorChange, theme, ...cfg }: EditorProps) {
+  const ref = useRef&lt;HTMLDivElement&gt;(null);
+  const viewRef = useRef&lt;EditorView | null&gt;(null);
+
+  useEffect(() =&gt; {
+    const updateListener = EditorView.updateListener.of((update) =&gt; {
+      if (update.docChanged) onChange?.(update.state.doc.toString());
+    });
+
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: value,
+        extensions: [...makeExtensions({ theme, ...cfg }), updateListener],
+      }),
+      parent: ref.current!,
+    });
+    viewRef.current = view;
+    return () =&gt; view.destroy();
+    // theme 变化时重建（CodeMirror 主题切换的标准做法是 reconfigure compartment，
+    // 但 v1 为简洁直接重建）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme]);
+
+  // 外部 setValue（用于 AI Fix 应用 / 历史恢复 / 上次会话恢复）
+  useEffect(() =&gt; {
+    const v = viewRef.current;
+    if (!v) return;
+    if (v.state.doc.toString() === value) return;
+    v.dispatch({
+      changes: { from: 0, to: v.state.doc.length, insert: value },
+    });
+  }, [value]);
+
+  return &lt;div ref={ref} className="jsonita-editor" /&gt;;
+}</code></pre>
+
+    <h3><span class="h3-num">1.5</span>Light theme extension</h3>
+
+    <pre><code>// src/editor/theme.ts
+import { EditorView } from '@codemirror/view';
+
+export const jsonitaLightTheme = EditorView.theme({
+  '&amp;': {
+    color:           'var(--text)',
+    backgroundColor: 'var(--editor-bg)',
+    fontSize:        'var(--fs-editor)',
+    fontFamily:      'var(--font-mono)',
+    height:          '100%',
+  },
+  '.cm-content': {
+    caretColor: 'var(--editor-cursor)',
+    padding:    '12px 0',
+  },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--editor-cursor)' },
+  '&amp;.cm-focused .cm-selectionBackground, ::selection': {
+    backgroundColor: 'var(--editor-selection)',
+  },
+  '.cm-gutters': {
+    backgroundColor: 'var(--editor-gutter)',
+    color:           'var(--text-faint)',
+    border:          'none',
+  },
+  '.cm-activeLineGutter, .cm-activeLine': {
+    backgroundColor: 'var(--editor-line-active)',
+  },
+  '.cm-foldPlaceholder': {
+    color:           'var(--text-faint)',
+    backgroundColor: 'transparent',
+    border:          'none',
+    fontSize:        '11px',
+  },
+  '.cm-matchingBracket': {
+    backgroundColor: 'var(--editor-bracket-match)',
+    outline:         '1px solid var(--primary-edge)',
+  },
+  '.cm-searchMatch': {
+    backgroundColor: 'rgba(250, 155, 16, 0.18)',
+  },
+  '.cm-searchMatch.cm-searchMatch-selected': {
+    backgroundColor: 'rgba(250, 155, 16, 0.36)',
+  },
+  '.cm-lintRange-error': {
+    backgroundImage:
+      'linear-gradient(to top right, transparent calc(50% - 1px), var(--editor-error-underline) calc(50% - 1px), var(--editor-error-underline) calc(50% + 1px), transparent calc(50% + 1px))',
+    backgroundRepeat: 'repeat-x',
+    backgroundPosition: 'bottom',
+    backgroundSize: '6px 2px',
+  },
+}, { dark: false });</code></pre>
+
+    <h3><span class="h3-num">1.6</span>Dark theme extension</h3>
+
+    <pre><code>// 同结构，颜色用 dark variant（[data-theme="dark"] 已切换 token 值）
+export const jsonitaDarkTheme = EditorView.theme({ /* same selectors */ }, { dark: true });</code></pre>
+
+    <p>实现简化：<b>所有选择器只取 CSS variables</b>，不写死 hex。<code>data-theme</code> 切换时整个 token table 跟着变 ── 编辑器主题不需要"内部双套"。但 CM 的 <code>dark: true/false</code> flag 影响默认 highlightStyle 选择，必须切，所以我们仍需要两个 instance。</p>
+
+    <h3><span class="h3-num">1.7</span>自定义 JSON 高亮风格</h3>
+
+    <pre><code>// src/editor/highlight.ts
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
+
+const style = HighlightStyle.define([
+  { tag: t.propertyName,                   color: 'var(--json-key)' },
+  { tag: t.string,                         color: 'var(--json-string)' },
+  { tag: t.number,                         color: 'var(--json-number)' },
+  { tag: [t.bool, t.atom],                 color: 'var(--json-bool)' },
+  { tag: t.null,                           color: 'var(--json-null)' },
+  { tag: [t.punctuation, t.separator, t.bracket], color: 'var(--json-punc)' },
+]);
+
+export const jsonitaJsonHighlight = syntaxHighlighting(style);</code></pre>
+
+    <h2><span class="h2-num">2</span>错误标注</h2>
+
+    <h3><span class="h3-num">2.1</span>两路 lint 源</h3>
+
+    <ol>
+      <li><b>CodeMirror 自带</b> <code>jsonParseLinter()</code>（来自 @codemirror/lang-json）── 300ms debounce 实时</li>
+      <li><b>Rust 后端</b> 通过 IPC 返回的 <code>JsonitaError::Parse</code>（更精确，含 line/col）</li>
+    </ol>
+
+    <h3><span class="h3-num">2.2</span>合并策略</h3>
+
+    <p>前端 linter 实时给 squiggle；用户提交（debounce 完成）后 Rust 返回更精确的位置，覆盖前端 lint 结果。</p>
+
+    <pre><code>// src/editor/lint.ts
+import { Diagnostic, linter } from '@codemirror/lint';
+import { EditorView } from '@codemirror/view';
+
+// 把外部错误（Rust 返回）转 CM Diagnostic
+export function externalErrorAsDiagnostic(
+  doc: string,
+  err: EditorError | null,
+): Diagnostic[] {
+  if (!err) return [];
+  // line/col 转换为 doc 中的 offset
+  const lines = doc.split(/\r?\n/);
+  let from = 0;
+  for (let i = 0; i &lt; err.line - 1; i++) from += lines[i].length + 1;
+  from += Math.max(0, err.col - 1);
+  const to = Math.min(doc.length, from + 1);
+  return [{ from, to, severity: 'error', message: err.msg, source: 'jsonita-engine' }];
+}
+
+// 自定义 linter：从 store 读 externalError，merge 进 cm linter
+export function externalLinter(getError: () =&gt; EditorError | null) {
+  return linter((view) =&gt; externalErrorAsDiagnostic(view.state.doc.toString(), getError()),
+                { delay: 0 });
+}</code></pre>
+
+    <h2><span class="h2-num">3</span>状态栏联动</h2>
+
+    <h3><span class="h3-num">3.1</span>onChange → store → status</h3>
+
+    <pre><code>// src/store/editor.ts
+import { create } from 'zustand';
+import { jsonFormat } from '@/ipc/commands';
+
+interface EditorStore {
+  content:    string;
+  outputText: string;
+  status:     'valid' | 'error' | 'empty' | 'large';
+  error:      EditorError | null;
+  bytes:      number;
+  lines:      number;
+
+  setContent: (s: string) =&gt; void;
+  // 内部：debounce 300 ms 后调 Rust 校验
+}
+
+export const editorStore = create&lt;EditorStore&gt;((set, get) =&gt; {
+  let timer: number | null = null;
+
+  async function validate() {
+    const s = get().content;
+    if (s.trim() === '') { set({ status: 'empty', error: null }); return; }
+    if (s.length &gt; 5 * 1024 * 1024) { set({ status: 'large' }); return; }
+    try {
+      const out = await jsonFormat(s, { indent: 'spaces2', sortKeys: false, trailingNewline: true });
+      set({ status: 'valid', error: null, outputText: out,
+            lines: out.split('\n').length, bytes: new Blob([out]).size });
+    } catch (e: unknown) {
+      const err = e as JsonitaError;
+      if (err.kind === 'Parse') {
+        set({ status: 'error',
+              error: { line: err.data.line, col: err.data.col, msg: err.data.msg } });
+      }
+    }
+  }
+
+  return {
+    content: '', outputText: '', status: 'empty', error: null, bytes: 0, lines: 0,
+    setContent: (s) =&gt; {
+      set({ content: s });
+      if (timer !== null) clearTimeout(timer);
+      timer = window.setTimeout(validate, 300);
+    },
+  };
+});</code></pre>
+
+    <h2><span class="h2-num">4</span>JSON 树</h2>
+
+    <h3><span class="h3-num">4.1</span>渲染库选型</h3>
+
+    <p>用 <code>react-json-view-lite</code>（轻量、~10KB），但<b>套自己的颜色</b>：</p>
+
+    <pre><code>// src/tree/TreeView.tsx
+import { JsonView, allExpanded, collapseAllNested, darkStyles, defaultStyles } from 'react-json-view-lite';
+import 'react-json-view-lite/dist/index.css';
+import { useTheme } from '@/theme/ThemeProvider';
+
+interface TreeViewProps {
+  data: unknown;
+  initialExpandDepth?: number;     // 默认 2（大对象 &gt; 50 keys 时折叠到 2 层）
+  onPathClick?: (path: string) =&gt; void;
+}
+
+export function TreeView({ data, initialExpandDepth = 2, onPathClick }: TreeViewProps) {
+  const { effective } = useTheme();
+  const baseStyles = effective === 'dark' ? darkStyles : defaultStyles;
+
+  const styles = useMemo(() =&gt; ({
+    ...baseStyles,
+    container:           'jsonita-tree-container',
+    basicChildStyle:     'jsonita-tree-child',
+    label:               'jsonita-tree-key',
+    stringValue:         'jsonita-tree-string',
+    numberValue:         'jsonita-tree-number',
+    booleanValue:        'jsonita-tree-bool',
+    nullValue:           'jsonita-tree-null',
+    undefinedValue:      'jsonita-tree-null',
+    otherValue:          'jsonita-tree-other',
+    punctuation:         'jsonita-tree-punc',
+    expandIcon:          'jsonita-tree-icon',
+    collapseIcon:        'jsonita-tree-icon',
+    collapsedContent:    'jsonita-tree-collapsed',
+    childFieldsContainer:'jsonita-tree-children',
+  }), [effective]);
+
+  return &lt;JsonView data={data}
+                  shouldExpandNode={(level, value, field) =&gt; level &lt; initialExpandDepth}
+                  style={styles} /&gt;;
+}</code></pre>
+
+    <h3><span class="h3-num">4.2</span>样式（global.css）</h3>
+
+    <pre><code>.jsonita-tree-container {
+  font-family: var(--font-mono);
+  font-size:   var(--fs-tree);
+  line-height: var(--lh-code);
+  padding:     var(--sp-3) var(--sp-4);
+  background:  var(--editor-bg);
+  color:       var(--text);
+  height:      100%;
+  overflow:    auto;
+}
+.jsonita-tree-key      { color: var(--json-key);    font-weight: 500; }
+.jsonita-tree-string   { color: var(--json-string); }
+.jsonita-tree-number   { color: var(--json-number); }
+.jsonita-tree-bool     { color: var(--json-bool);   }
+.jsonita-tree-null     { color: var(--json-null);   font-style: italic; }
+.jsonita-tree-punc     { color: var(--json-punc);   }
+.jsonita-tree-icon     { color: var(--text-faint);  cursor: pointer; }
+.jsonita-tree-icon:hover { color: var(--primary); }
+.jsonita-tree-children { padding-left: 18px;        border-left: 1px dashed var(--border); }</code></pre>
+
+    <h3><span class="h3-num">4.3</span>JSON Path 复制</h3>
+
+    <p>点击 key 时计算从 root 到此 key 的路径，复制到剪贴板。</p>
+
+    <pre><code>// src/tree/jsonpath.ts
+//
+// JsonView 的内置 callback 不暴露完整 path。
+// 我们用 mutationObserver + 自定义 click handler 注入：
+
+export function attachPathCopyHandler(container: HTMLElement, raw: unknown) {
+  container.addEventListener('click', (e) =&gt; {
+    const target = e.target as HTMLElement;
+    if (!target.classList.contains('jsonita-tree-key')) return;
+    const path = computePath(target);
+    navigator.clipboard.writeText(path);
+    toast.ok(`Copied: ${path}`);
+  });
+}
+
+function computePath(el: HTMLElement): string {
+  // 沿 .jsonita-tree-children 向上找 sibling key + index，拼成 user.items[2].name 风格
+  const segments: string[] = [];
+  let node: HTMLElement | null = el;
+  while (node) {
+    const keyText = node.textContent?.replace(/[:"]/g, '').trim();
+    if (keyText) segments.unshift(keyText);
+    node = node.parentElement?.closest('.jsonita-tree-children')?.previousElementSibling as HTMLElement | null;
+  }
+  return segments.join('.').replace(/\.(\d+)/g, '[$1]');
+}</code></pre>
+
+    <h3><span class="h3-num">4.4</span>搜索 / 高亮 key & value</h3>
+
+    <p>v1 用 <a href="04_components.html">04 § 5</a> 的 SplitPane 顶部加一个搜索框，client-side filter ── 把 JSON 序列化后 substring match，匹配命中的 path 自动展开（用 react-json-view-lite 的 <code>shouldExpandNode</code> 配合自定义 state）。</p>
+
+    <h3><span class="h3-num">4.5</span>Hover 复制节点（plan F2）</h3>
+
+    <p>视觉：见 <a href="01_mockups.html#1.3">01 § 1.3 Tree Tab</a> 的 hover 态。</p>
+
+    <p><b>触发与目标</b>：</p>
+
+    <table>
+      <thead><tr><th>node 类型</th><th>触发</th><th>复制内容</th></tr></thead>
+      <tbody>
+        <tr><td>leaf · string</td><td>hover 整行 → 行尾出现 <code>📋</code></td><td>raw value 含引号：<code>"alice"</code></td></tr>
+        <tr><td>leaf · number / bool / null</td><td>同上</td><td>字面量：<code>30</code> / <code>true</code> / <code>null</code></td></tr>
+        <tr><td>object node（含 root）</td><td>hover 标签行 → 标签行尾出现 <code>📋</code></td><td>递归 pretty-print 子树 JSON（2 空格）</td></tr>
+        <tr><td>array node</td><td>同上</td><td>同上</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>实现 ── 给每行注入 hover overlay</b>：react-json-view-lite 不内置此功能，需自行注入。方案：</p>
+
+    <pre><code>// src/tree/TreeView.tsx 扩展
+
+interface NodeMeta { path: string; raw: unknown; isLeaf: boolean }
+
+function attachHoverCopy(container: HTMLElement, rootData: unknown) {
+  // 1. 给容器加 mouseover/mouseleave delegate
+  // 2. 找到悬停的 .jsonita-tree-node，定位它在 rootData 中的对应 path
+  // 3. 在该行右侧绝对定位插入一个 .tree-copy-icon button
+  // 4. 点击 → computeCopyText(meta) → navigator.clipboard.writeText + toast.ok
+  //
+  // 离开时移除 .tree-copy-icon
+}
+
+function computeCopyText(meta: NodeMeta): string {
+  if (meta.isLeaf) {
+    // raw value 处理
+    if (typeof meta.raw === 'string')  return JSON.stringify(meta.raw);   // 自带引号
+    if (meta.raw === null)             return 'null';
+    return String(meta.raw);                                              // number / bool 字面量
+  }
+  // object / array → 递归 pretty
+  return JSON.stringify(meta.raw, null, 2);
+}</code></pre>
+
+    <p><b>样式（global.css 新增）</b>：</p>
+
+    <pre><code>.jsonita-tree-node {
+  position: relative;
+}
+.tree-copy-icon {
+  position: absolute;
+  top: 0; right: 8px;
+  opacity: 0;                          /* 默认隐 */
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 18px;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.jsonita-tree-node:hover .tree-copy-icon { opacity: 1; }
+.tree-copy-icon:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary-edge);
+  color: var(--primary);
+}
+.tree-copy-icon:active { background: var(--primary); color: white; }
+</code></pre>
+
+    <p><b>键盘可达</b>：聚焦在某节点行（含 <code>tabindex="0"</code>）按 <kbd>⌘C</kbd> 等同于点 <code>📋</code>。键盘焦点环用 <code>--shadow-focus</code>。</p>
+
+    <p><b>与点击 key 复制 path 的关系</b>：</p>
+
+    <ul>
+      <li>点击 key 文字本身 → 复制 path（如 <code>user.name</code>）── 现有行为保留</li>
+      <li>hover 行尾 <code>📋</code> 点击 → 按本节规则复制 value / subtree</li>
+      <li>两者独立 ── key 可点 + 行 hover 可见 icon，不冲突</li>
+    </ul>
+
+    <h2><span class="h2-num">5</span>编辑器 ↔ 树 同步</h2>
+
+    <p>Format / Tree / →Str 各 Tab 共用 input 编辑器；切换 Tab 时只是<b>切右侧输出面板</b>。</p>
+
+    <table>
+      <thead><tr><th>Tab</th><th>左侧</th><th>右侧</th></tr></thead>
+      <tbody>
+        <tr><td>Format</td><td>Editor (input)</td><td>Editor (output, readOnly)</td></tr>
+        <tr><td>Minify</td><td>Editor (input)</td><td>Editor (output, readOnly, lineWrapping=false)</td></tr>
+        <tr><td>Tree</td><td>Editor (input)</td><td>TreeView</td></tr>
+        <tr><td>→Str</td><td>Editor (input)</td><td>Editor (output, readOnly)</td></tr>
+        <tr><td>→JSON</td><td>Editor (input)</td><td>Editor (output, readOnly)</td></tr>
+        <tr><td>AI Fix</td><td>DiffView 左原</td><td>DiffView 右改</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">5.1</span>单窗模式（F9）</h3>
+
+    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，操作 in-place 替换 input：</p>
+
+    <pre><code>// src/shell/FloatingWindow.tsx
+const { singlePaneMode } = useSettings();
+
+return singlePaneMode
+  ? &lt;SinglePaneLayout /&gt;
+  : &lt;SplitPane left={&lt;InputPane /&gt;} right={&lt;OutputPane /&gt;} /&gt;;</code></pre>
+
+    <pre><code>// src/shell/SinglePaneLayout.tsx
+const handleApply = async (op: Pane) =&gt; {
+  const result = await runOp(op, editor.content);     // 调 IPC
+  editor.setContent(result);                          // CodeMirror history 自动记录
+  toast.ok(`Applied. ⌘Z to undo`);
+  // 同时写历史
+  history.add({ content: result, opType: op });
+};</code></pre>
+
+    <p><b>关键</b>：CodeMirror history extension 在 dispatch 修改时自动建 undo 项，<kbd>⌘Z</kbd> 回滚（包括 AI Fix 的应用）── 无需自己维护栈。</p>
+
+    <h2><span class="h2-num">6</span>编辑器配置项 → 设置面板映射</h2>
+
+    <table>
+      <thead><tr><th>设置项</th><th>编辑器影响</th></tr></thead>
+      <tbody>
+        <tr><td><code>settings.theme</code></td><td>切换 jsonitaLightTheme / jsonitaDarkTheme</td></tr>
+        <tr><td>F1 缩进选项</td><td>仅影响 Rust 端 format 输出；编辑器自身不区分</td></tr>
+        <tr><td>软换行（F1 编辑器交互）</td><td>EditorView.lineWrapping 开关</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">7</span>性能</h2>
+
+    <ul>
+      <li><b>大文件优化</b>：CodeMirror 6 已是 viewport-based 渲染，1MB JSON 不需特殊处理</li>
+      <li><b>linter delay 300 ms</b>：避免输入时频繁报错</li>
+      <li><b>onChange debounce 300 ms</b>：debounce 在 store 内做，编辑器自身不 debounce（保持光标跟手）</li>
+      <li><b>树渲染懒加载</b>：react-json-view-lite 已实现 ── 只渲染展开层级</li>
+    </ul>
+
+    <h2><span class="h2-num">8</span>测试 checklist</h2>
+
+    <ul>
+      <li>[ ] 输入合法 JSON 后状态栏切 valid + 右侧实时格式化</li>
+      <li>[ ] 输入非法 JSON 后状态栏切 error + 错误行高亮 + AI Fix Tab 出现</li>
+      <li>[ ] 切 light/dark 主题后编辑器立即跟随</li>
+      <li>[ ] <kbd>⌘F</kbd> 唤起搜索；<kbd>⌘D</kbd> 多光标；<kbd>⌘Z</kbd> undo</li>
+      <li>[ ] 大对象 / 大数组显示 fold 三角 + 点击收起</li>
+      <li>[ ] 树视图点击 key 复制 JSON Path 到剪贴板</li>
+      <li>[ ] AI Fix 应用后 <kbd>⌘Z</kbd> 可回滚（单窗模式）</li>
+      <li>[ ] 1MB JSON 树视图首次渲染 &lt; 800 ms</li>
+    </ul>
+
+    <h2><span class="h2-num">9</span>承上启下</h2>
+
+    <ul>
+      <li><b>08 JSON 引擎</b> ── format/minify/parse 的 Rust 端</li>
+      <li><b>09 存储 & 会话</b> ── 编辑器 setContent 触发历史写入</li>
+      <li><b>10 AI 客户端</b> ── DiffView 是 AI Fix 的 UI</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+{
+  "source": "assets/icon.png",
+  "style": "flat source-derived export; no shadow, no gradient, no rounded corners",
+  "masters": {
+    "light": "assets/icon-light-2048.png",
+    "dark": "assets/icon-dark-2048.png",
+    "transparentMark": "assets/icon-mark-transparent-2048.png"
+  },
+  "backgrounds": {
+    "light": "#FFFFFF",
+    "dark": "#000000"
+  },
+  "palette": {
+    "blue": "#057AF3",
+    "green": "#06B78F",
+    "purple": "#6B3CE9",
+    "orange": "#FA9B10"
+  },
+  "pngSizes": [
+    16,
+    24,
+    32,
+    48,
+    64,
+    128,
+    256,
+    512,
+    1024,
+    2048
+  ],
+  "macOS": {
+    "lightIconset": "assets/icons/macos/Jsonita-Light.iconset",
+    "darkIconset": "assets/icons/macos/Jsonita-Dark.iconset",
+    "lightIcns": "assets/icons/macos/Jsonita-Light.icns",
+    "darkIcns": "assets/icons/macos/Jsonita-Dark.icns"
+  },
+  "windows": {
+    "sizes": [
+      16,
+      24,
+      32,
+      48,
+      64,
+      128,
+      256
+    ],
+    "lightIco": "assets/icons/windows/jsonita-light.ico",
+    "darkIco": "assets/icons/windows/jsonita-dark.ico"
+  },
+  "menubar": {
+    "logicalSizes": [
+      18,
+      22
+    ],
+    "scales": [
+      1,
+      2,
+      3
+    ],
+    "variants": {
+      "template": "black alpha mask for macOS template-style usage",
+      "light": "black alpha mask for light menu bar backgrounds",
+      "dark": "white alpha mask for dark menu bar backgrounds"
+    },
+    "directory": "assets/icons/menubar"
+  }
+}

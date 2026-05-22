@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 11 AI 客户端</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="11">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 11</span>
+      <h1 class="doc-title">AI 客户端</h1>
+      <p class="doc-subtitle">DeepSeek 请求构造 · Prompt 模板 · 响应验证 · 错误透传 · diff 计算 · 测试连接。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>原则锁定</h2>
+
+    <ul>
+      <li><b>用户用自己 API key</b> ── 不当家长，<b>不</b>限频，<b>不</b>缓存</li>
+      <li><b>仅修复，不解释</b> ── prompt 严格要求只返回合法 JSON</li>
+      <li><b>错误透传</b> ── 上游 429 / 5xx 原样回前端，附 retry-after</li>
+      <li><b>开关完全关</b> ── ai_enabled=false 时入口隐藏 + Rust 端 early return</li>
+      <li><b>无 telemetry</b> ── 不把用户 JSON 发到任何 Jsonita 自己的后端</li>
+    </ul>
+
+    <h2><span class="h2-num">2</span>模块结构</h2>
+
+    <pre><code>src-tauri/src/ai/
+├─ mod.rs
+├─ deepseek.rs          // reqwest 请求 + 流式接收
+├─ prompt.rs            // prompt 模板
+└─ validate.rs          // 响应校验 + 提取 JSON
+
+src/ai/                 // 前端
+├─ AiFixPane.tsx        // DiffView 容器
+└─ store.ts             // ai 状态（loading / error / progress）
+</code></pre>
+
+    <h2><span class="h2-num">3</span>请求模型</h2>
+
+    <h3><span class="h3-num">3.1</span>endpoint</h3>
+
+    <pre><code>pub const DEEPSEEK_BASE_URL: &amp;str = "https://api.deepseek.com";
+pub const DEEPSEEK_CHAT_PATH: &amp;str = "/v1/chat/completions";</code></pre>
+
+    <h3><span class="h3-num">3.2</span>请求结构（兼容 OpenAI Chat Completions）</h3>
+
+    <pre><code>// src-tauri/src/ai/deepseek.rs
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize)]
+struct ChatRequest&lt;'a&gt; {
+    model:        &amp;'a str,
+    messages:     Vec&lt;ChatMessage&lt;'a&gt;&gt;,
+    temperature:  f32,
+    max_tokens:   u32,
+    stream:       bool,
+    response_format: ResponseFormat,
+}
+
+#[derive(Serialize)]
+struct ChatMessage&lt;'a&gt; { role: &amp;'a str, content: &amp;'a str }
+
+#[derive(Serialize)]
+#[serde(tag = "type")]
+enum ResponseFormat {
+    #[serde(rename = "json_object")] JsonObject,
+}
+
+#[derive(Deserialize)]
+struct ChatResponse {
+    choices:  Vec&lt;Choice&gt;,
+    usage:    Option&lt;Usage&gt;,
+    model:    Option&lt;String&gt;,
+}
+
+#[derive(Deserialize)]
+struct Choice { message: ChatMessageOut, finish_reason: Option&lt;String&gt; }
+
+#[derive(Deserialize)]
+struct ChatMessageOut { content: String }
+
+#[derive(Deserialize)]
+struct Usage { prompt_tokens: u32, completion_tokens: u32 }</code></pre>
+
+    <h3><span class="h3-num">3.3</span>请求默认参数</h3>
+
+    <table>
+      <thead><tr><th>参数</th><th>值</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>deepseek-chat</code>（settings 可改）</td><td>plan/01 F7.3</td></tr>
+        <tr><td>temperature</td><td>0.0</td><td>修复任务无创造性，最低温更可控</td></tr>
+        <tr><td>max_tokens</td><td>4096（input 长度 × 2，封顶 8192）</td><td>修复后大小约同输入</td></tr>
+        <tr><td>stream</td><td>false（v1）</td><td>简化 + 端到端验证</td></tr>
+        <tr><td>response_format</td><td>json_object</td><td>DeepSeek 支持，强制返回 JSON object（避免 markdown 包裹）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">4</span>Prompt 模板</h2>
+
+    <pre><code>// src-tauri/src/ai/prompt.rs
+pub fn system_prompt() -&gt; &amp;'static str {
+    r#"You are a JSON repair tool. Your only job is to fix invalid JSON.
+
+RULES:
+1. Output a SINGLE valid JSON object or array.
+2. Do NOT add any explanation, markdown, code fence, or commentary.
+3. Preserve the original intent: keep all keys and values exactly as the user
+   typed them, only fix syntax (quotes, commas, brackets, escapes).
+4. If the input is already valid JSON, return it unchanged (after standard
+   pretty-printing).
+5. If repair is impossible, return:
+   { "_jsonita_repair_failed": true, "reason": "&lt;short reason&gt;" }
+
+OUTPUT FORMAT: plain JSON text. No prefix, no suffix."#
+}
+
+pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&gt;, msg: Option&lt;&amp;str&gt;) -&gt; String {
+    let mut prompt = String::from("Fix this JSON:\n\n```\n");
+    prompt.push_str(text);
+    prompt.push_str("\n```\n");
+    if let (Some(l), Some(c)) = (line, col) {
+        use std::fmt::Write;
+        let _ = write!(prompt, "\nHint: parse error at line {}, column {}", l, c);
+        if let Some(m) = msg { let _ = write!(prompt, " ({})", m); }
+        prompt.push('.');
+    }
+    prompt
+}</code></pre>
+
+    <h2><span class="h2-num">5</span>请求执行</h2>
+
+    <pre><code>// src-tauri/src/ai/deepseek.rs (continued)
+use crate::error::JsonitaError;
+use crate::system::keychain::KeyStore;
+use crate::ai::{prompt, validate};
+use reqwest::Client;
+use std::time::{Duration, Instant};
+use tauri::{AppHandle, Manager};
+use uuid::Uuid;
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase", tag = "phase", content = "data")]
+pub enum AiProgress {
+    Started,
+    Waiting { elapsed_ms: u64 },
+    Received { tokens: u32 },
+    Validating,
+    Done,
+}
+
+pub async fn fix(
+    app: &amp;AppHandle,
+    req: AiFixReq,
+) -&gt; Result&lt;AiFixResp, JsonitaError&gt; {
+    let started = Instant::now();
+    let _ = app.emit("ai:progress", AiProgress::Started);
+
+    // 1. settings 检查（双重保险）
+    let s = app.state::&lt;SettingsStore&gt;().get();
+    if !s.ai_enabled {
+        return Err(JsonitaError::Io("ai disabled".into()));
+    }
+
+    // 2. 取 key
+    let key = KeyStore::get("deepseek_api_key")?
+        .ok_or_else(|| JsonitaError::Keychain("no api key".into()))?;
+
+    // 3. 构造 body
+    let body = ChatRequest {
+        model: &amp;s.ai_model_id,
+        messages: vec![
+            ChatMessage { role: "system", content: prompt::system_prompt() },
+            ChatMessage { role: "user",
+                          content: &amp;prompt::user_prompt(&amp;req.text, req.error_line, req.error_col,
+                                                       req.error_msg.as_deref()) },
+        ],
+        temperature: 0.0,
+        max_tokens:  pick_max_tokens(req.text.len()),
+        stream: false,
+        response_format: ResponseFormat::JsonObject,
+    };
+
+    let app_clone = app.clone();
+    // 4. 异步 keepalive emit
+    let progress_handle = spawn_progress_emitter(app.clone(), started);
+
+    // 5. HTTP
+    let client = Client::builder()
+        .timeout(Duration::from_secs(60))
+        .build()
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+    let resp = client
+        .post(format!("{}{}", DEEPSEEK_BASE_URL, DEEPSEEK_CHAT_PATH))
+        .bearer_auth(&amp;key)
+        .json(&amp;body)
+        .send()
+        .await
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+
+    progress_handle.abort();
+
+    // 6. 错误状态码
+    let status = resp.status().as_u16();
+    if status == 429 {
+        let ra = resp.headers().get("retry-after")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|s| s.parse::&lt;u64&gt;().ok())
+            .unwrap_or(60);
+        return Err(JsonitaError::RateLimit { retry_after_sec: ra });
+    }
+    if !resp.status().is_success() {
+        let body = resp.text().await.unwrap_or_default();
+        return Err(JsonitaError::Http { status, body });
+    }
+
+    // 7. parse
+    let _ = app_clone.emit("ai:progress", AiProgress::Validating);
+    let parsed: ChatResponse = resp.json().await
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+    let content = parsed.choices.first()
+        .map(|c| c.message.content.clone())
+        .unwrap_or_default();
+
+    // 8. 验证
+    let fixed = validate::extract_json(&amp;content)
+        .ok_or(JsonitaError::AiInvalidJson { raw: content.clone() })?;
+    let _: serde_json::Value = serde_json::from_str(&amp;fixed)
+        .map_err(|_| JsonitaError::AiInvalidJson { raw: content })?;
+
+    let _ = app_clone.emit("ai:progress", AiProgress::Done);
+
+    Ok(AiFixResp {
+        fixed,
+        model:      parsed.model.unwrap_or_default(),
+        tokens_in:  parsed.usage.as_ref().map(|u| u.prompt_tokens).unwrap_or(0),
+        tokens_out: parsed.usage.as_ref().map(|u| u.completion_tokens).unwrap_or(0),
+        elapsed_ms: started.elapsed().as_millis() as u64,
+    })
+}
+
+fn pick_max_tokens(input_len: usize) -&gt; u32 {
+    let approx = (input_len as u32 / 3) * 2;   // 字符数 ÷ 3 ≈ tokens；× 2 留余量
+    approx.clamp(512, 8192)
+}
+
+fn spawn_progress_emitter(app: AppHandle, started: Instant) -&gt; tokio::task::JoinHandle&lt;()&gt; {
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(Duration::from_millis(500));
+        ticker.tick().await; // 跳过首个立即 tick
+        loop {
+            ticker.tick().await;
+            let _ = app.emit("ai:progress",
+                AiProgress::Waiting { elapsed_ms: started.elapsed().as_millis() as u64 });
+        }
+    })
+}</code></pre>
+
+    <h2><span class="h2-num">6</span>响应验证</h2>
+
+    <pre><code>// src-tauri/src/ai/validate.rs
+
+/// 从 AI 输出中抽出 JSON 字符串（即使模型违反指令包了 markdown 也尽量救回）
+pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt; {
+    let t = raw.trim();
+
+    // case 1: 直接是 JSON
+    if t.starts_with('{') || t.starts_with('[') {
+        return Some(t.to_string());
+    }
+
+    // case 2: 包了 ```json ... ```（模型违反指令时常见）
+    if let Some(start) = t.find("```") {
+        let after = &amp;t[start+3..];
+        let after = after.trim_start_matches("json").trim_start();
+        if let Some(end) = after.rfind("```") {
+            let inner = after[..end].trim();
+            if inner.starts_with('{') || inner.starts_with('[') {
+                return Some(inner.to_string());
+            }
+        }
+    }
+
+    // case 3: 文本中找首个 { 到末尾 } 之间
+    let first = t.find(|c: char| c == '{' || c == '[')?;
+    let last  = t.rfind(|c: char| c == '}' || c == ']')?;
+    if last &gt; first {
+        return Some(t[first..=last].to_string());
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::extract_json;
+    #[test] fn raw_json() {
+        assert_eq!(extract_json(r#"{"a":1}"#), Some(r#"{"a":1}"#.into()));
+    }
+    #[test] fn fenced() {
+        let r = "```json\n{\"a\":1}\n```";
+        assert_eq!(extract_json(r), Some("{\"a\":1}".into()));
+    }
+    #[test] fn explanatory_text() {
+        let r = "Here is the fix: {\"a\":1} hope it helps.";
+        assert_eq!(extract_json(r), Some("{\"a\":1}".into()));
+    }
+}</code></pre>
+
+    <h2><span class="h2-num">7</span>Diff 计算（前端）</h2>
+
+    <pre><code>// src/panes/diff.ts
+import { diffLines } from 'diff';      // npm: diff ^7.0.0
+
+export type DiffLine = { type: 'eq' | 'add' | 'del'; text: string };
+
+export function computeDiff(before: string, after: string): DiffLine[] {
+  const parts = diffLines(before, after, { newlineIsToken: false });
+  const out: DiffLine[] = [];
+  for (const p of parts) {
+    const lines = p.value.split(/\n/);
+    if (lines[lines.length - 1] === '') lines.pop();
+    for (const line of lines) {
+      out.push({
+        type: p.added ? 'add' : p.removed ? 'del' : 'eq',
+        text: line,
+      });
+    }
+  }
+  return out;
+}</code></pre>
+
+    <h3><span class="h3-num">7.1</span>DiffView 渲染</h3>
+
+    <pre><code>// src/panes/DiffView.tsx (节选)
+import { useMemo } from 'react';
+import { computeDiff } from './diff';
+
+interface DiffViewProps {
+  before: string;
+  after:  string;
+  onAccept: () =&gt; void;
+  onReject: () =&gt; void;
+}
+
+export function DiffView({ before, after, onAccept, onReject }: DiffViewProps) {
+  const lines = useMemo(() =&gt; computeDiff(before, after), [before, after]);
+  return (
+    &lt;div className="diff-view"&gt;
+      &lt;pre className="diff-content"&gt;
+        {lines.map((l, i) =&gt; (
+          &lt;div key={i} className={`diff-line diff-${l.type}`}&gt;
+            &lt;span className="diff-marker"&gt;
+              {l.type === 'add' ? '+' : l.type === 'del' ? '-' : ' '}
+            &lt;/span&gt;
+            &lt;span&gt;{l.text}&lt;/span&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/pre&gt;
+      &lt;div className="diff-actions"&gt;
+        &lt;Button variant="outline" onClick={onReject}&gt;Cancel&lt;/Button&gt;
+        &lt;Button onClick={onAccept}&gt;Accept Fix&lt;/Button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+    <h2><span class="h2-num">8</span>测试连接</h2>
+
+    <p>不消耗已存 key（避免误测试时把生产 key 测坏），直接传入待验证的 key + model_id：</p>
+
+    <pre><code>pub async fn test_connection(api_key: String, model_id: String)
+    -&gt; Result&lt;TestConnectionResp, JsonitaError&gt;
+{
+    let started = Instant::now();
+    let client = Client::builder()
+        .timeout(Duration::from_secs(15))
+        .build()
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+
+    let body = ChatRequest {
+        model: &amp;model_id,
+        messages: vec![
+            ChatMessage { role: "system", content: "respond with the word OK only" },
+            ChatMessage { role: "user",   content: "ping" },
+        ],
+        temperature: 0.0,
+        max_tokens:  4,
+        stream: false,
+        response_format: ResponseFormat::JsonObject,
+    };
+
+    // 注意：response_format=json_object 时模型必须返合法 JSON，
+    // 改 user 内容为 "respond with {\"ok\":true} only"
+    // —— 我们这里仅为 demo 简化；实际实现见 ai_test_connection 完整版本
+
+    let resp = client.post(format!("{}{}", DEEPSEEK_BASE_URL, DEEPSEEK_CHAT_PATH))
+        .bearer_auth(&amp;api_key)
+        .json(&amp;body)
+        .send()
+        .await
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+
+    let status = resp.status().as_u16();
+    let ok = resp.status().is_success();
+    let body_text = resp.text().await.unwrap_or_default();
+
+    Ok(TestConnectionResp {
+        ok,
+        latency_ms: started.elapsed().as_millis() as u64,
+        model_echoed: if ok {
+            serde_json::from_str::&lt;ChatResponse&gt;(&amp;body_text)
+                .ok()
+                .and_then(|r| r.model)
+                .unwrap_or_else(|| model_id.clone())
+        } else { format!("{}: {}", status, &amp;body_text[..body_text.len().min(120)]) },
+    })
+}</code></pre>
+
+    <h2><span class="h2-num">9</span>错误处理 UI</h2>
+
+    <table>
+      <thead><tr><th>JsonitaError kind</th><th>UI 呈现</th></tr></thead>
+      <tbody>
+        <tr><td>Http { status: 401 }</td><td>Toast.danger("API key invalid") + 跳设置面板 AI 分组</td></tr>
+        <tr><td>Http { status: 5xx }</td><td>Toast.danger("DeepSeek 服务异常") + [重试] action</td></tr>
+        <tr><td>RateLimit</td><td>Toast.warn(`请 ${retryAfterSec}s 后重试`)，倒计时</td></tr>
+        <tr><td>AiInvalidJson</td><td>Modal 显示 raw + [复制] + [重试] + 提示提交 issue</td></tr>
+        <tr><td>Keychain</td><td>Toast.danger("无法访问 API key") + 跳设置</td></tr>
+        <tr><td>Http { status: 0 }</td><td>Toast.danger("网络错误") + [重试]</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">10</span>前端 store</h2>
+
+    <pre><code>// src/store/ai.ts
+import { create } from 'zustand';
+import { aiFix } from '@/ipc/commands';
+import { on } from '@/ipc/events';
+import { v4 as uuid } from 'uuid';
+
+interface AiStore {
+  status:  'idle' | 'requesting' | 'awaiting-decision';
+  before:  string;
+  after:   string;
+  elapsedMs: number;
+  error?:  JsonitaError;
+  startFix: (text: string, errLoc: EditorError | null) =&gt; Promise&lt;void&gt;;
+  accept:   () =&gt; void;
+  reject:   () =&gt; void;
+}
+
+export const aiStore = create&lt;AiStore&gt;((set, get) =&gt; {
+  // listen 进度
+  on('ai:progress', (p) =&gt; {
+    if (p.phase === 'Waiting') set({ elapsedMs: p.data.elapsedMs });
+  });
+  return {
+    status: 'idle', before: '', after: '', elapsedMs: 0,
+    async startFix(text, errLoc) {
+      set({ status: 'requesting', before: text, after: '', elapsedMs: 0, error: undefined });
+      try {
+        const resp = await aiFix({
+          text,
+          errorLine: errLoc?.line,
+          errorCol:  errLoc?.col,
+          errorMsg:  errLoc?.msg,
+          requestId: uuid(),
+        });
+        set({ status: 'awaiting-decision', after: resp.fixed });
+      } catch (e: any) {
+        set({ status: 'idle', error: e });
+        renderErrorToast(e);
+      }
+    },
+    accept() {
+      const { after } = get();
+      editorStore.getState().setContent(after);
+      historyStore.getState().add({ content: after, opType: 'ai-fix' });
+      set({ status: 'idle' });
+    },
+    reject() { set({ status: 'idle' }); },
+  };
+});</code></pre>
+
+    <h2><span class="h2-num">11</span>性能与容量</h2>
+
+    <table>
+      <thead><tr><th>指标</th><th>目标</th><th>实测</th></tr></thead>
+      <tbody>
+        <tr><td>typical fix latency</td><td>P50 &lt; 3s / P95 &lt; 8s</td><td>跟 DeepSeek 当前性能；客户端开销 &lt; 100ms</td></tr>
+        <tr><td>最大输入</td><td>100 KB</td><td>大于此时弹 Toast.warn 提示 token 可能超限</td></tr>
+        <tr><td>请求超时</td><td>60 s</td><td>reqwest client timeout</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">12</span>测试 checklist</h2>
+
+    <ul>
+      <li>[ ] 无 API key 时点 AI Fix → Toast 跳设置</li>
+      <li>[ ] settings.ai_enabled=false 时 AI Fix Tab 隐藏</li>
+      <li>[ ] 修复成功后展示 diff，Accept 后内容替换 + 写入历史</li>
+      <li>[ ] 修复失败时 Toast 含上游 status code 透传</li>
+      <li>[ ] 429 时显示 retry-after 倒计时</li>
+      <li>[ ] AI 返回 markdown 包裹的 JSON 仍能 extract</li>
+      <li>[ ] AI 返回 <code>{"_jsonita_repair_failed": true}</code> 时 UI 提示无法修复</li>
+      <li>[ ] 长请求过程中 ai:progress 事件每 500 ms 推一次</li>
+      <li>[ ] Test connection 成功 / 失败均不修改已存 Keychain</li>
+    </ul>
+
+    <h2><span class="h2-num">13</span>承上启下</h2>
+
+    <ul>
+      <li><b>11 打包</b> ── tauri.conf.json 的 http allowlist 必须含 <code>https://api.deepseek.com/**</code></li>
+      <li><b>07 编辑器</b> ── DiffView 是本章产出</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

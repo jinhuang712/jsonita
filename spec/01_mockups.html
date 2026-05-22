@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 01 原型图 & 交互细节</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="01">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 01</span>
+      <h1 class="doc-title">原型图 & 交互细节</h1>
+      <p class="doc-subtitle">所有界面真实 HTML/CSS mockup ── 每个 mock 左右 light/dark 双版。本章是 Jsonita 视觉层的唯一权威。</p>
+    </div>
+
+    <p>其他章节（04 组件库 / 06 窗口 / 07 菜单栏 / 08 编辑器）若需引用界面外观，均链到此章对应 § 节。<b>不允许</b>在别处重复画 UI。</p>
+
+    <h2><span class="h2-num">1</span>主浮窗 ── 6 种状态</h2>
+
+    <h3 id="1.1"><span class="h3-num">1.1</span>Format Tab · valid JSON（默认呼出后）</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{"name":"alice","age":30,"items":["a","b","c"]}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · 2 spaces</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30,
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 5 lines · 76 bytes</span>
+            <span>History (12) · ⚙</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{"name":"alice","age":30,"items":["a","b","c"]}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · 2 spaces</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30,
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 5 lines · 76 bytes</span>
+            <span>History (12) · ⚙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ul>
+      <li><b>顶部 Tab 条</b>：6 个 Tab（AI Fix 仅在 parse error 时出现，见 § 1.5）</li>
+      <li><b>左右栏</b>：1:1 等宽，可拖动 resize；记忆到 <code>window.json</code></li>
+      <li><b>JSON 类型染色</b>：见 <a href="03_design_tokens.html">03 § 2</a> 颜色 token</li>
+    </ul>
+
+    <h3 id="1.2"><span class="h3-num">1.2</span>Minify Tab</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab active">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · single line</div>
+<pre><code>{"name":"alice","age":30}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 1 line · 26 bytes</span>
+            <span>History · ⚙</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab active">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · single line</div>
+<pre><code>{"name":"alice","age":30}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 1 line · 26 bytes</span>
+            <span>History · ⚙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="1.3"><span class="h3-num">1.3</span>Tree Tab（含 hover 复制 ── 见 § 12）</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab active">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "user": {
+    "name": "alice",
+    "active": true,
+    "age": 30
+  },
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 📋</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{3}</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span></div>
+<div class="tree-node"><span class="tree-key">active</span>: <span class="tree-bool">true</span></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[3]</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-index">[0]</span>: <span class="tree-string">"a"</span></div>
+<div class="tree-node"><span class="tree-index">[1]</span>: <span class="tree-string">"b"</span></div>
+<div class="tree-node"><span class="tree-index">[2]</span>: <span class="tree-string">"c"</span></div>
+</div>
+</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 11 nodes</span>
+            <span>History · ⚙</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab active">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "user": {
+    "name": "alice",
+    "active": true,
+    "age": 30
+  },
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 📋</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{3}</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span></div>
+<div class="tree-node"><span class="tree-key">active</span>: <span class="tree-bool">true</span></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[3]</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-index">[0]</span>: <span class="tree-string">"a"</span></div>
+<div class="tree-node"><span class="tree-index">[1]</span>: <span class="tree-string">"b"</span></div>
+<div class="tree-node"><span class="tree-index">[2]</span>: <span class="tree-string">"c"</span></div>
+</div>
+</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 11 nodes</span>
+            <span>History · ⚙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="1.4"><span class="h3-num">1.4</span>→Str / →JSON 互转</h3>
+
+    <p>结构同 § 1.1，仅 active tab 与 panel 内容变。略 ── light/dark 配色规则同 § 1.1-1.3。</p>
+
+    <h3 id="1.5"><span class="h3-num">1.5</span>错误状态 + AI Fix Tab 出现</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai">✨ AI Fix</button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input · 非法</div>
+<pre><code>{
+  name: 'alice',
+  age: 30,
+  items: ["a","b",],
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label" style="color: var(--danger);">Output · 错误</div>
+<pre style="color: var(--text-faint); font-style: italic;"><code>// 等待修复后输出</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span style="color: var(--danger); font-weight: 600;">● Line 2, Col 3: key must be a string</span>
+            <span>History · ⚙</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai">✨ AI Fix</button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input · 非法</div>
+<pre><code>{
+  name: 'alice',
+  age: 30,
+  items: ["a","b",],
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label" style="color: #F87171;">Output · 错误</div>
+<pre style="color: rgba(255,255,255,0.4); font-style: italic;"><code>// 等待修复后输出</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span style="color: #F87171; font-weight: 600;">● Line 2, Col 3: key must be a string</span>
+            <span>History · ⚙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="1.6"><span class="h3-num">1.6</span>单窗模式（Single-pane）</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">In-place editor · ⌘Z 撤销</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · single-pane</span>
+            <span>⌘Z to undo</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">In-place editor · ⌘Z 撤销</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · single-pane</span>
+            <span>⌘Z to undo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">2</span>状态栏 ── 4 态对照</h2>
+
+    <table>
+      <thead><tr><th>状态</th><th>light</th><th>dark</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>valid</td>
+          <td><div style="padding:6px 12px; background:#FAFAFC; border:1px solid #E5E7EB; border-radius:6px; font-family:var(--font-mono); font-size:11px;"><span style="color:#06B78F;font-weight:600;">●</span> Valid JSON · 5 lines · 76 bytes</div></td>
+          <td><div style="padding:6px 12px; background:#1F1F22; border:1px solid #2E2E33; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#E5E7EB;"><span style="color:#28D9A8;font-weight:600;">●</span> Valid JSON · 5 lines · 76 bytes</div></td>
+        </tr>
+        <tr>
+          <td>error</td>
+          <td><div style="padding:6px 12px; background:#FAFAFC; border:1px solid #E5E7EB; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#DC2626; font-weight:600;">● Line 3, Col 12: unexpected token ','</div></td>
+          <td><div style="padding:6px 12px; background:#1F1F22; border:1px solid #2E2E33; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#F87171; font-weight:600;">● Line 3, Col 12: unexpected token ','</div></td>
+        </tr>
+        <tr>
+          <td>empty</td>
+          <td><div style="padding:6px 12px; background:#FAFAFC; border:1px solid #E5E7EB; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#9CA3AF;">— Paste JSON to start</div></td>
+          <td><div style="padding:6px 12px; background:#1F1F22; border:1px solid #2E2E33; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#6B7280;">— Paste JSON to start</div></td>
+        </tr>
+        <tr>
+          <td>large</td>
+          <td><div style="padding:6px 12px; background:#FAFAFC; border:1px solid #E5E7EB; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#D97706; font-weight:600;">● Large file · 5.4 MB</div></td>
+          <td><div style="padding:6px 12px; background:#1F1F22; border:1px solid #2E2E33; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#F0A23A; font-weight:600;">● Large file · 5.4 MB</div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">3</span>菜单栏 tray + 下拉菜单</h2>
+
+    <p>左键 toggle 浮窗；右键弹下拉。tray 图标用 template variant 自动反色（见 <a href="05_icons_theme.html">05 § 3.5</a>）。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light menubar</div>
+        <div class="mockup-window" style="max-width: 340px;">
+          <div class="mockup-titlebar" style="background: linear-gradient(to bottom, #F5F5F7, #ECECEE);">
+            <span class="mockup-menubar-icon">
+              <img src="../assets/icons/menubar/jsonita-menubar-template-22@2x.png" width="14" height="14" style="vertical-align: -2px;"> Jsonita
+            </span>
+            <div style="flex:1;"></div>
+            <span style="color: var(--text-muted); font-size: 11px; font-family: var(--font-mono);">10:42</span>
+          </div>
+          <div style="padding: 6px 0; background: #FAFAFC;">
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Open Jsonita</span><kbd>⌘⇧J</kbd></div>
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Restore Last</span><kbd>⌘⇧L</kbd></div>
+            <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
+            <div style="padding: 7px 14px; font-size: 12.5px;">Show History…</div>
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd>⌘,</kbd></div>
+            <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
+            <div style="padding: 7px 14px; font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd>⌘Q</kbd></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark menubar</div>
+        <div class="mockup-window dark" style="max-width: 340px;">
+          <div class="mockup-titlebar">
+            <span class="mockup-menubar-icon">
+              <img src="../assets/icons/menubar/jsonita-menubar-template-22@2x.png" width="14" height="14" style="filter: invert(1); vertical-align: -2px;"> Jsonita
+            </span>
+            <div style="flex:1;"></div>
+            <span style="color: rgba(255,255,255,0.55); font-size: 11px; font-family: var(--font-mono);">10:42</span>
+          </div>
+          <div style="padding: 6px 0; background: #2A2A2E; color: #E5E7EB;">
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Open Jsonita</span><kbd style="background:#1F1F22; border-color:#3F3F46; color:#E5E7EB;">⌘⇧J</kbd></div>
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Restore Last</span><kbd style="background:#1F1F22; border-color:#3F3F46; color:#E5E7EB;">⌘⇧L</kbd></div>
+            <div style="border-top: 1px solid #3F3F46; margin: 4px 0;"></div>
+            <div style="padding: 7px 14px; font-size: 12.5px;">Show History…</div>
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd style="background:#1F1F22; border-color:#3F3F46; color:#E5E7EB;">⌘,</kbd></div>
+            <div style="border-top: 1px solid #3F3F46; margin: 4px 0;"></div>
+            <div style="padding: 7px 14px; font-size: 12.5px; color: #9BA3AF; display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd style="background:#1F1F22; border-color:#3F3F46; color:#E5E7EB;">⌘Q</kbd></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">4</span>设置 Modal</h2>
+
+    <p>整体 W 720 × H 540（最大）。左 nav 180 + 右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset 弹二次确认。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">Settings</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 130px 1fr; min-height: 260px; background: var(--bg);">
+            <nav style="background: var(--bg-card); border-right: 1px solid var(--border); padding: 12px 0; font-size: 12px;">
+              <div style="padding: 6px 12px; background: var(--primary-soft); color: var(--primary); border-left: 2px solid var(--primary); font-weight: 600;">General</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">Shortcuts</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">AI</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">History</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">JSON Transform</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">About</div>
+            </nav>
+            <div style="padding: 14px 18px; font-size: 12px;">
+              <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>开机自启动</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>智能扩宽</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>初始宽度</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">920 ▾</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>主题</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">System ▾</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:var(--danger);">重置浮窗尺寸</span><button style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--danger); border-radius:4px; color:var(--danger);">Reset</button></div>
+            </div>
+          </div>
+          <div style="padding: 8px 16px; background: var(--bg-card); border-top: 1px solid var(--border); text-align: right;">
+            <button style="padding: 4px 12px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 12px; margin-right: 4px;">Reset all</button>
+            <button style="padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">Done</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">Settings</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 130px 1fr; min-height: 260px; background: #1F1F22;">
+            <nav style="background: #232326; border-right: 1px solid #2E2E33; padding: 12px 0; font-size: 12px;">
+              <div style="padding: 6px 12px; background: rgba(59,156,255,0.12); color: #3B9CFF; border-left: 2px solid #3B9CFF; font-weight: 600;">General</div>
+              <div style="padding: 6px 12px; color: #9BA3AF;">Shortcuts</div>
+              <div style="padding: 6px 12px; color: #9BA3AF;">AI</div>
+              <div style="padding: 6px 12px; color: #9BA3AF;">History</div>
+              <div style="padding: 6px 12px; color: #9BA3AF;">JSON Transform</div>
+              <div style="padding: 6px 12px; color: #9BA3AF;">About</div>
+            </nav>
+            <div style="padding: 14px 18px; font-size: 12px; color: #E5E7EB;">
+              <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2E2E33;"><span>开机自启动</span><span style="width:30px;height:17px;background:#3B9CFF;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2E2E33;"><span>智能扩宽</span><span style="width:30px;height:17px;background:#3B9CFF;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2E2E33;"><span>初始宽度</span><span style="padding:2px 8px; background:#2A2A2E; border:1px solid #3F3F46; border-radius:4px; color:#E5E7EB;">920 ▾</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2E2E33;"><span>主题</span><span style="padding:2px 8px; background:#2A2A2E; border:1px solid #3F3F46; border-radius:4px; color:#E5E7EB;">System ▾</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:#F87171;">重置浮窗尺寸</span><button style="padding:2px 8px; background:#2A2A2E; border:1px solid #F87171; border-radius:4px; color:#F87171;">Reset</button></div>
+            </div>
+          </div>
+          <div style="padding: 8px 16px; background: #232326; border-top: 1px solid #2E2E33; text-align: right;">
+            <button style="padding: 4px 12px; background: #2A2A2E; border: 1px solid #3F3F46; color: #E5E7EB; border-radius: 4px; font-size: 12px; margin-right: 4px;">Reset all</button>
+            <button style="padding: 4px 12px; background: #3B9CFF; color: white; border: none; border-radius: 4px; font-size: 12px;">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">5</span>历史 Modal</h2>
+
+    <p>结构：搜索框 + 筛选 chips（All / Pinned / Starred）+ ScrollArea 列表。op-type chip 配色见 <a href="04_components.html">04 § 4.5</a>。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">History</div>
+          </div>
+          <div style="padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center;">
+            <div style="flex: 1; padding: 4px 10px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 11px; color: var(--text-muted);">🔍 Search…</div>
+            <span style="padding: 3px 8px; background: var(--primary); color: white; border-radius: 10px; font-size: 10px;">All</span>
+            <span style="padding: 3px 8px; background: var(--bg-code); color: var(--text-muted); border-radius: 10px; font-size: 10px;">Pin</span>
+            <span style="padding: 3px 8px; background: var(--bg-code); color: var(--text-muted); border-radius: 10px; font-size: 10px;">★</span>
+          </div>
+          <div style="background: var(--bg-card);">
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); border-left: 3px solid var(--primary); background: var(--primary-soft);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--accent-soft); color:var(--accent); border-radius:3px; font-size:9.5px; font-weight:600;">AI-FIX</span><span style="font-size:10px; color:var(--text-faint);">📌  2m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"name":"alice","age":30}</div>
+            </div>
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--primary-soft); color:var(--primary); border-radius:3px; font-size:9.5px; font-weight:600;">FORMAT</span><span style="font-size:10px; color:var(--text-faint);">★  12m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"code":200,"data":{"name":"alice"}}</div>
+            </div>
+            <div style="padding: 10px 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--info-bg); color:var(--info); border-radius:3px; font-size:9.5px; font-weight:600;">TREE</span><span style="font-size:10px; color:var(--text-faint);">38m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[{"x":1,"y":2},{"x":3,"y":4}]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">History</div>
+          </div>
+          <div style="padding: 12px 16px; background: #232326; border-bottom: 1px solid #2E2E33; display: flex; gap: 8px; align-items: center;">
+            <div style="flex: 1; padding: 4px 10px; background: #1F1F22; border: 1px solid #3F3F46; border-radius: 4px; font-size: 11px; color: #9BA3AF;">🔍 Search…</div>
+            <span style="padding: 3px 8px; background: #3B9CFF; color: white; border-radius: 10px; font-size: 10px;">All</span>
+            <span style="padding: 3px 8px; background: #2A2A2E; color: #9BA3AF; border-radius: 10px; font-size: 10px;">Pin</span>
+            <span style="padding: 3px 8px; background: #2A2A2E; color: #9BA3AF; border-radius: 10px; font-size: 10px;">★</span>
+          </div>
+          <div style="background: #232326; color: #E5E7EB;">
+            <div style="padding: 10px 16px; border-bottom: 1px solid #2E2E33; border-left: 3px solid #3B9CFF; background: rgba(59,156,255,0.12);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:rgba(251,164,58,0.18); color:#FBA43A; border-radius:3px; font-size:9.5px; font-weight:600;">AI-FIX</span><span style="font-size:10px; color:#6B7280;">📌  2m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"name":"alice","age":30}</div>
+            </div>
+            <div style="padding: 10px 16px; border-bottom: 1px solid #2E2E33;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:rgba(59,156,255,0.12); color:#5DA8FF; border-radius:3px; font-size:9.5px; font-weight:600;">FORMAT</span><span style="font-size:10px; color:#6B7280;">★  12m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"code":200,"data":{"name":"alice"}}</div>
+            </div>
+            <div style="padding: 10px 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:rgba(96,165,250,0.14); color:#60A5FA; border-radius:3px; font-size:9.5px; font-weight:600;">TREE</span><span style="font-size:10px; color:#6B7280;">38m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[{"x":1,"y":2},{"x":3,"y":4}]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">6</span>RestoreBar</h2>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div style="padding: 10px 16px; background: var(--info-bg); border: 1px solid var(--info); border-radius: 6px; display: flex; justify-content: space-between; color: var(--info); font-size: 13px;">
+          <span>↻ Restored from 3 min ago</span>
+          <span style="cursor: pointer; font-weight: 500;">Discard ×</span>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div style="padding: 10px 16px; background: rgba(96,165,250,0.14); border: 1px solid #60A5FA; border-radius: 6px; display: flex; justify-content: space-between; color: #60A5FA; font-size: 13px;">
+          <span>↻ Restored from 3 min ago</span>
+          <span style="cursor: pointer; font-weight: 500;">Discard ×</span>
+        </div>
+      </div>
+    </div>
+
+    <p>5 秒后自动淡出，点 Discard 立即清空 + 隐藏。</p>
+
+    <h2><span class="h2-num">7</span>Toast ── 4 variant × light/dark</h2>
+
+    <table>
+      <thead><tr><th>variant</th><th>light</th><th>dark</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>info</td>
+          <td><div style="padding: 8px 12px; background: var(--info-bg); border: 1px solid var(--info); color: var(--info); border-radius: 6px; font-size: 12px;"><b>ℹ Restored from 3 min ago</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Cmd+Z to revert</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(96,165,250,0.14); border: 1px solid #60A5FA; color: #60A5FA; border-radius: 6px; font-size: 12px;"><b>ℹ Restored from 3 min ago</b><br><span style="font-size: 10.5px; color: #9BA3AF;">Cmd+Z to revert</span></div></td>
+        </tr>
+        <tr>
+          <td>ok</td>
+          <td><div style="padding: 8px 12px; background: var(--ok-bg); border: 1px solid var(--ok); color: var(--ok); border-radius: 6px; font-size: 12px;"><b>✓ Copied: user.name</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Path 已复制</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(40,217,168,0.14); border: 1px solid #28D9A8; color: #28D9A8; border-radius: 6px; font-size: 12px;"><b>✓ Copied: user.name</b><br><span style="font-size: 10.5px; color: #9BA3AF;">Path 已复制</span></div></td>
+        </tr>
+        <tr>
+          <td>warn</td>
+          <td><div style="padding: 8px 12px; background: var(--warn-bg); border: 1px solid var(--warn); color: var(--warn); border-radius: 6px; font-size: 12px;"><b>⚠ Rate limited</b><br><span style="font-size: 10.5px; color: var(--text-muted);">请 42s 后重试</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(240,162,58,0.14); border: 1px solid #F0A23A; color: #F0A23A; border-radius: 6px; font-size: 12px;"><b>⚠ Rate limited</b><br><span style="font-size: 10.5px; color: #9BA3AF;">请 42s 后重试</span></div></td>
+        </tr>
+        <tr>
+          <td>danger</td>
+          <td><div style="padding: 8px 12px; background: var(--danger-bg); border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; font-size: 12px;"><b>✕ API key invalid</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Open Settings</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(248,113,113,0.14); border: 1px solid #F87171; color: #F87171; border-radius: 6px; font-size: 12px;"><b>✕ API key invalid</b><br><span style="font-size: 10.5px; color: #9BA3AF;">Open Settings</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">8</span>AI Fix · DiffView</h2>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai active">✨ AI Fix</button>
+          </div>
+          <div style="padding: 12px 14px; background: var(--bg-card); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75;">
+            <div style="background: rgba(220,38,38,0.08);"><span style="color: var(--danger);">-</span>  {</div>
+            <div style="background: rgba(220,38,38,0.08);"><span style="color: var(--danger);">-</span>    name: 'alice',</div>
+            <div style="background: rgba(6,183,143,0.10);"><span style="color: var(--ok);">+</span>  {</div>
+            <div style="background: rgba(6,183,143,0.10);"><span style="color: var(--ok);">+</span>    "name": "alice",</div>
+            <div><span style="color: var(--text-faint);"> </span>    "age": 30,</div>
+            <div style="background: rgba(220,38,38,0.08);"><span style="color: var(--danger);">-</span>    items: ["a",],</div>
+            <div style="background: rgba(6,183,143,0.10);"><span style="color: var(--ok);">+</span>    "items": ["a"]</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: flex-end; padding: 8px 14px; background: var(--bg); border-top: 1px solid var(--border);">
+            <button style="padding: 4px 12px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 12px;">Cancel</button>
+            <button style="padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">Accept</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai active">✨ AI Fix</button>
+          </div>
+          <div style="padding: 12px 14px; background: #232326; color: #E5E7EB; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75;">
+            <div style="background: rgba(248,113,113,0.16);"><span style="color: #F87171;">-</span>  {</div>
+            <div style="background: rgba(248,113,113,0.16);"><span style="color: #F87171;">-</span>    name: 'alice',</div>
+            <div style="background: rgba(40,217,168,0.16);"><span style="color: #28D9A8;">+</span>  {</div>
+            <div style="background: rgba(40,217,168,0.16);"><span style="color: #28D9A8;">+</span>    "name": "alice",</div>
+            <div><span style="color: #6B7280;"> </span>    "age": 30,</div>
+            <div style="background: rgba(248,113,113,0.16);"><span style="color: #F87171;">-</span>    items: ["a",],</div>
+            <div style="background: rgba(40,217,168,0.16);"><span style="color: #28D9A8;">+</span>    "items": ["a"]</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: flex-end; padding: 8px 14px; background: #1F1F22; border-top: 1px solid #2E2E33;">
+            <button style="padding: 4px 12px; background: #2A2A2E; border: 1px solid #3F3F46; color: #E5E7EB; border-radius: 4px; font-size: 12px;">Cancel</button>
+            <button style="padding: 4px 12px; background: #3B9CFF; color: white; border: none; border-radius: 4px; font-size: 12px;">Accept</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">9</span>macOS 权限引导 Modal</h2>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window" style="max-width: 360px;">
+          <div style="padding: 20px 22px; background: var(--bg-card); text-align: center;">
+            <div style="font-size: 30px; margin-bottom: 8px;">⌨️</div>
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">需要键盘事件权限</div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.55; margin-bottom: 16px;">全局快捷键 <kbd>⌘⇧J</kbd> 需要 Input Monitoring。</div>
+            <div style="display: flex; gap: 6px; justify-content: center;">
+              <button style="padding: 6px 14px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 12px;">稍后</button>
+              <button style="padding: 6px 14px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">打开系统设置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark" style="max-width: 360px;">
+          <div style="padding: 20px 22px; background: #232326; color: #E5E7EB; text-align: center;">
+            <div style="font-size: 30px; margin-bottom: 8px;">⌨️</div>
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">需要键盘事件权限</div>
+            <div style="font-size: 12px; color: #9BA3AF; line-height: 1.55; margin-bottom: 16px;">全局快捷键 <kbd style="background:#1F1F22; border-color:#3F3F46; color:#E5E7EB;">⌘⇧J</kbd> 需要 Input Monitoring。</div>
+            <div style="display: flex; gap: 6px; justify-content: center;">
+              <button style="padding: 6px 14px; background: #2A2A2E; border: 1px solid #3F3F46; color: #E5E7EB; border-radius: 4px; font-size: 12px;">稍后</button>
+              <button style="padding: 6px 14px; background: #3B9CFF; color: white; border: none; border-radius: 4px; font-size: 12px;">打开系统设置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">10</span>Empty States</h2>
+
+    <h3><span class="h3-num">10.1</span>浮窗无内容</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body" style="min-height: 160px;">
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: var(--text-faint);">
+              <div style="text-align: center;">
+                <div style="font-size: 22px; margin-bottom: 6px;">{ }</div>
+                <div style="font-size: 12px;">Paste JSON to start</div>
+                <div style="font-size: 10.5px; margin-top: 4px;"><kbd>⌘V</kbd></div>
+              </div>
+            </div>
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 11px;">→ output</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+          </div>
+          <div class="mockup-body" style="min-height: 160px;">
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: #6B7280;">
+              <div style="text-align: center;">
+                <div style="font-size: 22px; margin-bottom: 6px;">{ }</div>
+                <div style="font-size: 12px;">Paste JSON to start</div>
+                <div style="font-size: 10.5px; margin-top: 4px;"><kbd style="background:#1F1F22; border-color:#3F3F46; color:#E5E7EB;">⌘V</kbd></div>
+              </div>
+            </div>
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: #6B7280; font-size: 11px;">→ output</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">10.2</span>历史空 / 无 API key</h3>
+
+    <p>结构同上 ── "No history yet · 操作过的 JSON 自动保存" / "AI Fix 未配置 · 打开设置 ⚙ 配置 DeepSeek API key"。略。</p>
+
+    <h2 id="11"><span class="h2-num">11</span>浮窗智能宽度（plan F10）</h2>
+
+    <p>4 层逻辑（首次 / 粘贴扩 / 拖动 / soft-wrap）的视觉示意。<b>克制：最大不占满屏 · 初次不能太小</b>。详细算法见 <a href="06_window.html">06 § 9 智能宽度</a>。</p>
+
+    <h3><span class="h3-num">11.1</span>层 1 ── 首次呼出（默认 920 × 560）</h3>
+
+    <div class="mockup-window" style="max-width: 460px;">
+      <div class="mockup-tabs">
+        <button class="mockup-tab active">Format</button>
+        <button class="mockup-tab">Minify</button>
+        <button class="mockup-tab">Tree</button>
+        <button class="mockup-tab">→Str</button>
+        <button class="mockup-tab">→JSON</button>
+        <div class="mockup-tab-spacer"></div>
+      </div>
+      <div class="mockup-body" style="min-height: 100px;">
+        <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">920 × 560 · empty</div>
+        <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">→</div>
+      </div>
+      <div class="mockup-statusbar"><span style="color:var(--text-faint);">— Paste JSON to start</span><span>⚙</span></div>
+    </div>
+
+    <h3><span class="h3-num">11.2</span>层 2 ── 粘贴后自动扩宽</h3>
+
+    <table>
+      <thead><tr><th>maxLineChars</th><th>计算</th><th>ideal_w</th><th>行为</th></tr></thead>
+      <tbody>
+        <tr><td>≤ 80</td><td>不触发</td><td>—</td><td>保持当前</td></tr>
+        <tr><td>100</td><td>100×8+64</td><td>864 px</td><td>仍为 920（已大于 ideal，不缩）</td></tr>
+        <tr><td>160</td><td>160×8+64</td><td>1344 px</td><td>920 → 1344（150ms 动画）</td></tr>
+        <tr><td>240</td><td>1984</td><td>clamp(720, min(1400, 屏宽×70%))</td><td>13" 屏 → 1008；27" 屏 → 1400</td></tr>
+      </tbody>
+    </table>
+
+    <div class="mockup-window">
+      <div class="mockup-tabs">
+        <button class="mockup-tab active">Format</button>
+        <button class="mockup-tab">Minify</button>
+        <button class="mockup-tab">Tree</button>
+        <button class="mockup-tab">→Str</button>
+        <button class="mockup-tab">→JSON</button>
+        <div class="mockup-tab-spacer"></div>
+      </div>
+      <div class="mockup-body" style="min-height: 80px;">
+        <div class="mockup-panel"><div class="mockup-panel-label">Input · 160 ch 长行</div><pre style="white-space: nowrap; overflow-x: auto;"><code>{"description":"a very long single-line description that triggers auto-widen","ok":true}</code></pre></div>
+        <div class="mockup-panel"><div class="mockup-panel-label">Output</div><pre><code>{
+  "description": "a very long ...",
+  "ok": true
+}</code></pre></div>
+      </div>
+      <div class="mockup-statusbar"><span><span class="mockup-status-ok">● Valid JSON</span> · auto-widened to 1344 px</span><span>⚙</span></div>
+    </div>
+
+    <h3><span class="h3-num">11.3</span>层 3 ── 手动拖动锁定</h3>
+
+    <ul>
+      <li>用户拖动后立即写 <code>window.json</code> + <code>user_dragged = true</code></li>
+      <li>下次呼出沿用</li>
+      <li>之后再粘贴长内容 <b>不再</b>自动扩宽 ── 用户尺寸锁定</li>
+      <li>设置 General "重置浮窗尺寸" 按钮可清</li>
+    </ul>
+
+    <h3><span class="h3-num">11.4</span>层 4 ── soft-wrap 跳过自动扩宽</h3>
+
+    <p>soft-wrap = on（默认）→ 长行换行不溢出，<b>不需要</b>扩宽，层 2 跳过。soft-wrap = off → 长行水平滚动，层 2 触发扩宽。</p>
+
+    <h2 id="12"><span class="h2-num">12</span>Tree 节点 Hover 复制（plan F2 · spec 08 § 4.5）</h2>
+
+    <p>hover 任意节点 → 行尾出现 <code>📋</code>。leaf 复制 raw value；object/array 递归复制 pretty JSON。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light · 悬停在 leaf "alice"</div>
+        <div class="mockup-window">
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 📋</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node" style="background: var(--primary-soft);"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span><button class="tree-copy-icon" style="opacity: 1;">📋 copy</button></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[2]</span></div>
+</div>
+              </div>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px;">点 📋 → 剪贴板 = <code>"alice"</code>（带引号 raw）→ Toast "Copied"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark · 悬停在 object root</div>
+        <div class="mockup-window dark">
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 📋</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node" style="background: rgba(59,156,255,0.10);">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span><button class="tree-copy-icon" style="opacity: 1;">📋 copy</button></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[2]</span></div>
+</div>
+              </div>
+              <p style="font-size: 11.5px; color: #9BA3AF; margin-top: 8px;">点 📋 → 剪贴板 = 整个 subtree pretty JSON（含 user / items）</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p><b>复制内容规则</b>：</p>
+
+    <table>
+      <thead><tr><th>node 类型</th><th>剪贴板内容</th></tr></thead>
+      <tbody>
+        <tr><td>string leaf</td><td>带引号 raw：<code>"alice"</code></td></tr>
+        <tr><td>number leaf</td><td>字面量：<code>30</code></td></tr>
+        <tr><td>bool leaf</td><td><code>true</code> / <code>false</code></td></tr>
+        <tr><td>null leaf</td><td><code>null</code></td></tr>
+        <tr><td>object / array node（含 root）</td><td>递归 pretty-print 2 空格缩进 JSON</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>键盘可达</b>：聚焦节点行按 <kbd>⌘C</kbd> 等同于点 📋。点击 key 文字本身仍复制 path（如 <code>user.name</code>），两者独立。</p>
+
+    <h2><span class="h2-num">13</span>承接关系</h2>
+
+    <table>
+      <thead><tr><th>章节</th><th>引用本章哪节</th></tr></thead>
+      <tbody>
+        <tr><td>04 组件库 · TreeView</td><td>§ 1.3 · § 12</td></tr>
+        <tr><td>04 组件库 · RestoreBar / HistoryItem / SettingsModal / DiffView</td><td>§ 6 · § 5 · § 4 · § 8</td></tr>
+        <tr><td>06 窗口 runtime · 智能宽度</td><td>§ 11</td></tr>
+        <tr><td>07 菜单栏 · tray / 权限</td><td>§ 3 · § 9</td></tr>
+        <tr><td>08 编辑器 & 树 · hover 复制</td><td>§ 1.3 · § 12</td></tr>
+        <tr><td>11 AI 客户端 · DiffView · 无 API key</td><td>§ 8 · § 10.2</td></tr>
+      </tbody>
+    </table>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

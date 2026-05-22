@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Plan · 04 非功能性需求</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="plan" data-chapter="04">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">PLAN · 章节 04</span>
+      <h1 class="doc-title">非功能性需求（NFR）</h1>
+      <p class="doc-subtitle">性能、隐私、可用性、兼容性，每项都有可测量的目标。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>性能</h2>
+    <table>
+      <thead><tr><th>指标</th><th>目标</th><th>测量方式</th></tr></thead>
+      <tbody>
+        <tr><td>冷启动（首次菜单栏点击 → 浮窗可交互）</td><td>&lt; 800ms（首次）/ &lt; 500ms（已驻留）</td><td>手动秒表 + performance API</td></tr>
+        <tr><td>呼出（快捷键 → 浮窗可交互）</td><td>&lt; 500ms（P95）</td><td>performance.mark</td></tr>
+        <tr><td>稳态内存</td><td>&lt; 80MB（编辑器空闲时）</td><td>Activity Monitor</td></tr>
+        <tr><td>峰值内存（处理 1MB JSON）</td><td>&lt; 200MB</td><td>Activity Monitor</td></tr>
+        <tr><td>安装包体积（.dmg）</td><td>&lt; 15MB</td><td>Finder</td></tr>
+        <tr><td>10KB JSON 格式化</td><td>&lt; 20ms</td><td>Rust 后端 benchmark</td></tr>
+        <tr><td>100KB JSON 格式化</td><td>&lt; 50ms</td><td>同上</td></tr>
+        <tr><td>1MB JSON 树状渲染</td><td>&lt; 800ms（初次渲染完成）</td><td>前端 performance.mark</td></tr>
+        <tr><td>历史记录搜索（100 条）</td><td>&lt; 30ms</td><td>SQLite 内置 timing</td></tr>
+        <tr><td>AI Fix 响应（DeepSeek）</td><td>P50 &lt; 3s / P95 &lt; 8s</td><td>客户端日志</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">2</span>隐私</h2>
+    <ul>
+      <li><b>本地处理</b>：JSON 内容完全本地（Rust + WebView），除 AI Auto Fix 用户主动触发外不联网</li>
+      <li><b>密钥管理</b>：
+        <ul>
+          <li>DeepSeek API key 用 macOS Keychain（<code>keyring</code> crate）加密存储</li>
+          <li>UI 上始终显示为 <code>••••••••</code>，不显示明文</li>
+          <li>读取 key 时仅在 IPC 调用栈内传递，不持久化到任何配置文件</li>
+        </ul>
+      </li>
+      <li><b>无 telemetry</b>：首版本不收集任何使用数据 / 崩溃日志（如未来开启，必须用户显式同意）</li>
+      <li><b>请求最小化</b>：调 DeepSeek 时只发送当前编辑器内容 + parse 错误信息，不发送历史记录、文件名、机器信息</li>
+      <li><b>本地数据透明</b>：历史 SQLite 文件路径公开（<code>~/Library/Application Support/Jsonita/history.db</code>），用户可直接查看 / 删除</li>
+      <li><b>卸载清理</b>：提供清理脚本删除所有本地数据（历史 / 设置 / Keychain 条目）</li>
+    </ul>
+
+    <h2><span class="h2-num">3</span>可用性</h2>
+    <ul>
+      <li><b>失焦行为可控</b>：默认失焦隐藏，设置可关闭</li>
+      <li><b>主题适配</b>：跟随系统亮 / 暗模式，可手动覆盖</li>
+      <li><b>全键盘可达</b>：所有核心功能都有快捷键（详见 <a href="01_features.html">01 · F6 全局快捷键</a>）</li>
+      <li><b>语言</b>：v1 首版本 UI 仅英文；中文 UI 在 M3 阶段</li>
+      <li><b>Empty State</b>：所有面板（无 JSON / 无历史 / 无 API key）都有清晰的引导提示</li>
+    </ul>
+
+    <h2><span class="h2-num">4</span>兼容性</h2>
+    <table>
+      <thead><tr><th>平台</th><th>支持版本</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>macOS</td><td>11 (Big Sur) 及以上</td><td>Tauri 2.x 最低要求</td></tr>
+        <tr><td>架构</td><td>Apple Silicon (arm64) + Intel (x64) universal</td><td>.dmg 内含 universal binary</td></tr>
+        <tr><td>Windows</td><td>10 / 11（M3 阶段评估）</td><td>同一份代码，Tauri 自动构建</td></tr>
+        <tr><td>Linux</td><td>v1 不支持</td><td>受众小 + GTK / WebKitGTK 适配成本</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">5</span>可靠性</h2>
+    <ul>
+      <li><b>崩溃容忍</b>：前端崩溃不影响菜单栏（Rust 端独立）；可一键 reload 浮窗</li>
+      <li><b>数据丢失</b>：所有用户输入在浮窗关闭前自动入历史；历史写入用事务保证一致</li>
+      <li><b>升级安全</b>：自动检测旧版本数据 schema，自动迁移；迁移失败保留备份</li>
+      <li><b>网络容错</b>：DeepSeek 调用失败时清晰报错 + 重试按钮；不重试到死</li>
+    </ul>
+
+    <h2><span class="h2-num">6</span>可观察性</h2>
+    <ul>
+      <li>v1 不做任何上报，仅在本地写一份滚动日志：<code>~/Library/Logs/Jsonita/app.log</code></li>
+      <li>日志级别：错误 / 警告（不记录用户 JSON 内容）</li>
+      <li>设置面板提供「打开日志目录」按钮，方便排障</li>
+    </ul>
+
+    <h2><span class="h2-num">7</span>分发</h2>
+
+    <h3><span class="h3-num">7.1</span>v1（仅 macOS）</h3>
+    <ul>
+      <li><b>格式</b>：<code>.dmg</code>（universal arm64 + x64）</li>
+      <li><b>签名</b>：Apple Developer ID + notarization → 新 Mac 双击即开，无 Gatekeeper 警告</li>
+      <li><b>渠道</b>：GitHub Releases（<b>不</b>上 Mac App Store —— 沙箱限制 Keychain / 全局快捷键）</li>
+      <li><b>更新</b>：v1 用户手动下载新版（About 页提供「打开 GitHub Releases」按钮）</li>
+    </ul>
+
+    <h3><span class="h3-num">7.2</span>v1.1+ 分发扩展</h3>
+    <table>
+      <thead><tr><th>平台</th><th>格式 / 命令</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td rowspan="2"><b>macOS</b></td>
+          <td><code>.dmg</code> via GitHub Releases</td>
+          <td>v1 已有，继续保留</td>
+        </tr>
+        <tr>
+          <td><code>brew install jsonita</code></td>
+          <td>建立 homebrew tap（<code>klook/homebrew-tap</code> 或独立 tap），cask 模式拉 .dmg</td>
+        </tr>
+        <tr>
+          <td rowspan="2"><b>Windows 10/11</b></td>
+          <td><code>.exe</code>（NSIS installer）</td>
+          <td><b>推荐主格式</b>：个人用户最熟；带卸载器；菜单栏 / 自启动配置友好</td>
+        </tr>
+        <tr>
+          <td><code>.msi</code>（Wix）</td>
+          <td>可选：企业批量部署、winget 仓库收录需要 MSI</td>
+        </tr>
+        <tr>
+          <td><b>跨平台 CLI 包装</b></td>
+          <td><code>npx jsonita</code> / <code>npm i -g jsonita</code></td>
+          <td>npm 包是个小启动器，下载对应平台 binary 到本地缓存后启动；面向 Node 生态开发者</td>
+        </tr>
+        <tr>
+          <td><b>Linux</b></td>
+          <td>—</td>
+          <td>v1 / v2 都不做：受众小 + GTK / WebKitGTK 适配成本</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">7.3</span>Windows 分发格式选型</h3>
+    <table>
+      <thead><tr><th>格式</th><th>选 / 不选</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td><code>.exe</code> (NSIS)</td><td>✓ 主</td><td>Tauri 默认；用户体验最接近 macOS .dmg 双击即装；体积小</td></tr>
+        <tr><td><code>.msi</code> (Wix)</td><td>✓ 备</td><td>企业 IT 友好；winget 收录要 MSI</td></tr>
+        <tr><td>zip portable</td><td>✗</td><td>用户要手动解压、放路径、设权限；菜单栏图标 / 全局快捷键依赖安装态；劝退普通用户</td></tr>
+        <tr><td>Windows Store (MSIX)</td><td>✗（v2 再说）</td><td>沙箱限制 + 上架审核 + 抽成</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">7.4</span>签名</h3>
+    <ul>
+      <li><b>macOS</b>：Apple Developer ID + notarization（v1 必须）</li>
+      <li><b>Windows</b>：EV Code Signing Certificate（v1.1+ Windows 发布前完成；未签名会触发 SmartScreen 警告劝退用户）</li>
+    </ul>
+
+    <h3><span class="h3-num">7.5</span>自动更新</h3>
+    <ul>
+      <li>v1 不做</li>
+      <li>v1.1+ 接入 <code>tauri-plugin-updater</code>：跨平台一致 API + 签名验证；增量更新</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

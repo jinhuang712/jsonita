@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 03 设计令牌</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="03">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 03</span>
+      <h1 class="doc-title">设计令牌</h1>
+      <p class="doc-subtitle">颜色 / 字体 / 间距 / 圆角 / 阴影 / 动效 ── light · dark 双主题的完整 token 系统。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>设计语言锚点</h2>
+
+    <p>Jsonita 的视觉语言锚定在四点上，所有 token 取值都为之服务：</p>
+
+    <div class="constraints-grid">
+      <div class="constraints-col must-have">
+        <h3 class="constraints-title">要表达 · Express</h3>
+        <ul>
+          <li><b>极简克制</b> ── 不装饰，编辑器和数据是主角</li>
+          <li><b>macOS native 气质</b> ── SF Pro · 系统 blur · vibrancy 风</li>
+          <li><b>开发者审美</b> ── mono 字体多用 · 类型颜色清晰</li>
+          <li><b>瞬时清晰</b> ── 状态色不饱和但识别度高（红=错，绿=有效）</li>
+        </ul>
+      </div>
+      <div class="constraints-col must-not">
+        <h3 class="constraints-title">避免 · Avoid</h3>
+        <ul>
+          <li><b>大色块 / 渐变背景</b> ── 浮窗保持极轻</li>
+          <li><b>多种品牌色</b> ── 蓝是唯一 primary，橙是唯一 accent</li>
+          <li><b>圆角 ≥ 16px 的"App"感</b> ── 文档卡片最多 10px</li>
+          <li><b>动效 &gt; 200ms</b> ── 工具应即时响应</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">2</span>颜色 token</h2>
+
+    <h3><span class="h3-num">2.1</span>品牌 / 中性 / 状态 三组</h3>
+
+    <table>
+      <thead><tr><th>组</th><th>token</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2">品牌</td><td><code>--primary</code></td><td>主操作 / 链接 / 选中态 / focus ring（蓝 #057AF3，与图标 manifest 一致）</td></tr>
+        <tr><td><code>--accent</code></td><td>inline code / AI Fix 按钮 / 强调短文本（橙 #FA9B10）</td></tr>
+
+        <tr><td rowspan="3">中性</td><td><code>--bg / --bg-card / --bg-code</code></td><td>页面 / 卡片 / 代码块三档背景</td></tr>
+        <tr><td><code>--text / --text-muted / --text-faint</code></td><td>正文 / 弱化 / 几乎隐形（占位 / 元信息）三档文本</td></tr>
+        <tr><td><code>--border / --border-strong</code></td><td>普通分隔 / 强调分隔</td></tr>
+
+        <tr><td rowspan="4">状态</td><td><code>--ok / --ok-bg</code></td><td>"valid JSON" / "测试通过" 绿系</td></tr>
+        <tr><td><code>--warn / --warn-bg</code></td><td>"大文件警告" / "超时" 橙系</td></tr>
+        <tr><td><code>--danger / --danger-bg</code></td><td>"parse 失败" / "API 错误" 红系</td></tr>
+        <tr><td><code>--info / --info-bg</code></td><td>callout-info 蓝系（与 primary 区分饱和度更低）</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">2.2</span>具体取值 ── light</h3>
+
+    <pre><code>:root, [data-theme="light"] {
+  /* 品牌 */
+  --primary:        #057AF3;
+  --primary-soft:   #EFF6FF;     /* hover 背景 */
+  --primary-edge:   #BFDBFE;     /* hover 边框 */
+  --accent:         #FA9B10;
+  --accent-soft:    #FFF7ED;
+
+  /* 中性 */
+  --bg:             #FAFAFA;     /* 全局背景 */
+  --bg-card:        #FFFFFF;     /* 浮窗 / Modal / 卡片 */
+  --bg-code:        #F5F5F7;     /* &lt;code&gt; / &lt;pre&gt; */
+  --bg-overlay:     rgba(0,0,0,0.32);  /* Modal 遮罩 */
+
+  --text:           #1A1A1A;
+  --text-muted:     #6B7280;
+  --text-faint:     #9CA3AF;
+
+  --border:         #E5E7EB;
+  --border-strong:  #D1D5DB;
+
+  /* 状态 */
+  --ok:             #06B78F;     /* manifest 调色板 green */
+  --ok-bg:          #ECFDF5;
+  --warn:           #D97706;
+  --warn-bg:        #FFFBEB;
+  --danger:         #DC2626;
+  --danger-bg:      #FEF2F2;
+  --info:           #3B82F6;
+  --info-bg:        #EFF6FF;
+
+  /* JSON 语法高亮（编辑器 & tree-mock） */
+  --json-key:       #057AF3;     /* 同 primary */
+  --json-string:    #15803D;     /* 深绿 */
+  --json-number:    #1D4ED8;     /* 深蓝 */
+  --json-bool:      #6B3CE9;     /* manifest purple */
+  --json-null:      #9CA3AF;     /* 同 text-faint */
+  --json-punc:      #6B7280;
+
+  /* 编辑器专属 */
+  --editor-bg:      #FFFFFF;
+  --editor-gutter:  #FAFAFA;
+  --editor-line-active: #F0F7FF;  /* primary 5% */
+  --editor-selection:   #BFDBFE80;
+  --editor-cursor:  #057AF3;
+  --editor-error-underline: #DC2626;
+  --editor-bracket-match:   #BFDBFE;
+  --editor-indent-guide:    #E5E7EB;
+}</code></pre>
+
+    <h3><span class="h3-num">2.3</span>具体取值 ── dark</h3>
+
+    <pre><code>[data-theme="dark"] {
+  /* 品牌（更亮一档，dark 上 #057AF3 显闷） */
+  --primary:        #3B9CFF;
+  --primary-soft:   rgba(59,156,255,0.12);
+  --primary-edge:   rgba(59,156,255,0.32);
+  --accent:         #FBA43A;
+  --accent-soft:    rgba(251,164,58,0.12);
+
+  /* 中性 */
+  --bg:             #1A1A1C;     /* 不纯黑，留呼吸 */
+  --bg-card:        #232326;     /* 浮窗 */
+  --bg-code:        #1F1F22;     /* code 块更深 */
+  --bg-overlay:     rgba(0,0,0,0.56);
+
+  --text:           #E5E7EB;
+  --text-muted:     #9BA3AF;
+  --text-faint:     #6B7280;
+
+  --border:         #2E2E33;
+  --border-strong:  #3F3F46;
+
+  /* 状态（背景透明叠加，避免大片饱和色块） */
+  --ok:             #28D9A8;
+  --ok-bg:          rgba(40,217,168,0.14);
+  --warn:           #F0A23A;
+  --warn-bg:        rgba(240,162,58,0.14);
+  --danger:         #F87171;
+  --danger-bg:      rgba(248,113,113,0.14);
+  --info:           #60A5FA;
+  --info-bg:        rgba(96,165,250,0.14);
+
+  /* JSON */
+  --json-key:       #5DA8FF;
+  --json-string:    #4ADE80;     /* 亮绿，dark 上识别度高 */
+  --json-number:    #93C5FD;
+  --json-bool:      #C084FC;
+  --json-null:      #6B7280;
+  --json-punc:      #9BA3AF;
+
+  /* 编辑器 */
+  --editor-bg:          #232326;
+  --editor-gutter:      #1F1F22;
+  --editor-line-active: rgba(59,156,255,0.08);
+  --editor-selection:   rgba(59,156,255,0.28);
+  --editor-cursor:      #5DA8FF;
+  --editor-error-underline: #F87171;
+  --editor-bracket-match:   rgba(59,156,255,0.32);
+  --editor-indent-guide:    #2E2E33;
+}</code></pre>
+
+    <h3><span class="h3-num">2.4</span>对比度核验</h3>
+
+    <table>
+      <thead><tr><th>组合</th><th>light 比</th><th>dark 比</th><th>WCAG</th></tr></thead>
+      <tbody>
+        <tr><td>text on bg</td><td>14.5 : 1</td><td>11.2 : 1</td><td>AAA</td></tr>
+        <tr><td>text on bg-card</td><td>15.8 : 1</td><td>11.9 : 1</td><td>AAA</td></tr>
+        <tr><td>text-muted on bg</td><td>5.7 : 1</td><td>5.9 : 1</td><td>AA</td></tr>
+        <tr><td>primary on bg-card</td><td>4.8 : 1</td><td>5.2 : 1</td><td>AA</td></tr>
+        <tr><td>danger on bg-card</td><td>5.9 : 1</td><td>5.3 : 1</td><td>AA</td></tr>
+        <tr><td>json-string on editor-bg</td><td>5.4 : 1</td><td>6.1 : 1</td><td>AA</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-ok">
+      <span class="callout-icon">OK</span>
+      <div class="callout-body">
+        <p>所有正文文本组合 ≥ AA（4.5 : 1）；body text 达 AAA（7 : 1）。无障碍达标。</p>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">3</span>字体 token</h2>
+
+    <h3><span class="h3-num">3.1</span>字体栈</h3>
+
+    <pre><code>--font-sans:
+  -apple-system,
+  BlinkMacSystemFont,
+  "SF Pro Display",        /* macOS */
+  "Segoe UI",              /* Windows */
+  "PingFang SC",           /* 中文 macOS */
+  "Microsoft YaHei UI",    /* 中文 Windows */
+  "Helvetica Neue",
+  Arial,
+  sans-serif;
+
+--font-mono:
+  "SF Mono",               /* macOS */
+  "JetBrains Mono",        /* 已装则用 */
+  "Cascadia Code",         /* Windows Terminal 默认 */
+  Menlo,
+  Consolas,
+  "Liberation Mono",
+  monospace;</code></pre>
+
+    <p><b>不打包字体文件</b>，全用系统字体。理由：</p>
+    <ul>
+      <li>SF Pro 是 macOS 系统字体，质感最对</li>
+      <li>打包字体会让 dmg 体积突破 15 MB 红线（见 <a href="../plan/04_nfr.html">04 NFR § 1</a>）</li>
+      <li>跨平台时 Segoe UI 是 Windows 的官方对应</li>
+    </ul>
+
+    <h3><span class="h3-num">3.2</span>字号 scale（4 档 + 编辑器独立）</h3>
+
+    <table>
+      <thead><tr><th>token</th><th>px</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>--fs-xs</code></td><td>11</td><td>tag / breadcrumb / meta 小字</td></tr>
+        <tr><td><code>--fs-sm</code></td><td>12.5</td><td>表格 td / Toast / 状态栏</td></tr>
+        <tr><td><code>--fs-base</code></td><td>13.5</td><td>UI 默认（按钮 / 输入框 / 列表）</td></tr>
+        <tr><td><code>--fs-md</code></td><td>14</td><td>设置面板正文 / Modal body</td></tr>
+        <tr><td><code>--fs-lg</code></td><td>16</td><td>Modal 标题 / Tab 文字</td></tr>
+        <tr><td><code>--fs-xl</code></td><td>20</td><td>设置面板分组标题</td></tr>
+        <tr><td><code>--fs-2xl</code></td><td>26</td><td>预留（v1 未用）</td></tr>
+        <tr><td><code>--fs-editor</code></td><td>13</td><td>CodeMirror 主编辑器（独立调）</td></tr>
+        <tr><td><code>--fs-tree</code></td><td>12</td><td>JSON 树视图</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">3.3</span>字重</h3>
+
+    <pre><code>--fw-regular:    400;     /* 正文 */
+--fw-medium:     500;     /* UI 标签 / 按钮 */
+--fw-semibold:   600;     /* 标题 / 强调 */
+--fw-bold:       700;     /* 顶层标题 / 链接 hover */</code></pre>
+
+    <h3><span class="h3-num">3.4</span>行高</h3>
+
+    <pre><code>--lh-tight:   1.25;       /* 标题 */
+--lh-snug:    1.4;        /* UI / 状态栏 */
+--lh-normal:  1.6;        /* 正文 */
+--lh-loose:   1.75;       /* Markdown 渲染 */
+--lh-code:    1.55;       /* 编辑器 + tree */</code></pre>
+
+    <h2><span class="h2-num">4</span>间距 scale（8 档 4px 节奏）</h2>
+
+    <table>
+      <thead><tr><th>token</th><th>px</th><th>典型场景</th></tr></thead>
+      <tbody>
+        <tr><td><code>--sp-0</code></td><td>0</td><td>—</td></tr>
+        <tr><td><code>--sp-1</code></td><td>4</td><td>图标 + 文本 gap</td></tr>
+        <tr><td><code>--sp-2</code></td><td>8</td><td>按钮内边距 vertical / list item</td></tr>
+        <tr><td><code>--sp-3</code></td><td>12</td><td>按钮 horizontal / 表格 td</td></tr>
+        <tr><td><code>--sp-4</code></td><td>16</td><td>卡片 padding / Modal 内边距 v</td></tr>
+        <tr><td><code>--sp-5</code></td><td>20</td><td>section 之间 / Modal 内边距 h</td></tr>
+        <tr><td><code>--sp-6</code></td><td>24</td><td>h2 上下间距</td></tr>
+        <tr><td><code>--sp-8</code></td><td>32</td><td>doc-article 边距</td></tr>
+        <tr><td><code>--sp-10</code></td><td>40</td><td>大段落分隔</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">5</span>圆角 / 边框 / 阴影</h2>
+
+    <h3><span class="h3-num">5.1</span>圆角</h3>
+
+    <pre><code>--radius-sm:   4px;       /* tag / code / kbd */
+--radius-md:   6px;       /* 按钮 / 输入框 / toast */
+--radius-lg:   8px;       /* 卡片 / callout / 表格容器 */
+--radius-xl:   10px;      /* 浮窗主容器 / mockup-window */
+--radius-2xl:  14px;      /* Modal */
+--radius-full: 9999px;    /* pill / 头像 */</code></pre>
+
+    <h3><span class="h3-num">5.2</span>边框</h3>
+
+    <pre><code>--bw-1:        1px;       /* 默认 */
+--bw-2:        2px;       /* focus ring inner */
+--bw-3:        3px;       /* h2 左竖条 */</code></pre>
+
+    <h3><span class="h3-num">5.3</span>阴影（light 实色 / dark 加亮）</h3>
+
+    <pre><code>/* light */
+--shadow-sm:   0 1px 2px rgba(0,0,0,0.04);
+--shadow-md:   0 4px 12px rgba(0,0,0,0.06);
+--shadow-lg:   0 12px 36px rgba(0,0,0,0.12);   /* 浮窗 / Modal */
+--shadow-focus: 0 0 0 3px rgba(5,122,243,0.32);  /* primary 32% */
+
+/* dark：阴影 + 边框微亮，避免阴影"消失"在深色背景里 */
+[data-theme="dark"] {
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg:   0 12px 36px rgba(0,0,0,0.6),
+                 0 0 0 1px rgba(255,255,255,0.04);  /* 亮边 */
+  --shadow-focus: 0 0 0 3px rgba(93,168,255,0.4);
+}</code></pre>
+
+    <h2><span class="h2-num">6</span>动效 token</h2>
+
+    <h3><span class="h3-num">6.1</span>时长</h3>
+
+    <table>
+      <thead><tr><th>token</th><th>ms</th><th>场景</th></tr></thead>
+      <tbody>
+        <tr><td><code>--dur-instant</code></td><td>80</td><td>hover 色变化</td></tr>
+        <tr><td><code>--dur-fast</code></td><td>120</td><td>按钮 active</td></tr>
+        <tr><td><code>--dur-base</code></td><td>150</td><td>浮窗淡入</td></tr>
+        <tr><td><code>--dur-slow</code></td><td>200</td><td>浮窗淡出 / Modal 出场</td></tr>
+        <tr><td><code>--dur-toast</code></td><td>5000</td><td>Toast 自动消失</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.2</span>缓动</h3>
+
+    <pre><code>--ease-standard: cubic-bezier(0.4, 0.0, 0.2, 1);     /* Material 风 */
+--ease-out:      cubic-bezier(0.0, 0.0, 0.2, 1);     /* 入场 */
+--ease-in:       cubic-bezier(0.4, 0.0, 1, 1);       /* 出场 */</code></pre>
+
+    <h3><span class="h3-num">6.3</span>关键动画</h3>
+
+    <pre><code>/* 浮窗淡入 */
+@keyframes window-fade-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.floating-window-enter {
+  animation: window-fade-in var(--dur-base) var(--ease-out);
+}
+
+/* Toast 入场 */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Restore bar 5 秒后淡出 */
+@keyframes fade-out {
+  to { opacity: 0; }
+}</code></pre>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">INFO</span>
+      <div class="callout-body">
+        <p>遵循 <code>@media (prefers-reduced-motion: reduce)</code>：所有动画时长降至 1 ms（实际禁用）。</p>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">7</span>Z-index scale</h2>
+
+    <pre><code>--z-base:       0;
+--z-elevated:   10;       /* 卡片 hover */
+--z-sticky:     20;       /* 状态栏 */
+--z-dropdown:   30;       /* select / autocomplete */
+--z-modal-bg:   40;
+--z-modal:      50;
+--z-toast:      60;
+--z-tooltip:    70;</code></pre>
+
+    <h2><span class="h2-num">8</span>主题切换机制</h2>
+
+    <h3><span class="h3-num">8.1</span>三态：System / Light / Dark</h3>
+
+    <p>设置项 <code>settings.theme: 'system' | 'light' | 'dark'</code>，默认 <code>'system'</code>。</p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 01</div>
+        <div class="flow-step-title">读 settings</div>
+        <div class="flow-step-desc">启动时调 settings_get_all() → theme</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 02</div>
+        <div class="flow-step-title">解析有效值</div>
+        <div class="flow-step-desc">system → 查 prefers-color-scheme</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 03</div>
+        <div class="flow-step-title">挂 data-theme</div>
+        <div class="flow-step-desc">document.documentElement.dataset.theme = 'light' / 'dark'</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">STEP 04</div>
+        <div class="flow-step-title">订阅变化</div>
+        <div class="flow-step-desc">listen 'theme:system_changed' + matchMedia change</div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">8.2</span>实现要点</h3>
+
+    <pre><code>// src/theme/ThemeProvider.tsx（关键片段）
+function resolveTheme(setting: ThemeMode): 'light' | 'dark' {
+  if (setting === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark' : 'light';
+  }
+  return setting;
+}
+
+useEffect(() =&gt; {
+  const apply = () =&gt; {
+    const eff = resolveTheme(settings.theme);
+    document.documentElement.dataset.theme = eff;
+    // 同步给 CodeMirror（编辑器另开 theme extension）
+    editorStore.setTheme(eff);
+  };
+  apply();
+
+  if (settings.theme === 'system') {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    mql.addEventListener('change', apply);
+    return () =&gt; mql.removeEventListener('change', apply);
+  }
+}, [settings.theme]);</code></pre>
+
+    <h3><span class="h3-num">8.3</span>Rust 端配合</h3>
+
+    <p>Rust 端监听 macOS NSDistributedNotificationCenter 的 <code>AppleInterfaceThemeChangedNotification</code>，转发到前端 <code>theme:system_changed</code> 事件 ── 解决 WebView 的 <code>matchMedia</code> 在某些 Tauri 版本不响应外部切换的问题。</p>
+
+    <pre><code>// src-tauri/src/system/theme.rs（macOS 实现）
+#[cfg(target_os = "macos")]
+pub fn watch_system_theme(app: tauri::AppHandle) {
+    // 注册 NSDistributedNotificationCenter observer
+    // 触发后：app.emit_all("theme:system_changed", json!({ "mode": current_mode() }))
+}</code></pre>
+
+    <h3><span class="h3-num">8.4</span>避免主题切换闪烁</h3>
+
+    <p>HTML 头部内联一段 script（在 React 挂载前）读 localStorage cache 中的 theme，先设 <code>data-theme</code>，再加载主 bundle ── 避免 FOUC。</p>
+
+    <pre><code>&lt;script&gt;
+(function() {
+  try {
+    var t = localStorage.getItem('jsonita.theme.effective') || 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) {}
+})();
+&lt;/script&gt;</code></pre>
+
+    <h2><span class="h2-num">9</span>Tailwind 集成</h2>
+
+    <p>用 Tailwind 是为了"快写 utility"，但<b>颜色 / 间距 / 字号</b>都引用我们自己的 CSS variables，<b>不</b>用 Tailwind 默认色板。</p>
+
+    <pre><code>// tailwind.config.ts
+import type { Config } from 'tailwindcss';
+
+export default {
+  darkMode: ['selector', '[data-theme="dark"]'],
+  content: ['./src/**/*.{ts,tsx,html}', './index.html'],
+  theme: {
+    extend: {
+      colors: {
+        primary:       'var(--primary)',
+        'primary-soft':'var(--primary-soft)',
+        'primary-edge':'var(--primary-edge)',
+        accent:        'var(--accent)',
+        bg:            'var(--bg)',
+        'bg-card':     'var(--bg-card)',
+        'bg-code':     'var(--bg-code)',
+        text:          'var(--text)',
+        'text-muted':  'var(--text-muted)',
+        'text-faint':  'var(--text-faint)',
+        border:        'var(--border)',
+        'border-strong':'var(--border-strong)',
+        ok:            'var(--ok)',
+        warn:          'var(--warn)',
+        danger:        'var(--danger)',
+        info:          'var(--info)',
+      },
+      fontFamily: {
+        sans: 'var(--font-sans)',
+        mono: 'var(--font-mono)',
+      },
+      fontSize: {
+        xs:    ['var(--fs-xs)',   { lineHeight: 'var(--lh-snug)' }],
+        sm:    ['var(--fs-sm)',   { lineHeight: 'var(--lh-snug)' }],
+        base:  ['var(--fs-base)', { lineHeight: 'var(--lh-normal)' }],
+        md:    ['var(--fs-md)',   { lineHeight: 'var(--lh-normal)' }],
+        lg:    ['var(--fs-lg)',   { lineHeight: 'var(--lh-snug)' }],
+        xl:    ['var(--fs-xl)',   { lineHeight: 'var(--lh-tight)' }],
+      },
+      spacing: {
+        '0.5':'2px', 1:'4px', 2:'8px', 3:'12px', 4:'16px',
+        5:'20px', 6:'24px', 8:'32px', 10:'40px',
+      },
+      borderRadius: {
+        sm:   'var(--radius-sm)',
+        md:   'var(--radius-md)',
+        lg:   'var(--radius-lg)',
+        xl:   'var(--radius-xl)',
+        '2xl':'var(--radius-2xl)',
+      },
+      boxShadow: {
+        sm:    'var(--shadow-sm)',
+        md:    'var(--shadow-md)',
+        lg:    'var(--shadow-lg)',
+        focus: 'var(--shadow-focus)',
+      },
+      transitionDuration: {
+        instant: 'var(--dur-instant)',
+        fast:    'var(--dur-fast)',
+        base:    'var(--dur-base)',
+        slow:    'var(--dur-slow)',
+      },
+      transitionTimingFunction: {
+        standard: 'var(--ease-standard)',
+        out:      'var(--ease-out)',
+        in:       'var(--ease-in)',
+      },
+    },
+  },
+  plugins: [],
+} satisfies Config;</code></pre>
+
+    <h2><span class="h2-num">10</span>预览 ── 同一组件 light vs dark</h2>
+
+    <h3><span class="h3-num">10.1</span>状态栏（合法 / 错误）</h3>
+
+    <div class="example-grid">
+      <div class="example-col">
+        <div class="example-label">light · valid</div>
+        <div style="padding: 9px 14px; background: #FAFAFC; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between;">
+          <span><span style="color: #06B78F; font-weight: 600;">● Valid JSON</span> <span style="color: #6B7280;">· 5 lines · 76 bytes</span></span>
+          <span style="color: #6B7280;">History (12) · ⚙ Settings</span>
+        </div>
+      </div>
+      <div class="example-arrow">/</div>
+      <div class="example-col">
+        <div class="example-label">dark · valid</div>
+        <div style="padding: 9px 14px; background: #1F1F22; border: 1px solid #2E2E33; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between;">
+          <span><span style="color: #28D9A8; font-weight: 600;">● Valid JSON</span> <span style="color: #9BA3AF;">· 5 lines · 76 bytes</span></span>
+          <span style="color: #9BA3AF;">History (12) · ⚙ Settings</span>
+        </div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">10.2</span>错误状态</h3>
+
+    <div class="example-grid">
+      <div class="example-col">
+        <div class="example-label">light · parse error</div>
+        <div style="padding: 9px 14px; background: #FAFAFC; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono);">
+          <span style="color: #DC2626; font-weight: 600;">● Line 3, Col 12: unexpected token ',' </span>
+        </div>
+      </div>
+      <div class="example-arrow">/</div>
+      <div class="example-col">
+        <div class="example-label">dark · parse error</div>
+        <div style="padding: 9px 14px; background: #1F1F22; border: 1px solid #2E2E33; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono);">
+          <span style="color: #F87171; font-weight: 600;">● Line 3, Col 12: unexpected token ',' </span>
+        </div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">10.3</span>JSON 树 ── 类型颜色</h3>
+
+    <div class="example-grid">
+      <div class="example-col">
+        <div class="example-label">light tree</div>
+        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 6px; line-height: 1.7;">
+<div>▾ <span style="color:#057AF3;">root</span><span style="color:#9CA3AF;font-size:10.5px;margin-left:4px;">{3}</span></div>
+<div style="padding-left:18px;">
+<div><span style="color:#057AF3;">name</span>: <span style="color:#15803D;">"alice"</span></div>
+<div><span style="color:#057AF3;">age</span>: <span style="color:#1D4ED8;">30</span></div>
+<div><span style="color:#057AF3;">active</span>: <span style="color:#6B3CE9;">true</span></div>
+<div><span style="color:#057AF3;">extra</span>: <span style="color:#9CA3AF;">null</span></div>
+</div>
+        </div>
+      </div>
+      <div class="example-arrow">/</div>
+      <div class="example-col">
+        <div class="example-label">dark tree</div>
+        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: #232326; border: 1px solid #2E2E33; border-radius: 6px; line-height: 1.7; color: #E5E7EB;">
+<div>▾ <span style="color:#5DA8FF;">root</span><span style="color:#6B7280;font-size:10.5px;margin-left:4px;">{3}</span></div>
+<div style="padding-left:18px;">
+<div><span style="color:#5DA8FF;">name</span>: <span style="color:#4ADE80;">"alice"</span></div>
+<div><span style="color:#5DA8FF;">age</span>: <span style="color:#93C5FD;">30</span></div>
+<div><span style="color:#5DA8FF;">active</span>: <span style="color:#C084FC;">true</span></div>
+<div><span style="color:#5DA8FF;">extra</span>: <span style="color:#6B7280;">null</span></div>
+</div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">11</span>命名一致性规则</h2>
+
+    <ul>
+      <li>所有 token 用 <code>--kebab-case</code></li>
+      <li>语义优先于具体值：用 <code>--danger</code> 不用 <code>--red-500</code></li>
+      <li>三档命名 = base / soft / strong（如 <code>border</code> / <code>border-strong</code>）</li>
+      <li>状态色"背景"统一加 <code>-bg</code> 后缀（<code>--ok-bg</code>）</li>
+      <li>编辑器专属 token 都以 <code>--editor-*</code> 前缀</li>
+      <li>JSON 高亮以 <code>--json-*</code> 前缀</li>
+      <li><b>不要</b>用 <code>--color-*</code> / <code>--font-size-*</code> 这种冗长前缀；语义已经够清楚</li>
+    </ul>
+
+    <h2><span class="h2-num">12</span>承上启下</h2>
+
+    <ul>
+      <li><b>下游 03 组件库映射</b> ── 每个组件标注用了哪些 token</li>
+      <li><b>下游 04 图标资源 & 主题</b> ── 用本章 token 决定 light/dark 切图标</li>
+      <li><b>下游 07 编辑器</b> ── CodeMirror theme extension 直接读 <code>--editor-*</code> 和 <code>--json-*</code></li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

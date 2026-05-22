@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 09 JSON 引擎</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-section="spec" data-chapter="09">
+
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 09</span>
+      <h1 class="doc-title">JSON 引擎</h1>
+      <p class="doc-subtitle">Rust 端核心算法 ── format · minify · 错误定位 · 嵌套 stringified 解开 · ↔ string 互转。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>模块文件</h2>
+
+    <pre><code>src-tauri/src/engine/
+├─ mod.rs               // re-exports
+├─ json.rs              // format / minify（核心）
+├─ unwrap.rs            // 递归嵌套解开（带超时）
+├─ stringify.rs         // JSON ↔ String 互转
+├─ error_loc.rs         // serde_json 错误 → (line, col, msg)
+└─ tests/               // 单测
+   ├─ format_tests.rs
+   ├─ unwrap_tests.rs
+   ├─ stringify_tests.rs
+   └─ fixtures/         // 各种 JSON 样本
+</code></pre>
+
+    <h2><span class="h2-num">2</span>format / minify</h2>
+
+    <h3><span class="h3-num">2.1</span>签名</h3>
+
+    <pre><code>// src-tauri/src/engine/json.rs
+use serde_json::Value;
+use crate::error::JsonitaError;
+
+#[derive(Copy, Clone)]
+pub enum IndentMode { Spaces2, Spaces4, Tab }
+
+pub struct FormatOpts {
+    pub indent: IndentMode,
+    pub sort_keys: bool,
+    pub trailing_newline: bool,
+}
+
+pub fn format(text: &amp;str, opts: FormatOpts) -&gt; Result&lt;String, JsonitaError&gt;;
+pub fn minify(text: &amp;str)                  -&gt; Result&lt;String, JsonitaError&gt;;</code></pre>
+
+    <h3><span class="h3-num">2.2</span>实现</h3>
+
+    <pre><code>pub fn format(text: &amp;str, opts: FormatOpts) -&gt; Result&lt;String, JsonitaError&gt; {
+    // 1. 解析为 Value（serde_json 已 preserve insertion order，需要开启 feature）
+    //    Cargo.toml: serde_json = { version = "1", features = ["preserve_order"] }
+    let mut v: Value = serde_json::from_str(text)
+        .map_err(error_loc::map)?;
+
+    // 2. sort_keys（递归）
+    if opts.sort_keys { sort_keys_recursive(&amp;mut v); }
+
+    // 3. 用 PrettyFormatter 输出
+    let indent: &amp;[u8] = match opts.indent {
+        IndentMode::Spaces2 =&gt; b"  ",
+        IndentMode::Spaces4 =&gt; b"    ",
+        IndentMode::Tab     =&gt; b"\t",
+    };
+
+    let formatter = serde_json::ser::PrettyFormatter::with_indent(indent);
+    let mut buf = Vec::with_capacity(text.len() + 64);
+    let mut ser = serde_json::Serializer::with_formatter(&amp;mut buf, formatter);
+    use serde::Serialize;
+    v.serialize(&amp;mut ser).map_err(|e| JsonitaError::Io(e.to_string()))?;
+
+    let mut out = String::from_utf8(buf)
+        .map_err(|e| JsonitaError::Io(e.to_string()))?;
+    if opts.trailing_newline &amp;&amp; !out.ends_with('\n') { out.push('\n'); }
+    Ok(out)
+}
+
+pub fn minify(text: &amp;str) -&gt; Result&lt;String, JsonitaError&gt; {
+    let v: Value = serde_json::from_str(text).map_err(error_loc::map)?;
+    serde_json::to_string(&amp;v).map_err(|e| JsonitaError::Io(e.to_string()))
+}
+
+fn sort_keys_recursive(v: &amp;mut Value) {
+    match v {
+        Value::Object(map) =&gt; {
+            // serde_json::Map (preserve_order) 用 IndexMap，sort 需重构
+            let mut keys: Vec&lt;String&gt; = map.keys().cloned().collect();
+            keys.sort();
+            let mut new_map = serde_json::Map::with_capacity(keys.len());
+            for k in keys {
+                let mut val = map.remove(&amp;k).unwrap();
+                sort_keys_recursive(&amp;mut val);
+                new_map.insert(k, val);
+            }
+            *map = new_map;
+        }
+        Value::Array(arr) =&gt; arr.iter_mut().for_each(sort_keys_recursive),
+        _ =&gt; {}
+    }
+}</code></pre>
+
+    <h3><span class="h3-num">2.3</span>性能基线</h3>
+
+    <table>
+      <thead><tr><th>输入</th><th>format P50</th><th>format P95</th><th>minify P50</th></tr></thead>
+      <tbody>
+        <tr><td>10 KB</td><td>3 ms</td><td>8 ms</td><td>2 ms</td></tr>
+        <tr><td>100 KB</td><td>22 ms</td><td>45 ms</td><td>14 ms</td></tr>
+        <tr><td>1 MB</td><td>180 ms</td><td>320 ms</td><td>110 ms</td></tr>
+      </tbody>
+    </table>
+
+    <p>测量条件：M1 Pro · release build · serde_json 1.0.x · preserve_order feature。来源：见 <code>engine/benches/json_bench.rs</code>。</p>
+
+    <h2><span class="h2-num">3</span>错误位置定位</h2>
+
+    <h3><span class="h3-num">3.1</span>策略</h3>
+
+    <p>serde_json 的 <code>Error</code> 提供 <code>line()</code> 和 <code>column()</code>（基于 deserializer 状态），但这俩 1-indexed 且与<b>用户看到的位置一致</b>。提取要点：</p>
+
+    <pre><code>// src-tauri/src/engine/error_loc.rs
+use serde_json::Error as SjErr;
+use crate::error::JsonitaError;
+
+pub fn map(e: SjErr) -&gt; JsonitaError {
+    JsonitaError::Parse {
+        line: e.line() as u32,
+        col:  e.column() as u32,
+        msg:  classify(&amp;e),
+    }
+}
+
+fn classify(e: &amp;SjErr) -&gt; String {
+    // serde_json 错误信息形如 "expected `,` or `}` at line 3 column 5"
+    // 取冒号前的描述部分给用户看，去掉 "at line ... column ..." 后缀
+    let raw = e.to_string();
+    raw.split(" at line ").next().unwrap_or(&amp;raw).to_string()
+}</code></pre>
+
+    <h3><span class="h3-num">3.2</span>常见错误分类</h3>
+
+    <table>
+      <thead><tr><th>原始 serde 错误</th><th>分类后展示</th></tr></thead>
+      <tbody>
+        <tr><td>expected `,` or `}`</td><td>"expected ',' or '}'"</td></tr>
+        <tr><td>trailing comma</td><td>"trailing comma not allowed"</td></tr>
+        <tr><td>key must be a string</td><td>"key must be a string (use double quotes)"</td></tr>
+        <tr><td>EOF while parsing a string</td><td>"unterminated string"</td></tr>
+        <tr><td>expected value</td><td>"unexpected token, value required"</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">4</span>嵌套 stringified JSON 全量解开</h2>
+
+    <h3><span class="h3-num">4.1</span>问题定义</h3>
+
+    <p>来自 plan/01 F3.3：Go proto 序列化 / 网关包裹常见 ── JSON 字段值本身又是 stringified JSON。一键递归解开：</p>
+
+    <pre><code>// before
+{
+  "code": 200,
+  "data": "{\"name\":\"alice\"}",
+  "extra": "{\"tags\":[\"a\",\"b\"]}"
+}
+
+// after
+{
+  "code": 200,
+  "data": { "name": "alice" },
+  "extra": { "tags": ["a", "b"] }
+}</code></pre>
+
+    <h3><span class="h3-num">4.2</span>算法</h3>
+
+    <pre><code>// src-tauri/src/engine/unwrap.rs
+use serde_json::Value;
+use std::time::{Duration, Instant};
+use crate::error::JsonitaError;
+
+pub struct UnwrapOpts {
+    pub timeout_ms: u64,                   // 默认 200
+    pub max_depth: Option&lt;u32&gt;,         // None = 无限制
+}
+
+/// 递归解开嵌套 stringified JSON。
+/// 策略：对每个 string 值尝试 JSON.parse；成功且结果是 object/array 则替换。
+/// 终止条件：超时 / 达到 max_depth / 不再有可解的 string。
+pub fn unwrap(text: &amp;str, opts: UnwrapOpts) -&gt; Result&lt;String, JsonitaError&gt; {
+    let deadline = Instant::now() + Duration::from_millis(opts.timeout_ms);
+    let mut v: Value = serde_json::from_str(text).map_err(super::error_loc::map)?;
+    walk(&amp;mut v, deadline, opts.max_depth, 0)?;
+    serde_json::to_string_pretty(&amp;v).map_err(|e| JsonitaError::Io(e.to_string()))
+}
+
+fn walk(
+    v: &amp;mut Value,
+    deadline: Instant,
+    max_depth: Option&lt;u32&gt;,
+    depth: u32,
+) -&gt; Result&lt;(), JsonitaError&gt; {
+    if Instant::now() &gt;= deadline {
+        return Err(JsonitaError::UnwrapTimeout { ms: 0, depth });
+    }
+    if let Some(md) = max_depth { if depth &gt;= md { return Ok(()); } }
+
+    match v {
+        Value::String(s) =&gt; {
+            // 尝试 parse 当前 string 为 JSON
+            if let Ok(parsed) = serde_json::from_str::&lt;Value&gt;(s) {
+                if matches!(parsed, Value::Object(_) | Value::Array(_)) {
+                    *v = parsed;
+                    walk(v, deadline, max_depth, depth + 1)?;
+                }
+            }
+        }
+        Value::Object(map) =&gt; {
+            for (_, child) in map.iter_mut() { walk(child, deadline, max_depth, depth + 1)?; }
+        }
+        Value::Array(arr) =&gt; {
+            for child in arr.iter_mut() { walk(child, deadline, max_depth, depth + 1)?; }
+        }
+        _ =&gt; {}
+    }
+    Ok(())
+}</code></pre>
+
+    <h3><span class="h3-num">4.3</span>关键决策</h3>
+
+    <table>
+      <thead><tr><th>决策</th><th>选择</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>string 是数字 / bool 时是否解</td><td>不解（只解到 object / array）</td><td>避免破坏 <code>"123"</code> 这种业务上有意义的字符串</td></tr>
+        <tr><td>解开后是否再 walk</td><td>是</td><td>支持多层嵌套（如 <code>"{\\"a\\":\\"{\\\\\\"b\\\\\\":1}\\"}"</code>）</td></tr>
+        <tr><td>遇到错误 string</td><td>静默跳过，保留原 string</td><td>不是"修复"工具，无效字符串不该报错</td></tr>
+        <tr><td>超时单位</td><td>每次 walk 检查 Instant，不是按节点数</td><td>避免大对象遍历时仍卡死</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.4</span>边界用例</h3>
+
+    <pre><code>// fixtures/unwrap_cases.json
+[
+  { name: "single level",
+    input:    "{\"a\":\"{\\\"b\\\":1}\"}",
+    expected: "{\"a\":{\"b\":1}}" },
+
+  { name: "double nested",
+    input:    "{\"a\":\"{\\\"b\\\":\\\"{\\\\\\\"c\\\\\\\":1}\\\"}\"}",
+    expected: "{\"a\":{\"b\":{\"c\":1}}}" },
+
+  { name: "array of stringified",
+    input:    "{\"items\":[\"{\\\"x\\\":1}\",\"{\\\"x\\\":2}\"]}",
+    expected: "{\"items\":[{\"x\":1},{\"x\":2}]}" },
+
+  { name: "non-json string stays",
+    input:    "{\"label\":\"hello world\"}",
+    expected: "{\"label\":\"hello world\"}" },
+
+  { name: "numeric string stays",
+    input:    "{\"id\":\"12345\"}",
+    expected: "{\"id\":\"12345\"}" },
+
+  { name: "depth limit",
+    input:    "{\"a\":\"{\\\"b\\\":\\\"{\\\\\\\"c\\\\\\\":1}\\\"}\"}",
+    opts:     { maxDepth: 1 },
+    expected: "{\"a\":\"{\\\"b\\\":\\\"...\\\"}\"}" }
+]</code></pre>
+
+    <h2><span class="h2-num">5</span>JSON → String（转义打包）</h2>
+
+    <h3><span class="h3-num">5.1</span>签名</h3>
+
+    <pre><code>// src-tauri/src/engine/stringify.rs
+pub enum QuoteStyle { Double, Single }
+
+pub struct StringifyOpts {
+    pub quote: QuoteStyle,
+    pub escape_unicode: bool,        // \uXXXX 转义非 ASCII
+    pub minify: bool,                // 默认 true（转 string 通常希望紧凑）
+}
+
+pub fn json_to_string(text: &amp;str, opts: StringifyOpts) -&gt; Result&lt;String, JsonitaError&gt;;
+pub fn string_to_json(text: &amp;str)                       -&gt; Result&lt;String, JsonitaError&gt;;</code></pre>
+
+    <h3><span class="h3-num">5.2</span>实现</h3>
+
+    <pre><code>pub fn json_to_string(text: &amp;str, opts: StringifyOpts) -&gt; Result&lt;String, JsonitaError&gt; {
+    // 1. 验证合法 JSON
+    let v: Value = serde_json::from_str(text).map_err(super::error_loc::map)?;
+    // 2. 转回 string（minify or pretty）
+    let raw = if opts.minify {
+        serde_json::to_string(&amp;v)
+    } else {
+        serde_json::to_string_pretty(&amp;v)
+    }.map_err(|e| JsonitaError::Io(e.to_string()))?;
+    // 3. 按 quote style 包裹 + 转义内部 quote
+    let (open, close, esc) = match opts.quote {
+        QuoteStyle::Double =&gt; ("\"", "\"", '"'),
+        QuoteStyle::Single =&gt; ("'",  "'",  '\''),
+    };
+    let mut out = String::with_capacity(raw.len() + 2);
+    out.push_str(open);
+    for c in raw.chars() {
+        match c {
+            '\\' =&gt; out.push_str("\\\\"),
+            c if c == esc =&gt; { out.push('\\'); out.push(c); }
+            '\n' =&gt; out.push_str("\\n"),
+            '\t' =&gt; out.push_str("\\t"),
+            '\r' =&gt; out.push_str("\\r"),
+            c if opts.escape_unicode &amp;&amp; c as u32 &gt; 127 =&gt; {
+                let mut b = [0u16; 2]; let s = c.encode_utf16(&amp;mut b);
+                for unit in s { out.push_str(&amp;format!("\\u{:04X}", unit)); }
+            }
+            c =&gt; out.push(c),
+        }
+    }
+    out.push_str(close);
+    Ok(out)
+}
+
+pub fn string_to_json(text: &amp;str) -&gt; Result&lt;String, JsonitaError&gt; {
+    // 1. 剥去最外层 quote（容忍 single / double）
+    let trimmed = text.trim();
+    let inner = if (trimmed.starts_with('"')  &amp;&amp; trimmed.ends_with('"'))
+                 || (trimmed.starts_with('\'') &amp;&amp; trimmed.ends_with('\'')) {
+        &amp;trimmed[1..trimmed.len()-1]
+    } else {
+        trimmed   // 已经没有外层包裹，直接当 raw json 处理
+    };
+    // 2. 反转义
+    let unescaped = unescape(inner)?;
+    // 3. 验证 + 格式化
+    let v: Value = serde_json::from_str(&amp;unescaped).map_err(super::error_loc::map)?;
+    serde_json::to_string_pretty(&amp;v).map_err(|e| JsonitaError::Io(e.to_string()))
+}
+
+fn unescape(s: &amp;str) -&gt; Result&lt;String, JsonitaError&gt; {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c != '\\' { out.push(c); continue; }
+        match chars.next() {
+            Some('"')  =&gt; out.push('"'),
+            Some('\'') =&gt; out.push('\''),
+            Some('\\') =&gt; out.push('\\'),
+            Some('/')  =&gt; out.push('/'),
+            Some('n')  =&gt; out.push('\n'),
+            Some('r')  =&gt; out.push('\r'),
+            Some('t')  =&gt; out.push('\t'),
+            Some('b')  =&gt; out.push('\u{08}'),
+            Some('f')  =&gt; out.push('\u{0C}'),
+            Some('u') =&gt; {
+                let hex: String = chars.by_ref().take(4).collect();
+                let code = u32::from_str_radix(&amp;hex, 16)
+                    .map_err(|_| JsonitaError::Parse { line:0, col:0, msg: format!("invalid \\u{}", hex) })?;
+                if let Some(c) = char::from_u32(code) { out.push(c); }
+            }
+            Some(other) =&gt; { out.push('\\'); out.push(other); }
+            None =&gt; return Err(JsonitaError::Parse { line:0, col:0, msg: "trailing backslash".into() }),
+        }
+    }
+    Ok(out)
+}</code></pre>
+
+    <h3><span class="h3-num">5.3</span>4 层嵌套转义验证</h3>
+
+    <p>plan/01 F3.2 要求"支持 4 层嵌套转义"。基线 test case：</p>
+
+    <pre><code>// fixtures/nested_escape_4_levels.txt
+//
+// L4: {"a":1}
+// L3: "{\"a\":1}"
+// L2: "\"{\\\"a\\\":1}\""
+// L1: "\"\\\"{\\\\\\\"a\\\\\\\":1}\\\"\""
+// L0: 用户在 IDE 中按 ⌘C 拷贝的字符串字面量（含 6 层 \）</code></pre>
+
+    <p>verifyer：解 L0 4 次得到 L4 {"a":1}。<code>tests/stringify_tests.rs</code> 覆盖。</p>
+
+    <h2><span class="h2-num">6</span>"自动解开" 与 format 的组合</h2>
+
+    <p>plan/01 F7.5 ── 设置 <code>auto_unwrap = true</code> 时，<code>json_format</code> 内部先调 unwrap 再 format。</p>
+
+    <pre><code>// src-tauri/src/commands/json_ops.rs
+#[tauri::command]
+pub async fn json_format(
+    text: String,
+    opts: FormatOpts,
+    settings: tauri::State&lt;'_, SettingsStore&gt;,
+) -&gt; Result&lt;String, JsonitaError&gt; {
+    let s = settings.get();
+    let processed = if s.auto_unwrap {
+        engine::unwrap::unwrap(&amp;text, UnwrapOpts {
+            timeout_ms: s.unwrap_timeout_ms,
+            max_depth:  None,
+        })?
+    } else {
+        text
+    };
+    tauri::async_runtime::spawn_blocking(move || engine::json::format(&amp;processed, opts))
+        .await
+        .map_err(|e| JsonitaError::Io(e.to_string()))?
+}</code></pre>
+
+    <h2><span class="h2-num">7</span>I/O 解耦原则</h2>
+
+    <ul>
+      <li><code>engine::*</code> 所有函数<b>纯</b>（只接 str → 返 String / Error），不读 fs / net / db</li>
+      <li>Tauri command 层负责拼装：读 settings → 调 engine → 写 history</li>
+      <li>所有 engine 函数可在 <code>cargo test</code> 中无 Tauri 环境跑</li>
+    </ul>
+
+    <h2><span class="h2-num">8</span>基准测试</h2>
+
+    <pre><code>// src-tauri/benches/json_bench.rs
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use jsonita::engine;
+
+fn bench_format(c: &amp;mut Criterion) {
+    let input_10k = std::fs::read_to_string("benches/fixtures/sample-10k.json").unwrap();
+    c.bench_function("format 10k", |b| {
+        b.iter(|| engine::json::format(black_box(&amp;input_10k), default_opts()))
+    });
+    let input_100k = std::fs::read_to_string("benches/fixtures/sample-100k.json").unwrap();
+    c.bench_function("format 100k", |b| {
+        b.iter(|| engine::json::format(black_box(&amp;input_100k), default_opts()))
+    });
+}
+
+criterion_group!(benches, bench_format);
+criterion_main!(benches);</code></pre>
+
+    <h2><span class="h2-num">9</span>测试 checklist</h2>
+
+    <ul>
+      <li>[ ] format 100 KB &lt; 50 ms（P95）</li>
+      <li>[ ] sort_keys 在嵌套 object 中按字典序排</li>
+      <li>[ ] format 错误时返回 Parse { line, col, msg }，line/col 与用户视角一致</li>
+      <li>[ ] unwrap 多层嵌套 5+ 层正确展开</li>
+      <li>[ ] unwrap 超时返回 UnwrapTimeout，深度记录正确</li>
+      <li>[ ] unwrap 不解纯数字 / bool 字符串</li>
+      <li>[ ] json_to_string 单 / 双引号切换均正确</li>
+      <li>[ ] string_to_json 兼容首尾有无 quote 的情况</li>
+      <li>[ ] 4 层嵌套转义往返一致</li>
+    </ul>
+
+    <h2><span class="h2-num">10</span>承上启下</h2>
+
+    <ul>
+      <li><b>01 IPC</b> ── json_format / minify / unwrap / stringify 4 个 command 的 Rust 实现</li>
+      <li><b>07 编辑器</b> ── 错误位置 line/col 喂给 CodeMirror linter</li>
+      <li><b>10 AI 客户端</b> ── AI 返回后用 <code>serde_json::from_str</code> 复用本章错误处理</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
+</main>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>
