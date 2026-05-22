@@ -1,0 +1,49 @@
+name: ci
+
+# M0-N7 雏形：仅 type-check + Rust 编译 + Rust test
+# 不跑：pnpm lint (M1-N1 加 ESLint)；UI e2e (CLAUDE.md § 7.3 投入产出比低)
+# 签名 + notarize CI step 留 M2-N6 release workflow
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+      - name: Rust test
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+        # M0 无 engine 单测；M1-N2 起 cargo test 才有实际用例
+
+      - name: Rust build
+        run: cargo build --release --manifest-path src-tauri/Cargo.toml

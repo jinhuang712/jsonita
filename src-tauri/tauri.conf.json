@@ -48,9 +48,30 @@
     "shortDescription": "Tiny menu-bar JSON toolkit.",
     "longDescription": "Tiny menu-bar JSON toolkit for macOS.",
     "targets": ["dmg", "app"],
-    "icon": [],
+    "icon": [
+      "../assets/icons/macos/Jsonita-Light.icns",
+      "../assets/icons/windows/jsonita-light.ico",
+      "../assets/icons/light/png/icon-32.png",
+      "../assets/icons/light/png/icon-128.png",
+      "../assets/icons/light/png/icon-256.png",
+      "../assets/icons/light/png/icon-512.png",
+      "../assets/icons/light/png/icon-1024.png"
+    ],
+    "resources": [
+      "../assets/icons/menubar/**"
+    ],
     "macOS": {
-      "minimumSystemVersion": "11.0"
+      "minimumSystemVersion": "11.0",
+      "frameworks": [],
+      "exceptionDomain": "api.deepseek.com",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": "entitlements.plist",
+      "dmg": {
+        "windowSize": { "width": 660, "height": 420 },
+        "appPosition": { "x": 180, "y": 170 },
+        "applicationFolderPosition": { "x": 480, "y": 170 }
+      }
     }
   }
 }

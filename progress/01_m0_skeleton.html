@@ -23,7 +23,7 @@
     <div class="callout callout-info">
       <span class="callout-icon">PHASE</span>
       <div class="callout-body">
-        <p><b>状态</b>：<code>active</code>（唯一进行中的 Phase；M1 / M2 / M3 / v1.1 锁在 <code>planned</code>）<br>
+        <p><b>状态</b>：<code>completed · pending-user-verification</code>（M0-N1..N7 全部 agent-side 完成；待用户本机跑 M0-A1..A13 全验后 <code>git tag 0.3.0-m0</code>，再切 M1 active）<br>
         <b>目标版本</b>：<code>0.3.0-m0</code>（CHANGELIST 版本规划表锁定）<br>
         <b>对应 plan / NFR</b>：<a href="../plan/04_nfr.html">04 NFR § 1 启动 / § 2 内存 / § 6 安装</a> 初验<br>
         <b>对接 spec 章节</b>：<a href="../spec/00_architecture.html">00</a> · <a href="../spec/05_icons_theme.html">05</a> · <a href="../spec/06_window.html">06</a> · <a href="../spec/07_menubar.html">07</a> · <a href="../spec/12_packaging.html">12</a> · <a href="../spec/13_schemas.html">13</a> · <a href="../spec/14_i18n_a11y.html">14</a> · <a href="../spec/15_logging.html">15</a></p>
@@ -179,10 +179,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td><code>src-tauri/tauri.conf.json</code>（完整 bundle 段）· <code>src-tauri/entitlements.plist</code> · <code>.github/workflows/ci.yml</code>（雏形）</td></tr>
-        <tr><td>verification</td><td>M0-A1 / A2 / E7：<code>pnpm tauri build</code> 出 <code>Jsonita.dmg</code>；双击装入 /Applications；首次经 Gatekeeper 放行；CI 三项绿</td></tr>
-        <tr><td>commit / tag</td><td><code>chore(m0-n7): local dmg build + ci skeleton</code> + 完成 M0 时 <code>git tag 0.3.0-m0</code></td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src-tauri/tauri.conf.json</code>（bundle 完整：icon 7档 + resources menubar/** + macOS{minimumSystemVersion=11.0, exceptionDomain=api.deepseek.com, signingIdentity=null, entitlements=entitlements.plist, dmg windowSize/positions}）· <code>src-tauri/entitlements.plist</code>（network.client + Hardened Runtime 准备 0 项）· <code>.github/workflows/ci.yml</code>（3 step on macos-14：pnpm tsc + cargo test + cargo build --release；含 Rust cache + pnpm cache + universal target install）</td></tr>
+        <tr><td>verification</td><td>agent 端：bundle 段完整 ✓ · entitlements.plist 写完 ✓ · ci.yml 雏形 ✓ · 链接校验 0 broken；<b>待用户本机跑</b>：<code>rustup target add x86_64-apple-darwin aarch64-apple-darwin</code> → <code>pnpm install</code>（生成 pnpm-lock.yaml）→ <code>cargo check --manifest-path src-tauri/Cargo.toml</code>（生成 Cargo.lock）→ <code>pnpm tauri build --target universal-apple-darwin</code> → <code>du -h src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg</code> 检体积 &lt; 15 MB → 双击装入 /Applications → 首次右键打开放行 Gatekeeper → 跑 M0-A1..A13 全 13 用例 → 都过则 <code>git tag 0.3.0-m0</code></td></tr>
+        <tr><td>commit / tag</td><td><code>chore(m0-n7): local dmg build + ci skeleton</code> + M0 全验后 <code>git tag 0.3.0-m0</code>（agent 不主动 tag，待用户跑完 M0-A1..A13）</td></tr>
         <tr><td>blocked_by</td><td><code>m0-n2-tray</code>, <code>m0-n3-nspanel</code>, <code>m0-n4-shortcut</code>, <code>m0-n5-logging</code>, <code>m0-n6-i18n</code></td></tr>
         <tr><td>关键交付物</td><td><code>tauri.conf.json</code> 完整填写（bundle / identifier / category / minimumSystemVersion 等）；<code>entitlements.plist</code>（含 <code>com.apple.security.app-sandbox=false</code> 等关键项）；<code>pnpm tauri build</code> 出 <code>.dmg</code>；本地双击能装；首次启动经过 Gatekeeper 警告（无签名 → 右键打开放行）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/12_packaging.html">12 § 1-4</a>（tauri.conf 全文表 / capabilities / entitlements / 构建命令）</td></tr>
