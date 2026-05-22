@@ -4,6 +4,7 @@
   "description": "M0-N1 scaffold default permissions. Extended by later phases (M0-N2 tray / M0-N3 window / M0-N4 shortcut / etc.) per spec/12 § 2.",
   "windows": ["main"],
   "permissions": [
-    "core:default"
+    "core:default",
+    "global-shortcut:default"
   ]
 }

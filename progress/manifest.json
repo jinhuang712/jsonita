@@ -128,7 +128,7 @@
         {
           "node": "M0-N4",
           "title": "全局快捷键 + 权限引导",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n4-shortcut",
           "task_file": "progress/tasks/M0-N4_global_shortcut.md",
           "spec_refs": [
