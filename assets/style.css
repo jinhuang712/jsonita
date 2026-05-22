@@ -195,24 +195,22 @@ main.doc-main {
 .doc-meta b { color: var(--text); font-weight: 500; }
 
 h2 {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  margin: 44px 0 16px;
-  padding: 12px 18px;
-  background: linear-gradient(90deg, var(--primary-soft) 0%, transparent 100%);
-  border-left: 3px solid var(--primary);
-  border-radius: 0 6px 6px 0;
+  margin: 40px 0 14px;
+  padding: 0 0 10px 0;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: baseline;
   gap: 12px;
 }
 h2 .h2-num {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 14px;
   color: var(--primary);
   font-weight: 600;
-  min-width: 28px;
+  min-width: 22px;
 }
 h3 {
   font-size: 17px;
@@ -291,7 +289,7 @@ a:hover { text-decoration: underline; }
 .section-divider {
   margin: 56px 0 8px;
   padding: 14px 0 14px 18px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.18em;
   color: var(--text-muted);
@@ -309,9 +307,10 @@ a:hover { text-decoration: underline; }
   background: var(--primary);
 }
 .section-divider b {
+  font-size: 16px;
   color: var(--text);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 /* ===== Tables ===== */
