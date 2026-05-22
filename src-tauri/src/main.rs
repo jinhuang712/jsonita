@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod cmds;
+mod engine;
 mod error;
 mod logging;
 mod menubar;
@@ -28,11 +29,12 @@ fn main() {
             shortcuts::shortcut_status,
             shortcuts::shortcut_retry,
             shortcuts::open_accessibility_settings,
-            // M1-N1 stubs: json_ops
+            // M1-N2: json_ops (real engine impl)
             cmds::json::json_format,
             cmds::json::json_minify,
             cmds::json::json_unwrap_stringified,
             cmds::json::json_stringify,
+            cmds::json::json_parse,
             // M1-N1 stubs: history
             cmds::history::history_list,
             cmds::history::history_search,

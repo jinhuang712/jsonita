@@ -8,6 +8,40 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1-N2 · JSON 引擎核心（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src-tauri/src/engine/mod.rs` ── re-exports 4 子模块
+- `src-tauri/src/engine/error_loc.rs` ── `serde_json::Error → JsonitaError::Parse`（line/col 1-indexed，spec/09 § 5.2）+ `polish()` 5 类错误文案润色（key must be string / trailing comma / unterminated string / 等）
+- `src-tauri/src/engine/json.rs` ── `format(text, opts)` 走 Value 中转 + PrettyFormatter::with_indent + sort_keys_recursive 递归 IndexMap 重建（preserve_order 必开）；`minify(text)` 走 to_string；8 单测覆盖 basic / preserve order / sort / nested sort / trailing newline / minify / parse error line+col
+- `src-tauri/src/engine/unwrap.rs` ── `unwrap(text, opts)` walk Value 树（spec/09 § 6.3 ~20 行核心）：遇 String + parse 成 object/array 即解开；纯数字 / bool / null 字符串保留；Instant deadline 每层入口检查；6 单测覆盖 single / double nested / array / non-json string / numeric string / max_depth=1
+- `src-tauri/src/engine/stringify.rs` ── `json_to_string(text, opts)` 包裹 quote + 转义（含可选 unicode escape \\uXXXX UTF-16 surrogate pair）；`string_to_json(text)` 容忍有无 outer quotes + unescape ~15 行（含 \\u4-hex）；4 单测含 plan/01 F3.2 "4 层嵌套转义往返一致" fixture
+- `src-tauri/src/cmds/json.rs` ── 4 命令替换 stub 为 `spawn_blocking(move || engine::*::...)`（不阻塞 main 进程，spec/00 § 3 不变量 I-4）；新增 `json_parse` 命令（string → JSON 反向）
+- `src-tauri/src/main.rs` ── `mod engine;` + invoke_handler 加 json_parse
+- `src-tauri/Cargo.toml` ── `serde_json = { version = "1", features = ["preserve_order"] }`（关键！默认 BTreeMap 会丢用户输入 key 顺序）
+- `src/ipc/commands.ts` ── `json.parse(text)` 暴露给前端
+
+关键决策：
+
+- **preserve_order feature 开启**：spec/09 § 2 锁定 ── 用户输入 key 顺序保留是"所见即所得"工具的基本契约
+- **sort_keys 手写递归而非 BTreeMap**：preserve_order 用 IndexMap 替代 BTreeMap，得手写排序；spec/09 § 4.2 ~12 行核心
+- **`spawn_blocking` 用于所有 4 个命令**：format / minify / unwrap / stringify 都是 CPU 密集；100KB 输入可能 ~50ms 阻塞 ── 必须放 blocking pool（spec/09 § 8）
+- **`json_parse` 新增命令**：spec/02 § 6.1 列了 json_stringify（JSON → String）但未列反向；M1-N2 加 json_parse 让 →JSON tab 可用，留 spec 后续追认（spec/02 § 6.1.1 IPC 表）
+- **18 个 inline unit test**：分布 8 (json) + 6 (unwrap) + 4 (stringify)；走 `cargo test --manifest-path src-tauri/Cargo.toml` 可独立跑（无 Tauri runtime 需要），CLAUDE.md § 7.1 核心边界覆盖率达标
+- **错误文案 polish() 仅 5 类已知 case**：其余 raw 透传；M3-N3 polish 时若发现更多 case 再加（保 KISS）
+
+待用户本机验证：
+
+- `cargo test --manifest-path src-tauri/Cargo.toml` ── 18 测试全 pass
+- 启动后 DevTools `invoke('json_format', { text: '{"z":1,"a":2}', opts: {indent: 'spaces2', sortKeys: true } })` 应回包含 `"a": 2` 在 `"z": 1` 之前的字符串
+- 输入非法 JSON 应回 `{kind: 'Parse', data: { line: N, col: N, msg: '...' }}`
+
+进度状态：
+
+- `progress/manifest.json` M1-N2 `status: completed`
+- `progress/02_m1_core_json.html#m1-n2-engine` status: `done · pending-user-verification`
+
 #### M1-N1 · 状态管理 + IPC 骨架（done · pending-user-verification）
 
 Rust 端（8 个新文件）：

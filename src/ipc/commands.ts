@@ -27,6 +27,7 @@ export const json = {
     invoke<string>('json_unwrap_stringified', { text, opts }),
   stringify: (text: string, opts: StringifyOpts) =>
     invoke<string>('json_stringify', { text, opts }),
+  parse: (text: string) => invoke<string>('json_parse', { text }),
 };
 
 // ──────────── history ────────────

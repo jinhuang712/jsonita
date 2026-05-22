@@ -297,7 +297,7 @@
         {
           "node": "M1-N2",
           "title": "JSON 引擎核心",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/02_m1_core_json.html#m1-n2-engine",
           "task_file": null,
           "spec_refs": [
