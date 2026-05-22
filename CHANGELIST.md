@@ -8,6 +8,24 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1-N6 · SQLite + 历史记录（done · pending-user-verification）
+
+- `src-tauri/migrations/0001_init.sql` ── 5 表 schema：schema_version / app_meta / history（含 content_hash UNIQUE + idx_pinned_created / idx_starred）/ history_fts (FTS5 external content + unicode61 tokenizer + 3 trigger insert/delete/update) / last_session (CHECK id=1)
+- `src-tauri/src/store/db.rs` ── r2d2 pool max_size=4 + WAL/synchronous=NORMAL/foreign_keys/busy_timeout PRAGMA；migrate() 读 schema_version → 顺序 apply 缺失 SQL；default_db_path() 走 dirs::data_dir() + Jsonita/history.db；From&lt;rusqlite::Error&gt; / r2d2::Error → JsonitaError::Sqlite
+- `src-tauri/src/store/history.rs` ── add()（UPSERT 走 content_hash UNIQUE 去重 + 自动 trim 至 limit 条非 pinned/starred）；list()（onlyPinned/Starred 互斥 + 默认 pinned DESC, created_at DESC）；search()（FTS5 MATCH 包裹引号）；set_pinned / set_starred / clear（保留 pinned + starred）
+- `src-tauri/src/store/session.rs` ── save (id=1 UPSERT) / load (QueryReturnedNoRows → None) / clear；M1-N7 起接入 RestoreTimer
+- `src-tauri/src/cmds/history.rs` ── 5 命令替换 stub：从 State&lt;Db&gt; 拿 Db.clone() 进 spawn_blocking；加内部 helper `record(app, content, op)` 供 cmds/json.rs 写完操作后调（M1-N7 集成）
+- `src-tauri/src/main.rs` ── setup 期间 store::Db::open(default_db_path()) → app.manage(db)；失败 log error 不阻塞启动
+- `Cargo.toml` ── rusqlite 0.32 bundled (FTS5 自动) + r2d2 0.8 + r2d2_sqlite 0.25 + sha2 0.10 + hex 0.4
+
+关键决策：
+- **bundled 而非 system sqlite**：编译期嵌入 SQLite source，无 macOS 系统 sqlite 版本依赖；包尺寸 +1MB 可接受
+- **UPSERT 去重而非"先 SELECT 再 INSERT"**：单 SQL 原子，避免竞态；spec/10 § 3 I-1 不变量
+- **history.add() 不在 IPC handler 暴露**：只通过 `cmds::history::record(app, ...)` 内部调；前端 ops 写入历史的逻辑在 M1-N7 通过 hook 触发（避免每个 op 都加一个 IPC 命令）
+- **M1-N6 暂不挂 record() 到 json 操作**：M1-N7 起在 useDebouncedTransform success 分支调；保 M1-N6 commit 范围聚焦
+
+进度状态：M1-N6 `status: completed`；progress html 同步。
+
 #### M1-N5 · TreeView + Path 复制（done · pending-user-verification）
 
 - `src/tree/jsonpath.ts` ── `pathToString(path[])` 转 `$.user.items[0].name` 友好格式；`nodeCopyText(value)` 按类型计算剪贴板内容（spec/01 § 12 复制内容规则）；纯函数可单测
