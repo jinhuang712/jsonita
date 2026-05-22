@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- 网络：DeepSeek API (M2-N3 起调) -->
+  <key>com.apple.security.network.client</key>
+  <true/>
+
+  <!-- 拒绝 Apple Events 自动化（不需要） -->
+  <key>com.apple.security.automation.apple-events</key>
+  <false/>
+
+  <!-- Hardened Runtime 准备（M2-N6 公证要求）：
+       JIT / unsigned executable memory / disable library validation 全关 -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <false/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <false/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <false/>
+</dict>
+</plist>

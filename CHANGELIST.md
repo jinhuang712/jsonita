@@ -8,6 +8,62 @@
 
 ### M0 实施期 · 0.3.0-m0 路线开工
 
+#### M0 Phase 收口（agent-side 全完成）
+
+7 节点 commit 列表（顺序串）：
+
+1. `feat(m0-n1): bootstrap tauri 2.x scaffold (react+ts+vite)` ── Tauri 2 + React 18 + TS 5 + Vite 5 工程
+2. `feat(m0-n2): menubar tray + template icons + accessory dock policy` ── 22pt@2x template + Accessory dock
+3. `feat(m0-n3): nspanel-like floating window (cocoa unsafe)` ── NSPanel promote + 多屏定位 + close/blur 路由
+4. `feat(m0-n4): global shortcut + accessibility guide modal` ── ⌘⇧J + 权限引导 + 2s 轮询 retry
+5. `feat(m0-n5): tracing + daily rolling + redact layer` ── ~/Library/Logs/Jsonita/jsonita.*.log + 0600 + 7d purge
+6. `feat(m0-n6): react-i18next + 7 namespaces (en-US only)` ── 7 namespace + locale 检测 + lang attr 同步
+7. `chore(m0-n7): local dmg build + ci skeleton` ── bundle 完整 + entitlements + GitHub Actions yml
+
+**M0 收口决策（agent vs user）**：
+
+- agent 已做：所有代码 + 配置 + 进度同步 + commit。
+- 用户待跑（CLAUDE.md § 2.3 禁 agent 替跑 install / build）：
+  1. `rustup target add x86_64-apple-darwin aarch64-apple-darwin`
+  2. `pnpm install` → 生成 `pnpm-lock.yaml`（需提交）
+  3. `cargo check --manifest-path src-tauri/Cargo.toml` → 生成 `src-tauri/Cargo.lock`（需提交，.gitignore 已加 `!src-tauri/Cargo.lock` 例外）
+  4. `pnpm tauri dev` → 单点验 M0-A4/A6/A7/A8/A9/A10/A11/A12/A13
+  5. `pnpm tauri build --target universal-apple-darwin` → dmg 出炉
+  6. `du -h ...dmg` → 验 &lt; 15 MB（NFR § 6）
+  7. 双击 dmg + 拖到 Applications + 右键打开过 Gatekeeper → 跑全 M0-A1..A13
+  8. 全过 → `git tag 0.3.0-m0`（agent 不主动 tag）
+  9. `git push` + `git push --tags`（agent 不主动 push）
+
+**为不阻塞 M1 实施 → agent 预切 active_phase=M1**（progress/manifest.json）。用户跑完 M0 验收前可<b>随时</b>回 M0 节点修 bug；M1 工作期间发现 M0 问题须 § 6.4 双向同步回 M0。
+
+---
+
+#### M0-N7 · dmg 本地构建 + CI 雏形（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `src-tauri/tauri.conf.json` ── 完整 bundle 段：icon 7 档（icns + ico + 5 PNG）/ resources `../assets/icons/menubar/**` / macOS{minimumSystemVersion=11.0 / frameworks=[] / exceptionDomain=api.deepseek.com / signingIdentity=null（M2-N6 装）/ entitlements=entitlements.plist / dmg windowSize + appPosition + applicationFolderPosition}
+- `src-tauri/entitlements.plist` ── 4 个关键 key：`network.client=true`（DeepSeek M2 起需要）/ `automation.apple-events=false` / `cs.allow-jit=false` / `cs.allow-unsigned-executable-memory=false` / `cs.disable-library-validation=false`（Hardened Runtime 准备，M2-N6 公证要求）
+- `.github/workflows/ci.yml` ── 3 step on macos-14：pnpm tsc --noEmit + cargo test + cargo build --release；含 Rust cache + pnpm cache + universal target preinstall；timeout 30 min；签名 secrets 留 M2-N6 release workflow
+
+关键决策：
+
+- **不加 ESLint / pnpm lint step**：lint 配置 + 规则磨合留 M1-N1；CI 雏形先三项绿
+- **dmg 命名走 Tauri 默认 `Jsonita_<version>_universal.dmg`**：不改默认（影响后续 D-N1 brew formula + D-N3 updater latest.json 都依赖此命名）
+- **`signingIdentity: null`**：M0 不签名（M2-N6 改 env `TAURI_SIGNING_IDENTITY`）；首次启动会触发 Gatekeeper（用户右键打开放行）
+- **`exceptionDomain: api.deepseek.com`**：App Transport Security 例外，M2-N3 起 HTTP 请求 DeepSeek 需要；M0 阶段无害
+- **CI 用 `--frozen-lockfile`**：要求用户先本机 `pnpm install` 生成 lockfile 并 commit；不允许 CI 自由解析依赖
+
+待用户本机验证（M0 完整退出条件）：
+
+- 见上方 M0 Phase 收口 § "用户待跑" 1-9 步
+
+进度状态：
+
+- `progress/manifest.json` M0-N7 `status: completed` · M0 phase `status: completed` · active_phase=`M1` · M1 phase `status: active`
+- `progress/01_m0_skeleton.html#m0-n7-dmg` status: `done · pending-user-verification`；顶部 callout 切 `completed · pending-user-verification`
+- `progress/02_m1_core_json.html` 顶部 callout 切 `active`
+
 #### M0-N6 · i18n 框架（react-i18next）（done · pending-user-verification）
 
 新增 / 修改文件：

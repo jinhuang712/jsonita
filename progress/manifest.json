@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "generated_at": "2026-05-23",
-  "active_phase": "M0",
-  "notes": "本文件是节点状态总表 ── agent 读它判断当前可做的节点；改 progress html 状态字段时记得同步本文件。",
+  "active_phase": "M1",
+  "notes": "本文件是节点状态总表 ── agent 读它判断当前可做的节点；改 progress html 状态字段时记得同步本文件。M0 已 agent-side 完成（N1-N7）；用户本机跑 M0-A1..A13 全验后 git tag 0.3.0-m0。",
   "phases": [
     {
       "phase": "M0",
       "title": "Skeleton",
-      "status": "active",
+      "status": "completed",
       "version_target": "0.3.0-m0",
       "progress_file": "progress/01_m0_skeleton.html",
       "exit_criteria_count": 7,
@@ -229,7 +229,7 @@
         {
           "node": "M0-N7",
           "title": "dmg 本地构建 + CI 雏形",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n7-dmg",
           "task_file": "progress/tasks/M0-N7_dmg_build.md",
           "spec_refs": [
@@ -274,7 +274,7 @@
     {
       "phase": "M1",
       "title": "Core JSON",
-      "status": "planned",
+      "status": "active",
       "version_target": "0.4.0-m1",
       "progress_file": "progress/02_m1_core_json.html",
       "exit_criteria_count": 12,
