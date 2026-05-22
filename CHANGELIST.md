@@ -8,6 +8,23 @@
 
 ### M1 实施期 · 0.4.0-m1 路线起手
 
+#### M1-N8 · 嵌套 unwrap 集成（done · pending-user-verification）
+
+- `src-tauri/src/types.rs` ── Settings struct + Default impl（17 字段 spec/13 § 3.3 全对齐）
+- `src-tauri/src/store/settings.rs` ── SettingsStore Arc&lt;RwLock&lt;Settings&gt;&gt; + get / auto_unwrap / unwrap_timeout_ms 便捷访问；M2-N1 加 load/patch/persist
+- `src-tauri/src/cmds/json.rs` ── json_format 接 State&lt;SettingsStore&gt;：先 unwrap (timeout=settings.unwrap_timeout_ms) 再 format；spec/09 § 8 组合
+- `src-tauri/src/main.rs` ── setup 注入 SettingsStore::new()
+
+#### M1-N7 · 会话保留 + ⌘⇧L + ⌘K（done · minimal · pending-user-verification）
+
+- `src-tauri/src/cmds/session.rs` ── save/load/clear 3 命令真实化
+- `src/hooks/useGlobalHotkeys.ts` ── ⌘K 清 + clearLast / ⌘⇧L loadLast / Esc + ⌘W win.hide()
+- `src/hooks/useDebouncedTransform.ts` ── success 时 session.saveLast 持久化
+- `src/App.tsx` ── useGlobalHotkeys()
+- `package.json` ── react-hotkeys-hook 4.6
+
+minimal 范围：完整 RestoreTimer 5min 窗口期 + window:shown 主动 restore 留 M2-N1。
+
 #### M1-N6 · SQLite + 历史记录（done · pending-user-verification）
 
 - `src-tauri/migrations/0001_init.sql` ── 5 表 schema：schema_version / app_meta / history（含 content_hash UNIQUE + idx_pinned_created / idx_starred）/ history_fts (FTS5 external content + unicode61 tokenizer + 3 trigger insert/delete/update) / last_session (CHECK id=1)

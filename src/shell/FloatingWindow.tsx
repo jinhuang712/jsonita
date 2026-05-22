@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Editor } from '../editor/Editor';
 import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
+import { useSmartWidth } from '../hooks/useSmartWidth';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
 import { TreeView } from '../tree/TreeView';
@@ -22,6 +23,8 @@ export function FloatingWindow() {
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
+  // 智能宽度：粘长行后自动扩宽（spec/06 § 7）
+  useSmartWidth();
 
   // tree tab 时把 outputText parse 为 object 给 TreeView
   const treeData = useMemo(() => {
