@@ -196,7 +196,7 @@
         {
           "node": "M0-N6",
           "title": "i18n 框架 (react-i18next, en-US only)",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n6-i18n",
           "task_file": "progress/tasks/M0-N6_i18n.md",
           "spec_refs": [

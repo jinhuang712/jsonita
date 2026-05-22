@@ -1,0 +1,17 @@
+{
+  "accessibilityRequired": {
+    "title": "Accessibility permission needed",
+    "body": "Global shortcut {{key}} needs Input Monitoring permission to work in any frontmost app. Add Jsonita in System Settings → Privacy & Security → Accessibility."
+  },
+  "parse": {
+    "title": "JSON parse error",
+    "atLineCol": "Line {{line}}, Col {{col}}: {{msg}}"
+  },
+  "rateLimit": {
+    "title": "Rate limited",
+    "retryAfter": "Please retry in {{sec}}s"
+  },
+  "aiInvalidJson": {
+    "title": "AI returned invalid JSON"
+  }
+}

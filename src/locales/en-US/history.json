@@ -1,0 +1,10 @@
+{
+  "title": "History",
+  "searchPlaceholder": "Search…",
+  "filter": {
+    "all": "All",
+    "pinned": "Pin",
+    "starred": "★"
+  },
+  "empty": "No history yet · operated JSONs auto-saved"
+}

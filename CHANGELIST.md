@@ -8,6 +8,45 @@
 
 ### M0 实施期 · 0.3.0-m0 路线开工
 
+#### M0-N6 · i18n 框架（react-i18next）（done · pending-user-verification）
+
+新增 / 修改文件：
+
+- `package.json` ── 加 `i18next 23.16` / `react-i18next 15.1` / `i18next-browser-languagedetector 8.0`
+- `src/i18n/index.ts` ── `initI18n()` async：装 LanguageDetector + initReactI18next + 7 namespace 静态 import；resources = en-US 全套；fallbackLng=en-US；supportedLngs=['en-US']（v1 仅；M3-N2 加 zh-CN）；detection 走 localStorage(`jsonita.locale`) → navigator → en-US；监听 `languageChanged` event 同步 `document.documentElement.lang`
+- `src/i18n/types.ts` ── `declare module 'react-i18next'` 类型增强：基于 en-US 资源推 `CustomTypeOptions.resources`；让 `t('errors.parse.title')` 有 IDE 补全 + 编译期 key 校验
+- `src/locales/en-US/shell.json` ── tray menu labels + statusBar valid/empty
+- `src/locales/en-US/panes.json` ── empty.title + 6 个 tab labels（Format/Minify/Tree/→Str/→JSON/AI Fix）
+- `src/locales/en-US/settings.json` ── M0 仅 title + 6 group 名（M2-N1 补全）
+- `src/locales/en-US/history.json` ── title + search placeholder + 3 filter chips + empty
+- `src/locales/en-US/errors.json` ── 4 个 kind 起点（accessibilityRequired / parse / rateLimit / aiInvalidJson；插值 {{key}}/{{line}}/{{col}}/{{sec}}）
+- `src/locales/en-US/about.json` ── M0 占位（version 插值 + openLogDir 按钮）
+- `src/locales/en-US/common.json` ── 7 个通用按钮（ok/cancel/save/done/later/retry/openSystemSettings）
+- `src/main.tsx` ── `await initI18n()` before `createRoot(...).render()`，避免首屏 raw key 闪
+- `src/components/PanelShell.tsx` ── 改 `useTranslation('panes')`，hardcode "Paste JSON to start" → `t('empty.title')`
+- `src/permissions/AccessibilityModal.tsx` ── 改 `useTranslation('errors')` + `'common'`，所有 hardcode 英文 → `t()`；`{{key}}` 插值传 `⌘⇧J`
+
+关键决策：
+
+- **静态 import 而非 lazy import**：M0 单 locale + 7 文件 &lt; 5 KB，lazy 收益不抵复杂度；M3-N2 zh-CN 双语后再 lazy
+- **`document.documentElement.lang` 同步**：spec/14 § 9 a11y "语言声明" 必需，screen reader 读对语言
+- **`supportedLngs: ['en-US']` 锁死 v1**：navigator zh-CN 仍 fallback en-US，避免不完整翻译
+- **`escapeValue: false`**：React 自动 escape，i18next 别再 escape 一次
+- **tray menu 仍 Rust 端硬编码英文**：M0-N6 只 cover React-side（spec/14 § 2 边界）；tray menu localize 留 M3-N2 时设计跨进程 locale 传递
+- **resources 类型增强基于 en-US 推**：所有翻译文件结构必须严格对齐 en-US（M3-N2 zh-CN 复制后改值即可，路径 / key 不变）
+
+待用户本机验证：
+
+- M0-A13 ── `grep -rE '"[A-Z][a-z]+ [A-Z][a-z]+"' src/ --include="*.tsx" --include="*.ts" | grep -v src/locales | grep -v src/i18n` → 0 命中
+- `pnpm tsc --noEmit` → 0 错（含 `t('key')` 自动补全 + 编译期 key 校验）
+- `pnpm tauri dev` → DevTools console: `i18next.languages === ['en-US']` + `document.documentElement.lang === 'en-US'`
+- Modal 文案与 PanelShell empty state 全部从 JSON 来
+
+进度状态：
+
+- `progress/manifest.json` M0-N6 `status: completed`
+- `progress/01_m0_skeleton.html#m0-n6-i18n` status: `done · pending-user-verification`
+
 #### M0-N5 · 日志框架（tracing）（done · pending-user-verification）
 
 新增 / 修改文件：
