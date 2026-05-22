@@ -56,7 +56,7 @@
         {
           "node": "M0-N2",
           "title": "菜单栏 tray + 图标",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/01_m0_skeleton.html#m0-n2-tray",
           "task_file": "progress/tasks/M0-N2_tray_icon.md",
           "spec_refs": [
