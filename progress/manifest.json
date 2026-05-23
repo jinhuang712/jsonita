@@ -522,7 +522,7 @@
         {
           "node": "M3-N1",
           "title": "主题动效 + Empty State",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/04_m3_polish_cross.html#m3-n1-theme-empty",
           "task_file": null,
           "spec_refs": [

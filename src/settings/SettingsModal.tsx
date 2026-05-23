@@ -216,6 +216,21 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
 function GroupGeneral({ settings, patch }: GroupProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={rowStyle}>
+        <span>主题</span>
+        <select
+          value={settings.theme}
+          onChange={(e) =>
+            patch({ theme: e.target.value as 'system' | 'light' | 'dark' })
+          }
+          style={inputStyle}
+          aria-label="Theme"
+        >
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
       <Row
         label="开机自启动"
         on={settings.launchAtLogin}

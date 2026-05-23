@@ -5,6 +5,7 @@ import { useSmartWidth } from '../hooks/useSmartWidth';
 import { AiFixPane } from '../panes/AiFixPane';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
+import { useEffectiveTheme } from '../theme/useEffectiveTheme';
 import { TreeView } from '../tree/TreeView';
 import { StatusBar } from './StatusBar';
 import { TabBar } from './TabBar';
@@ -21,6 +22,7 @@ export function FloatingWindow() {
   const setContent = useEditorStore((s) => s.setContent);
   const status = useEditorStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
+  const effectiveTheme = useEffectiveTheme();
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
@@ -61,7 +63,7 @@ export function FloatingWindow() {
         }}
       >
         <div style={{ borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
-          <Editor theme="light" value={content} onChange={setContent} softWrap={true} />
+          <Editor theme={effectiveTheme} value={content} onChange={setContent} softWrap={true} />
         </div>
         <div style={{ overflow: 'hidden' }}>
           {activePane === 'ai-fix' ? (
@@ -70,7 +72,7 @@ export function FloatingWindow() {
             <TreeView data={treeData} />
           ) : (
             <Editor
-              theme="light"
+              theme={effectiveTheme}
               value={outputText}
               readOnly={true}
               softWrap={true}
