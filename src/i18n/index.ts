@@ -17,6 +17,14 @@ import history from '../locales/en-US/history.json';
 import panes from '../locales/en-US/panes.json';
 import settings from '../locales/en-US/settings.json';
 import shell from '../locales/en-US/shell.json';
+// M3-N2 zh-CN locale
+import aboutZh from '../locales/zh-CN/about.json';
+import commonZh from '../locales/zh-CN/common.json';
+import errorsZh from '../locales/zh-CN/errors.json';
+import historyZh from '../locales/zh-CN/history.json';
+import panesZh from '../locales/zh-CN/panes.json';
+import settingsZh from '../locales/zh-CN/settings.json';
+import shellZh from '../locales/zh-CN/shell.json';
 
 export const NS = [
   'shell',
@@ -30,6 +38,15 @@ export const NS = [
 
 const resources = {
   'en-US': { shell, panes, settings, history, errors, about, common },
+  'zh-CN': {
+    shell: shellZh,
+    panes: panesZh,
+    settings: settingsZh,
+    history: historyZh,
+    errors: errorsZh,
+    about: aboutZh,
+    common: commonZh,
+  },
 };
 
 export async function initI18n() {
@@ -39,8 +56,8 @@ export async function initI18n() {
     .init({
       resources,
       fallbackLng: 'en-US',
-      // v1 仅 en-US；M3-N2 加 'zh-CN'
-      supportedLngs: ['en-US'],
+      // M3-N2 起加 zh-CN
+      supportedLngs: ['en-US', 'zh-CN'],
       ns: NS as unknown as string[],
       defaultNS: 'common',
       interpolation: { escapeValue: false },

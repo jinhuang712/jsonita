@@ -1,0 +1,11 @@
+{
+  "title": "设置",
+  "groups": {
+    "general": "通用",
+    "shortcuts": "快捷键",
+    "ai": "AI",
+    "history": "历史",
+    "jsonTransform": "JSON 变换",
+    "about": "关于"
+  }
+}

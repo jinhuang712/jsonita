@@ -1,0 +1,10 @@
+{
+  "title": "历史",
+  "searchPlaceholder": "搜索…",
+  "filter": {
+    "all": "全部",
+    "pinned": "置顶",
+    "starred": "★"
+  },
+  "empty": "暂无历史 · 操作过的 JSON 自动保存"
+}
