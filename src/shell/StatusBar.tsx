@@ -49,6 +49,9 @@ export function StatusBar() {
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       style={{
         display: 'flex',
         justifyContent: 'space-between',

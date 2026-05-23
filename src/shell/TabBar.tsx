@@ -24,6 +24,8 @@ export function TabBar() {
 
   return (
     <div
+      role="tablist"
+      aria-label="Pane tabs"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -38,6 +40,9 @@ export function TabBar() {
         return (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
             onClick={() => setActive(tab.id)}
             style={{
               padding: '4px 10px',
@@ -57,6 +62,9 @@ export function TabBar() {
       <div style={{ flex: 1 }} />
       {showAiFix && (
         <button
+          role="tab"
+          aria-selected={active === 'ai-fix'}
+          tabIndex={active === 'ai-fix' ? 0 : -1}
           onClick={() => setActive('ai-fix')}
           style={{
             padding: '4px 10px',

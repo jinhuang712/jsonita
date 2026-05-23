@@ -19,6 +19,9 @@ export function AccessibilityModal({ onClose }: Props) {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="accessibility-modal-title"
       style={{
         position: 'fixed',
         inset: 0,
@@ -42,7 +45,7 @@ export function AccessibilityModal({ onClose }: Props) {
         }}
       >
         <div style={{ fontSize: 30, marginBottom: 8 }}>⌨️</div>
-        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
+        <div id="accessibility-modal-title" style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
           {t('accessibilityRequired.title')}
         </div>
         <div

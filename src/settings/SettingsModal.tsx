@@ -64,6 +64,9 @@ export function SettingsModal() {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
       style={{
         position: 'fixed',
         inset: 0,
@@ -91,6 +94,7 @@ export function SettingsModal() {
         onClick={(e) => e.stopPropagation()}
       >
         <div
+          id="settings-modal-title"
           style={{
             padding: '12px 16px',
             borderBottom: '1px solid var(--border)',
