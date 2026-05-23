@@ -5,8 +5,8 @@
 use tauri::{Manager, State};
 
 use crate::error::JsonitaError;
-use crate::store::{history as h, Db};
-use crate::types::{HistoryRow, ListOpts};
+use crate::store::{history as h, Db, SettingsStore};
+use crate::types::{HistoryRow, ListOpts, OpType};
 
 const DEFAULT_LIMIT: u32 = 100;
 
@@ -73,4 +73,20 @@ pub fn record(
 ) -> Result<HistoryRow, JsonitaError> {
     let db = app.state::<Db>();
     h::add(&db, content, op, DEFAULT_LIMIT)
+}
+
+/// 前端调用：M2-N4 AI Fix Accept 后写入历史。
+/// spec/02 § 6.1.2 IPC 列表的扩展（spec 待追认）。
+#[tauri::command]
+pub async fn history_add(
+    content: String,
+    op_type: OpType,
+    db: State<'_, Db>,
+    settings: State<'_, SettingsStore>,
+) -> Result<HistoryRow, JsonitaError> {
+    let db = db.inner().clone();
+    let limit = settings.get().history_limit;
+    tauri::async_runtime::spawn_blocking(move || h::add(&db, &content, op_type, limit))
+        .await
+        .map_err(|e| JsonitaError::Io(e.to_string()))?
 }
