@@ -30,12 +30,15 @@ pub fn toggle(app: &AppHandle) -> tauri::Result<()> {
     let Some(win) = app.get_webview_window(MAIN_LABEL) else {
         return Ok(()); // 静默 no-op；启动期间 win 还没就位时可能命中
     };
-    if win.is_visible()? {
+    let was_visible = win.is_visible()?;
+    if was_visible {
         win.hide()?;
+        tracing::info!(action = "hide", "window.toggle");
     } else {
         let _ = locate::position_for_cursor(&win);
         win.show()?;
         win.set_focus()?;
+        tracing::info!(action = "show", "window.toggle");
     }
     Ok(())
 }

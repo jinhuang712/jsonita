@@ -9,19 +9,16 @@
 //! 也不接 Settings Modal 实现（属 M2-N1）— 菜单项暂 disabled。
 
 use tauri::{
-    image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager,
 };
 
-/// macOS template @2x PNG 直接编译进二进制，避开运行时资源解析（M0-N7 dmg bundle 由 include_bytes! 兜底）。
-const TRAY_ICON_TEMPLATE_22_2X: &[u8] = include_bytes!(
-    "../../../assets/icons/menubar/jsonita-menubar-template-22@2x.png"
-);
-
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
-    let icon = Image::from_bytes(TRAY_ICON_TEMPLATE_22_2X)?;
+    // macOS template @2x PNG 编译期 PNG → RGBA decode 嵌入（Tauri 2 include_image! 宏处理）
+    let icon = tauri::include_image!(
+        "../assets/icons/menubar/jsonita-menubar-template-22@2x.png"
+    );
 
     let menu = build_menu(app)?;
 

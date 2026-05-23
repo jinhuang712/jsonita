@@ -20,9 +20,10 @@ pub fn promote(win: &WebviewWindow) -> tauri::Result<()> {
     unsafe {
         // styleMask: titled + fullSizeContentView + nonactivatingPanel
         // .nonactivatingPanel 让 panel 接收点击但不切换前台 App 焦点（关键）
+        // cocoa 0.26 不直接含 NSNonactivatingPanelMask 常量 → 走 from_bits_retain(1 << 7)
         let mask = NSWindowStyleMask::NSTitledWindowMask
             | NSWindowStyleMask::NSFullSizeContentViewWindowMask
-            | NSWindowStyleMask::NSNonactivatingPanelMask;
+            | NSWindowStyleMask::from_bits_retain(1 << 7);
         ns_window.setStyleMask_(mask);
 
         // collectionBehavior:

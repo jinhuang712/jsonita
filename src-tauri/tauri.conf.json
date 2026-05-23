@@ -29,7 +29,7 @@
         "visible": false,
         "focus": false,
         "skipTaskbar": false,
-        "fileDropEnabled": false,
+        "dragDropEnabled": false,
         "center": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
@@ -56,9 +56,6 @@
       "../assets/icons/light/png/icon-256.png",
       "../assets/icons/light/png/icon-512.png",
       "../assets/icons/light/png/icon-1024.png"
-    ],
-    "resources": [
-      "../assets/icons/menubar/**"
     ],
     "macOS": {
       "minimumSystemVersion": "11.0",
