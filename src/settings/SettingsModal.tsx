@@ -156,7 +156,7 @@ export function SettingsModal() {
             {activeGroup === 'shortcuts' && (
               <GroupShortcuts settings={settings} patch={patch} />
             )}
-            {activeGroup === 'about' && <Placeholder text="M3-N6" />}
+            {activeGroup === 'about' && <GroupAbout />}
           </div>
         </div>
         <div
@@ -372,6 +372,32 @@ function Placeholder({ text }: { text: string }) {
   return (
     <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', padding: 'var(--sp-4)' }}>
       {text}
+    </div>
+  );
+}
+
+function GroupAbout() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 'var(--fs-sm)' }}>
+      <div>
+        <span style={{ fontWeight: 600 }}>Jsonita</span>{' '}
+        <span style={{ color: 'var(--text-muted)' }}>v0.3.0-m0 · MIT License</span>
+      </div>
+      <div style={{ color: 'var(--text-muted)' }}>
+        Tiny menu-bar JSON toolkit for macOS.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)' }}>Data &amp; logs</div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>
+          ~/Library/Application Support/Jsonita/
+        </div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>
+          ~/Library/Logs/Jsonita/
+        </div>
+      </div>
+      <div style={{ marginTop: 8, color: 'var(--text-muted)', fontSize: 'var(--fs-xs)' }}>
+        Author: Jin Huang
+      </div>
     </div>
   );
 }

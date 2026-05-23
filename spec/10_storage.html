@@ -17,13 +17,13 @@
     <div class="doc-header">
       <span class="doc-tag">SPEC · 章节 10</span>
       <h1 class="doc-title">存储 & 会话</h1>
-      <p class="doc-subtitle">SQLite · Keychain · settings store · last_session ── 先讲分层设计与状态机，再列 schema 速查。</p>
+      <p class="doc-subtitle">SQLite · secrets.json · settings store · last_session ── 先讲分层设计与状态机，再列 schema 速查。</p>
     </div>
 
     <div class="callout callout-info">
       <span class="callout-icon">REF</span>
       <div class="callout-body">
-        <p>SQLite 表结构（字段 / 索引 / PRAGMA）见 <a href="13_schemas.html">13 § 4</a>；Keychain entry 见 <a href="13_schemas.html">13 § 6</a>；settings 字段表见 <a href="13_schemas.html">13 § 3.3</a>；window.json 见 <a href="13_schemas.html">13 § 5.2</a>。本章不重复 DDL，只讲<b>为何这么设计 + 怎么工作</b>。</p>
+        <p>SQLite 表结构（字段 / 索引 / PRAGMA）见 <a href="13_schemas.html">13 § 4</a>；secrets.json 字段见 <a href="13_schemas.html">13 § 6</a>；settings 字段表见 <a href="13_schemas.html">13 § 3.3</a>；window.json 见 <a href="13_schemas.html">13 § 5.2</a>。本章不重复 DDL，只讲<b>为何这么设计 + 怎么工作</b>。</p>
       </div>
     </div>
 
@@ -35,8 +35,8 @@
 
     <ul>
       <li><b>数据全本地</b>：依 <a href="../plan/00_overview.html">plan/00 must-have</a>，所有用户数据不上传；这也意味着不需要 schema 版本迁移到云端 / 跨设备同步</li>
-      <li><b>关停即安全</b>：API key 走 macOS Keychain，应用进程崩溃也不会泄漏；JSON 历史走 SQLite 文件，权限是用户家目录默认权限</li>
-      <li><b>卸载干净</b>：能用一条 <code>rm -rf ~/Library/Application Support/Jsonita</code> + <code>security delete-generic-password</code> 完全清理（脚本见 § 10.2）</li>
+      <li><b>关停即安全</b>：API key 走 <code>secrets.json</code>（<code>chmod 600</code> 只本人可读），应用崩溃也不会写到 settings / 日志；JSON 历史走 SQLite，权限是用户家目录默认权限</li>
+      <li><b>卸载干净</b>：一条 <code>rm -rf ~/Library/Application Support/Jsonita</code> 完全清理（含 history.db + settings.json + secrets.json + window.json）</li>
       <li><b>恢复优于警告</b>：意外关闭后再呼出，恢复内容比"你刚才编辑了 X 行，是否找回"友好 ── 但提供 ⌘K 让用户主动放弃</li>
     </ul>
 
@@ -49,7 +49,7 @@
       <tbody>
         <tr><td><b>SQLite</b></td><td>历史记录 + last_session</td><td>需要 FTS5 全文搜索 / pinned-starred 索引 / 事务原子性</td><td><code>~/Library/Application Support/Jsonita/history.db</code></td></tr>
         <tr><td><b>tauri-plugin-store (JSON)</b></td><td>设置项 · window.json 尺寸记忆</td><td>纯 KV 配置 + 启动一次加载 ── 不值得开 SQLite 连接池</td><td><code>~/Library/Application Support/Jsonita/{settings,window}.json</code></td></tr>
-        <tr><td><b>macOS Keychain</b></td><td>DeepSeek API key（plain text）</td><td>系统级加密 + 解锁授权 + 卸载不残留</td><td>service=<code>com.jsonita.app</code> / account=<code>deepseek_api_key</code></td></tr>
+        <tr><td><b>secrets.json</b></td><td>DeepSeek API key</td><td>无 keychain 弹窗、无 codesign 依赖、dev rebuild 不丢；<code>chmod 600</code> 限制只本人可读</td><td><code>~/Library/Application Support/Jsonita/secrets.json</code></td></tr>
         <tr><td><b>本地日志文件</b></td><td>error / warn 级别日志</td><td>调试反馈用；不放 SQLite 是因为日志写入频繁 + 不需要查询</td><td><code>~/Library/Logs/Jsonita/app.log</code>（按天滚动，保留 7 天）</td></tr>
       </tbody>
     </table>
@@ -240,15 +240,17 @@ impl RestoreTimer {
     pub async fn disarm(&amp;self);          // 取消当前 timer（⌘K / 重新呼出时调用）
 }</code></pre>
 
-    <h2><span class="h2-num">6</span>Keychain 封装</h2>
+    <h2><span class="h2-num">6</span>secrets store（本地文件）</h2>
 
     <h3><span class="h3-num">6.1</span>设计要点</h3>
 
     <ul>
-      <li><b>统一 service 名</b>：<code>com.jsonita.app</code> ── 与 bundle identifier 一致，方便钥匙串管理器辨识</li>
+      <li><b>放数据目录</b>：<code>~/Library/Application Support/Jsonita/secrets.json</code>，与 history.db / settings.json 同级，卸载一并清干净</li>
       <li><b>按 account 区分多 key</b>：v1 只有 <code>deepseek_api_key</code>；预留 <code>openai_api_key</code> / <code>claude_api_key</code> 等以备 v2 多 AI 后端</li>
-      <li><b>"不存在" 不是错误</b>：<code>get</code> 返回 <code>Result&lt;Option&lt;String&gt;&gt;</code>，<code>NoEntry</code> 映射为 <code>Ok(None)</code> ── 让首次启动正常走"AI 未配置"路径</li>
-      <li><b>删除幂等</b>：<code>delete</code> 不存在的 entry 也返回 <code>Ok(())</code>，方便卸载脚本</li>
+      <li><b>"不存在" 不是错误</b>：<code>get</code> 返回 <code>Result&lt;Option&lt;String&gt;&gt;</code>，文件不存在 / key 不存在都映射为 <code>Ok(None)</code> ── 让首次启动正常走"AI 未配置"路径</li>
+      <li><b>删除幂等</b>：<code>delete</code> 不存在的 entry 也返回 <code>Ok(())</code></li>
+      <li><b>权限 chmod 600</b>：写文件后立刻 <code>set_permissions</code>，限制只本进程拥有者可读</li>
+      <li><b>不选 Keychain 的理由</b>：每次 codesign 身份变（dev rebuild / app 更新）系统都弹"jsonita wants to use confidential information" 密码框；对个人本地工具体验过差。安全权衡见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a></li>
     </ul>
 
     <h3><span class="h3-num">6.2</span>Account 清单（见 <a href="13_schemas.html">13 § 6</a>）</h3>
@@ -263,15 +265,12 @@ impl RestoreTimer {
 
     <h3><span class="h3-num">6.3</span>接口</h3>
 
-    <pre><code>// src-tauri/src/system/keychain.rs ── 接口签名
-pub struct KeyStore;
-impl KeyStore {
-    pub fn set(account: &amp;str, value: &amp;str)    -&gt; Result&lt;(), JsonitaError&gt;;
-    pub fn get(account: &amp;str)                  -&gt; Result&lt;Option&lt;String&gt;, JsonitaError&gt;;
-    pub fn delete(account: &amp;str)               -&gt; Result&lt;(), JsonitaError&gt;;   // 幂等
-}</code></pre>
+    <pre><code>// src-tauri/src/store/secrets.rs ── 接口签名
+pub fn set(account: &amp;str, value: &amp;str)   -&gt; Result&lt;(), JsonitaError&gt;;
+pub fn get(account: &amp;str)                 -&gt; Result&lt;Option&lt;String&gt;, JsonitaError&gt;;
+pub fn delete(account: &amp;str)              -&gt; Result&lt;(), JsonitaError&gt;;   // 幂等</code></pre>
 
-    <p>所有方法把 <code>keyring::Error</code> 映射为 <code>JsonitaError::Keychain</code>，例外是 <code>NoEntry</code>（get 返 None / delete 返 Ok）。</p>
+    <p>内部用 <code>OnceLock&lt;Mutex&lt;HashMap&gt;&gt;</code> 缓存避免反复读盘；fs IO 错误（write / chmod）映射为 <code>JsonitaError::Keychain</code>（命名遗留，含义是"secrets 存取错"）。</p>
 
     <h2><span class="h2-num">7</span>settings store</h2>
 
@@ -317,7 +316,7 @@ pub fn patch(&amp;self, patch: serde_json::Map&lt;String, serde_json::Value&gt;)
         <tr><td>SQLite PRAGMA</td><td><a href="13_schemas.html">13 § 4.5</a></td></tr>
         <tr><td>settings.json schema</td><td><a href="13_schemas.html">13 § 3.3 + § 5.1</a></td></tr>
         <tr><td>window.json schema</td><td><a href="13_schemas.html">13 § 5.2</a></td></tr>
-        <tr><td>Keychain entry</td><td><a href="13_schemas.html">13 § 6</a></td></tr>
+        <tr><td>secrets.json schema</td><td><a href="13_schemas.html">13 § 6</a></td></tr>
         <tr><td><code>HistoryRow</code> / <code>ListOpts</code> / <code>LastSession</code> Rust struct</td><td><a href="13_schemas.html">13 § 3.2</a></td></tr>
       </tbody>
     </table>
@@ -334,7 +333,7 @@ pub fn patch(&amp;self, patch: serde_json::Map&lt;String, serde_json::Value&gt;)
         <tr><td>history_add（含裁剪）</td><td>4 ms</td><td>12 ms</td><td>单事务 UPSERT + DELETE</td></tr>
         <tr><td>session_save_last</td><td>2 ms</td><td>8 ms</td><td>单行 UPSERT</td></tr>
         <tr><td>settings_get_all</td><td>0.1 ms</td><td>0.5 ms</td><td>纯内存读 RwLock</td></tr>
-        <tr><td>keychain.get</td><td>3 ms</td><td>15 ms</td><td>macOS Security framework 调用</td></tr>
+        <tr><td>secrets.get（首次）</td><td>0.5 ms</td><td>2 ms</td><td>OnceLock 读盘一次 + cache 命中后纯内存</td></tr>
       </tbody>
     </table>
 

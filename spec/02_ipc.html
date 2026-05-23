@@ -34,9 +34,9 @@
     <p>IPC 在 Jsonita 里同时承担三个角色：<b>权限边界</b>（控制 React 能做什么）、<b>类型契约</b>（Rust 与 TS 双向类型一致）、<b>性能护栏</b>（CPU 与 IO 在 Rust 端集中调度）。</p>
 
     <ul>
-      <li><b>唯一通道</b>：React 不允许绕过 Rust 访问 SQLite / Keychain / 系统快捷键 / Finder ── 不仅是约定，Tauri 默认关掉了 WebView 对应能力</li>
+      <li><b>唯一通道</b>：React 不允许绕过 Rust 访问 SQLite / secrets / 系统快捷键 / Finder ── 不仅是约定，Tauri 默认关掉了 WebView 对应能力</li>
       <li><b>类型契约</b>：Rust 端 enum/struct 通过 serde 序列化为 JSON 跨进程；TS 端镜像同名 interface，编译期捕捉签名漂移（v1 手工镜像，体量上来再换 ts-rs）</li>
-      <li><b>关注的事</b>：状态修改（SQLite / Keychain / 设置）/ 系统调用（快捷键 / 剪贴板 / Finder）/ 外网请求（DeepSeek）/ 窗口管理</li>
+      <li><b>关注的事</b>：状态修改（SQLite / secrets / 设置）/ 系统调用（快捷键 / 剪贴板 / Finder）/ 外网请求（DeepSeek）/ 窗口管理</li>
       <li><b>不关注的事</b>：纯 UI 渲染（mermaid 图、CodeMirror 内部操作）、DOM/CSS、前端路由 ── WebView 内部处理，不消耗 IPC 信道</li>
     </ul>
 
@@ -53,7 +53,7 @@
         <tr><td><b>history</b></td><td>SQLite <code>history</code> 表 + FTS5 索引</td><td>SQLite</td><td>写入后 emit <code>history:updated</code></td></tr>
         <tr><td><b>session</b></td><td>SQLite <code>last_session</code> 单行 + 内存恢复 timer</td><td>SQLite + 内存</td><td>写入 + arm / 销毁 restoreWindow 计时</td></tr>
         <tr><td><b>settings</b></td><td>tauri-plugin-store JSON 文件</td><td>JSON 文件 + 内存缓存</td><td>写入后 emit <code>settings:changed</code></td></tr>
-        <tr><td><b>ai</b></td><td>DeepSeek HTTP + Keychain 读</td><td>Keychain + 内存 inflight 表</td><td>外网调用 + 每 500ms emit <code>ai:progress</code></td></tr>
+        <tr><td><b>ai</b></td><td>DeepSeek HTTP + secrets 读</td><td>secrets.json + 内存 inflight 表</td><td>外网调用 + 每 500ms emit <code>ai:progress</code></td></tr>
         <tr><td><b>window</b></td><td>NSPanel 状态 + 智能宽度记忆</td><td>window.json + 内存 flag</td><td>show / hide / resize UI 动作 + emit <code>window:resized</code></td></tr>
         <tr><td><b>system</b></td><td>全局快捷键 / 剪贴板 / 日志路径</td><td>系统级注册表</td><td>注册 / 释放快捷键 / Finder reveal</td></tr>
       </tbody>
@@ -64,7 +64,7 @@
     <ul>
       <li>命令<b>不能跨分组直接读写状态</b>。例：<code>history_*</code> 不直接读 <code>last_session</code> 表；需要联动则通过事件（如 <code>history:updated</code>）解耦</li>
       <li>纯计算分组（json_ops）<b>不持有任何状态</b>，可任意并发 ── 默认在 CPU 池 <code>spawn_blocking</code> 跑</li>
-      <li>外网分组（ai）<b>不写 SQLite</b>，只读 Keychain；命令返回后由前端决定是否落历史。这样 ai 模块可以被替换（换成 OpenAI / Claude）而不影响历史模型</li>
+      <li>外网分组（ai）<b>不写 SQLite</b>，只读 secrets.json；命令返回后由前端决定是否落历史。这样 ai 模块可以被替换（换成 OpenAI / Claude）而不影响历史模型</li>
       <li><b>window 分组</b>不感知业务（不知道有 JSON / 历史 / AI），只接收 React 推来的 ContentMetrics 算尺寸 ── 这样窗口逻辑可独立测试</li>
     </ul>
 
@@ -112,7 +112,7 @@ catch (e) {
     <ul>
       <li><b>状态栏（轻）</b>：能让用户边输入边解决的，如 <code>Parse</code> ── 标红 + 高亮位置，不打断打字</li>
       <li><b>Toast（中）</b>：操作失败但应用可继续用，如 <code>Http</code> / <code>RateLimit</code> / <code>UnwrapTimeout</code> ── 横幅 + 重试按钮 / 倒计时</li>
-      <li><b>Modal（重）</b>：必须用户决策才能继续，如 <code>Keychain</code> 权限被拒 / <code>AiInvalidJson</code> 拿到 raw 需用户决定 ── 阻塞输入</li>
+      <li><b>Modal（重）</b>：必须用户决策才能继续，如 <code>AiInvalidJson</code> 拿到 raw 需用户决定 / secrets fs 写权限错 ── 阻塞输入</li>
     </ul>
 
     <h2><span class="h2-num">4</span>命名、同步语义、幂等、大小</h2>
@@ -180,7 +180,7 @@ sequenceDiagram
     participant React as React UI
     participant Store as ai_store
     participant Rust as Rust ai_fix
-    participant KC as Keychain
+    participant KC as secrets.json
     participant DS as DeepSeek API
     User->>React: click AI Fix
     React->>Store: startFix(text, errorLoc)
@@ -288,7 +288,7 @@ sequenceDiagram
         <tr><td rowspan="3"><b>ai</b></td>
             <td><code>ai_fix</code></td><td>—</td><td>P50 3 s / P95 8 s</td><td>调 DeepSeek 修复 JSON</td></tr>
         <tr><td><code>ai_test_connection</code></td><td>—</td><td>&lt; 3 s</td><td>测 API key + 模型可用</td></tr>
-        <tr><td><code>ai_set_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>写 Keychain（masked 显示前端）</td></tr>
+        <tr><td><code>ai_set_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>写 secrets.json（masked 显示前端）</td></tr>
 
         <tr><td rowspan="5"><b>window</b></td>
             <td><code>window_show</code></td><td>—</td><td>&lt; 200 ms</td><td>显示浮窗（含定位 + focus）</td></tr>
@@ -364,9 +364,9 @@ sequenceDiagram
     <table>
       <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th><th>错误分支</th></tr></thead>
       <tbody>
-        <tr><td><code>ai_fix(req)</code></td><td><code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4 AiFixReq / Resp</a></td><td>Http / RateLimit / AiInvalidJson / Keychain</td></tr>
-        <tr><td><code>ai_test_connection(apiKey, modelId)</code></td><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a>；apiKey 直接传，不入 Keychain</td><td>Http / RateLimit</td></tr>
-        <tr><td><code>ai_set_api_key(apiKey)</code></td><td><code>()</code></td><td>明文 → Keychain</td><td>Keychain</td></tr>
+        <tr><td><code>ai_fix(req)</code></td><td><code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4 AiFixReq / Resp</a></td><td>Http / RateLimit / AiInvalidJson / AiDisabled / Keychain（命名遗留，含义=secrets 存取错）</td></tr>
+        <tr><td><code>ai_test_connection(apiKey, modelId)</code></td><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a>；apiKey 直接传，不入 secrets.json</td><td>Http / RateLimit</td></tr>
+        <tr><td><code>ai_set_api_key(apiKey)</code></td><td><code>()</code></td><td>明文 → secrets.json（chmod 600）</td><td>Keychain（命名遗留 = 写 secrets fs 失败）</td></tr>
       </tbody>
     </table>
 
@@ -451,7 +451,7 @@ export function on&lt;K extends keyof EventMap&gt;(
         <tr><td><code>Parse</code></td><td>json_format / minify / stringify</td><td>状态栏红 + 高亮位置</td><td>点 AI Fix 或手动修</td></tr>
         <tr><td><code>UnwrapTimeout</code></td><td>json_unwrap_stringified</td><td>Toast（warn）</td><td>建议关 auto-unwrap 或提高超时</td></tr>
         <tr><td><code>Sqlite</code></td><td>history_* / session_*</td><td>Toast（danger）+ "打开日志" 链接</td><td>反馈 issue</td></tr>
-        <tr><td><code>Keychain</code></td><td>ai_set_api_key / ai_fix</td><td>Modal（danger）</td><td>检查系统钥匙串权限</td></tr>
+        <tr><td><code>Keychain</code>（命名遗留 = secrets fs 错）</td><td>ai_set_api_key / ai_fix</td><td>Modal（danger）</td><td>检查数据目录权限 / 磁盘空间</td></tr>
         <tr><td><code>Http</code></td><td>ai_fix / ai_test_connection</td><td>Toast（danger）+ 「重试」+ 「打开原始返回」</td><td>检查网络 / API key</td></tr>
         <tr><td><code>RateLimit</code></td><td>ai_fix</td><td>Toast（warn）显示倒计时</td><td>等待 retryAfterSec 后重试</td></tr>
         <tr><td><code>AiInvalidJson</code></td><td>ai_fix</td><td>Modal 展示 raw（可复制）</td><td>提交 issue 附 raw</td></tr>

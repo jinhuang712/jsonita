@@ -6,6 +6,29 @@
 
 ## [Unreleased]
 
+### fix · Keychain 切换的多处遗漏 + Single-pane mode 真接 + About 占位 + Test mock + spec/plan 大扫
+
+用户连发 4 张截图反馈：
+
+1. **ApiKeyInput placeholder 还说"已存 Keychain"** ── 后端切了 UI 没跟着改，撒谎。改：placeholder "已存 Keychain，可输入新 key 覆盖" → "已保存，可输入新 key 覆盖"；2 条 toast "Saved to Keychain" / "Removed from Keychain" 去掉后缀；JSDoc + commands.ts 注释也清
+2. **Settings → AI Test 按钮还在 mock**（"OK · (M2-N2 mock — M2-N3 starts real HTTP)"）── M2-N3 漏改。改 `cmds/ai.rs ai_test_connection`：实打 `POST chat/completions` max_tokens=1，返 ok + 真实 latency + 服务端 echo model 名；err 走 err_chain 展开 source
+3. **About 面板只显示"M3-N6"占位** ── 我自己留的字符串泄漏 UI。改：版本 + License + 数据/日志路径 + 作者
+4. **Single-pane mode 永远没接** ── settings 字段是死字段。`FloatingWindow.tsx` grid 改 `singlePaneMode ? '1fr' : '1fr 1fr'`，true 时只渲染左 input editor（右栏隐藏）
+5. **spec/ + plan/ 散落旧 Keychain 描述** ── 用户怒命令"每次改动必须再重新审查一遍 spec+plan，写进 CLAUDE.md"。完成扫描：
+   - `plan/03_tech_stack.html` § 2.4 密钥存储行 + § 2.5 整段（重写为"为什么 secrets.json 而不是 Keychain"）+ Crate 列表删 `keyring`
+   - `plan/04_nfr.html` 隐私段 3 处 + 卸载脚本描述
+   - `spec/00_architecture.html` 8 处描述 + mermaid 节点 `KC[Keychain]` → `KC[secrets.json]` / `E4[Keychain]` → `E4[secrets.json]` + 各 system 层 label
+   - `spec/02_ipc.html` 唯一通道描述 + ai 分组表 + sequence 图 + 错误矩阵
+   - `spec/04_components.html` ApiKeyInputProps 注释
+   - `spec/10_storage.html` § 6 整段重写 "Keychain 封装" → "secrets store"，含设计要点 / Account 清单 / 接口签名 / 性能数字
+   - `spec/11_ai_client.html` 5 处文字 + 代码示例
+   - `spec/13_schemas.html` § 6 整段 "Keychain entry" → "secrets.json schema"（含 JSON 示例）+ JsonitaError 表 + Rust enum + TS 镜像
+   - `spec/15_logging.html` ERROR 示例 + `keychain.denied` event → `secrets.io_error`
+   - `JsonitaError::Keychain` 变体名<b>不动</b>（不破坏 M2-N2 commit），所有引用处加注释"命名遗留 = secrets 存取错"
+6. **CLAUDE.md 加 § 5.4** "源码/UI 改了某个概念后必扫 spec/ + plan/" ── 永远防再犯
+
+涉及 18 个文件 / ~250 行净改动。
+
 ### refactor · Keychain → 本地 secrets.json（用户反馈"太麻烦"）
 
 每次 dev rebuild macOS 都把 binary 当新身份，弹"jsonita wants to use confidential information in com.jsonita.app keychain"密码框。生产环境签了名也会首次弹一次。用户反馈"太麻烦，删了改本地保存"。换法：

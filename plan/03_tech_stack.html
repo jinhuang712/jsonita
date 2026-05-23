@@ -31,7 +31,7 @@
         <tr><td>JSON 树渲染</td><td>react-json-view-lite</td><td>纯渲染组件，无重 deps</td></tr>
         <tr><td>状态管理</td><td>Zustand</td><td>API 极简，bundle 几乎无感</td></tr>
         <tr><td>本地存储</td><td>SQLite（rusqlite）</td><td>支持搜索、置顶、收藏；零外部进程</td></tr>
-        <tr><td>密钥存储</td><td>macOS Keychain（keyring crate）</td><td>系统级加密；未来跨平台时切 Windows Credential Manager</td></tr>
+        <tr><td>密钥存储</td><td>本地 <code>secrets.json</code>（chmod 600）</td><td>放数据目录；dev rebuild / app 更新不弹 keychain 密码框；跨平台一致</td></tr>
         <tr><td>HTTP 客户端</td><td>reqwest（Rust）</td><td>调 DeepSeek 用；Tauri 已默认集成 fetch plugin</td></tr>
         <tr><td>全局快捷键</td><td>tauri-plugin-global-shortcut</td><td>官方插件，多平台一致 API</td></tr>
         <tr><td>菜单栏图标</td><td>Tauri tray-icon API</td><td>原生 macOS NSStatusItem 封装</td></tr>
@@ -74,11 +74,12 @@
       <li>未来若加 tag 等结构化字段，扩展成本低</li>
     </ul>
 
-    <h3><span class="h3-num">2.5</span>为什么 API key 走 Keychain</h3>
+    <h3><span class="h3-num">2.5</span>为什么 API key 用本地 <code>secrets.json</code> 而不是 Keychain</h3>
     <ul>
-      <li>本地配置文件（即使加密）易被备份服务（iCloud、Time Machine）扫到</li>
-      <li>Keychain 是 macOS 系统级加密，与用户登录会话绑定</li>
-      <li>Windows 有对等的 Credential Manager，跨平台时 API 一致（用 keyring crate）</li>
+      <li>Keychain 路：每次 codesign 身份变（dev rebuild、app 更新）系统都弹密码框；首次部署同样要授权一次</li>
+      <li>对个人本地工具：数据目录已是 per-user 隔离（<code>~/Library/Application Support/Jsonita/</code>），<code>chmod 600</code> 限制只本人可读；威胁模型对得上</li>
+      <li>跨平台一致：Windows / Linux 都用同一文件方式；无需 keyring crate + Windows Credential Manager 抽象层</li>
+      <li>权衡：失去 OS 加密层。换来无弹窗、无 codesign 依赖、dev 期 key 不丢</li>
     </ul>
 
     <h2><span class="h2-num">3</span>关键依赖列表</h2>
@@ -92,7 +93,7 @@
         <tr><td><code>tauri-plugin-clipboard-manager</code></td><td>剪贴板读取</td></tr>
         <tr><td><code>tauri-plugin-store</code></td><td>设置项 KV 持久化</td></tr>
         <tr><td><code>rusqlite</code></td><td>SQLite 客户端</td></tr>
-        <tr><td><code>keyring</code></td><td>Keychain 接入</td></tr>
+        <tr><td><code>dirs</code></td><td>跨平台数据目录定位（<code>secrets.json</code> / settings.json / window.json 路径）</td></tr>
         <tr><td><code>reqwest</code></td><td>调 DeepSeek HTTP</td></tr>
         <tr><td><code>serde / serde_json</code></td><td>JSON 解析（兼做 Formatter 后端）</td></tr>
         <tr><td><code>tokio</code></td><td>异步运行时</td></tr>

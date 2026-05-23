@@ -154,6 +154,16 @@
 
 > 历史教训：index.html 经历两次精简 ── (1) 之前内嵌 README/TODO/CHANGELIST 副本 → 改 fetch 加载，避免漏同步；(2) 用户反馈"首页不需要这三页标签" → 整块删了。**首页只剩 Plan/Spec/Progress 三栏导航**，README/TODO/CHANGELIST 用户直接看 .md 原文。同步规则简化到只有"章节列表"一项。
 
+### 5.4 源码/UI 改了某个概念后必扫 spec/ + plan/（用户多次怒过）
+- **触发**：删了某模块（如 keychain → secrets）/ 改了某接口签名 / 删了某 UI 字段 / 改了 default 值 / 改了 endpoint URL
+- **必跑**：`grep -rn '<旧概念>' spec/ plan/ src/ src-tauri/ README.md CHANGELIST.md TODO.md` ── 不光是 .rs / .ts，也包括 spec/*.html / plan/*.html 里的描述性文字、表格、mermaid label、code block 示例
+- **判定**：每条命中决定一种处理 ──
+  - 真该改：替换为新概念 + 必要时加注释解释"变体名遗留"
+  - 历史决策可保留：加注释指向 CHANGELIST / 新章节
+  - 与新概念无关的同名词（如 spec/12_packaging codesign 的 keychain）：跳过
+- **禁止**："改完源码就 commit"，必先扫 + 改 + 再 commit。否则 UI 文案 / spec / plan 散落旧概念 → 用户看到立刻反馈"骗谁呢"
+- **真实事故**：M2-N3→secrets 切换时漏改 ApiKeyInput placeholder + Test mock 文字 + About 占位 + 7 个 spec/plan 文件 → 用户连发 4 条截图怒喷 → 教训写进本节
+
 ## 六、Progress 迭代规则
 
 详见 memory `progress-iteration-rules`（10 条）。CLAUDE 要点：

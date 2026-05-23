@@ -23,7 +23,7 @@
     <div class="callout callout-info">
       <span class="callout-icon">INFO</span>
       <div class="callout-body">
-        <p>整套架构在 <a href="../plan/03_tech_stack.html">plan/03 技术选型</a> 已锁定（Tauri 2 / React / SQLite / Keychain）。本章描述<b>如何组合</b>，不再讨论选型；数据契约见 <a href="13_schemas.html">13 § 1-3</a>，IPC 合约见 <a href="02_ipc.html">02</a>。</p>
+        <p>整套架构在 <a href="../plan/03_tech_stack.html">plan/03 技术选型</a> 已锁定（Tauri 2 / React / SQLite / 本地 secrets.json）。本章描述<b>如何组合</b>，不再讨论选型；数据契约见 <a href="13_schemas.html">13 § 1-3</a>，IPC 合约见 <a href="02_ipc.html">02</a>。</p>
       </div>
     </div>
 
@@ -31,7 +31,7 @@
 
     <h2><span class="h2-num">1</span>系统全景</h2>
 
-    <p>Jsonita 是一个<b>双进程</b>桌面应用：Rust 主进程承载所有系统能力（菜单栏 / 全局快捷键 / SQLite / Keychain / HTTP），WebView 渲染进程承载 UI（React + CodeMirror）。两者通过 Tauri IPC pipe 通信，<b>WebView 进程绝对不直接访问 fs / net / clipboard / Keychain</b>。</p>
+    <p>Jsonita 是一个<b>双进程</b>桌面应用：Rust 主进程承载所有系统能力（菜单栏 / 全局快捷键 / SQLite / 本地 secrets.json / HTTP），WebView 渲染进程承载 UI（React + CodeMirror）。两者通过 Tauri IPC pipe 通信，<b>WebView 进程绝对不直接访问 fs / net / clipboard / secrets</b>。</p>
 
     <div class="mermaid">
 graph TB
@@ -43,7 +43,7 @@ graph TB
 
     subgraph RustHost["Rust 主进程（host，常驻 ≤ 40 MB）"]
         direction TB
-        SYS["system 层<br/>tray · shortcuts · window-panel · keychain"]
+        SYS["system 层<br/>tray · shortcuts · window-panel · secrets"]
         CMD["commands 层<br/>20+ IPC handlers"]
         ENG["engine 层（纯计算）<br/>json · unwrap · stringify · error_loc"]
         STR["store 层<br/>db · history · session · settings"]
@@ -61,7 +61,7 @@ graph TB
 
     subgraph External["外部资源"]
         SQL[(SQLite<br/>history.db)]
-        KC[(macOS<br/>Keychain)]
+        KC[(secrets.json<br/>chmod 600)]
         JSON[(tauri-plugin-store<br/>settings.json · window.json)]
         DS([DeepSeek API])
     end
@@ -102,7 +102,7 @@ graph TB
         <tr><td>IPC 层</td><td>跨进程</td><td>commands / events 合约</td><td>序列化经 serde_json；payload &lt; 4 MB</td></tr>
         <tr><td>领域层</td><td>Rust</td><td>JSON 引擎、AI 调度、设置、会话、历史</td><td>纯函数优先；不持有 Tauri runtime context</td></tr>
         <tr><td>系统层</td><td>Rust</td><td>菜单栏、全局快捷键、窗口、剪贴板、权限</td><td>macOS / Windows 抽象不同 ── 平台 cfg</td></tr>
-        <tr><td>持久化</td><td>Rust</td><td>history.db / settings.json / Keychain</td><td>仅 Rust 端访问；前端走 IPC</td></tr>
+        <tr><td>持久化</td><td>Rust</td><td>history.db / settings.json / secrets.json</td><td>仅 Rust 端访问；前端走 IPC</td></tr>
       </tbody>
     </table>
 
@@ -151,7 +151,7 @@ stateDiagram-v2
         <tr><td><b>I-1 单一数据源</b></td><td>浮窗内容只存在 React 编辑器 state；关闭时落 sqlite；重呼出从 sqlite 读 ── 不在两处同步</td><td>恢复后内容与用户输入不一致</td></tr>
         <tr><td><b>I-2 设置项单源</b></td><td>所有可配置项以 Rust 端 <code>SettingsStore</code> 为准；前端启动 load + 监听 <code>settings:changed</code></td><td>设置生效延迟 / 多窗口不同步</td></tr>
         <tr><td><b>I-3 错误不藏</b></td><td>所有 IPC 错误必须有 UI 呈现（Toast / 状态栏 / Modal），不允许 silent fail</td><td>用户看不到为什么操作没反应</td></tr>
-        <tr><td><b>I-4 main 进程不阻塞</b></td><td>所有 IO（SQLite / HTTP / Keychain）走 <code>tokio::spawn_blocking</code> 或 async client</td><td>菜单栏 / 快捷键 / 窗口卡顿</td></tr>
+        <tr><td><b>I-4 main 进程不阻塞</b></td><td>所有 IO（SQLite / HTTP / secrets fs）走 <code>tokio::spawn_blocking</code> 或 async client</td><td>菜单栏 / 快捷键 / 窗口卡顿</td></tr>
         <tr><td><b>I-5 UI 不直访 fs/net</b></td><td>WebView 不开 <code>fs</code> / <code>http</code> allowlist；所有外部 IO 走 commands</td><td>WebView 漏洞可读用户文件 / 偷 API key</td></tr>
         <tr><td><b>I-6 AI 完全可关</b></td><td><code>settings.ai_enabled = false</code> 时 UI Tab 隐藏 + Rust early return ── 双重保险</td><td>用户关了 AI 仍出网</td></tr>
       </tbody>
@@ -268,7 +268,7 @@ graph LR
         E1["Parse<br/>line/col/msg"]
         E2[UnwrapTimeout]
         E3[Sqlite]
-        E4[Keychain]
+        E4[secrets.json]
         E5["Http / RateLimit"]
         E6[AiInvalidJson]
     end
@@ -302,7 +302,7 @@ graph LR
     <ul>
       <li><b>状态栏（轻）</b>：用户输入边解决，如 <code>Parse</code> ── 不打断</li>
       <li><b>Toast（中）</b>：操作失败但应用可继续，如 <code>Http</code> / <code>RateLimit</code> / <code>UnwrapTimeout</code></li>
-      <li><b>Modal（重）</b>：必须用户决策才继续，如 <code>Keychain</code> 拒绝 / <code>AiInvalidJson</code> raw 决定</li>
+      <li><b>Modal（重）</b>：必须用户决策才继续，如 <code>AiInvalidJson</code> raw 决定 / secrets fs 写失败</li>
     </ul>
 
     <p>设计原则：<b>Rust 不"产品化"错误</b>（不翻译中文、不加 emoji），UI 层按 <code>kind</code> 决定如何展示给用户。</p>
@@ -339,7 +339,7 @@ graph TD
         engine["engine/<br/>json · unwrap · stringify · error_loc<br/>纯函数 · 可独立单测"]
         store["store/<br/>db · history · session · settings<br/>SQLite + tauri-plugin-store"]
         ai["ai/<br/>deepseek · prompt · validate<br/>reqwest HTTP"]
-        system["system/<br/>tray · shortcuts · window_panel · keychain<br/>平台 cfg 抽象"]
+        system["system/<br/>tray · shortcuts · window_panel · secrets<br/>平台 cfg 抽象"]
     end
 
     error["error.rs<br/>JsonitaError"] -.- engine
@@ -361,8 +361,8 @@ graph TD
         <tr><td><code>commands/</code></td><td>20+ Tauri command handlers（见 <a href="02_ipc.html">02 § 6</a>）</td><td>engine / store / ai / system</td></tr>
         <tr><td><code>engine/</code></td><td><code>format / minify / unwrap / json_to_string / string_to_json</code> 5 个纯函数（<a href="09_json_engine.html">09</a>）</td><td>serde_json</td></tr>
         <tr><td><code>store/</code></td><td><code>Db / SettingsStore / KeyStore</code> + history/session CRUD（<a href="10_storage.html">10</a>）</td><td>rusqlite + r2d2 + tauri-plugin-store</td></tr>
-        <tr><td><code>ai/</code></td><td><code>fix / test_connection</code>（<a href="11_ai_client.html">11</a>）</td><td>reqwest + Keychain（读）</td></tr>
-        <tr><td><code>system/</code></td><td>tray + shortcuts + NSPanel + Keychain wrapper（<a href="06_window.html">06</a> · <a href="07_menubar.html">07</a>）</td><td>tauri-plugin-* + cocoa（macOS）</td></tr>
+        <tr><td><code>ai/</code></td><td><code>fix / test_connection</code>（<a href="11_ai_client.html">11</a>）</td><td>reqwest + secrets store（读）</td></tr>
+        <tr><td><code>system/</code></td><td>tray + shortcuts + NSPanel + secrets store（<a href="06_window.html">06</a> · <a href="07_menubar.html">07</a>）</td><td>tauri-plugin-* + cocoa（macOS）</td></tr>
         <tr><td><code>error.rs</code></td><td><code>JsonitaError</code>（<a href="13_schemas.html">13 § 1</a>）</td><td>thiserror + serde</td></tr>
       </tbody>
     </table>

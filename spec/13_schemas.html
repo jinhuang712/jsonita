@@ -39,11 +39,12 @@
         <tr><td><code>Parse</code></td><td><code>{ line: u32, col: u32, msg: String }</code></td><td>JSON 解析失败</td><td>状态栏红 + AI Fix Tab 出现</td></tr>
         <tr><td><code>UnwrapTimeout</code></td><td><code>{ ms: u64, depth: u32 }</code></td><td>嵌套 unwrap 超时</td><td>Toast.warn</td></tr>
         <tr><td><code>Sqlite</code></td><td><code>String</code></td><td>SQLite 错误</td><td>Toast.danger + 日志链接</td></tr>
-        <tr><td><code>Keychain</code></td><td><code>String</code></td><td>Keychain 操作失败</td><td>Modal.danger</td></tr>
+        <tr><td><code>Keychain</code></td><td><code>String</code></td><td>secrets.json 存取错（变体名遗留 ── v1 走 Keychain，后切本地文件，名字未改）</td><td>Modal.danger</td></tr>
         <tr><td><code>Http</code></td><td><code>{ status: u16, body: String }</code></td><td>DeepSeek HTTP 错</td><td>Toast.danger + [重试]</td></tr>
         <tr><td><code>AiInvalidJson</code></td><td><code>{ raw: String }</code></td><td>AI 返回非合法 JSON</td><td>Modal + 原始返回</td></tr>
         <tr><td><code>RateLimit</code></td><td><code>{ retry_after_sec: u64 }</code></td><td>上游 429</td><td>Toast.warn 倒计时</td></tr>
         <tr><td><code>Io</code></td><td><code>String</code></td><td>FS / 网络 / 其他</td><td>Toast.danger</td></tr>
+        <tr><td><code>AiDisabled</code></td><td>—</td><td>settings.ai_enabled=false 时调 ai_fix</td><td>Toast + 跳 Settings</td></tr>
       </tbody>
     </table>
 
@@ -58,12 +59,13 @@ pub enum JsonitaError {
     UnwrapTimeout { ms: u64, depth: u32 },
 
     #[error("SQLite: {0}")]   Sqlite(String),
-    #[error("Keychain: {0}")] Keychain(String),
+    #[error("Keychain: {0}")] Keychain(String),    // 变体名遗留 = secrets.json 存取错
     #[error("HTTP {status}: {body}")] Http { status: u16, body: String },
     #[error("AI invalid JSON: {raw}")] AiInvalidJson { raw: String },
     #[error("Rate limited; retry after {retry_after_sec}s")]
     RateLimit { retry_after_sec: u64 },
     #[error("IO: {0}")] Io(String),
+    #[error("AI Fix is disabled in Settings")] AiDisabled,
 }</code></pre>
 
     <p><b>TS 镜像</b>（<code>src/types/error.ts</code>）：</p>
@@ -72,11 +74,12 @@ pub enum JsonitaError {
   | { kind: 'Parse';          data: { line: number; col: number; msg: string } }
   | { kind: 'UnwrapTimeout';  data: { ms: number; depth: number } }
   | { kind: 'Sqlite';         data: string }
-  | { kind: 'Keychain';       data: string }
+  | { kind: 'Keychain';       data: string }    // 变体名遗留 = secrets.json 存取错
   | { kind: 'Http';           data: { status: number; body: string } }
   | { kind: 'AiInvalidJson';  data: { raw: string } }
   | { kind: 'RateLimit';      data: { retry_after_sec: number } }
-  | { kind: 'Io';             data: string };</code></pre>
+  | { kind: 'Io';             data: string }
+  | { kind: 'AiDisabled' };</code></pre>
 
     <h2><span class="h2-num">2</span>枚举集合</h2>
 
@@ -365,14 +368,24 @@ pub enum ShowSource    { Hotkey, Tray, Manual }</code></pre>
 
     <p>见 <a href="05_icons_theme.html">05 § 1</a>；权威字段：<code>masters</code> · <code>palette</code> · <code>pngSizes</code> · <code>macOS</code> · <code>windows</code> · <code>menubar</code>。</p>
 
-    <h2><span class="h2-num">6</span>Keychain entry</h2>
+    <h2><span class="h2-num">6</span>secrets.json schema</h2>
+
+    <p>路径：<code>~/Library/Application Support/Jsonita/secrets.json</code>，权限 <code>chmod 600</code>。结构是<b>扁平 map</b>：account → plain string。</p>
 
     <table>
-      <thead><tr><th>service</th><th>account</th><th>value 类型</th></tr></thead>
+      <thead><tr><th>key</th><th>value 类型</th><th>状态</th></tr></thead>
       <tbody>
-        <tr><td><code>com.jsonita.app</code></td><td><code>deepseek_api_key</code></td><td>plain text · DeepSeek API key</td></tr>
+        <tr><td><code>deepseek_api_key</code></td><td>string · DeepSeek API key（<code>sk-*</code>）</td><td>v1 唯一项</td></tr>
+        <tr><td><code>openai_api_key</code></td><td>—</td><td>v2 预留</td></tr>
       </tbody>
     </table>
+
+    <p>示例：</p>
+    <pre><code>{
+  "deepseek_api_key": "sk-xxxxxxxxxxxxxxxx"
+}</code></pre>
+
+    <p>不放 Keychain 的原因：见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a>。封装实现见 <a href="10_storage.html">10 § 6</a>。</p>
 
     <h2><span class="h2-num">7</span>命名规范汇总</h2>
 
@@ -406,7 +419,7 @@ pub enum ShowSource    { Hotkey, Tray, Manual }</code></pre>
         <tr><td>06 窗口 runtime</td><td>§ 3.5 ContentMetrics / WindowResizedPayload · § 5.2 window.json</td></tr>
         <tr><td>08 编辑器</td><td>§ 3.6 CopyNodeInfo · § 3.3 editorSoftWrap</td></tr>
         <tr><td>09 JSON 引擎</td><td>§ 3.1 FormatOpts / UnwrapOpts / StringifyOpts · § 1 Parse / UnwrapTimeout</td></tr>
-        <tr><td>10 存储 & 会话</td><td>§ 4 SQLite 表 · § 3.2 HistoryRow / LastSession · § 6 Keychain</td></tr>
+        <tr><td>10 存储 & 会话</td><td>§ 4 SQLite 表 · § 3.2 HistoryRow / LastSession · § 6 secrets.json</td></tr>
         <tr><td>11 AI 客户端</td><td>§ 3.4 AiFixReq / AiFixResp / AiProgress</td></tr>
       </tbody>
     </table>

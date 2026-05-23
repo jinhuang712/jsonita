@@ -72,7 +72,7 @@
     <table>
       <thead><tr><th>级别</th><th>v1 默认</th><th>含义</th><th>示例</th></tr></thead>
       <tbody>
-        <tr><td><code>ERROR</code></td><td>开</td><td>需要用户 / 开发者关注的问题</td><td>SQLite 写失败 / Keychain 拒绝 / AI HTTP 5xx</td></tr>
+        <tr><td><code>ERROR</code></td><td>开</td><td>需要用户 / 开发者关注的问题</td><td>SQLite 写失败 / secrets.json 写错 / AI HTTP 5xx</td></tr>
         <tr><td><code>WARN</code></td><td>开</td><td>降级但可继续</td><td>UnwrapTimeout / RateLimit / FTS5 索引失败但主表 ok</td></tr>
         <tr><td><code>INFO</code></td><td>开（关键事件）</td><td>关键状态变更</td><td>启动 / 退出 / migration 应用 / AI 调用开始结束（不含 prompt）</td></tr>
         <tr><td><code>DEBUG</code></td><td><b>关</b>（默认）</td><td>开发期排障</td><td>每次 IPC 调用 / 每次状态机迁移</td></tr>
@@ -184,7 +184,7 @@ graph LR
         <tr><td><code>ai.call.failed</code></td><td>ERROR</td><td>ai_fix 失败</td><td>error_kind, status（不记 body）</td></tr>
         <tr><td><code>ai.rateLimited</code></td><td>WARN</td><td>429</td><td>retry_after_sec</td></tr>
         <tr><td><code>unwrap.timeout</code></td><td>WARN</td><td>UnwrapTimeout</td><td>depth, input_len（不记内容）</td></tr>
-        <tr><td><code>keychain.denied</code></td><td>ERROR</td><td>Keychain 操作拒绝</td><td>op: get/set/delete, account（不记 value）</td></tr>
+        <tr><td><code>secrets.io_error</code></td><td>ERROR</td><td>secrets.json 读/写/chmod 失败</td><td>op: get/set/delete, account（不记 value）</td></tr>
         <tr><td><code>settings.changed</code></td><td>INFO</td><td>settings_set / reset</td><td>changed_keys（只记 key 名，不记 value）</td></tr>
         <tr><td><code>panic</code></td><td>ERROR</td><td>Rust panic handler</td><td>thread, location, msg, backtrace（不含内联数据）</td></tr>
       </tbody>

@@ -42,15 +42,15 @@
       <li><b>本地处理</b>：JSON 内容完全本地（Rust + WebView），除 AI Auto Fix 用户主动触发外不联网</li>
       <li><b>密钥管理</b>：
         <ul>
-          <li>DeepSeek API key 用 macOS Keychain（<code>keyring</code> crate）加密存储</li>
+          <li>DeepSeek API key 存本地 <code>~/Library/Application Support/Jsonita/secrets.json</code>，<code>chmod 600</code> 限制只本人可读</li>
           <li>UI 上始终显示为 <code>••••••••</code>，不显示明文</li>
-          <li>读取 key 时仅在 IPC 调用栈内传递，不持久化到任何配置文件</li>
+          <li>读取 key 时仅在 IPC 调用栈内传递；不进 settings.json / 日志 / event payload</li>
         </ul>
       </li>
       <li><b>无 telemetry</b>：首版本不收集任何使用数据 / 崩溃日志（如未来开启，必须用户显式同意）</li>
       <li><b>请求最小化</b>：调 DeepSeek 时只发送当前编辑器内容 + parse 错误信息，不发送历史记录、文件名、机器信息</li>
       <li><b>本地数据透明</b>：历史 SQLite 文件路径公开（<code>~/Library/Application Support/Jsonita/history.db</code>），用户可直接查看 / 删除</li>
-      <li><b>卸载清理</b>：提供清理脚本删除所有本地数据（历史 / 设置 / Keychain 条目）</li>
+      <li><b>卸载清理</b>：<code>rm -rf ~/Library/Application Support/Jsonita</code> 一句清空（历史 + 设置 + secrets.json）；<code>rm -rf ~/Library/Logs/Jsonita</code> 清日志</li>
     </ul>
 
     <h2><span class="h2-num">3</span>可用性</h2>
@@ -94,7 +94,7 @@
     <ul>
       <li><b>格式</b>：<code>.dmg</code>（universal arm64 + x64）</li>
       <li><b>签名</b>：Apple Developer ID + notarization → 新 Mac 双击即开，无 Gatekeeper 警告</li>
-      <li><b>渠道</b>：GitHub Releases（<b>不</b>上 Mac App Store —— 沙箱限制 Keychain / 全局快捷键）</li>
+      <li><b>渠道</b>：GitHub Releases（<b>不</b>上 Mac App Store —— 沙箱限制全局快捷键 + NSPanel）</li>
       <li><b>更新</b>：v1 用户手动下载新版（About 页提供「打开 GitHub Releases」按钮）</li>
     </ul>
 

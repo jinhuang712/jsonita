@@ -227,7 +227,7 @@ interface ToastOpts {
     <p>设置面板 AI 分组内的 API key 录入 + 测试连接控件。视觉嵌入 <a href="01_mockups.html#4">01 § 4 设置 Modal</a>。</p>
 
     <pre><code>interface ApiKeyInputProps {
-  hasKey: boolean;          // 已存 Keychain 时为 true
+  hasKey: boolean;          // secrets.json 里已存时为 true
   onSubmit: (key: string) =&gt; Promise&lt;void&gt;;
   onTest: () =&gt; Promise&lt;TestConnectionResp&gt;;
 }</code></pre>
