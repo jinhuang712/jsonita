@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Editor } from '../editor/Editor';
 import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
+import { AiFixPane } from '../panes/AiFixPane';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
 import { TreeView } from '../tree/TreeView';
@@ -63,7 +64,9 @@ export function FloatingWindow() {
           <Editor theme="light" value={content} onChange={setContent} softWrap={true} />
         </div>
         <div style={{ overflow: 'hidden' }}>
-          {activePane === 'tree' && treeData !== null ? (
+          {activePane === 'ai-fix' ? (
+            <AiFixPane />
+          ) : activePane === 'tree' && treeData !== null ? (
             <TreeView data={treeData} />
           ) : (
             <Editor

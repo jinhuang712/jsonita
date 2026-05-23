@@ -141,10 +141,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M2-A15 / A16 / A17 / A17b</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td>Rust: <code>shortcuts/mod.rs</code>（parse_accelerator + 8 reserved 列表 + register_all/register_one 双键 + shortcut_register IPC 验证+落 Settings+重注册+回滚）；<code>main.rs</code> 注册 shortcut_register；前端：<code>src/settings/ShortcutInput.tsx</code>（focus→keydown捕获→组合格式化→ipc 调用→4 种 resp 处理（ok/conflict/reserved/invalid））；<code>SettingsModal.tsx</code> Shortcuts group active 走 2 个 ShortcutInput；<code>ipc/commands.ts</code> shortcuts namespace</td></tr>
+        <tr><td>verification</td><td>agent 端：build 1.62s 0 error ✓ + HMR 热刷 ✓；<b>待用户跑</b>：Settings → Shortcuts → 点 "呼出浮窗" 输入框 → 按 ⌘⇧K → 应 OK + 旧 ⌘⇧J 失效；按 ⌘C → "Reserved" + Override 按钮（confirm dialog）；按 ⌘Q → "Reserved"；改后菜单栏 toggle 立即生效</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m2-n5): shortcut input + accelerator parser + reserved/conflict check</code></td></tr>
         <tr><td>blocked_by</td><td><code>m2-n1-settings-ui</code></td></tr>
         <tr><td>关键交付物</td><td>Settings → Shortcuts 分组用 <code>ShortcutInput</code> 组件：按下组合键自动捕获；冲突检测对照（a）系统级保留快捷键白名单 + （b）当前已绑定的 Jsonita 内部快捷键；冲突时 Tooltip 警告 + <b>默认阻塞 patch 提交</b>（保留旧绑定）；如需 override 走<b>二次确认 Modal</b>（标题"我知道与系统快捷键冲突，仍然绑定"，含 [取消] / [仍然绑定] 二按钮）方可提交；改 <code>shortcut_toggle</code> 后立即重新注册 + 菜单栏 menu accelerator 文字同步</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/07_menubar.html">07 § 4 global-shortcut</a> · <a href="../spec/04_components.html">04 ShortcutInput</a> · <a href="../spec/01_mockups.html">01 § 6.2 ShortcutInput 视觉</a></td></tr>

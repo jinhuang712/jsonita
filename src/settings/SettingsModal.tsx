@@ -5,6 +5,7 @@ import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { ApiKeyInput } from './ApiKeyInput';
+import { ShortcutInput } from './ShortcutInput';
 
 /**
  * 设置 Modal — 6 分组 nav + 字段。
@@ -149,7 +150,7 @@ export function SettingsModal() {
               <GroupJsonTransform settings={settings} patch={patch} />
             )}
             {activeGroup === 'shortcuts' && (
-              <Placeholder text="M2-N5：可自定义快捷键 + 冲突检测" />
+              <GroupShortcuts settings={settings} patch={patch} />
             )}
             {activeGroup === 'about' && <Placeholder text="M3-N6：版本 / 日志 / 致谢" />}
           </div>
@@ -184,6 +185,32 @@ export function SettingsModal() {
 interface GroupProps {
   settings: Settings;
   patch: (p: Partial<Settings>) => void | Promise<void>;
+}
+
+function GroupShortcuts({ settings, patch }: GroupProps) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>呼出浮窗</span>
+        <ShortcutInput
+          action="toggle-window"
+          value={settings.shortcutToggle}
+          onChange={(v) => patch({ shortcutToggle: v })}
+        />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>恢复上次会话</span>
+        <ShortcutInput
+          action="restore-last"
+          value={settings.shortcutRestoreLast}
+          onChange={(v) => patch({ shortcutRestoreLast: v })}
+        />
+      </div>
+      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 8 }}>
+        点输入框后按目标组合键。系统保留组合（⌘Q / ⌘W / ⌘Tab 等）默认阻塞；如需强制绑定走 [Override]。
+      </div>
+    </div>
+  );
 }
 
 function GroupGeneral({ settings, patch }: GroupProps) {

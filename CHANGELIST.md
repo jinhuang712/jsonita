@@ -8,6 +8,19 @@
 
 ### M2 实施期 · 0.5.0-m2 路线起手
 
+#### M2-N5 · 自定义快捷键 + 冲突检测（done · pending-user-verification）
+
+- `src-tauri/src/shortcuts/mod.rs` ── parse_accelerator("CmdOrCtrl+Shift+J" 类) + 8 reserved 列表 (⌘Q/⌘W/⌘Tab/⌘Space/⌘H/F11/F12/Escape) + register_all/register_one 双键模式 + `shortcut_register` IPC（验证 → patch SettingsStore → register_all → 失败回滚）
+- `src-tauri/src/main.rs` ── 注册 shortcut_register 命令
+- `src/settings/ShortcutInput.tsx` ── 录入：focus → keydown 捕获组合 → 格式化 "Cmd+Shift+K" → ipc.shortcuts.register；4 resp 分支 (ok/conflict/reserved/invalid-accelerator)；Reserved 配 [Override] 按钮走 window.confirm 二次确认（spec/07 § 2.3 简化版）
+- `src/settings/SettingsModal.tsx` ── GroupShortcuts 接入 2 个 ShortcutInput（toggle / restore-last）+ 说明文案
+- `src/ipc/commands.ts` ── shortcuts namespace（register/status/retry/openAccessibilitySettings）+ ShortcutAction + ShortcutRegisterResp 类型
+
+#### M2-N4 wiring fix（之前 commit a5f2615 漏 wiring）
+
+- `src/ipc/commands.ts` ── 补 ai.fix + AiFixReq/Resp + history.add wrappers（M2-N4 创建文件时 Edit 因 stale state 丢失）
+- `src/shell/FloatingWindow.tsx` ── 补 activePane==='ai-fix' → AiFixPane 路由
+
 #### M2-N4 · AI Fix DiffView UI（done · pending-user-verification）
 
 - `package.json` ── `diff 7.0` + `@types/diff 7.0`
