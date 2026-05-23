@@ -549,7 +549,7 @@
         {
           "node": "M3-N3",
           "title": "a11y 完整验收",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/04_m3_polish_cross.html#m3-n3-a11y",
           "task_file": null,
           "spec_refs": [
@@ -594,7 +594,7 @@
         {
           "node": "M3-N6",
           "title": "README + 演示 GIF + v1.0 发布",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/04_m3_polish_cross.html#m3-n6-release",
           "task_file": null,
           "spec_refs": [],
