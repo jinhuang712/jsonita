@@ -8,6 +8,27 @@
 
 ### M2 实施期 · 0.5.0-m2 路线起手
 
+#### M2-N4 · AI Fix DiffView UI（done · pending-user-verification）
+
+- `package.json` ── `diff 7.0` + `@types/diff 7.0`
+- `src/store/ai.ts` ── 4 态 zustand：idle / requesting / awaiting-decision / error；before/after/error 字段 + startFix/setSuccess/setError/reset
+- `src/panes/diff.ts` ── computeDiff 走 `diffLines` 行级（spec/11 § 8.2）；输出 `{type: 'eq'|'add'|'del', text}[]`
+- `src/panes/DiffView.tsx` ── unified diff 渲染：add 绿底 `+` / del 红底 `-` / eq 透明（spec/01 § 8 视觉）
+- `src/panes/AiFixPane.tsx` ── orchestrator：mount 时 status===idle → 调 ai.fix（crypto.randomUUID + editor.error 注入）→ setSuccess / setError；DiffView + Accept (替换 editor + history.add op_type='ai-fix' + 切回 format tab) / Reject (reset + 切回)；错误分支文案分类（RateLimit / Http / Keychain / AiInvalidJson）
+- `src/shell/FloatingWindow.tsx` ── 右侧条件：activePane==='ai-fix' 渲染 AiFixPane（之前是 Editor / Tree 路由）
+- `src/ipc/commands.ts` ── `ai.fix(req)` + `history.add(content, opType)` 两个 IPC wrapper；AiFixReq + AiFixResp TS 类型
+- `src-tauri/src/cmds/history.rs` ── `history_add` IPC 命令（State&lt;Db&gt; + State&lt;SettingsStore&gt; → spawn_blocking + h::add）；spec/02 § 6.1.2 扩展（spec 待追认）
+- `src-tauri/src/main.rs` ── 注册 history_add 命令
+
+关键决策：
+- **AiFixPane mount 自动触发 fix**：用户切到 AI Fix tab 即开始；无显式"Fix" 按钮（spec/01 § 8 mockup 直接展示 DiffView）
+- **crypto.randomUUID() 前端生成 requestId**：spec/11 § 5.2 幂等
+- **错误文案前端 fallback 映射 4 类**：RateLimit/Http/Keychain/AiInvalidJson；其他 kind 透传
+- **Accept 写 history(op_type='ai-fix')**：UPSERT 走 content_hash UNIQUE 自动去重；Reject 不写
+- **行级 diff 而非字符级**：spec/11 § 8.2 v1 简化；M3-N1 polish 不引 Monaco-diff
+
+待用户验证：粘非法 JSON → AI Fix tab → 点击 → loading → DeepSeek HTTP → DiffView → Accept 应用 + 历史多一条。
+
 #### M2-N3 · DeepSeek client + extract_json（done · minimal · pending-user-verification）
 
 - `src-tauri/Cargo.toml` ── reqwest 0.12 [json + rustls-tls, default-features=false] + uuid 1 [v4] + tokio 1 [time, macros]

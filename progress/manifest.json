@@ -461,7 +461,7 @@
         {
           "node": "M2-N4",
           "title": "AI Fix 流程 (Tab + DiffView)",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/03_m2_ai_settings.html#m2-n4-ai-fix",
           "task_file": null,
           "spec_refs": [

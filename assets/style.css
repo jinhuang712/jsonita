@@ -45,16 +45,42 @@ body {
 .topbar {
   position: fixed;
   top: 0; left: 280px; right: 0;
-  height: 52px;
+  height: 104px;
   background: rgba(250, 250, 250, 0.85);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border);
   display: flex;
-  align-items: center;
-  padding: 0 32px;
+  flex-direction: column;
   z-index: 50;
   font-size: 13px;
+}
+.topbar-row {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+.topbar-row.row-strip {
+  border-top: 1px solid var(--border);
+  padding: 0 0 0 32px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+.topbar-row.row-strip::after {
+  content: "";
+  position: sticky;
+  right: 0;
+  width: 32px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(250,250,250,0) 0%, rgba(250,250,250,0.95) 100%);
+  pointer-events: none;
+  flex-shrink: 0;
+  margin-left: -32px;
 }
 .topbar-crumb { color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
 .topbar-crumb a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
@@ -73,6 +99,42 @@ body {
   transition: all 0.15s;
 }
 .topbar-action:hover { background: var(--bg-card); color: var(--primary); border-color: var(--primary-edge); }
+
+/* ===== Chapter Strip (横向章节导航) ===== */
+.chapter-strip {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+  padding-right: 32px;
+}
+.chapter-strip a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.chapter-strip a:hover { background: var(--primary-soft); color: var(--primary); }
+.chapter-strip a.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+.chapter-strip .strip-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+.chapter-strip a.active .strip-num,
+.chapter-strip a:hover .strip-num { color: var(--primary); }
 
 /* ===== Sidebar ===== */
 .sidebar {
@@ -125,7 +187,8 @@ body {
   border-radius: 6px;
   border-left: 2px solid transparent;
   transition: all 0.15s ease;
-  gap: 4px;
+  gap: 6px;
+  line-height: 1.4;
 }
 .toc a:hover { background: var(--primary-soft); color: var(--primary); }
 .toc a.active {
@@ -136,7 +199,7 @@ body {
 }
 .toc-num {
   display: inline-block;
-  width: 24px;
+  min-width: 28px;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-faint);
@@ -144,10 +207,45 @@ body {
 }
 .toc a.active .toc-num { color: var(--primary); }
 
+/* doc TOC 变体：H2/H3 两级缩进 */
+.toc-doc a.toc-h2 {
+  font-weight: 500;
+}
+.toc-doc a.toc-h3 {
+  padding-left: 38px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.toc-doc a.toc-h3 .toc-num {
+  min-width: 32px;
+  font-size: 10px;
+}
+.toc-doc a.toc-h3:hover {
+  background: transparent;
+  color: var(--primary);
+}
+.toc-doc a.toc-h3.active {
+  background: transparent;
+  color: var(--primary);
+  border-left-color: var(--primary-edge);
+  font-weight: 600;
+}
+.toc-empty {
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
 /* ===== Main ===== */
 main.doc-main {
   margin-left: 280px;
-  padding-top: 52px;
+  padding-top: 104px;
+  scroll-padding-top: 120px;
+}
+.doc-article h2[id],
+.doc-article h3[id] {
+  scroll-margin-top: 120px;
 }
 .doc-article {
   max-width: 1120px;

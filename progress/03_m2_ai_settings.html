@@ -124,10 +124,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M2 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M2-A10..A14</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td>package.json 加 diff 7.0 + @types/diff；前端 <code>src/store/ai.ts</code>（4 态 zustand）· <code>src/panes/{diff.ts,DiffView.tsx,AiFixPane.tsx}</code>（computeDiff 行级 + DiffView 渲染 + 自动触发 fix + Accept/Reject）· <code>src/shell/FloatingWindow.tsx</code>（activePane==='ai-fix' 路由到 AiFixPane）· <code>src/ipc/commands.ts</code>（ai.fix 命令 + history.add）· Rust <code>cmds/history.rs</code>（history_add IPC 命令真实化）· <code>main.rs</code> 注册</td></tr>
+        <tr><td>verification</td><td>agent 端：4 文件 + dev server auto-rebuild 1.82s ✓；<b>待用户跑</b>：粘非法 JSON → AI Fix tab 出现 → 点击 tab → loading "AI Fix in progress…" → 真实 DeepSeek HTTP（需 sk- key + ai_enabled） → DiffView 红绿行展示 → Accept 替换 input + history.add op_type='ai-fix'，Reject 关 tab；Http/RateLimit/AiInvalidJson 错误分支 UI 显</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m2-n4): ai fix diffview ui + accept/reject + history add</code></td></tr>
         <tr><td>blocked_by</td><td><code>m2-n3-deepseek</code></td></tr>
         <tr><td>关键交付物</td><td>StatusBar invalid 时 AI Fix Tab 自动出现（M1 已占位）；点击触发 IPC <code>ai_fix</code>；Loading 期间 progress 心跳更新；成功后 DiffView（M1 已有占位）显示左右对比；Accept → 替换 input + 写 history op_type='ai-fix' + ⌘Z 单窗模式下能 undo（M1 已锁）；Reject → 关闭 Tab 保留原文</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/11_ai_client.html">11 § 3 调用流程</a> · <a href="../spec/01_mockups.html">01 § 8 AI Fix DiffView</a> · <a href="../spec/04_components.html">04 DiffView 组件</a></td></tr>
