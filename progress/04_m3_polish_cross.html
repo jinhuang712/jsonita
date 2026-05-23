@@ -115,10 +115,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M3-A9..A13</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · minimal · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>StatusBar.tsx</code> 加 role="status" + aria-live="polite" + aria-atomic（M0-A11 screen reader 朗读 parse 错位置）；<code>TabBar.tsx</code> role="tablist" + 每 tab role="tab" + aria-selected + tabIndex 跟随 active；<code>AccessibilityModal.tsx</code> + <code>SettingsModal.tsx</code> 加 role="dialog" + aria-modal="true" + aria-labelledby 指向 title</td></tr>
+        <tr><td>verification</td><td>agent 端：4 组件 aria 加完；<b>待用户跑</b>：开 VoiceOver（⌘F5）→ ⌘⇧J → VO 朗读 "Pane tabs"；粘非法 JSON → 状态栏 aria-live → VO 朗读错误；打开设置 → VO 朗读 "Settings, dialog"。focus trap 完整实现留 M3 polish (Modal 内 Tab 循环)</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m3-n3): aria roles + aria-live + dialog labelling</code></td></tr>
         <tr><td>blocked_by</td><td><code>m3-n1-theme-empty</code></td></tr>
         <tr><td>关键交付物</td><td>所有交互元素加 <code>aria-label</code> / <code>aria-describedby</code>；StatusBar / Toast 加 <code>aria-live="polite"</code>；Modal 用 focus trap；Tab 序梳理（浮窗内交互元素的 logical 顺序 = 视觉顺序）；VoiceOver 三条关键流脚本 walk-through</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 9 a11y 强制要求 § 10 screen reader 关键流</a> · <a href="../spec/04_components.html">04 所有交互组件</a></td></tr>
