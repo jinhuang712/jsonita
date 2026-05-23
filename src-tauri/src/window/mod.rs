@@ -43,6 +43,19 @@ pub fn toggle(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+/// 仅显示（不切换）── tray Settings 项调用，避免"窗口本已显示再点 Settings 反而 hide"。
+pub fn toggle_show_only(app: &AppHandle) -> tauri::Result<()> {
+    let Some(win) = app.get_webview_window(MAIN_LABEL) else {
+        return Ok(());
+    };
+    if !win.is_visible()? {
+        let _ = locate::position_for_cursor(&win);
+        win.show()?;
+    }
+    win.set_focus()?;
+    Ok(())
+}
+
 /// CloseRequested → 拦截改 hide；Focused(false) → 失焦 hide；Resized → mark userDragged。
 fn install_window_events(win: &WebviewWindow) {
     let w = win.clone();

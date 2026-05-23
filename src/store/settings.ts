@@ -18,6 +18,7 @@ export interface Settings {
   hideOnBlur: boolean;
   singlePaneMode: boolean;
   theme: ThemeMode;
+  locale: 'en-US' | 'zh-CN';
   restoreWindow: RestoreWindow;
   initialWidth: InitialWidth;
   smartWidth: boolean;
@@ -38,6 +39,7 @@ const DEFAULT_SETTINGS: Settings = {
   hideOnBlur: true,
   singlePaneMode: false,
   theme: 'system',
+  locale: 'en-US',
   restoreWindow: 'min-5',
   initialWidth: 'w-920',
   smartWidth: true,

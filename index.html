@@ -113,19 +113,6 @@
     }
   }
 
-  function renderFallback(pane, file) {
-    pane.innerHTML =
-      '<div class="md-fallback">' +
-      '<p>本地 <code>file://</code> 协议下浏览器禁止 fetch 本地文件（CORS），无法直接渲染 <code>' + file + '</code>。</p>' +
-      '<p><b>查看方式</b>：</p>' +
-      '<ol>' +
-      '<li>直接打开文件原文 → <a href="' + file + '">' + file + '</a></li>' +
-      '<li>或在项目根目录起本地服务后访问 <code>http://localhost:8000</code>：' +
-      '<pre style="margin-top:6px;"><code>python3 -m http.server 8000\n# 或： npx serve .</code></pre></li>' +
-      '</ol>' +
-      '</div>';
-  }
-
   function renderAll() {
     SOURCES.forEach(function(src) {
       const pane = document.getElementById(src.paneId);
@@ -133,7 +120,7 @@
       fetch('./' + src.file)
         .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
         .then(function(md) { renderMarkdown(pane, md); })
-        .catch(function() { renderFallback(pane, src.file); });
+        .catch(function(e) { console.warn('[index] fetch ' + src.file + ' failed', e); });
     });
   }
 

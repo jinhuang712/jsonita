@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { ai as aiApi, history as historyApi } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { useAiStore } from '../store/ai';
@@ -13,7 +12,6 @@ import { DiffView } from './DiffView';
  * Spec ref: spec/11 § 8.1 状态机 · spec/01 § 8 DiffView 视觉
  */
 export function AiFixPane() {
-  const { t } = useTranslation('errors');
   const status = useAiStore((s) => s.status);
   const before = useAiStore((s) => s.before);
   const after = useAiStore((s) => s.after);

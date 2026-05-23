@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { shortcuts, type ShortcutAction, type ShortcutRegisterResp } from '../ipc/commands';
 
 /**
@@ -20,8 +21,9 @@ interface Props {
 }
 
 export function ShortcutInput({ action, value, onChange }: Props) {
+  const { t } = useTranslation('settings');
   const [recording, setRecording] = useState(false);
-  const [msg, setMsg] = useState<{ kind: 'ok' | 'err' | 'reserved'; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ kind: 'ok' | 'err' | 'reserved'; text: string; acc?: string } | null>(null);
 
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -57,22 +59,25 @@ export function ShortcutInput({ action, value, onChange }: Props) {
       switch (r.kind) {
         case 'ok':
           onChange(acc);
-          setMsg({ kind: 'ok', text: `Bound: ${acc}` });
+          setMsg({ kind: 'ok', text: t('shortcuts.bound', { accelerator: acc }), acc });
           break;
         case 'reserved':
           setMsg({
             kind: 'reserved',
-            text: `${acc} 是系统保留键。点 [Override] 强制绑定。`,
+            text: t('shortcuts.reserved', { accelerator: acc }),
+            acc,
           });
           break;
         case 'conflict':
           setMsg({
             kind: 'err',
-            text: `冲突${r.withApp ? `（已被 ${r.withApp} 占用）` : ''}`,
+            text: r.withApp
+              ? t('shortcuts.conflictWithApp', { app: r.withApp })
+              : t('shortcuts.conflictNoApp'),
           });
           break;
         case 'invalid-accelerator':
-          setMsg({ kind: 'err', text: `Invalid: ${r.reason}` });
+          setMsg({ kind: 'err', text: t('shortcuts.invalid', { reason: r.reason }) });
           break;
       }
     } catch (e) {
@@ -82,9 +87,9 @@ export function ShortcutInput({ action, value, onChange }: Props) {
 
   const overrideReserved = async () => {
     // 二次确认（spec/07 § 2.3 override Modal；M2-N5 minimal 用 window.confirm）
-    if (!msg) return;
-    const acc = msg.text.split(' ')[0];
-    const ok = window.confirm(`${acc} 与系统快捷键冲突，仍要绑定？`);
+    if (!msg?.acc) return;
+    const acc = msg.acc;
+    const ok = window.confirm(t('shortcuts.overrideConfirm', { accelerator: acc }));
     if (ok) {
       setMsg(null);
       await tryRegister(acc, true);
@@ -116,7 +121,7 @@ export function ShortcutInput({ action, value, onChange }: Props) {
         role="button"
         aria-label={`Shortcut for ${action}`}
       >
-        {recording ? 'Press keys…' : value || '(none)'}
+        {recording ? t('shortcuts.recordingPlaceholder') : value || t('shortcuts.noneBound')}
       </div>
       {msg && (
         <div
@@ -147,7 +152,7 @@ export function ShortcutInput({ action, value, onChange }: Props) {
                 cursor: 'pointer',
               }}
             >
-              Override
+              {t('shortcuts.overrideButton')}
             </button>
           )}
         </div>

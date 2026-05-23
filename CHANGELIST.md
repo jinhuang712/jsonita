@@ -6,6 +6,33 @@
 
 ## [Unreleased]
 
+### chore · 删 index.html `file://` fallback 框
+
+`index.html` 之前在 fetch README/TODO/CHANGELIST 失败时渲染一个解释 CORS + 提示起 `python3 -m http.server` 的 fallback 框（用户反馈"不需要"）。
+
+- `index.html` ── 删 `renderFallback` 函数 + catch 改为 `console.warn` 静默
+- `assets/style.css` ── 删 `.md-fallback` 全套样式（21 行）
+
+### fix · tray Settings 灰色 + Edit-race 漏写补齐（用户反馈"settings 打不开"）
+
+用户截图反馈 tray 菜单"Settings…" 项灰色不可点。根因：M0-N2 占位写了 `enabled=false` + 空 handler，M2-N1 写 Settings Modal 时只接了 StatusBar ⚙ 按钮入口，没回头改 tray 项。顺手补齐 M3-N2 漏挂的 `useLocaleSync()`（导致 Settings 切语言不生效）。
+
+- `src-tauri/src/menubar/mod.rs` ── Settings 项 `enabled=true`；handler 接 `crate::window::toggle_show_only(app)` + `emit("tray:open-settings", ())`
+- `src-tauri/src/window/mod.rs` ── 新增 `toggle_show_only(app)`：仅显示不切换（窗口已显示时点 Settings 不应反而 hide）
+- `src/App.tsx` ── `import { useLocaleSync }` + 顶层调用；新增 `listen('tray:open-settings')` → `setSettingsModalOpen(true)`
+
+### fix · SettingsModal i18n 硬编码 → 全 t() (M3-N2 漏)
+
+用户截图反馈：Locale=English 时 General 字段 label 仍是中文（开机自启动 / 失焦自动隐藏 / 智能扩宽 / 单窗模式 / 自动粘贴剪贴板）。根因：M2-N1 写 SettingsModal 时只把标题 + nav 走 i18n，字段 label 直接写中文常量；M3-N2 加 locale 时没回头查这里。同时 `Settings` struct 在 Rust + TS 两端都缺 `locale` 字段（M3-N2 仅加了 useLocaleSync.ts 没加 store）。
+
+- `src/locales/{en-US,zh-CN}/settings.json` ── 补全 5 组字段 i18n key：`general.*` / `ai.*` / `history.*` / `jsonTransform.*` / `shortcuts.*` / `footer.*`
+- `src/settings/SettingsModal.tsx` ── 5 个 Group 子组件全部 `useTranslation('settings')` + `t()` 替换；footer Reset all / Done 也走 i18n
+- `src/settings/ShortcutInput.tsx` ── `Bound: X` / `Press keys…` / `(none)` / `冲突...` / `Override` / `confirm` 文案全 t() + 参数化 (`{{accelerator}}` / `{{app}}` / `{{reason}}`)
+- `src-tauri/src/types.rs` ── 加 `pub enum Locale { EnUs, ZhCn }`（`#[serde(rename = "en-US" / "zh-CN")]`）+ `Settings.locale: Locale` + default `Locale::EnUs`
+- `src/store/settings.ts` ── Settings interface 加 `locale: 'en-US' | 'zh-CN'` + DEFAULT_SETTINGS
+
+教训：commit 前必跑 `git diff --stat` 看 file list 与预期一致，再写 commit message。Edit 工具 stale state 失败时一定要 verify file 后再继续。
+
 ### Docs UI · docmost / lark 冷淡风格统一
 
 - `assets/style.css` ── 全局文档站 palette 改为灰白底 + 低饱和蓝焦点：背景 `#F7F8FA` / 文本 `#1F2329` / 主色 `#245BDB`；新增 `--bg-subtle` / `--radius-*`；正文、侧栏、topbar、表格、callout、pagination、index、mockup、mermaid 统一为细边框、轻阴影、8px 内圆角
