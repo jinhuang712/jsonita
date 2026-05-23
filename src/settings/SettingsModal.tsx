@@ -287,15 +287,6 @@ function GroupAi({ settings, patch }: GroupProps) {
         on={settings.aiEnabled}
         onChange={(v) => patch({ aiEnabled: v })}
       />
-      <div style={rowStyle}>
-        <span>{t('ai.modelId')}</span>
-        <input
-          type="text"
-          value={settings.aiModelId}
-          onChange={(e) => patch({ aiModelId: e.target.value })}
-          style={inputStyle}
-        />
-      </div>
       <div style={{ marginTop: 8 }}>
         <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginBottom: 4 }}>
           {t('ai.apiKey')}

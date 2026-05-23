@@ -10,6 +10,7 @@
     "tree": "Tree",
     "jsonToStr": "→Str",
     "strToJson": "→JSON",
-    "aiFix": "AI Fix"
+    "aiFix": "AI Fix",
+    "aiFixDisabledTooltip": "AI Fix is disabled. Enable it in Settings → AI."
   }
 }

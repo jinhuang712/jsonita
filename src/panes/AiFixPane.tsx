@@ -52,6 +52,10 @@ export function AiFixPane() {
             setError(`No API key configured (Settings → AI)`);
           } else if (e.kind === 'AiInvalidJson') {
             setError(`AI returned invalid JSON`);
+          } else if (e.kind === 'AiDisabled') {
+            setError(`AI Fix is disabled. Enable it in Settings → AI.`);
+          } else if (e.kind === 'Io' || e.kind === 'Sqlite') {
+            setError(`${e.kind}: ${e.data}`);
           } else {
             setError(e.kind);
           }

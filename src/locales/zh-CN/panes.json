@@ -10,6 +10,7 @@
     "tree": "树视图",
     "jsonToStr": "→字符串",
     "strToJson": "→JSON",
-    "aiFix": "AI 修复"
+    "aiFix": "AI 修复",
+    "aiFixDisabledTooltip": "AI 修复未启用。请到 Settings → AI 开启。"
   }
 }

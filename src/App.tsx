@@ -3,16 +3,25 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { useLocaleSync } from './i18n/useLocaleSync';
+import { settings as settingsApi } from './ipc/commands';
 import { AccessibilityModal } from './permissions/AccessibilityModal';
 import { SettingsModal } from './settings/SettingsModal';
 import { FloatingWindow } from './shell/FloatingWindow';
+import { useSettingsStore } from './store/settings';
 import { useUiStore } from './store/ui';
 
 export function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const setSettingsModalOpen = useUiStore((s) => s.setSettingsModalOpen);
+  const setSettings = useSettingsStore((s) => s.setSettings);
   useGlobalHotkeys();
   useLocaleSync();
+
+  // 启动期拉一次 settings ── 避免 store 用 DEFAULT_SETTINGS 状态下 TabBar
+  // 把 aiEnabled 当 false（哪怕 settings.json 里其实是 true）
+  useEffect(() => {
+    settingsApi.getAll().then(setSettings).catch(() => {});
+  }, [setSettings]);
 
   // 首次 mount：查 ⌘⇧J 注册状态 + listen 后续 event
   useEffect(() => {

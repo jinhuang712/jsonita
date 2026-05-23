@@ -13,7 +13,8 @@ export type JsonitaError =
   | { kind: 'Http'; data: { status: number; body: string } }
   | { kind: 'AiInvalidJson'; data: { raw: string } }
   | { kind: 'RateLimit'; data: { retryAfterSec: number } }
-  | { kind: 'Io'; data: string };
+  | { kind: 'Io'; data: string }
+  | { kind: 'AiDisabled' };
 
 export function isJsonitaError(e: unknown): e is JsonitaError {
   return (

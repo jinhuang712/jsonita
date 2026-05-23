@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
 
 /**
@@ -21,6 +22,7 @@ export function TabBar() {
   const active = useUiStore((s) => s.activePane);
   const showAiFix = useUiStore((s) => s.showAiFix);
   const setActive = useUiStore((s) => s.setActivePane);
+  const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
 
   return (
     <div
@@ -64,8 +66,10 @@ export function TabBar() {
         <button
           role="tab"
           aria-selected={active === 'ai-fix'}
+          aria-disabled={!aiEnabled}
           tabIndex={active === 'ai-fix' ? 0 : -1}
-          onClick={() => setActive('ai-fix')}
+          onClick={() => aiEnabled && setActive('ai-fix')}
+          title={aiEnabled ? undefined : t('tab.aiFixDisabledTooltip')}
           style={{
             padding: '4px 10px',
             fontSize: 12,
@@ -75,7 +79,8 @@ export function TabBar() {
             color: active === 'ai-fix' ? '#FFFFFF' : 'var(--accent)',
             border: 'none',
             borderRadius: 'var(--radius-sm)',
-            cursor: 'pointer',
+            cursor: aiEnabled ? 'pointer' : 'not-allowed',
+            opacity: aiEnabled ? 1 : 0.45,
           }}
         >
           ✨ {t('tab.aiFix')}
