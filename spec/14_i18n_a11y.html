@@ -91,9 +91,9 @@ graph TD
     Use3 --> Apply
     Apply["i18n.changeLanguage locale<br/>+ document.documentElement.lang"] --> Render["React 全量 re-render"]
 
-    classDef cond fill:#FFF7ED,stroke:#FA9B10
-    classDef use  fill:#EFF6FF,stroke:#057AF3
-    classDef act  fill:#ECFDF5,stroke:#06B78F
+    classDef cond fill:#F1F3F6,stroke:#3F4A5A
+    classDef use  fill:#F2F5FF,stroke:#245BDB
+    classDef act  fill:#F0F8F3,stroke:#237B4B
     class S1,S2 cond
     class Use1,Use2,Use3 use
     class Apply,Render act
@@ -143,9 +143,9 @@ graph TB
     B5 --> H
     RR --> H
 
-    classDef boot fill:#FFF7ED,stroke:#FA9B10
-    classDef rt fill:#EFF6FF,stroke:#057AF3
-    classDef comp fill:#ECFDF5,stroke:#06B78F
+    classDef boot fill:#F1F3F6,stroke:#3F4A5A
+    classDef rt fill:#F2F5FF,stroke:#245BDB
+    classDef comp fill:#F0F8F3,stroke:#237B4B
     class B1,B2,B3,B4,B5 boot
     class U,SS,EV,ST,CH,RR rt
     class H,T comp
@@ -173,9 +173,9 @@ graph TD
     F2 --> R2["等宽渲染"]
     F3 --> R3["CJK 字符变宽<br/>但行高一致, 视觉可接受"]
 
-    classDef cond fill:#FFF7ED,stroke:#FA9B10
-    classDef act fill:#EFF6FF,stroke:#057AF3
-    classDef ok fill:#ECFDF5,stroke:#06B78F
+    classDef cond fill:#F1F3F6,stroke:#3F4A5A
+    classDef act fill:#F2F5FF,stroke:#245BDB
+    classDef ok fill:#F0F8F3,stroke:#237B4B
     class C1,C2,C3 cond
     class F1,F2,F3 act
     class R1,R2,R3 ok

@@ -8,6 +8,7 @@ use crate::error::JsonitaError;
 use crate::store::{history as h, Db, SettingsStore};
 use crate::types::{HistoryRow, ListOpts, OpType};
 
+#[allow(dead_code)]
 const DEFAULT_LIMIT: u32 = 100;
 
 #[tauri::command]
@@ -66,6 +67,8 @@ pub async fn history_clear(db: State<'_, Db>) -> Result<u32, JsonitaError> {
 }
 
 /// 内部 helper ── 由 cmds/json.rs 等在写完操作后调（非 IPC 命令）。
+/// M2-N4 起前端走 history.add()；本 helper 留作 Rust 端直接写入入口。
+#[allow(dead_code)]
 pub fn record(
     app: &tauri::AppHandle,
     content: &str,

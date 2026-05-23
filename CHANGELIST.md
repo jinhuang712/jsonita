@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Docs UI · docmost / lark 冷淡风格统一
+
+- `assets/style.css` ── 全局文档站 palette 改为灰白底 + 低饱和蓝焦点：背景 `#F7F8FA` / 文本 `#1F2329` / 主色 `#245BDB`；新增 `--bg-subtle` / `--radius-*`；正文、侧栏、topbar、表格、callout、pagination、index、mockup、mermaid 统一为细边框、轻阴影、8px 内圆角
+- `assets/nav.js` Mermaid themeVariables 同步新 palette（primary / line / note / actor / label），避免渲染图仍保留旧高饱和蓝橙
+- `plan/01_features.html`、`plan/02_interaction.html`、`spec/00/01/02/03/05/06/08/14/15` ── 机械迁移 HTML 内 Mermaid classDef / swatch / mockup inline 旧色值；`AI Fix` 去掉 sparkle emoji，历史搜索 / pin / toast / 权限提示等 mockup 改成更克制的文字与冷色焦点态
+- 关键决策：本轮不新增/删除章节，因此不改 `index.html` 章节列与 `assets/nav.js` 章节定义；`src/index.html` 是 Tauri 透明根节点，不承载可见文档 UI，保持不动
+- diff 范围：14 个文档/样式文件，`454 insertions / 443 deletions`
+
 ### M3 实施期 · 1.0.0 路线起手
 
 #### M3-N6 · README 重写（done · agent-side；screenshot/GIF + release 留用户）

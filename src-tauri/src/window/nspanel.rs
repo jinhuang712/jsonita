@@ -2,8 +2,12 @@
 //!
 //! Spec ref: `spec/06_window.html` § 3 NSPanel 标志位详解
 //! 关键 3 个 setter：styleMask / collectionBehavior / level
+//!
+//! cocoa 0.26 已全面 deprecated（建议改 objc2-app-kit），但 Tauri 2.11 内部
+//! 仍依赖 cocoa；M3 polish 时若迁 objc2 再去掉 allow。
 
 #![cfg(target_os = "macos")]
+#![allow(deprecated)] // cocoa 0.26 整体 deprecated 但 Tauri 2.11 仍依赖
 
 use cocoa::appkit::{NSWindow, NSWindowCollectionBehavior, NSWindowStyleMask};
 use cocoa::base::id;

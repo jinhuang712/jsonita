@@ -109,14 +109,14 @@
       pane.innerHTML = window.marked.parse(md);
     } else {
       const escaped = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      pane.innerHTML = '<pre style="white-space: pre-wrap; font-size: 12.5px; padding: 16px; background: var(--bg-code); border-radius: 8px;">' + escaped + '</pre>';
+      pane.innerHTML = '<pre style="white-space: pre-wrap; font-size: 12.5px; padding: 16px; background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-lg);">' + escaped + '</pre>';
     }
   }
 
   function renderFallback(pane, file) {
     pane.innerHTML =
       '<div class="md-fallback">' +
-      '<p>📄 本地 <code>file://</code> 协议下浏览器禁止 fetch 本地文件（CORS）—— 无法直接渲染 <code>' + file + '</code>。</p>' +
+      '<p>本地 <code>file://</code> 协议下浏览器禁止 fetch 本地文件（CORS），无法直接渲染 <code>' + file + '</code>。</p>' +
       '<p><b>查看方式</b>：</p>' +
       '<ol>' +
       '<li>直接打开文件原文 → <a href="' + file + '">' + file + '</a></li>' +
