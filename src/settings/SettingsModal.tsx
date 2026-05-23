@@ -217,7 +217,19 @@ function GroupGeneral({ settings, patch }: GroupProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={rowStyle}>
-        <span>主题</span>
+        <span>Language / 语言</span>
+        <select
+          value={settings.locale}
+          onChange={(e) => patch({ locale: e.target.value as 'en-US' | 'zh-CN' })}
+          style={inputStyle}
+          aria-label="Language"
+        >
+          <option value="en-US">English</option>
+          <option value="zh-CN">简体中文</option>
+        </select>
+      </div>
+      <div style={rowStyle}>
+        <span>主题 / Theme</span>
         <select
           value={settings.theme}
           onChange={(e) =>

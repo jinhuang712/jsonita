@@ -1,0 +1,11 @@
+{
+  "tray": {
+    "toggle": "切换 Jsonita",
+    "settings": "设置…",
+    "quit": "退出 Jsonita"
+  },
+  "statusBar": {
+    "valid": "有效 JSON",
+    "empty": "粘贴 JSON 开始"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "accessibilityRequired": {
+    "title": "需要辅助功能权限",
+    "body": "全局快捷键 {{key}} 需要 Input Monitoring 权限以便在任何前台 App 下生效。请在 系统设置 → 隐私与安全 → 辅助功能 中添加 Jsonita。"
+  },
+  "parse": {
+    "title": "JSON 解析错误",
+    "atLineCol": "第 {{line}} 行第 {{col}} 列：{{msg}}"
+  },
+  "rateLimit": {
+    "title": "限流",
+    "retryAfter": "请 {{sec}} 秒后重试"
+  },
+  "aiInvalidJson": {
+    "title": "AI 返回的不是合法 JSON"
+  }
+}

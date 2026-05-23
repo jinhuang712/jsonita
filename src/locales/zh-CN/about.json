@@ -1,0 +1,6 @@
+{
+  "appName": "Jsonita",
+  "tagline": "小巧的菜单栏 JSON 工具",
+  "version": "版本 {{version}}",
+  "openLogDir": "打开日志目录"
+}

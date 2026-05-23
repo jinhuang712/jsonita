@@ -98,10 +98,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M3-A4..A8</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src/locales/zh-CN/{shell,panes,settings,history,errors,about,common}.json</code> 7 文件全译；<code>src/i18n/index.ts</code> supportedLngs 加 zh-CN + import 7 zh 文件；<code>src/i18n/useLocaleSync.ts</code> settings.locale 变 → i18n.changeLanguage；<code>src/App.tsx</code> 接 useLocaleSync；<code>src/store/settings.ts</code> + Rust <code>types.rs</code> Settings 加 locale 字段 + Locale enum；<code>SettingsModal.tsx</code> General 加 Language select（English / 简体中文）；mono 字体栈 M1-N3 tokens.css 已含 PingFang SC + Microsoft YaHei UI 末尾</td></tr>
+        <tr><td>verification</td><td>agent 端：7 zh 文件 + locale sync hook ✓；<b>待用户跑</b>：Settings → 通用 → Language 切简体中文 → 所有 UI 文案立即切换；切回 English 立即切回；powershell `localStorage` 看 `jsonita.locale=zh-CN`；粘含中文 key 的 JSON 树视图字符正常无方框</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m3-n2): zh-CN locale unlock + Settings Language select + Locale field</code></td></tr>
         <tr><td>blocked_by</td><td><code>m3-n1-theme-empty</code></td></tr>
         <tr><td>关键交付物</td><td><code>src/locales/zh-CN/{shell,panes,settings,history,errors,about,common}.json</code> 7 个 namespace 完整翻译；Settings → Language Select 加 zh-CN 选项；切换时 <code>i18n.changeLanguage</code> + <code>document.documentElement.lang</code> 同步；mono 字体栈末尾追加 PingFang SC（03 § 6.1）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/14_i18n_a11y.html">14 § 5 namespace § 6 locale 检测 § 7-8 字体回退 + a11y</a></td></tr>

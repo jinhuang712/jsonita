@@ -1,0 +1,15 @@
+{
+  "empty": {
+    "title": "粘贴 JSON 开始",
+    "shortcutLabel": "⌘V",
+    "phaseLabel": "M0-N3 NSPanel POC"
+  },
+  "tab": {
+    "format": "格式化",
+    "minify": "压缩",
+    "tree": "树视图",
+    "jsonToStr": "→字符串",
+    "strToJson": "→JSON",
+    "aiFix": "AI 修复"
+  }
+}
