@@ -42,6 +42,14 @@ pub enum ThemeMode {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum Locale {
+    #[serde(rename = "en-US")]
+    EnUs,
+    #[serde(rename = "zh-CN")]
+    ZhCn,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum RestoreWindow {
     Off,
@@ -218,6 +226,7 @@ pub struct Settings {
     pub hide_on_blur: bool,
     pub single_pane_mode: bool,
     pub theme: ThemeMode,
+    pub locale: Locale,
     pub restore_window: RestoreWindow,
     pub initial_width: InitialWidth,
     pub smart_width: bool,
@@ -240,6 +249,7 @@ impl Default for Settings {
             hide_on_blur: true,
             single_pane_mode: false,
             theme: ThemeMode::System,
+            locale: Locale::EnUs,
             restore_window: RestoreWindow::Min5,
             initial_width: InitialWidth::W920,
             smart_width: true,

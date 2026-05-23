@@ -156,7 +156,7 @@ export function SettingsModal() {
             {activeGroup === 'shortcuts' && (
               <GroupShortcuts settings={settings} patch={patch} />
             )}
-            {activeGroup === 'about' && <Placeholder text="M3-N6：版本 / 日志 / 致谢" />}
+            {activeGroup === 'about' && <Placeholder text="M3-N6" />}
           </div>
         </div>
         <div
@@ -175,10 +175,10 @@ export function SettingsModal() {
             }}
             style={btnGhost}
           >
-            Reset all
+            {t('footer.resetAll')}
           </button>
           <button onClick={() => setOpen(false)} style={btnPrimary}>
-            Done
+            {t('footer.done')}
           </button>
         </div>
       </div>
@@ -192,10 +192,11 @@ interface GroupProps {
 }
 
 function GroupShortcuts({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>呼出浮窗</span>
+        <span>{t('shortcuts.toggle')}</span>
         <ShortcutInput
           action="toggle-window"
           value={settings.shortcutToggle}
@@ -203,7 +204,7 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
         />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>恢复上次会话</span>
+        <span>{t('shortcuts.restoreLast')}</span>
         <ShortcutInput
           action="restore-last"
           value={settings.shortcutRestoreLast}
@@ -211,36 +212,37 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
         />
       </div>
       <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 8 }}>
-        点输入框后按目标组合键。系统保留组合（⌘Q / ⌘W / ⌘Tab 等）默认阻塞；如需强制绑定走 [Override]。
+        {t('shortcuts.hint')}
       </div>
     </div>
   );
 }
 
 function GroupGeneral({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={rowStyle}>
-        <span>Language / 语言</span>
+        <span>{t('general.language')}</span>
         <select
           value={settings.locale}
           onChange={(e) => patch({ locale: e.target.value as 'en-US' | 'zh-CN' })}
           style={inputStyle}
-          aria-label="Language"
+          aria-label={t('general.language')}
         >
           <option value="en-US">English</option>
           <option value="zh-CN">简体中文</option>
         </select>
       </div>
       <div style={rowStyle}>
-        <span>主题 / Theme</span>
+        <span>{t('general.theme')}</span>
         <select
           value={settings.theme}
           onChange={(e) =>
             patch({ theme: e.target.value as 'system' | 'light' | 'dark' })
           }
           style={inputStyle}
-          aria-label="Theme"
+          aria-label={t('general.theme')}
         >
           <option value="system">System</option>
           <option value="light">Light</option>
@@ -248,27 +250,27 @@ function GroupGeneral({ settings, patch }: GroupProps) {
         </select>
       </div>
       <Row
-        label="开机自启动"
+        label={t('general.launchAtLogin')}
         on={settings.launchAtLogin}
         onChange={(v) => patch({ launchAtLogin: v })}
       />
       <Row
-        label="失焦自动隐藏"
+        label={t('general.hideOnBlur')}
         on={settings.hideOnBlur}
         onChange={(v) => patch({ hideOnBlur: v })}
       />
       <Row
-        label="智能扩宽"
+        label={t('general.smartWidth')}
         on={settings.smartWidth}
         onChange={(v) => patch({ smartWidth: v })}
       />
       <Row
-        label="单窗模式"
+        label={t('general.singlePaneMode')}
         on={settings.singlePaneMode}
         onChange={(v) => patch({ singlePaneMode: v })}
       />
       <Row
-        label="自动粘贴剪贴板"
+        label={t('general.autoPasteClipboard')}
         on={settings.autoPasteClipboard}
         onChange={(v) => patch({ autoPasteClipboard: v })}
       />
@@ -277,15 +279,16 @@ function GroupGeneral({ settings, patch }: GroupProps) {
 }
 
 function GroupAi({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <Row
-        label="AI Fix 启用"
+        label={t('ai.enabled')}
         on={settings.aiEnabled}
         onChange={(v) => patch({ aiEnabled: v })}
       />
       <div style={rowStyle}>
-        <span>Model ID</span>
+        <span>{t('ai.modelId')}</span>
         <input
           type="text"
           value={settings.aiModelId}
@@ -295,7 +298,7 @@ function GroupAi({ settings, patch }: GroupProps) {
       </div>
       <div style={{ marginTop: 8 }}>
         <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginBottom: 4 }}>
-          DeepSeek API Key
+          {t('ai.apiKey')}
         </div>
         <ApiKeyInput modelId={settings.aiModelId} />
       </div>
@@ -304,10 +307,11 @@ function GroupAi({ settings, patch }: GroupProps) {
 }
 
 function GroupHistory({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={rowStyle}>
-        <span>历史上限</span>
+        <span>{t('history.limit')}</span>
         <select
           value={settings.historyLimit}
           onChange={(e) => patch({ historyLimit: Number(e.target.value) })}
@@ -324,15 +328,16 @@ function GroupHistory({ settings, patch }: GroupProps) {
 }
 
 function GroupJsonTransform({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <Row
-        label="自动解嵌套"
+        label={t('jsonTransform.autoUnwrap')}
         on={settings.autoUnwrap}
         onChange={(v) => patch({ autoUnwrap: v })}
       />
       <div style={rowStyle}>
-        <span>Unwrap 超时 (ms)</span>
+        <span>{t('jsonTransform.unwrapTimeoutMs')}</span>
         <input
           type="number"
           value={settings.unwrapTimeoutMs}
@@ -343,7 +348,7 @@ function GroupJsonTransform({ settings, patch }: GroupProps) {
         />
       </div>
       <Row
-        label="软换行（编辑器）"
+        label={t('jsonTransform.editorSoftWrap')}
         on={settings.editorSoftWrap}
         onChange={(v) => patch({ editorSoftWrap: v })}
       />

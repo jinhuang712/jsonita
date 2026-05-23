@@ -38,8 +38,8 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
 
 fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let toggle = MenuItem::with_id(app, "toggle", "Toggle Jsonita", true, None::<&str>)?;
-    // Settings 项 M2-N1 实化；M0 暂 disabled 留位（spec/07 § 1.1）
-    let settings = MenuItem::with_id(app, "settings", "Settings…", false, Some("CmdOrCtrl+,"))?;
+    // M2-N1 解锁：点击 → 显示浮窗 + emit tray:open-settings 让前端打开 Modal
+    let settings = MenuItem::with_id(app, "settings", "Settings…", true, Some("CmdOrCtrl+,"))?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Quit Jsonita", true, Some("CmdOrCtrl+Q"))?;
 
@@ -64,7 +64,9 @@ fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
             let _ = app.emit("tray:toggle", ());
         }
         "settings" => {
-            // M2-N1 起 emit open_settings_modal
+            // M2-N1: 先呼出浮窗（隐藏态时），再让前端打开 Settings Modal
+            let _ = crate::window::toggle_show_only(app);
+            let _ = app.emit("tray:open-settings", ());
         }
         "quit" => app.exit(0),
         _ => {}

@@ -7,5 +7,45 @@
     "history": "History",
     "jsonTransform": "JSON Transform",
     "about": "About"
+  },
+  "general": {
+    "language": "Language",
+    "theme": "Theme",
+    "launchAtLogin": "Launch at login",
+    "hideOnBlur": "Hide on blur",
+    "smartWidth": "Smart width",
+    "singlePaneMode": "Single-pane mode",
+    "autoPasteClipboard": "Auto-paste clipboard"
+  },
+  "ai": {
+    "enabled": "Enable AI Fix",
+    "modelId": "Model ID",
+    "apiKey": "DeepSeek API Key"
+  },
+  "history": {
+    "limit": "History limit"
+  },
+  "jsonTransform": {
+    "autoUnwrap": "Auto unwrap nested",
+    "unwrapTimeoutMs": "Unwrap timeout (ms)",
+    "editorSoftWrap": "Editor soft-wrap"
+  },
+  "shortcuts": {
+    "toggle": "Toggle window",
+    "restoreLast": "Restore last session",
+    "hint": "Click then press the combo. System-reserved combos (⌘Q / ⌘W / ⌘Tab …) are blocked by default; use [Override] to force-bind.",
+    "recordingPlaceholder": "Press keys…",
+    "noneBound": "(none)",
+    "bound": "Bound: {{accelerator}}",
+    "reserved": "{{accelerator}} is a system-reserved shortcut. Click [Override] to bind anyway.",
+    "conflictNoApp": "Conflict",
+    "conflictWithApp": "Conflict (in use by {{app}})",
+    "invalid": "Invalid: {{reason}}",
+    "overrideConfirm": "{{accelerator}} conflicts with a system shortcut. Bind anyway?",
+    "overrideButton": "Override"
+  },
+  "footer": {
+    "resetAll": "Reset all",
+    "done": "Done"
   }
 }

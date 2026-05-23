@@ -7,5 +7,45 @@
     "history": "历史",
     "jsonTransform": "JSON 变换",
     "about": "关于"
+  },
+  "general": {
+    "language": "语言",
+    "theme": "主题",
+    "launchAtLogin": "开机自启动",
+    "hideOnBlur": "失焦自动隐藏",
+    "smartWidth": "智能扩宽",
+    "singlePaneMode": "单窗模式",
+    "autoPasteClipboard": "自动粘贴剪贴板"
+  },
+  "ai": {
+    "enabled": "启用 AI Fix",
+    "modelId": "Model ID",
+    "apiKey": "DeepSeek API Key"
+  },
+  "history": {
+    "limit": "历史上限"
+  },
+  "jsonTransform": {
+    "autoUnwrap": "自动解嵌套",
+    "unwrapTimeoutMs": "Unwrap 超时 (ms)",
+    "editorSoftWrap": "编辑器软换行"
+  },
+  "shortcuts": {
+    "toggle": "呼出浮窗",
+    "restoreLast": "恢复上次会话",
+    "hint": "点输入框后按目标组合键。系统保留组合（⌘Q / ⌘W / ⌘Tab 等）默认阻塞；如需强制绑定走 [Override]。",
+    "recordingPlaceholder": "按下组合键…",
+    "noneBound": "（未绑定）",
+    "bound": "已绑定：{{accelerator}}",
+    "reserved": "{{accelerator}} 是系统保留键。点 [Override] 强制绑定。",
+    "conflictNoApp": "冲突",
+    "conflictWithApp": "冲突（已被 {{app}} 占用）",
+    "invalid": "非法：{{reason}}",
+    "overrideConfirm": "{{accelerator}} 与系统快捷键冲突，仍要绑定？",
+    "overrideButton": "Override"
+  },
+  "footer": {
+    "resetAll": "全部重置",
+    "done": "完成"
   }
 }
