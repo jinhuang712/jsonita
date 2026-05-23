@@ -384,31 +384,22 @@ a:hover { text-decoration: underline; }
 }
 
 /* ===== Section Divider（spec 大段标题：一·设计 / 二·机制 / 三·契约 / 四·数字 等） ===== */
+/* 视觉规则：divider 是大段分组（一级），H2 是小节（二级）。
+   阶梯：H1 doc-title 34 > divider 26 banner > H2 21 small > H3 17。
+   不加线，纯文字 + 大间距让分组自显。 */
 .section-divider {
-  margin: 56px 0 8px;
-  padding: 14px 0 14px 18px;
+  margin: 64px 0 24px;
+  padding: 0;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   color: var(--text-muted);
-  text-transform: uppercase;
-  border-top: 1px solid var(--border);
-  position: relative;
-}
-.section-divider::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  width: 64px;
-  height: 2px;
-  background: var(--primary);
 }
 .section-divider b {
-  font-size: 16px;
+  font-size: 26px;
   color: var(--text);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 
 /* ===== Tables ===== */
