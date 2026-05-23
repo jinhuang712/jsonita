@@ -32,6 +32,8 @@ export const json = {
 
 // ──────────── history ────────────
 
+import type { OpType } from '../types/enums';
+
 export const history = {
   list: (opts: ListOpts) => invoke<HistoryRow[]>('history_list', { opts }),
   search: (query: string, limit: number) =>
@@ -39,6 +41,8 @@ export const history = {
   pin: (id: number, pinned: boolean) => invoke<void>('history_pin', { id, pinned }),
   star: (id: number, starred: boolean) => invoke<void>('history_star', { id, starred }),
   clear: () => invoke<number>('history_clear'),
+  add: (content: string, opType: OpType) =>
+    invoke<HistoryRow>('history_add', { content, opType }),
 };
 
 // ──────────── session ────────────
@@ -88,10 +92,47 @@ export interface TestConnectionResp {
   modelEchoed: string;
 }
 
+export interface AiFixReq {
+  text: string;
+  errorLine?: number;
+  errorCol?: number;
+  errorMsg?: string;
+  requestId: string;
+}
+
+export interface AiFixResp {
+  fixed: string;
+  model: string;
+  tokensIn: number;
+  tokensOut: number;
+  elapsedMs: number;
+}
+
 export const ai = {
   setApiKey: (apiKey: string) => invoke<void>('ai_set_api_key', { apiKey }),
   deleteApiKey: () => invoke<void>('ai_delete_api_key'),
   testConnection: (apiKey: string, modelId: string) =>
     invoke<TestConnectionResp>('ai_test_connection', { apiKey, modelId }),
   hasApiKey: () => invoke<boolean>('ai_has_api_key'),
+  fix: (req: AiFixReq) => invoke<AiFixResp>('ai_fix', { req }),
+};
+
+// ──────────── shortcuts (M2-N5) ────────────
+
+export type ShortcutAction = 'toggle-window' | 'restore-last';
+
+export type ShortcutRegisterResp =
+  | { kind: 'ok' }
+  | { kind: 'conflict'; withApp?: string | null }
+  | { kind: 'reserved' }
+  | { kind: 'invalid-accelerator'; reason: string };
+
+export const shortcuts = {
+  register: (action: ShortcutAction, accelerator: string, forceOverride = false) =>
+    invoke<ShortcutRegisterResp>('shortcut_register', {
+      req: { action, accelerator, forceOverride },
+    }),
+  status: () => invoke<boolean>('shortcut_status'),
+  retry: () => invoke<boolean>('shortcut_retry'),
+  openAccessibilitySettings: () => invoke<void>('open_accessibility_settings'),
 };

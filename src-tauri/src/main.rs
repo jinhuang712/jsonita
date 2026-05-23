@@ -27,10 +27,11 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            // M0-N4 既有
+            // M0-N4 既有 + M2-N5 shortcut_register
             shortcuts::shortcut_status,
             shortcuts::shortcut_retry,
             shortcuts::open_accessibility_settings,
+            shortcuts::shortcut_register,
             // M1-N2: json_ops (real engine impl)
             cmds::json::json_format,
             cmds::json::json_minify,

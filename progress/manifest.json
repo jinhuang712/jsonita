@@ -476,7 +476,7 @@
         {
           "node": "M2-N5",
           "title": "自定义快捷键 + 冲突阻塞 + override 二次确认",
-          "status": "planned",
+          "status": "completed",
           "progress_file": "progress/03_m2_ai_settings.html#m2-n5-shortcuts",
           "task_file": null,
           "spec_refs": [

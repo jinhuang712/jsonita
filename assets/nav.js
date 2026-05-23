@@ -49,6 +49,92 @@ const SECTIONS = {
   }
 };
 
+/* ===== Doc TOC helpers ===== */
+
+function ensureHeadingIds() {
+  document.querySelectorAll('.doc-article h2, .doc-article h3').forEach(el => {
+    if (el.id) return;
+    const numEl = el.querySelector('.h2-num, .h3-num');
+    const num = numEl ? numEl.textContent.trim() : '';
+    const prefix = el.tagName === 'H2' ? 'h2' : 'h3';
+    if (num) {
+      el.id = `${prefix}-${num.replace(/\./g, '-')}`;
+    } else {
+      const text = el.textContent.trim().slice(0, 28).toLowerCase()
+        .replace(/[^a-z0-9一-鿿]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      el.id = `${prefix}-${text || Math.random().toString(36).slice(2, 7)}`;
+    }
+  });
+}
+
+function buildDocTOC() {
+  const headings = document.querySelectorAll('.doc-article h2[id], .doc-article h3[id]');
+  if (headings.length === 0) return '';
+  const items = Array.from(headings).map(h => {
+    const isH2 = h.tagName === 'H2';
+    const numEl = h.querySelector('.h2-num, .h3-num');
+    const num = numEl ? numEl.textContent.trim() : '';
+    const clone = h.cloneNode(true);
+    const n = clone.querySelector('.h2-num, .h3-num');
+    if (n) n.remove();
+    const title = clone.textContent.trim();
+    const cls = isH2 ? 'toc-h2' : 'toc-h3';
+    return `<li><a href="#${h.id}" class="${cls}" data-toc-target="${h.id}"><span class="toc-num">${num}</span><span>${title}</span></a></li>`;
+  }).join('');
+  return `<ul class="toc toc-doc">${items}</ul>`;
+}
+
+function setupScrollspy() {
+  const headings = Array.from(document.querySelectorAll('.doc-article h2[id], .doc-article h3[id]'));
+  if (headings.length === 0) return;
+  const tocLinks = new Map();
+  document.querySelectorAll('.toc-doc a[data-toc-target]').forEach(a => {
+    tocLinks.set(a.dataset.tocTarget, a);
+  });
+  if (tocLinks.size === 0) return;
+
+  let activeId = null;
+  const OFFSET = 130;
+
+  function updateActive() {
+    let current = null;
+    for (const h of headings) {
+      const top = h.getBoundingClientRect().top;
+      if (top <= OFFSET) current = h;
+      else break;
+    }
+    const id = current ? current.id : headings[0].id;
+    if (id === activeId) return;
+    if (activeId && tocLinks.has(activeId)) {
+      tocLinks.get(activeId).classList.remove('active');
+    }
+    activeId = id;
+    if (tocLinks.has(id)) {
+      const a = tocLinks.get(id);
+      a.classList.add('active');
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) {
+        const aRect = a.getBoundingClientRect();
+        const sRect = sidebar.getBoundingClientRect();
+        if (aRect.top < sRect.top + 60 || aRect.bottom > sRect.bottom - 60) {
+          a.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }
+  }
+
+  let raf = null;
+  function onScroll() {
+    if (raf) return;
+    raf = requestAnimationFrame(() => { updateActive(); raf = null; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  updateActive();
+}
+
+/* ===== Sidebar = 当前文档 TOC ===== */
+
 function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -56,22 +142,18 @@ function renderSidebar() {
   const currentChapter = document.body.dataset.chapter;
   const def = SECTIONS[section];
   if (!def) return;
+  const chapter = def.chapters.find(c => c.num === currentChapter);
 
-  const chapterList = def.chapters.map(c => `
-    <li>
-      <a href="${c.num}_${c.slug}.html" class="${c.num === currentChapter ? 'active' : ''}">
-        <span class="toc-num">${c.num}</span><span>${c.title}</span>
-      </a>
-    </li>
-  `).join('');
+  ensureHeadingIds();
+  const tocHtml = buildDocTOC() || '<div class="toc-empty">本页无章节标题</div>';
 
   sidebar.innerHTML = `
     <div class="sidebar-header">
       <a href="../index.html" class="sidebar-title">Jsonita</a>
-      <div class="sidebar-subtitle">${def.label}</div>
+      <div class="sidebar-subtitle">${chapter ? `${chapter.num} · ${chapter.title}` : def.label}</div>
     </div>
-    <div class="sidebar-section">章节</div>
-    <ul class="toc">${chapterList}</ul>
+    <div class="sidebar-section">目录</div>
+    ${tocHtml}
     <div class="sidebar-section">导航</div>
     <ul class="toc">
       <li><a href="../index.html"><span class="toc-num">↩</span><span>文档首页</span></a></li>
@@ -80,7 +162,11 @@ function renderSidebar() {
       <li><a href="../CHANGELIST.md"><span class="toc-num">md</span><span>CHANGELIST</span></a></li>
     </ul>
   `;
+
+  setupScrollspy();
 }
+
+/* ===== Topbar = breadcrumb 行 + 章节 strip 行 ===== */
 
 function renderTopbar() {
   const topbar = document.getElementById('topbar');
@@ -90,17 +176,35 @@ function renderTopbar() {
   const def = SECTIONS[section];
   if (!def) return;
   const chapter = def.chapters.find(c => c.num === currentChapter);
+
+  const stripHtml = def.chapters.map(c => `
+    <a href="${c.num}_${c.slug}.html" class="${c.num === currentChapter ? 'active' : ''}">
+      <span class="strip-num">${c.num}</span><span>${c.title}</span>
+    </a>
+  `).join('');
+
   topbar.innerHTML = `
-    <div class="topbar-crumb">
-      <a href="../index.html">Jsonita</a>
-      <span class="sep">/</span>
-      <a href="../index.html#${section}">${section}</a>
-      <span class="sep">/</span>
-      <span class="current">${chapter ? `${chapter.num} · ${chapter.title}` : ''}</span>
+    <div class="topbar-row row-breadcrumb">
+      <div class="topbar-crumb">
+        <a href="../index.html">Jsonita</a>
+        <span class="sep">/</span>
+        <a href="../index.html#${section}">${section}</a>
+        <span class="sep">/</span>
+        <span class="current">${chapter ? `${chapter.num} · ${chapter.title}` : ''}</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <a class="topbar-action" href="../index.html">↩ 文档首页</a>
     </div>
-    <div class="topbar-spacer"></div>
-    <a class="topbar-action" href="../index.html">↩ 文档首页</a>
+    <div class="topbar-row row-strip">
+      <nav class="chapter-strip">${stripHtml}</nav>
+    </div>
   `;
+
+  // 让当前 strip 项滚动可见
+  requestAnimationFrame(() => {
+    const active = topbar.querySelector('.chapter-strip a.active');
+    if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
+  });
 }
 
 function renderPagination() {
