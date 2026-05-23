@@ -27,7 +27,6 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         .icon_as_template(cfg!(target_os = "macos"))
         .tooltip("Jsonita")
         .menu(&menu)
-        .menu_on_left_click(false)
         .show_menu_on_left_click(false)
         .on_tray_icon_event(handle_tray_event)
         .on_menu_event(handle_menu_event)

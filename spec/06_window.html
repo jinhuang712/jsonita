@@ -132,8 +132,8 @@ graph TD
     Fallback --> Calc
     Calc --> SetPos[window.set_position]
 
-    classDef step fill:#EFF6FF,stroke:#057AF3
-    classDef cond fill:#FFF7ED,stroke:#FA9B10
+    classDef step fill:#F2F5FF,stroke:#245BDB
+    classDef cond fill:#F1F3F6,stroke:#3F4A5A
     class CP,UseN,Fallback,Calc,SetPos step
     class Check cond
     </div>
@@ -201,10 +201,10 @@ graph TD
     Quit --> SaveQ[最后一次<br/>session_save_last]
     SaveQ --> Exit[app.exit<br/>+ emit app:will_quit]
 
-    classDef src fill:#EFF6FF,stroke:#057AF3
-    classDef act fill:#FFF7ED,stroke:#FA9B10
-    classDef end1 fill:#ECFDF5,stroke:#06B78F
-    classDef end2 fill:#FEF2F2,stroke:#DC2626
+    classDef src fill:#F2F5FF,stroke:#245BDB
+    classDef act fill:#F1F3F6,stroke:#3F4A5A
+    classDef end1 fill:#F0F8F3,stroke:#237B4B
+    classDef end2 fill:#FFF1F0,stroke:#C92A2A
     class E,W,B,TL,TQ,Q src
     class CR,Blur,Intercept,Save,Fade,Quit,SaveQ,CheckBlur,NoOp act
     class Hide end1
@@ -288,9 +288,9 @@ graph TD
     L4 -->|是| Calc["needed = max_line_chars × 8 + 64<br/>ideal = clamp(needed, 720, min(1400, screen×70%))"]
     Calc --> Animate[animate set_size<br/>150 ms]
 
-    classDef cond fill:#FFF7ED,stroke:#FA9B10
-    classDef noop fill:#F5F5F7,stroke:#9CA3AF
-    classDef act  fill:#ECFDF5,stroke:#06B78F
+    classDef cond fill:#F1F3F6,stroke:#3F4A5A
+    classDef noop fill:#F4F5F7,stroke:#8F959E
+    classDef act  fill:#F0F8F3,stroke:#237B4B
     class L1,L2,L3,L4 cond
     class NoOp1,NoOp2,NoOp3,NoOp4 noop
     class Calc,Animate act

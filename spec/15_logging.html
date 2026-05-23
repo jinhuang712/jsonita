@@ -100,10 +100,10 @@ graph TD
     Q5 -->|是| R5[可记 · 元数据安全]
     Q5 -->|否| R6[默认拒绝<br/>新字段需 review]
 
-    classDef bad fill:#FEF2F2,stroke:#DC2626
-    classDef san fill:#FFF7ED,stroke:#FA9B10
-    classDef ok  fill:#ECFDF5,stroke:#06B78F
-    classDef cond fill:#EFF6FF,stroke:#057AF3
+    classDef bad fill:#FFF1F0,stroke:#C92A2A
+    classDef san fill:#F1F3F6,stroke:#3F4A5A
+    classDef ok  fill:#F0F8F3,stroke:#237B4B
+    classDef cond fill:#F2F5FF,stroke:#245BDB
     class N1 bad
     class R2,R3,R4 san
     class R5 ok
@@ -151,9 +151,9 @@ graph LR
     R2 -.console out<br/>开发模式.-> Term[终端 stdout]
     W2 -.console.*<br/>DevTools.-> DT[Chrome DevTools]
 
-    classDef rust fill:#FFF7ED,stroke:#FA9B10
-    classDef wv fill:#EFF6FF,stroke:#057AF3
-    classDef file fill:#F5F5F7,stroke:#9CA3AF
+    classDef rust fill:#F1F3F6,stroke:#3F4A5A
+    classDef wv fill:#F2F5FF,stroke:#245BDB
+    classDef file fill:#F4F5F7,stroke:#8F959E
     class R1,R2,R3,R4 rust
     class W1,W2,W3 wv
     class F,Term,DT file

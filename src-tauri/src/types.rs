@@ -51,6 +51,8 @@ pub enum RestoreWindow {
     Hour1,
 }
 
+/// spec/13 § 2 conformance；M2-N5 接快捷键用 String 而非 enum，留作 future。
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ShortcutAction {
@@ -67,6 +69,8 @@ pub enum InitialWidth {
     W1080,
 }
 
+/// spec/13 § 2 conformance；window:shown event payload 留 M3 polish 时 emit。
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ShowSource {
@@ -164,6 +168,8 @@ pub struct LastSession {
 
 // ──────────── § 3.5 窗口 / 系统 ────────────
 
+/// spec/13 § 3.5 window:shown event payload；M3 polish 时 emit 接 WindowEvent。
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowShown {
@@ -179,6 +185,9 @@ pub struct ClipboardSniff {
     pub looks_like_json: bool,
 }
 
+/// spec/13 § 3.5 ContentMetrics ── line_count + bytes 字段为 TS mirror 保留
+/// （前端计算后传过来；后端 4 层逻辑仅消费 max_line_chars + soft_wrap_on）。
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContentMetrics {

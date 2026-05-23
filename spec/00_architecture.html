@@ -84,9 +84,9 @@ graph TB
     STORE --> PANES
     STORE --> EDIT
 
-    classDef rust fill:#FFF7ED,stroke:#FA9B10,color:#7C2D12
-    classDef ts fill:#EFF6FF,stroke:#057AF3,color:#1E3A8A
-    classDef ext fill:#F5F5F7,stroke:#9CA3AF,color:#374151
+    classDef rust fill:#F1F3F6,stroke:#3F4A5A,color:#7C2D12
+    classDef ts fill:#F2F5FF,stroke:#245BDB,color:#1E3A8A
+    classDef ext fill:#F4F5F7,stroke:#8F959E,color:#374151
     class SYS,CMD,ENG,STR,AI rust
     class SHELL,PANES,EDIT,STORE,IPCC ts
     class SQL,KC,JSON,DS ext
@@ -289,9 +289,9 @@ graph LR
     S5 --> E5 --> U5
     S6 --> E6 --> U6
 
-    classDef src fill:#F5F5F7,stroke:#9CA3AF
-    classDef err fill:#FFF7ED,stroke:#FA9B10
-    classDef ui  fill:#EFF6FF,stroke:#057AF3
+    classDef src fill:#F4F5F7,stroke:#8F959E
+    classDef err fill:#F1F3F6,stroke:#3F4A5A
+    classDef ui  fill:#F2F5FF,stroke:#245BDB
     class S1,S2,S3,S4,S5,S6 src
     class E1,E2,E3,E4,E5,E6 err
     class U1,U2,U3,U4,U5,U6 ui
@@ -347,9 +347,9 @@ graph TD
     error -.- ai
     error -.- system
 
-    classDef coord fill:#FFF7ED,stroke:#FA9B10
-    classDef lib   fill:#EFF6FF,stroke:#057AF3
-    classDef err   fill:#FEF2F2,stroke:#DC2626
+    classDef coord fill:#F1F3F6,stroke:#3F4A5A
+    classDef lib   fill:#F2F5FF,stroke:#245BDB
+    classDef err   fill:#FFF1F0,stroke:#C92A2A
     class commands coord
     class engine,store,ai,system lib
     class error err
@@ -409,8 +409,8 @@ graph TD
     store --> ipc
     ipc --> types
 
-    classDef ui fill:#EFF6FF,stroke:#057AF3
-    classDef leaf fill:#F5F5F7,stroke:#9CA3AF
+    classDef ui fill:#F2F5FF,stroke:#245BDB
+    classDef leaf fill:#F4F5F7,stroke:#8F959E
     class App,shell,panes,editor,tree,settings,history ui
     class store,ipc,types leaf
     </div>

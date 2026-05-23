@@ -182,7 +182,7 @@ sequenceDiagram
     participant Rust as Rust ai_fix
     participant KC as Keychain
     participant DS as DeepSeek API
-    User->>React: click ✨ AI Fix
+    User->>React: click AI Fix
     React->>Store: startFix(text, errorLoc)
     Store-->>React: emit "ai:progress" Started
     React->>Rust: invoke ai_fix(req)
