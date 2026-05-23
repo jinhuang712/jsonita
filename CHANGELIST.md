@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+### chore · 删 agent 控制面文件（experiment 不付费）
+
+`1d24bae` 那次"agent control plane refactor"加了一套 SOP + 任务卡 + machine-readable manifest，想把 agent 实施流程做成数据驱动。实际跑 M0-M3 时这套<b>几乎没被引用</b>── 节奏靠 CLAUDE.md + `progress/0N_*.html` + TaskCreate 推就够了，反而维护成本（每完成一个节点要同步 manifest.json 的 status / 写 task 卡）变成负担。删。
+
+- `AGENT_RUNBOOK.md` (180 行) ── coding agent SOP
+- `AGENTS.md` (205 行) ── Codex-style agent rules（与 CLAUDE.md 大段重复）
+- `progress/manifest.json` (699 行) ── 33 节点 machine-readable 总表
+- `progress/tasks/M0-N1..N7_*.md` (7 文件 ~550 行) ── M0 任务卡（M1+ 本就没补，证明这套没生效）
+- `docs/traceability.md` (81 行) ── Feature ↔ Spec ↔ Progress ↔ Task ↔ Test ↔ Acceptance 矩阵
+- 同步：`README.md` 删 AGENT_RUNBOOK 一行 + manifest.json cat 命令；5 篇 `progress/0N_*.html` Verification Log intro 删 `AGENT_RUNBOOK § 7` 链接
+
+总：-9 文件 / -1700+ 行（含 manifest.json）。`progress/` 只剩 5 篇 phase html，回到 CLAUDE.md § 3.1 描述的状态。
+
 ### chore · 删 index.html 整个 README/TODO/CHANGELIST 标签页区块
 
 用户反馈"那你保留这个干嘛"── 上一轮删了 fetch 失败时的 CORS fallback 后，整个 md-tabs 也不必再保留。首页只留 Plan/Spec/Progress 三栏 + footer，README/TODO/CHANGELIST 直接看 .md 原文。
