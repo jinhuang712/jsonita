@@ -129,13 +129,13 @@ graph TB
 
     <div class="mermaid">
 stateDiagram-v2
-    [*] --> Bootstrapping: launchd / 用户首次启动
+    [*] --> Bootstrapping: launchd · 用户首次启动
     Bootstrapping --> Ready: tokio · SQLite · settings · tray · shortcuts · WebView prebuilt
-    Ready --> Visible: ⌘⇧J / tray click<br/>window.show()
-    Visible --> Ready: Esc / 失焦 / ⌘W<br/>window.hide() · 进程保留
-    Ready --> Quitting: ⌘Q / Tray Quit
+    Ready --> Visible: ⌘⇧J · tray click<br/>window.show
+    Visible --> Ready: Esc · 失焦 · ⌘W<br/>window.hide · 进程保留
+    Ready --> Quitting: ⌘Q · Tray Quit
     Visible --> Quitting: ⌘Q
-    Quitting --> [*]: emit app:will_quit<br/>最后一次 session_save_last
+    Quitting --> [*]: emit app·will_quit<br/>最后一次 session_save_last
 
     note right of Ready : Rust host + WebView 都活，但 WebView hidden（进程保留以加速呼出）
     note right of Visible : WebView visible，用户可交互
