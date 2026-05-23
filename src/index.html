@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jsonita</title>
+    <script>
+      // M3-N1 FOUC 防止：先于 React bundle 读 localStorage 设 data-theme
+      // spec/03 § 11.3
+      (function () {
+        try {
+          var t = localStorage.getItem('jsonita.theme.effective') || 'light';
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
     <style>
       /* M0-N3 NSPanel transparent 浮窗：body 透明 → React 自定 chrome */
       html, body { margin: 0; padding: 0; height: 100%; background: transparent; }

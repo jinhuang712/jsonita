@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+### M3 实施期 · 1.0.0 路线起手
+
+#### M3-N1 · 主题切换 + Empty State（done · minimal · pending-user-verification）
+
+- `src/theme/useEffectiveTheme.ts` ── 3 数据源 hook（spec/03 § 11）：settings.theme + matchMedia('(prefers-color-scheme: dark)') (system 时) + localStorage cache；apply 时 `document.documentElement.dataset.theme = eff` + localStorage 写入；matchMedia change 订阅 → settings 切换时自动 unsubscribe
+- `src/index.html` ── 7 行 inline FOUC 防止脚本（先于 React bundle 读 localStorage 设 data-theme）
+- `src/components/EmptyState.tsx` ── 复用组件（icon + title + hint）；M3 后续可挂入 HistoryModal / Settings 等
+- `src/shell/FloatingWindow.tsx` ── 接 useEffectiveTheme + 两个 Editor 传 theme={effective}（M3-N1 前硬编码 light）
+- `src/settings/SettingsModal.tsx` ── General 分组顶部加 Theme select（System / Light / Dark）
+
+`prefers-reduced-motion` 已在 M1-N3 tokens.css 写好（animation-duration:1ms!important）；spec/03 § 9.1 自动满足。
+
+Empty State 6 处 spec/01 § 9：组件就位；M3 polish 时挂入 HistoryModal 空列表 / 无 API key 等场景（当前 PanelShell 空 / AI loading 已有内联 placeholder）。
+
 ### UI infra · 文档导航重构（done · pending-user-verification）
 
 #### nav 重构：顶部章节 strip + 左侧文档 TOC（H2/H3）+ scrollspy

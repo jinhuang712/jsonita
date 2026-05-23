@@ -81,10 +81,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 M3-A1 / A2 / A3</td></tr>
-        <tr><td>commit / tag</td><td>(实施时填)</td></tr>
+        <tr><td>status</td><td><code>done · minimal · pending-user-verification</code></td></tr>
+        <tr><td>write scope</td><td><code>src/theme/useEffectiveTheme.ts</code>（3 数据源：settings.theme + matchMedia + localStorage；dataset.theme 同步）；<code>src/index.html</code> inline script 7 行 FOUC 防止；<code>src/components/EmptyState.tsx</code> 复用组件；<code>src/shell/FloatingWindow.tsx</code> 接 useEffectiveTheme → 两个 Editor 传 theme={effective}；<code>src/settings/SettingsModal.tsx</code> General 加 Theme select (System/Light/Dark)。spec/03 § 11 主题切换流程对齐；prefers-reduced-motion 已在 M1-N3 tokens.css 设</td></tr>
+        <tr><td>verification</td><td>agent 端：3 数据源 + dataset.theme + matchMedia event ✓；<b>待用户跑</b>：Settings → General → 主题 切 Dark → CSS vars 切深色 (浮窗 + Editor + StatusBar)；切 Light 切回；切 System 跟随 macOS 系统外观切换；EmptyState 复用组件就位（M3 polish 时挂入 HistoryModal 等）</td></tr>
+        <tr><td>commit / tag</td><td><code>feat(m3-n1): theme switching (3-source) + FOUC inline + EmptyState component</code></td></tr>
         <tr><td>blocked_by</td><td>M2 全部 exit-criteria</td></tr>
         <tr><td>关键交付物</td><td>主题切换走 03 design tokens 3 数据源（settings.theme / OS prefers-color-scheme / system event）；FOUC 避免：inline script 在 body 之前判断初始 theme；<code>prefers-reduced-motion</code> 检测 → 动效时长 token 改 ≤ 1 ms；Empty State 6 处真实组件（含图标 + 文案 + CTA）</td></tr>
         <tr><td>对接 spec</td><td><a href="../spec/03_design_tokens.html">03 § 4 主题切换 graph TB / § 8 动效</a> · <a href="../spec/01_mockups.html">01 § 9 Empty States</a></td></tr>
