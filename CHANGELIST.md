@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+### Style 修复 · section-divider 提升为大段标题（用户反馈"divider 令人疑惑"）
+
+- `assets/style.css` `.section-divider` ── 删 `border-top` 灰线 + `::before` 蓝色短线装饰；padding 14px 18px → 0；margin 56/8 → 64/24（上下空白拉开）；letter-spacing 0.18 → 0.16em
+- `assets/style.css` `.section-divider b` ── 字号 16px → <b>26px</b>；letter-spacing 0.08 → 0.04em（大字不需要那么宽字距）
+- 新阶梯：H1 doc-title 34px > <b>divider 26px banner</b> > H2 21px 小节 > H3 17px 子节
+- 修复用户反馈：之前 divider b 16px <b>小于</b> H2 21px ── "一级分组比二级小节字号还小"，加上灰线 + 短蓝线装饰让用户读成"装饰横条"而非"分组标题"；本次去装饰 + 提字号让分组语义自显（CSS 顶部注释写下视觉规则避免下次再退回小字号）
+
+提交：`7cb9022 style(css): section-divider 提升为 26px 净文字大标题（去装饰线）`
+
+待用户验证：浏览器开任一 spec 章（如 00 系统架构 / 02 IPC），看"一 · 设计" / "二 · 机制" / "三 · 契约" / "四 · 数字" 四段 banner 视觉是否清晰、与 H2 阶梯顺。
+
 ### M3 实施期 · 1.0.0 路线起手
 
 #### M3-N1 · 主题切换 + Empty State（done · minimal · pending-user-verification）
