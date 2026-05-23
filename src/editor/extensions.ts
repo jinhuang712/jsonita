@@ -24,7 +24,7 @@ import {
   lineNumbers,
   placeholder,
 } from '@codemirror/view';
-import { indentationMarkers } from '@uiw/codemirror-extensions-indentation-markers';
+import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 
 import { jsonitaJsonHighlight } from './highlight';
 import { jsonitaDarkTheme, jsonitaLightTheme } from './theme';
@@ -48,7 +48,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     history(),
     drawSelection(),
     highlightSelectionMatches(),
-    indentationMarkers({ thickness: 1, hideFirstIndent: true }),
+    indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),
     EditorState.allowMultipleSelections.of(true),
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),
