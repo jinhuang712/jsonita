@@ -3,17 +3,31 @@
 //! M2-N3 minimal：fix() 主流程 + 状态码分支 + extract+二次验证；
 //! 心跳进度推送 / 重试 / 复杂错误透传留 M2-N4 polish。
 
+use std::error::Error as StdError;
 use std::time::Duration;
 
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+
+/// reqwest 错误链展开 ── 否则 `e.to_string()` 只拿顶层 "error sending request for url (...)"，
+/// 丢了真正根因（connect refused / dns / tls / proxy unreachable 等）。
+fn err_chain(e: &reqwest::Error) -> String {
+    let mut s = e.to_string();
+    let mut src: Option<&dyn StdError> = e.source();
+    while let Some(inner) = src {
+        s.push_str(" → ");
+        s.push_str(&inner.to_string());
+        src = inner.source();
+    }
+    s
+}
 
 use crate::ai::{prompt, validate};
 use crate::error::JsonitaError;
 use crate::store::{keychain, SettingsStore};
 use crate::types::Settings;
 
-const ENDPOINT: &str = "https://api.deepseek.com/v1/chat/completions";
+const ENDPOINT: &str = "https://api.deepseek.com/chat/completions";
 const TIMEOUT_SEC: u64 = 60;
 const DEEPSEEK_ACCOUNT: &str = "deepseek_api_key";
 
@@ -88,7 +102,7 @@ struct Usage {
 
 pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, JsonitaError> {
     if !settings.ai_enabled {
-        return Err(JsonitaError::Io("ai disabled".into()));
+        return Err(JsonitaError::AiDisabled);
     }
     let key = keychain::get(DEEPSEEK_ACCOUNT)?
         .ok_or_else(|| JsonitaError::Keychain("no api key".into()))?;
@@ -129,7 +143,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         .build()
         .map_err(|e| JsonitaError::Http {
             status: 0,
-            body: e.to_string(),
+            body: err_chain(&e),
         })?;
 
     let resp = client
@@ -140,7 +154,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         .await
         .map_err(|e| JsonitaError::Http {
             status: 0,
-            body: e.to_string(),
+            body: err_chain(&e),
         })?;
 
     let status = resp.status();

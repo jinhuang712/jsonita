@@ -19,7 +19,6 @@
   },
   "ai": {
     "enabled": "Enable AI Fix",
-    "modelId": "Model ID",
     "apiKey": "DeepSeek API Key"
   },
   "history": {

@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+### fix · AI Fix 按钮永远 disabled + Settings 各种用户反馈
+
+用户多轮反馈：
+
+1. **Model ID 输入框不需要** ── DeepSeek 现在主推 v4 系列，UI 让用户填 model 名字反而误导。删 Settings → AI 的 Model ID 文本输入；字段仍在 Settings struct 里（ApiKeyInput 拿它做 keychain account name），只是 UI 不展示
+2. **`× Io` 是啥意思** ── AI 关时点 AI Fix，UI 只显示 enum 变体名 `Io`（因为 `setError(e.kind)` 把 data 吃掉了）。
+   - Rust: 加 `JsonitaError::AiDisabled` 专用 variant；`deepseek.rs` 用它替换之前误用的 `Io("ai disabled")`
+   - UI: AiFixPane 给 `AiDisabled` 友好文案"AI Fix is disabled. Enable it in Settings → AI."；`Io` / `Sqlite` fallback 也至少显示 `kind: data` 不再裸 enum 名
+3. **AI 没开启右上 AI Fix 按钮应该 disabled + hover tooltip** ── 之前按钮永远可点，点了才报错。改：`TabBar.tsx` 读 `settings.aiEnabled`，false 时 `opacity: 0.45 + cursor: not-allowed + title` tooltip + onClick no-op + `aria-disabled`；i18n key `tab.aiFixDisabledTooltip`
+4. **看来是用错 url 了 / API docs 看一下** ── DeepSeek 官方 doc (api-docs.deepseek.com) 现在权威是 `https://api.deepseek.com/chat/completions`（无 `/v1`）。改 `ENDPOINT`。两个路径其实都 401，但用 canonical 的稳
+5. **reqwest 真错被 `e.to_string()` 吞了** ── `error sending request for url (...)` 看不到根因（实际是 `HTTP_PROXY=127.0.0.1:59527` 不监听但 reqwest 走了它）。加 `err_chain()` 顺着 `e.source()` 拼全链给 UI
+6. **"我已经开启 AI Fix 为什么还 disabled"** ── 真 bug。Settings store 只在 Modal 打开时拉 `settings_get_all`，启动期不拉。所以 app 重启后 store 回到 `DEFAULT_SETTINGS`（`aiEnabled: false`），TabBar 一直读默认值。修：`App.tsx` mount 时立刻 `settingsApi.getAll().then(setSettings)`，让 store 跟磁盘同步
+
+11 文件 / +47 / -20 行。
+
 ### chore · 删 agent 控制面文件（experiment 不付费）
 
 `1d24bae` 那次"agent control plane refactor"加了一套 SOP + 任务卡 + machine-readable manifest，想把 agent 实施流程做成数据驱动。实际跑 M0-M3 时这套<b>几乎没被引用</b>── 节奏靠 CLAUDE.md + `progress/0N_*.html` + TaskCreate 推就够了，反而维护成本（每完成一个节点要同步 manifest.json 的 status / 写 task 卡）变成负担。删。

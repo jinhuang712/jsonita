@@ -34,6 +34,9 @@ pub enum JsonitaError {
 
     #[error("IO: {0}")]
     Io(String),
+
+    #[error("AI Fix is disabled in Settings")]
+    AiDisabled,
 }
 
 // 常用 From impls；其他 (rusqlite / reqwest / keyring) 在引入对应 crate 时加。
