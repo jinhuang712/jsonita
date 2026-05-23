@@ -1,4 +1,4 @@
-//! AI 分组 ── DeepSeek HTTP（M2-N3 完整化）+ Keychain（M2-N2）。
+//! AI 分组 ── DeepSeek HTTP + 本地 secrets.json 存 key（之前的 Keychain 已替）。
 //!
 //! Spec ref: spec/02 § 2.5 · spec/11 AI 客户端
 
@@ -6,18 +6,18 @@ use tauri::State;
 
 use crate::ai::deepseek;
 use crate::error::JsonitaError;
-use crate::store::{keychain, SettingsStore};
+use crate::store::{secrets, SettingsStore};
 
 const DEEPSEEK_ACCOUNT: &str = "deepseek_api_key";
 
 #[tauri::command]
 pub async fn ai_set_api_key(api_key: String) -> Result<(), JsonitaError> {
-    keychain::set(DEEPSEEK_ACCOUNT, &api_key)
+    secrets::set(DEEPSEEK_ACCOUNT, &api_key)
 }
 
 #[tauri::command]
 pub async fn ai_delete_api_key() -> Result<(), JsonitaError> {
-    keychain::delete(DEEPSEEK_ACCOUNT)
+    secrets::delete(DEEPSEEK_ACCOUNT)
 }
 
 /// 测试当前输入 key（不读 Keychain；用户先测再保存避免污染已有 key）
@@ -60,7 +60,7 @@ pub struct TestConnectionResp {
 /// 前端查 key 是否已存（不返回 value）── settings AI 分组初次渲染调。
 #[tauri::command]
 pub fn ai_has_api_key() -> bool {
-    keychain::get(DEEPSEEK_ACCOUNT)
+    secrets::get(DEEPSEEK_ACCOUNT)
         .ok()
         .flatten()
         .is_some()

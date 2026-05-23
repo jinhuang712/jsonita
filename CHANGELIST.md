@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+### refactor · Keychain → 本地 secrets.json（用户反馈"太麻烦"）
+
+每次 dev rebuild macOS 都把 binary 当新身份，弹"jsonita wants to use confidential information in com.jsonita.app keychain"密码框。生产环境签了名也会首次弹一次。用户反馈"太麻烦，删了改本地保存"。换法：
+
+- 新建 `src-tauri/src/store/secrets.rs` ── file-backed { account → value }，路径 `~/Library/Application Support/Jsonita/secrets.json`，进程内 `OnceLock<Mutex<HashMap>>` 缓存，写文件 chmod 600
+- 删 `src-tauri/src/store/keychain.rs`
+- `store/mod.rs` `pub mod keychain` → `pub mod secrets`
+- `cmds/ai.rs` + `ai/deepseek.rs` ── 5 处 `keychain::` 调用 → `secrets::`，API 完全等价
+- `Cargo.toml` ── 删 `security-framework = "3"` 依赖
+- `README.md` 卸载 ── 删 `security delete-generic-password` 行（前面 `rm -rf ~/Library/Application Support/Jsonita` 已经把 secrets.json 一起带走）
+- 错误 variant `JsonitaError::Keychain` 名字保留不动（少改动；意义上是"secrets 存取出错"）
+
+安全权衡：相比 Keychain 失去 OS 加密；换来**无弹窗、无 codesign 依赖、dev rebuild 不丢 key**。对个人本地工具足够（数据目录已 per-user 隔离 0700）。
+
+7 文件 / +75 / -65 行。
+
 ### fix · AI Fix 按钮永远 disabled + Settings 各种用户反馈
 
 用户多轮反馈：
