@@ -24,7 +24,7 @@ fn err_chain(e: &reqwest::Error) -> String {
 
 use crate::ai::{prompt, validate};
 use crate::error::JsonitaError;
-use crate::store::{keychain, SettingsStore};
+use crate::store::{secrets, SettingsStore};
 use crate::types::Settings;
 
 const ENDPOINT: &str = "https://api.deepseek.com/chat/completions";
@@ -104,7 +104,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
     if !settings.ai_enabled {
         return Err(JsonitaError::AiDisabled);
     }
-    let key = keychain::get(DEEPSEEK_ACCOUNT)?
+    let key = secrets::get(DEEPSEEK_ACCOUNT)?
         .ok_or_else(|| JsonitaError::Keychain("no api key".into()))?;
 
     let started = std::time::Instant::now();

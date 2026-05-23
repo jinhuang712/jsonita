@@ -95,7 +95,7 @@ pnpm tauri build --target universal-apple-darwin  # 生产 dmg（未签名）
 rm -rf /Applications/Jsonita.app
 rm -rf ~/Library/Application\ Support/Jsonita    # 历史 + 设置 + window.json
 rm -rf ~/Library/Logs/Jsonita                    # 日志
-security delete-generic-password -s "com.jsonita.app" -a "deepseek_api_key" 2>/dev/null  # API key
+# API key 与 settings 一起在 Application Support/Jsonita 已被上一行删掉（secrets.json）
 ```
 
 ## License
