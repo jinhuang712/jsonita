@@ -166,10 +166,10 @@
     <table>
       <thead><tr><th>项</th><th>内容</th></tr></thead>
       <tbody>
-        <tr><td>status</td><td><code>planned</code></td></tr>
-        <tr><td>write scope</td><td>(M3 实施时填)</td></tr>
-        <tr><td>verification</td><td>对应 E12 / E13</td></tr>
-        <tr><td>commit / tag</td><td>(完成时打 <code>git tag 1.0.0</code>)</td></tr>
+        <tr><td>status</td><td><code>done · agent-side (README 重写) · screenshot/GIF + GitHub Release 留用户</code></td></tr>
+        <tr><td>write scope</td><td><code>README.md</code> 重写：1 段 tagline + 9 功能表 + 系统需求 + 安装（brew / dmg / 源码） + 基本使用 7 步 + 项目文档链接 + 5 阶段进度表 + 卸载脚本 + MIT License</td></tr>
+        <tr><td>verification</td><td>agent 端：README 重写齐 ✓；<b>用户待跑</b>：录 3 段 GIF（kap / licecap）插入；跑全 M0/M1/M2/M3 验收 → `git tag 1.0.0` → `gh release create v1.0.0` 上 GitHub Releases + 附 dmg artifact</td></tr>
+        <tr><td>commit / tag</td><td><code>docs(m3-n6): rewrite README + install / features / progress / uninstall</code></td></tr>
         <tr><td>blocked_by</td><td><code>m3-n3-a11y</code>, <code>m3-n4-macos-versions</code></td></tr>
         <tr><td>关键交付物</td><td>README.md 重写：1 段产品介绍 + Screenshot (light / dark 各一) + 3 段演示 GIF（呼出 / 格式化 / AI Fix）+ Install 区（dmg 下载链接，v1.1+ 加 brew）+ License + Build from source；GitHub Releases <code>v1.0.0</code> 发布；release notes 从 CHANGELIST 截取</td></tr>
         <tr><td>对接 spec</td><td>无（README 是仓库根，不在 spec 内）</td></tr>

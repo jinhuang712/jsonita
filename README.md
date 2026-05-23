@@ -1,73 +1,106 @@
 # Jsonita
 
-一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。
+**Tiny menu-bar JSON toolkit for macOS — paste, format, fix, copy. ⌘⇧J.**
 
-> **Status**: Implementation Phase · M0 active (next: M0-N1 工程脚手架)
-> **Stack**: Tauri 2.x · React 18 · TypeScript · Rust · CodeMirror 6 · SQLite
+一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集 · 浮窗 P95 < 500 ms · 内存稳态 < 80 MB · 隐私零上传。
 
-核心能力：JSON 格式化 · 树状视图 · String 互转 · 嵌套 stringified 解开 · AI Auto Fix · 历史记录 · 会话保留 · 自定义快捷键
+> 截图与演示 GIF 待 v1.0 发布前 (M3-N6) 录入；当前请直接 `pnpm tauri dev` 起本地实例预览。
 
-完整的设计约束（产品边界）见 [`plan/00_overview.html`](plan/00_overview.html) C 章节；具体性能指标见 [`plan/04_nfr.html`](plan/04_nfr.html)。
+---
 
-## 项目结构
+## 功能（v1.0 范围）
 
-```
-jsonita/
-├─ index.html                # 📍 文档导航入口（用浏览器打开此文件）
-├─ README.md                 # 本文件
-├─ TODO.md                   # 阶段性 TODO
-├─ CHANGELIST.md             # 变更历史
-├─ AGENT_RUNBOOK.md          # coding agent 执行 SOP
-├─ AGENTS.md / CLAUDE.md     # Codex / Claude 项目硬约束
-│
-├─ assets/                   # 文档共享资源
-│  ├─ style.css              # 共享样式
-│  └─ nav.js                 # 共享导航
-│
-├─ plan/                     # ✓ 产品设计（5 篇）
-├─ spec/                     # ✓ 技术设计（16 篇，见 index.html Spec 列）
-├─ progress/                 # ✓ 实施进度
-│  ├─ 01_m0_skeleton.html    M0 (active)
-│  ├─ 02_m1_core_json.html   M1 (planned)
-│  ├─ 03_m2_ai_settings.html M2 (planned)
-│  ├─ 04_m3_polish_cross.html M3 (planned)
-│  ├─ 05_v11_distribution.html D / v1.1+ (planned)
-│  ├─ tasks/                 实施期任务卡（每节点一张）
-│  └─ manifest.json          机器可读节点状态总表
-│
-├─ docs/                     # 项目侧文档
-│  └─ traceability.md        Feature ↔ Spec ↔ Progress 矩阵
-│
-├─ scripts/                  # 文档工具
-│  └─ verify_doc_links.mjs   本地链接 + 锚点校验
-│
-├─ src/                      # React 前端（M0-N1 起新增）
-└─ src-tauri/                # Rust 后端（M0-N1 起新增）
-```
+| 功能 | 说明 |
+|---|---|
+| **JSON 格式化** | 缩进 2 / 4 / Tab · sort keys · trailing newline 可配 |
+| **Minify** | 单行压缩 |
+| **Tree 视图** | JSON 树展开折叠 · 类型染色 |
+| **String ↔ JSON 互转** | 4 层嵌套转义往返一致 |
+| **嵌套 stringified 解开** | Golang proto 多层 wrap 一键展开（200 ms 全局超时兜底） |
+| **AI Auto-Fix** | 粘非法 JSON → ✨ AI Fix tab → DiffView → Accept（DeepSeek，需用户自带 API key） |
+| **历史记录** | SQLite FTS5 · 自动去重 · pin / star · 100 条上限 |
+| **会话保留** | 关闭浮窗 5 分钟内自动恢复 · `⌘⇧L` 手动找回 · `⌘K` 清空 |
+| **自定义快捷键** | 默认 `⌘⇧J` 呼出 / `⌘⇧L` 恢复；可改 + 冲突检测 + override 二次确认 |
+| **智能宽度** | 粘长行自动扩宽（4 层逻辑：手动拖锁定 / soft-wrap 跳过 / smartWidth 开关 / max-chars 阈值） |
+| **i18n** | English / 简体中文 |
+| **隐私** | 所有用户数据本地（SQLite + Keychain）· 仅 DeepSeek API key 加密存系统 Keychain · 日志不记 JSON 内容 |
 
-## 如何阅读
+## 系统需求
+
+- macOS 11 Big Sur 及以上
+- arm64 (Apple Silicon) 或 x86_64 (Intel)
+- 安装体积 < 15 MB（dmg）· 内存稳态 < 80 MB
+
+## 安装
+
+### v1.0 发布后（待 M2-N6 签名 + M3-N6 release 完成）
 
 ```bash
-open index.html
+# Homebrew Cask（v1.1 起，待 D-N1）
+brew tap jinhuang712/jsonita && brew install --cask jsonita
+
+# 直装 dmg（v1.0 起）
+# 从 https://github.com/jinhuang712/jsonita/releases/latest 下载 .dmg
 ```
 
-## 当前进度
+### 当前（开发期）── 从源码构建
 
-- [x] 项目命名 & 查重
-- [x] 项目骨架 & git init
-- [x] 根 `index.html` 文档导航
-- [x] `plan/00-04_*.html` 5 篇产品设计（聚焦产品边界）
-- [x] `spec/00-15_*.html` 16 篇技术设计
-- [x] `progress/01-05_*.html` 5 篇实施路线 + agent 控制面（tasks / manifest / runbook / traceability / 链接校验脚本）
-- [ ] **当前 active**：M0 Skeleton —— 等用户起手 `pnpm create tauri-app`（M0-N1 工程脚手架）
+要求：Rust ≥ 1.77 · Node ≥ 20 · pnpm ≥ 9 · Xcode CLT。
 
-## 给后续 agent / 协作者
+```bash
+git clone https://github.com/jinhuang712/jsonita.git
+cd jsonita
+pnpm install                              # 装前端依赖
+cargo check --manifest-path src-tauri/Cargo.toml  # 装 Rust 依赖 + 生成 lockfile
+pnpm tauri dev                            # dev mode 启动（首次 ~5 min 编译）
+# 或：
+pnpm tauri build --target universal-apple-darwin  # 生产 dmg（未签名）
+```
 
-- 实施期 SOP：先读 [`AGENT_RUNBOOK.md`](AGENT_RUNBOOK.md) 再动手
-- 当前 active phase / 节点状态：[`progress/manifest.json`](progress/manifest.json)
-- 节点任务卡：`progress/tasks/M0-N*.md`
-- 改文档后跑：`node scripts/verify_doc_links.mjs`（应 0 broken link）
+首次启动 macOS 会问 Accessibility 权限（全局快捷键需要）── 浮窗内 Modal 引导跳系统设置。授权后无需重启即生效。
+
+## 基本使用
+
+1. 装入 `/Applications/Jsonita.app`，启动。Dock 不出图标，菜单栏右上出现单色 `J` 图标
+2. 任何前台 App 下按 `⌘⇧J` → 浮窗居中弹出（不抢焦点）
+3. 粘 JSON → 右侧 300 ms 内出现格式化输出 · StatusBar `● Valid JSON`
+4. 切 Tab：Format / Minify / Tree / →Str / →JSON
+5. 粘<b>非法</b> JSON → AI Fix tab 出现 → 点击触发 DeepSeek 修复 → DiffView → Accept
+6. `⌘K` 清空 / `⌘⇧L` 恢复 / `Esc` / `⌘W` 关闭
+7. `⚙` 打开 Settings → 改语言、主题、快捷键、AI key
+
+## 项目文档
+
+| 路径 | 内容 |
+|---|---|
+| [`index.html`](index.html) | 📍 文档导航入口（用浏览器打开） |
+| [`plan/`](plan/) | 5 篇产品设计：产品边界 / 功能 / 交互 / 技术栈 / NFR |
+| [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块 ... |
+| [`progress/`](progress/) | 5 篇实施进度（M0 / M1 / M2 / M3 / v1.1+）+ tasks + manifest |
+| [`AGENT_RUNBOOK.md`](AGENT_RUNBOOK.md) | coding agent 实施期 SOP |
+| [`CHANGELIST.md`](CHANGELIST.md) | 变更历史（按 Phase 顺序） |
+
+## 当前进度（agent 实施）
+
+| Phase | 节点 | 状态 |
+|---|---|---|
+| M0 Skeleton | 7/7 | ✅ agent-side 完成（待用户验收 M0-A1..A13） |
+| M1 Core JSON | 9/9 | ✅ agent-side 完成（待用户验收 M1-A1..A22） |
+| M2 AI + Settings | 5/6 | ✅ N1..N5 完成 · N6 macOS 签名 (需 Apple Developer 证书) 留用户 |
+| M3 Polish | 3/6 | ✅ N1..N3 完成 · N4 多版本回归 / N5 Windows / N6 release 留用户 |
+| v1.1+ Distribution | 0/5 | 全 user-only ops（brew / npm / updater / Win EV / 日志导出） |
+
+跑 `cat progress/manifest.json | python3 -c "import sys,json; m=json.load(sys.stdin); print(m['active_phase'])"` 看 agent 当前判定的 active phase。
+
+## 卸载
+
+```bash
+rm -rf /Applications/Jsonita.app
+rm -rf ~/Library/Application\ Support/Jsonita    # 历史 + 设置 + window.json
+rm -rf ~/Library/Logs/Jsonita                    # 日志
+security delete-generic-password -s "com.jsonita.app" -a "deepseek_api_key" 2>/dev/null  # API key
+```
 
 ## License
 
-待定（计划：MIT 或 Apache-2.0）
+MIT

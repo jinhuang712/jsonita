@@ -6,6 +6,24 @@
 
 ## [Unreleased]
 
+### M3 实施期 · 1.0.0 路线起手
+
+#### M3-N6 · README 重写（done · agent-side；screenshot/GIF + release 留用户）
+
+- `README.md` 全文重写：1 段 tagline + 9 行功能表 + 系统需求 + 安装（brew/dmg/源码 3 渠道） + 基本使用 7 步 + 文档链接表 + 当前进度表（5 Phase × 节点） + 卸载脚本（4 行清 app + 数据 + 日志 + Keychain） + MIT License
+- `progress/manifest.json` M3-N3 + M3-N6 status: completed
+- `progress/04_m3_polish_cross.html` M3-N6 status: done · agent-side
+
+留用户：录 3 段演示 GIF（kap / licecap，每段 ≤ 5s ≤ 500KB）+ 截图 light/dark 各 1 张 + 跑 M0/M1/M2/M3 全验收 → `git tag 1.0.0` → `gh release create v1.0.0`。
+
+#### fix(spec/00) · § 2.1 mermaid stateDiagram syntax
+
+label 内裸用 `:` `/` `()` 导致 mermaid 11.4 解析失败（用户截图 "Syntax error in text"）。按 `mermaid-safe-syntax` memory：
+
+- `app:will_quit` → `app·will_quit`
+- `⌘⇧J / tray click` → `⌘⇧J · tray click`（5 处 / 替换）
+- `window.show()` → `window.show` / `window.hide()` → `window.hide`
+
 ### Style 修复 · section-divider 提升为大段标题（用户反馈"divider 令人疑惑"）
 
 - `assets/style.css` `.section-divider` ── 删 `border-top` 灰线 + `::before` 蓝色短线装饰；padding 14px 18px → 0；margin 56/8 → 64/24（上下空白拉开）；letter-spacing 0.18 → 0.16em
