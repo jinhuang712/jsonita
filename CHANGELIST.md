@@ -6,12 +6,14 @@
 
 ## [Unreleased]
 
-### chore · 删 index.html `file://` fallback 框
+### chore · 删 index.html 整个 README/TODO/CHANGELIST 标签页区块
 
-`index.html` 之前在 fetch README/TODO/CHANGELIST 失败时渲染一个解释 CORS + 提示起 `python3 -m http.server` 的 fallback 框（用户反馈"不需要"）。
+用户反馈"那你保留这个干嘛"── 上一轮删了 fetch 失败时的 CORS fallback 后，整个 md-tabs 也不必再保留。首页只留 Plan/Spec/Progress 三栏 + footer，README/TODO/CHANGELIST 直接看 .md 原文。
 
-- `index.html` ── 删 `renderFallback` 函数 + catch 改为 `console.warn` 静默
-- `assets/style.css` ── 删 `.md-fallback` 全套样式（21 行）
+- `index.html` ── 删 `.md-tabs` + `.md-panes` + fetch 脚本 + `<script src="marked.min.js">` 引入；从 69 → 84 行删到 33 → 已写完整页
+- `assets/style.css` ── 删 `.md-tabs` / `.md-tab` / `.md-pane` 全套样式（~135 行）
+- `assets/style.css` ── 之前先删的 `.md-fallback`（21 行）合并到这一节描述
+- `CLAUDE.md` § 1.3 / § 5.3 同步：删"README/TODO/CHANGELIST 由 index.html 运行时 fetch 加载"的描述
 
 ### fix · tray Settings 灰色 + Edit-race 漏写补齐（用户反馈"settings 打不开"）
 

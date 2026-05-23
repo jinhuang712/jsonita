@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jsonita · 项目文档</title>
 <link rel="stylesheet" href="assets/style.css">
-<script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
 </head>
 <body class="is-index">
 
@@ -77,72 +76,9 @@
 
   </div>
 
-  <div class="md-tabs" role="tablist">
-    <button class="md-tab active" data-target="pane-readme" role="tab">README</button>
-    <button class="md-tab" data-target="pane-todo" role="tab">TODO</button>
-    <button class="md-tab" data-target="pane-changelist" role="tab">CHANGELIST</button>
-  </div>
-  <div class="md-panes">
-    <article id="pane-readme" class="md-pane active"></article>
-    <article id="pane-todo" class="md-pane"></article>
-    <article id="pane-changelist" class="md-pane"></article>
-  </div>
-
-
   <footer class="doc-footer">Jsonita · documentation index</footer>
 
 </div>
-
-<script>
-(function() {
-  // Sources: 直接 fetch .md 文件 ── 单源，无内嵌副本
-  const SOURCES = [
-    { file: 'README.md',     paneId: 'pane-readme' },
-    { file: 'TODO.md',       paneId: 'pane-todo' },
-    { file: 'CHANGELIST.md', paneId: 'pane-changelist' }
-  ];
-
-  function renderMarkdown(pane, md) {
-    const hasMarked = typeof window.marked !== 'undefined' && typeof window.marked.parse === 'function';
-    if (hasMarked) {
-      if (window.marked.setOptions) window.marked.setOptions({ gfm: true, breaks: false });
-      pane.innerHTML = window.marked.parse(md);
-    } else {
-      const escaped = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      pane.innerHTML = '<pre style="white-space: pre-wrap; font-size: 12.5px; padding: 16px; background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-lg);">' + escaped + '</pre>';
-    }
-  }
-
-  function renderAll() {
-    SOURCES.forEach(function(src) {
-      const pane = document.getElementById(src.paneId);
-      if (!pane) return;
-      fetch('./' + src.file)
-        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-        .then(function(md) { renderMarkdown(pane, md); })
-        .catch(function(e) { console.warn('[index] fetch ' + src.file + ' failed', e); });
-    });
-  }
-
-  function wireTabs() {
-    const tabs = document.querySelectorAll('.md-tab');
-    tabs.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        const target = btn.dataset.target;
-        tabs.forEach(function(b) { b.classList.toggle('active', b === btn); });
-        document.querySelectorAll('.md-pane').forEach(function(p) {
-          p.classList.toggle('active', p.id === target);
-        });
-      });
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    renderAll();
-    wireTabs();
-  });
-})();
-</script>
 
 </body>
 </html>
