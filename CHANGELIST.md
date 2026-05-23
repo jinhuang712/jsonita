@@ -6,6 +6,30 @@
 
 ## [Unreleased]
 
+### UI infra · 文档导航重构（done · pending-user-verification）
+
+#### nav 重构：顶部章节 strip + 左侧文档 TOC（H2/H3）+ scrollspy
+
+- `assets/nav.js` `renderTopbar` ── topbar 内拆<b>两行</b>：第 1 行 breadcrumb + "↩ 文档首页"按钮（原样）；第 2 行 <code>.chapter-strip</code> 横向列当前 section 全部章节（plan 5 / spec 16 / progress 5）；当前 .active 蓝软背景；初渲染后 <code>scrollIntoView({inline:'center'})</code> 把当前项滚到 strip 中央
+- `assets/nav.js` `renderSidebar` ── 原章节列表改为<b>当前文档 H2/H3 目录</b>；header subtitle 从 section.label 改为<b>当前章节标题</b>（如 "05 · v1.1+ Distribution"）；底部"导航"段（文档首页 / README / TODO / CHANGELIST）保留
+- 新 helper `ensureHeadingIds()` ── 给 <code>.doc-article h2/h3</code> 注入 id：已有保留（progress 文件 <code>entry-criteria</code> / <code>milestones</code> / <code>d-n1-brew</code> 等）；按 h2-num/h3-num 生成 <code>h2-1</code> / <code>h3-3-1</code>；fallback slugify（中文 unicode 范围保留）
+- 新 helper `buildDocTOC()` ── 扫所有带 id 的 H2/H3 输出 <code>ul.toc.toc-doc</code>；H3 加 .toc-h3 类做 38px 缩进 + 字号小 + 字色淡
+- 新 helper `setupScrollspy()` ── window scroll + rAF 节流；阈值 130px；找<b>最后一个 top ≤ 130 的 H2/H3</b>作 active；TOC 当前项 <code>.active</code> + 偏离 sidebar 可视范围时 <code>scrollIntoView({block:'nearest'})</code>
+- `renderPagination()` 不动 ── 底部"上一节 / 下一节"按章节顺序保留，与顶部 strip "任意跳"两种体验并存
+
+CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）：
+- `.topbar` height 52→104px 拆两行；新 `.topbar-row.row-strip` + 右侧渐变 mask
+- 新 `.chapter-strip`（横向 flex / overflow-x:auto / hover/active 蓝色软背景）
+- 新 `.toc-doc` 变体（H2/H3 两级缩进 + scrollspy 高亮）
+- `main.doc-main` padding-top 52→104；新 `scroll-padding-top: 120px` + `scroll-margin-top: 120px` 让锚点跳转不被 topbar 遮挡
+
+关键决策：
+- <b>0 个 HTML 文件改动</b> ── nav 由 nav.js 运行时注入；body 内容不动；用户已为 progress/01-05 加的 H2/H3 <code>id</code> 由 ensureHeadingIds 自动检测保留
+- scrollspy 用 scroll + rAF 而非 IntersectionObserver ── 边界处理更稳（滚到底也保留 active）；性能 OK（典型 5-30 个 heading）
+- 顶部单层 strip + 三 section 切换走 breadcrumb（用户 AskUserQuestion Q1 Recommended）；左侧 H2+H3+scrollspy（Q2 Recommended）；spec 16 章节横向溢出走滚动条 + 渐变 mask（Q3 Recommended）
+
+待用户验证：浏览器开任一 plan/spec/progress 页面 → 看顶部章节 strip 渲染 + 当前项高亮 + 左侧切到 doc TOC + 滚动时 H2/H3 跟随高亮 + 锚点跳转不被 topbar 遮挡。
+
 ### M2 实施期 · 0.5.0-m2 路线起手
 
 #### M2-N5 · 自定义快捷键 + 冲突检测（done · pending-user-verification）
