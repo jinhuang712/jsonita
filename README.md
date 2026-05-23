@@ -76,8 +76,7 @@ pnpm tauri build --target universal-apple-darwin  # 生产 dmg（未签名）
 | [`index.html`](index.html) | 📍 文档导航入口（用浏览器打开） |
 | [`plan/`](plan/) | 5 篇产品设计：产品边界 / 功能 / 交互 / 技术栈 / NFR |
 | [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块 ... |
-| [`progress/`](progress/) | 5 篇实施进度（M0 / M1 / M2 / M3 / v1.1+）+ tasks + manifest |
-| [`AGENT_RUNBOOK.md`](AGENT_RUNBOOK.md) | coding agent 实施期 SOP |
+| [`progress/`](progress/) | 5 篇实施进度（M0 / M1 / M2 / M3 / v1.1+） |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史（按 Phase 顺序） |
 
 ## 当前进度（agent 实施）
@@ -89,8 +88,6 @@ pnpm tauri build --target universal-apple-darwin  # 生产 dmg（未签名）
 | M2 AI + Settings | 5/6 | ✅ N1..N5 完成 · N6 macOS 签名 (需 Apple Developer 证书) 留用户 |
 | M3 Polish | 3/6 | ✅ N1..N3 完成 · N4 多版本回归 / N5 Windows / N6 release 留用户 |
 | v1.1+ Distribution | 0/5 | 全 user-only ops（brew / npm / updater / Win EV / 日志导出） |
-
-跑 `cat progress/manifest.json | python3 -c "import sys,json; m=json.load(sys.stdin); print(m['active_phase'])"` 看 agent 当前判定的 active phase。
 
 ## 卸载
 
