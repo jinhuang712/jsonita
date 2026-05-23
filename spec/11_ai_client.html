@@ -23,7 +23,7 @@
     <div class="callout callout-info">
       <span class="callout-icon">REF</span>
       <div class="callout-body">
-        <p>对外 IPC 类型 <code>AiFixReq</code> / <code>AiFixResp</code> / <code>AiProgress</code> 定义见 <a href="13_schemas.html">13 § 3.4</a>；API key 走 Keychain（<a href="13_schemas.html">13 § 6</a>）。本章描述<b>设计原则 + 协议构造 + 算法</b>。</p>
+        <p>对外 IPC 类型 <code>AiFixReq</code> / <code>AiFixResp</code> / <code>AiProgress</code> 定义见 <a href="13_schemas.html">13 § 3.4</a>；API key 走本地 <code>secrets.json</code>（<a href="13_schemas.html">13 § 6</a>），不进 Keychain ── 设计动因见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a> / <a href="10_storage.html">10 § 6</a>。本章描述<b>设计原则 + 协议构造 + 算法</b>。</p>
       </div>
     </div>
 
@@ -125,8 +125,8 @@ pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&g
     <table>
       <thead><tr><th>步骤</th><th>动作</th><th>失败处理</th></tr></thead>
       <tbody>
-        <tr><td>1. 双重开关</td><td>检查 <code>settings.ai_enabled</code></td><td>false 时 early return <code>Io("ai disabled")</code></td></tr>
-        <tr><td>2. 取 key</td><td><code>KeyStore::get("deepseek_api_key")</code></td><td>None → <code>Keychain("no api key")</code></td></tr>
+        <tr><td>1. 双重开关</td><td>检查 <code>settings.ai_enabled</code></td><td>false 时 early return <code>AiDisabled</code>（UI 友好提示"在 Settings 启用 AI Fix"）</td></tr>
+        <tr><td>2. 取 key</td><td><code>secrets::get("deepseek_api_key")</code></td><td>None → <code>Keychain("no api key")</code>（变体名遗留 = secrets 取错）</td></tr>
         <tr><td>3. 构造 body</td><td>system + user 拼装 + 设置默认参数</td><td>纯字符串操作，无失败</td></tr>
         <tr><td>4. spawn 进度任务</td><td>每 500 ms emit Waiting</td><td>主流程完成时 abort()</td></tr>
         <tr><td>5. POST</td><td>reqwest 60s timeout</td><td>网络错 → <code>Http { status: 0, body }</code></td></tr>
@@ -159,9 +159,9 @@ pub async fn fix(app: &amp;AppHandle, req: AiFixReq) -&gt; Result&lt;AiFixResp, 
 
     // 1-2: 检查开关 + 取 key
     if !app.state::&lt;SettingsStore&gt;().get().ai_enabled {
-        return Err(JsonitaError::Io("ai disabled".into()));
+        return Err(JsonitaError::AiDisabled);
     }
-    let key = KeyStore::get("deepseek_api_key")?
+    let key = secrets::get("deepseek_api_key")?
         .ok_or_else(|| JsonitaError::Keychain("no api key".into()))?;
 
     // 3-4: body + 异步 keepalive
@@ -305,7 +305,7 @@ export function computeDiff(before: string, after: string): DiffLine[] {
 
     <h2><span class="h2-num">9</span>测试连接（settings 面板用）</h2>
 
-    <p><b>关键设计</b>：<code>ai_test_connection(apiKey, modelId)</code> 接收待验证的 key + model 作为参数，<b>不读 Keychain 已存的 key</b>。理由：用户在设置面板输入新 key 时，需要"先测试再保存" ── 如果先入 Keychain 再测，失败会污染已存的有效 key。</p>
+    <p><b>关键设计</b>：<code>ai_test_connection(apiKey, modelId)</code> 接收待验证的 key + model 作为参数，<b>不读 secrets.json 里已存的 key</b>。理由：用户在设置面板输入新 key 时，需要"先测试再保存" ── 如果先入 secrets 再测，失败会污染已存的有效 key。</p>
 
     <ul>
       <li>发一个最小请求："respond with <code>{"ok":true}</code> only" + max_tokens=4</li>
@@ -326,7 +326,7 @@ export function computeDiff(before: string, after: string): DiffLine[] {
         <tr><td><code>AiFixReq</code> · <code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
         <tr><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
         <tr><td><code>AiProgress</code>（5 个 phase 变体）</td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
-        <tr><td><code>JsonitaError::Http / RateLimit / AiInvalidJson / Keychain</code></td><td><a href="13_schemas.html">13 § 1</a></td></tr>
+        <tr><td><code>JsonitaError::Http / RateLimit / AiInvalidJson / AiDisabled / Keychain</code>（最后一个变体名遗留）</td><td><a href="13_schemas.html">13 § 1</a></td></tr>
       </tbody>
     </table>
 

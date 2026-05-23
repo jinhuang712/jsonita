@@ -84,7 +84,7 @@ export const settings = {
   reset: () => invoke<Settings>('settings_reset'),
 };
 
-// ──────────── ai (M2-N2 keychain; M2-N3 fix/connection real) ────────────
+// ──────────── ai (secrets.json + DeepSeek HTTP) ────────────
 
 export interface TestConnectionResp {
   ok: boolean;

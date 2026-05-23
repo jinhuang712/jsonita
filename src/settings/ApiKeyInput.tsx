@@ -6,7 +6,7 @@ import { ai } from '../ipc/commands';
  *
  * 视觉锚：spec/01_mockups.html § 6 Settings AI 分组
  * Spec ref: spec/04 § 4.8 ApiKeyInput · spec/11 § 9 测试连接
- * 关键：key 直接传给 ai_test_connection（不先存 Keychain），test 通过后 set。
+ * 关键：key 直接传给 ai_test_connection（不先存 secrets.json），test 通过后 set。
  */
 
 interface Props {
@@ -45,7 +45,7 @@ export function ApiKeyInput({ modelId }: Props) {
       await ai.setApiKey(keyInput);
       setKeyInput('');
       setHasKey(true);
-      setMsg({ kind: 'ok', text: 'Saved to Keychain' });
+      setMsg({ kind: 'ok', text: 'Saved' });
     } catch (e) {
       setMsg({ kind: 'err', text: String(e) });
     }
@@ -55,7 +55,7 @@ export function ApiKeyInput({ modelId }: Props) {
     try {
       await ai.deleteApiKey();
       setHasKey(false);
-      setMsg({ kind: 'ok', text: 'Removed from Keychain' });
+      setMsg({ kind: 'ok', text: 'Removed' });
     } catch (e) {
       setMsg({ kind: 'err', text: String(e) });
     }
@@ -68,7 +68,7 @@ export function ApiKeyInput({ modelId }: Props) {
           type="password"
           value={keyInput}
           onChange={(e) => setKeyInput(e.target.value)}
-          placeholder={hasKey ? '••••••••（已存 Keychain，可输入新 key 覆盖）' : 'sk-...'}
+          placeholder={hasKey ? '••••••••（已保存，可输入新 key 覆盖）' : 'sk-...'}
           style={inputStyle}
           autoComplete="off"
         />

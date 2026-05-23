@@ -4,6 +4,7 @@ import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
 import { AiFixPane } from '../panes/AiFixPane';
 import { useEditorStore } from '../store/editor';
+import { useSettingsStore } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { useEffectiveTheme } from '../theme/useEffectiveTheme';
 import { TreeView } from '../tree/TreeView';
@@ -22,6 +23,7 @@ export function FloatingWindow() {
   const setContent = useEditorStore((s) => s.setContent);
   const status = useEditorStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
+  const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const effectiveTheme = useEffectiveTheme();
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
@@ -58,28 +60,35 @@ export function FloatingWindow() {
         style={{
           flex: 1,
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: singlePaneMode ? '1fr' : '1fr 1fr',
           minHeight: 0,
         }}
       >
-        <div style={{ borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div
+          style={{
+            borderRight: singlePaneMode ? 'none' : '1px solid var(--border)',
+            overflow: 'hidden',
+          }}
+        >
           <Editor theme={effectiveTheme} value={content} onChange={setContent} softWrap={true} />
         </div>
-        <div style={{ overflow: 'hidden' }}>
-          {activePane === 'ai-fix' ? (
-            <AiFixPane />
-          ) : activePane === 'tree' && treeData !== null ? (
-            <TreeView data={treeData} />
-          ) : (
-            <Editor
-              theme={effectiveTheme}
-              value={outputText}
-              readOnly={true}
-              softWrap={true}
-              placeholderText="→ output"
-            />
-          )}
-        </div>
+        {!singlePaneMode && (
+          <div style={{ overflow: 'hidden' }}>
+            {activePane === 'ai-fix' ? (
+              <AiFixPane />
+            ) : activePane === 'tree' && treeData !== null ? (
+              <TreeView data={treeData} />
+            ) : (
+              <Editor
+                theme={effectiveTheme}
+                value={outputText}
+                readOnly={true}
+                softWrap={true}
+                placeholderText="→ output"
+              />
+            )}
+          </div>
+        )}
       </div>
       <StatusBar />
     </div>
