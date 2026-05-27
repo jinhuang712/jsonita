@@ -250,7 +250,7 @@ sequenceDiagram
 
         <tr><td rowspan="6"><b>history</b></td>
             <td><code>history_list</code></td><td>✓</td><td>&lt; 30 ms</td><td>分页 + 排序（pinned 优先）</td></tr>
-        <tr><td><code>history_search</code></td><td>✓</td><td>&lt; 30 ms</td><td>FTS 子串匹配 content / summary</td></tr>
+        <tr><td><code>history_search</code></td><td>✓</td><td>&lt; 30 ms</td><td>子串匹配 content / summary；历史上限小，优先直觉搜索</td></tr>
         <tr><td><code>history_pin</code></td><td>—</td><td>&lt; 10 ms</td><td>置顶 / 取消</td></tr>
         <tr><td><code>history_star</code></td><td>—</td><td>&lt; 10 ms</td><td>收藏 / 取消</td></tr>
         <tr><td><code>history_clear</code></td><td>—</td><td>&lt; 50 ms</td><td>一键清空（不删 pinned / starred）</td></tr>
@@ -317,7 +317,7 @@ sequenceDiagram
       <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
       <tbody>
         <tr><td><code>history_list(opts)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td><a href="13_schemas.html">13 § 3.2 ListOpts / HistoryRow</a></td></tr>
-        <tr><td><code>history_search(query, limit)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td>FTS5 子串匹配</td></tr>
+        <tr><td><code>history_search(query, limit)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td>content / summary 子串匹配</td></tr>
         <tr><td><code>history_pin(id, pinned)</code></td><td><code>()</code></td><td>—</td></tr>
         <tr><td><code>history_star(id, starred)</code></td><td><code>()</code></td><td>—</td></tr>
         <tr><td><code>history_clear()</code></td><td><code>u32</code></td><td>返回删除条数（不删 pinned / starred）</td></tr>

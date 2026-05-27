@@ -168,9 +168,9 @@ interface ToastOpts {
 
     <p>未来接入后，每个 variant 对应一个 className（<code>toast-info / toast-ok / toast-warn / toast-danger</code>），样式由全局 CSS 注入。Position 固定 <code>bottom-right</code>；同时最多 3 个堆叠，超出旧的自动 dismiss。</p>
 
-    <h3><span class="h3-num">4.4</span>HistoryModal + HistoryItem（reserved / future）</h3>
+    <h3><span class="h3-num">4.4</span>HistoryModal + HistoryItem</h3>
 
-    <p>当前代码有历史 IPC 与 <code>historyModalOpen</code> 状态，但没有 <code>src/history/HistoryModal.tsx</code> / <code>HistoryItem.tsx</code>，<code>App.tsx</code> 也未渲染历史 Modal。以下布局是保留设计，不代表当前已交付 UI。</p>
+    <p><code>src/history/HistoryModal.tsx</code> 在 <code>App.tsx</code> 中常驻渲染，由 <code>historyModalOpen</code> 控制显隐。底部 StatusBar 的 History 按钮打开 Modal；<kbd>Esc</kbd> 或点击遮罩关闭。Modal 支持列表、搜索、All / Pinned / Starred 筛选、点击条目载入编辑器、Pin / Star，以及 Clear 非 pinned/starred 条目。</p>
 
     <pre><code>interface HistoryItemProps {
   row: HistoryRow;
@@ -178,15 +178,15 @@ interface ToastOpts {
   onLoad: (id: number) =&gt; void;     // 双击 / Enter 载入到编辑器
   onPin: (id: number) =&gt; void;
   onStar: (id: number) =&gt; void;
-  onDelete: (id: number) =&gt; void;
+  onClearPlainRows: () =&gt; void;
 }</code></pre>
 
     <p><b>关键契约</b>：</p>
     <ul>
       <li><b>op-type chip</b>：每行左侧显示 op_type 的色彩 chip（format/minify 用 primary 色 / tree 用 info 色 / str-json 互转用 ok 色 / ai-fix 用 accent 色） ── 让用户扫一眼就能识别操作类型</li>
-      <li><b>hover 显示操作按钮</b>：default 状态只显示内容；hover / focused 时右侧出现 pin / star / delete 三个图标按钮</li>
-      <li><b>pinned 视觉</b>：op-type chip 旁加 pin 图标（svg，不用 emoji）</li>
-      <li><b>键盘导航</b>：<kbd>↑↓</kbd> 选择，<kbd>Enter</kbd> 载入，<kbd>Cmd+P</kbd> pin，<kbd>Cmd+S</kbd> star，<kbd>Delete</kbd> 删除</li>
+      <li><b>显式写入</b>：AI Fix Accept、单窗 <kbd>⌘Enter</kbd> 成功应用 Format / Minify / →Str / →JSON 时写入 history；普通编辑输入不自动写入，避免噪音</li>
+      <li><b>op-type chip</b>：每行左侧显示 op_type 的色彩 chip；format/minify 用 primary，tree 用 info，str-json 互转用 ok，ai-fix 用 accent</li>
+      <li><b>保留策略</b>：Clear 只删除普通条目；pinned / starred 保留，与 SQLite <code>history_clear</code> 契约一致</li>
     </ul>
 
     <h3><span class="h3-num">4.6</span>SettingsModal</h3>

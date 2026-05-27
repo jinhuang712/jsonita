@@ -143,22 +143,28 @@ pub fn list(db: &Db, opts: ListOpts) -> Result<Vec<HistoryRow>, JsonitaError> {
 
 pub fn search(db: &Db, query: &str, limit: u32) -> Result<Vec<HistoryRow>, JsonitaError> {
     let conn = db.pool().get()?;
-    // FTS5 MATCH ── 转义 / 包裹引号让多字符 token 也工作
-    let q = format!("\"{}\"", query.replace('"', "\"\""));
+    let pattern = format!("%{}%", escape_like(query.trim()));
 
     let mut stmt = conn.prepare(
-        "SELECT h.* FROM history h
-         JOIN history_fts f ON f.rowid = h.id
-         WHERE history_fts MATCH ?1
-         ORDER BY h.pinned DESC, h.created_at DESC
+        "SELECT * FROM history
+         WHERE content LIKE ?1 ESCAPE '\\'
+            OR summary LIKE ?1 ESCAPE '\\'
+         ORDER BY pinned DESC, created_at DESC
          LIMIT ?2",
     )?;
-    let rows = stmt.query_map(params![q, limit as i64], row_to_history)?;
+    let rows = stmt.query_map(params![pattern, limit as i64], row_to_history)?;
     let mut out = Vec::with_capacity(limit as usize);
     for r in rows {
         out.push(r?);
     }
     Ok(out)
+}
+
+fn escape_like(query: &str) -> String {
+    query
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_")
 }
 
 pub fn set_pinned(db: &Db, id: i64, pinned: bool) -> Result<(), JsonitaError> {
