@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { formatAccelerator } from '../keyboard/accelerators';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
 
@@ -66,9 +67,9 @@ export function StatusBar() {
           onClick={() => setHistoryModalOpen(true)}
           style={btnStyle}
           aria-label="Open history"
-          title="Cmd+Y"
+          title={formatAccelerator('CmdOrCtrl+Y')}
         >
-          <span style={kbdStyle}>⌘Y</span> History
+          <span style={kbdStyle}>{formatAccelerator('CmdOrCtrl+Y')}</span> History
         </button>
         <button
           onClick={() => setSettingsModalOpen(true)}

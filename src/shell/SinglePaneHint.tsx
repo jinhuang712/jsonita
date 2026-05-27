@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { formatAccelerator } from '../keyboard/accelerators';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane, type SinglePaneApplyState } from '../store/ui';
@@ -82,7 +83,7 @@ export function SinglePaneHint() {
           fontSize: 'inherit',
         }}
       >
-        ⌘↵
+        {formatAccelerator('CmdOrCtrl+Enter')}
       </kbd>
       <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{label}</span>
     </div>

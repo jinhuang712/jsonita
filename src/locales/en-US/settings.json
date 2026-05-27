@@ -30,9 +30,21 @@
     "editorSoftWrap": "Editor soft-wrap"
   },
   "shortcuts": {
+    "customTitle": "Custom",
+    "builtInTitle": "Built-in",
     "toggle": "Toggle window",
     "restoreLast": "Restore last session",
-    "hint": "Click then press the combo. System-reserved combos (⌘Q / ⌘W / ⌘Tab …) are blocked by default; use [Override] to force-bind.",
+    "hint": "Click a custom shortcut, then press the combo. System-reserved combos ({{reserved}} ...) are blocked by default; use [Override] to force-bind.",
+    "builtIn": {
+      "switchTabs": "Switch feature tab",
+      "exitEditing": "Exit editing",
+      "hideWindow": "Hide window",
+      "runCurrent": "Run current action / accept AI Fix",
+      "aiFixCancel": "Cancel AI Fix",
+      "history": "Open / close History",
+      "clearInput": "Clear input",
+      "zoom": "Adjust font size"
+    },
     "recordingPlaceholder": "Press keys…",
     "noneBound": "(none)",
     "bound": "Bound: {{accelerator}}",

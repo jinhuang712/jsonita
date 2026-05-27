@@ -30,9 +30,21 @@
     "editorSoftWrap": "编辑器软换行"
   },
   "shortcuts": {
+    "customTitle": "可自定义",
+    "builtInTitle": "内置快捷键",
     "toggle": "呼出浮窗",
     "restoreLast": "恢复上次会话",
-    "hint": "点输入框后按目标组合键。系统保留组合（⌘Q / ⌘W / ⌘Tab 等）默认阻塞；如需强制绑定走 [Override]。",
+    "hint": "点可自定义快捷键后按目标组合键。系统保留组合（{{reserved}} 等）默认阻塞；如需强制绑定走 [Override]。",
+    "builtIn": {
+      "switchTabs": "切换功能 Tab",
+      "exitEditing": "退出编辑态",
+      "hideWindow": "隐藏浮窗",
+      "runCurrent": "执行当前功能 / 接受 AI Fix",
+      "aiFixCancel": "取消 AI Fix",
+      "history": "打开 / 关闭历史",
+      "clearInput": "清空输入",
+      "zoom": "调整字体大小"
+    },
     "recordingPlaceholder": "按下组合键…",
     "noneBound": "（未绑定）",
     "bound": "已绑定：{{accelerator}}",

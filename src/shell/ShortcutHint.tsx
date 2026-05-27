@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { on } from '../ipc/events';
+import { formatAccelerator } from '../keyboard/accelerators';
 import { useAiStore } from '../store/ai';
 import { useUiStore } from '../store/ui';
 
@@ -56,17 +57,17 @@ export function ShortcutHint() {
   const items = useMemo(() => {
     if (activePane === 'ai-fix' && aiStatus === 'awaiting-decision') {
       return [
-        { keys: ['⌘↵'], label: 'Accept' },
+        { keys: [formatAccelerator('CmdOrCtrl+Enter')], label: 'Accept' },
         { keys: ['Esc'], label: 'Cancel' },
-        { keys: ['Tab', '⇧Tab'], label: 'Switch' },
+        { keys: ['Tab', formatAccelerator('Shift+Tab')], label: 'Switch' },
       ];
     }
 
     return [
       { keys: ['Esc'], label: 'Exit edit' },
       { keys: ['Esc', 'Esc'], label: 'Hide' },
-      { keys: ['Tab', '⇧Tab'], label: 'Switch' },
-      { keys: ['⌘Y'], label: 'History' },
+      { keys: ['Tab', formatAccelerator('Shift+Tab')], label: 'Switch' },
+      { keys: [formatAccelerator('CmdOrCtrl+Y')], label: 'History' },
     ];
   }, [activePane, aiStatus]);
 

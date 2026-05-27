@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shortcuts, type ShortcutAction, type ShortcutRegisterResp } from '../ipc/commands';
+import { formatAccelerator } from '../keyboard/accelerators';
 
 /**
  * ShortcutInput — 录入快捷键，调 shortcut_register 验 + 注册。
@@ -56,15 +57,16 @@ export function ShortcutInput({ action, value, onChange }: Props) {
   const tryRegister = async (acc: string, forceOverride: boolean) => {
     try {
       const r: ShortcutRegisterResp = await shortcuts.register(action, acc, forceOverride);
+      const displayAcc = formatAccelerator(acc);
       switch (r.kind) {
         case 'ok':
           onChange(acc);
-          setMsg({ kind: 'ok', text: t('shortcuts.bound', { accelerator: acc }), acc });
+          setMsg({ kind: 'ok', text: t('shortcuts.bound', { accelerator: displayAcc }), acc });
           break;
         case 'reserved':
           setMsg({
             kind: 'reserved',
-            text: t('shortcuts.reserved', { accelerator: acc }),
+            text: t('shortcuts.reserved', { accelerator: displayAcc }),
             acc,
           });
           break;
@@ -89,7 +91,7 @@ export function ShortcutInput({ action, value, onChange }: Props) {
     // 二次确认（spec/07 § 2.3 override Modal；M2-N5 minimal 用 window.confirm）
     if (!msg?.acc) return;
     const acc = msg.acc;
-    const ok = window.confirm(t('shortcuts.overrideConfirm', { accelerator: acc }));
+    const ok = window.confirm(t('shortcuts.overrideConfirm', { accelerator: formatAccelerator(acc) }));
     if (ok) {
       setMsg(null);
       await tryRegister(acc, true);
@@ -121,7 +123,11 @@ export function ShortcutInput({ action, value, onChange }: Props) {
         role="button"
         aria-label={`Shortcut for ${action}`}
       >
-        {recording ? t('shortcuts.recordingPlaceholder') : value || t('shortcuts.noneBound')}
+        {recording
+          ? t('shortcuts.recordingPlaceholder')
+          : value
+            ? formatAccelerator(value)
+            : t('shortcuts.noneBound')}
       </div>
       {msg && (
         <div

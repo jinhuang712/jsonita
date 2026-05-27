@@ -4,6 +4,7 @@ import { settings as settingsApi } from '../ipc/commands';
 import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
+import { formatAccelerator } from '../keyboard/accelerators';
 import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
 
@@ -193,8 +194,53 @@ interface GroupProps {
 
 function GroupShortcuts({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
+  const reservedExamples = [
+    formatAccelerator('CmdOrCtrl+Q'),
+    formatAccelerator('CmdOrCtrl+W'),
+    formatAccelerator('CmdOrCtrl+Tab'),
+  ].join(' / ');
+  const builtInShortcuts = [
+    {
+      label: t('shortcuts.builtIn.switchTabs'),
+      keys: ['Tab', formatAccelerator('Shift+Tab')],
+    },
+    {
+      label: t('shortcuts.builtIn.exitEditing'),
+      keys: ['Esc'],
+    },
+    {
+      label: t('shortcuts.builtIn.hideWindow'),
+      keys: ['Esc', 'Esc'],
+    },
+    {
+      label: t('shortcuts.builtIn.runCurrent'),
+      keys: [formatAccelerator('CmdOrCtrl+Enter')],
+    },
+    {
+      label: t('shortcuts.builtIn.aiFixCancel'),
+      keys: ['Esc'],
+    },
+    {
+      label: t('shortcuts.builtIn.history'),
+      keys: [formatAccelerator('CmdOrCtrl+Y')],
+    },
+    {
+      label: t('shortcuts.builtIn.clearInput'),
+      keys: [formatAccelerator('CmdOrCtrl+K')],
+    },
+    {
+      label: t('shortcuts.builtIn.zoom'),
+      keys: [
+        formatAccelerator('CmdOrCtrl+Plus'),
+        formatAccelerator('CmdOrCtrl+Minus'),
+        formatAccelerator('CmdOrCtrl+0'),
+      ],
+    },
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <SectionLabel>{t('shortcuts.customTitle')}</SectionLabel>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>{t('shortcuts.toggle')}</span>
         <ShortcutInput
@@ -211,9 +257,43 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
           onChange={(v) => patch({ shortcutRestoreLast: v })}
         />
       </div>
-      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 8 }}>
-        {t('shortcuts.hint')}
+      <div style={shortcutDividerStyle} />
+      <SectionLabel>{t('shortcuts.builtInTitle')}</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {builtInShortcuts.map((shortcut) => (
+          <ReadonlyShortcutRow
+            key={shortcut.label}
+            label={shortcut.label}
+            keys={shortcut.keys}
+          />
+        ))}
       </div>
+      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 8 }}>
+        {t('shortcuts.hint', { reserved: reservedExamples })}
+      </div>
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={sectionLabelStyle}>
+      {children}
+    </div>
+  );
+}
+
+function ReadonlyShortcutRow({ label, keys }: { label: string; keys: string[] }) {
+  return (
+    <div style={readonlyShortcutRowStyle}>
+      <span>{label}</span>
+      <span style={keyGroupStyle}>
+        {keys.map((key, index) => (
+          <kbd key={`${key}-${index}`} style={keyCapStyle}>
+            {key}
+          </kbd>
+        ))}
+      </span>
     </div>
   );
 }
@@ -428,6 +508,48 @@ const rowStyle: React.CSSProperties = {
   alignItems: 'center',
   padding: '6px 0',
   borderBottom: '1px solid var(--border)',
+};
+
+const sectionLabelStyle: React.CSSProperties = {
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-xs)',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: 0,
+};
+
+const shortcutDividerStyle: React.CSSProperties = {
+  height: 1,
+  background: 'var(--border)',
+  margin: '2px 0',
+};
+
+const readonlyShortcutRowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: 16,
+  minHeight: 28,
+  color: 'var(--text)',
+};
+
+const keyGroupStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: 4,
+  flexWrap: 'wrap',
+};
+
+const keyCapStyle: React.CSSProperties = {
+  padding: '2px 6px',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--border-strong)',
+  background: 'var(--bg)',
+  color: 'var(--text-muted)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--fs-xs)',
+  lineHeight: 1.2,
 };
 
 const inputStyle: React.CSSProperties = {
