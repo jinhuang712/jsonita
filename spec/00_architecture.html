@@ -114,7 +114,7 @@ graph TB
       <thead><tr><th>进程</th><th>启动</th><th>退出</th><th>常驻目标</th></tr></thead>
       <tbody>
         <tr><td>Rust host</td><td>开机自启动 / 用户首次启动</td><td>菜单栏 Quit / <kbd>⌘Q</kbd></td><td>≤ 40 MB（无浮窗时）</td></tr>
-        <tr><td>WebView 浮窗</td><td><kbd>⌘⇧J</kbd> / tray 点击</td><td>非编辑态 <kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> = <b>hide 不 close</b>；编辑态 <kbd>Esc</kbd> 先 blur；进程保留</td><td>≤ 80 MB（含编辑器空闲）</td></tr>
+        <tr><td>WebView 浮窗</td><td><kbd>⌘⇧J</kbd> / tray 点击</td><td>非编辑态连续两次 <kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> = <b>hide 不 close</b>；编辑态 <kbd>Esc</kbd> 先 blur；进程保留</td><td>≤ 80 MB（含编辑器空闲）</td></tr>
       </tbody>
     </table>
 
@@ -133,7 +133,7 @@ stateDiagram-v2
     Bootstrapping --> Ready: tokio · SQLite · settings · tray · shortcuts · WebView prebuilt
     Ready --> Visible: ⌘⇧J · tray click<br/>window.show
     Visible --> Visible: Esc while editing<br/>blur active editor/input
-    Visible --> Ready: Esc 非编辑态 · 失焦 · ⌘W<br/>window.hide · 进程保留
+    Visible --> Ready: 双击 Esc 非编辑态 · 失焦 · ⌘W<br/>window.hide · 进程保留
     Ready --> Quitting: ⌘Q · Tray Quit
     Visible --> Quitting: ⌘Q
     Quitting --> [*]: emit app·will_quit<br/>最后一次 session_save_last
