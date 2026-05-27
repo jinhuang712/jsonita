@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { useLocaleSync } from './i18n/useLocaleSync';
+import { HistoryModal } from './history/HistoryModal';
 import { settings as settingsApi } from './ipc/commands';
 import { AccessibilityModal } from './permissions/AccessibilityModal';
 import { SettingsModal } from './settings/SettingsModal';
@@ -68,6 +69,7 @@ export function App() {
   return (
     <>
       <FloatingWindow />
+      <HistoryModal />
       <SettingsModal />
       {modalOpen && <AccessibilityModal onClose={() => setModalOpen(false)} />}
     </>

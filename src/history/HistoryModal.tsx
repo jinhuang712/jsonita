@@ -1,0 +1,440 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { history as historyApi } from '../ipc/commands';
+import { useEditorStore } from '../store/editor';
+import { useUiStore } from '../store/ui';
+import type { HistoryRow } from '../types/commands';
+import type { OpType } from '../types/enums';
+
+type Filter = 'all' | 'pinned' | 'starred';
+
+const LIST_LIMIT = 80;
+
+export function HistoryModal() {
+  const { t } = useTranslation('history');
+  const open = useUiStore((s) => s.historyModalOpen);
+  const setOpen = useUiStore((s) => s.setHistoryModalOpen);
+  const setContent = useEditorStore((s) => s.setContent);
+  const [rows, setRows] = useState<HistoryRow[]>([]);
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!open) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const q = query.trim();
+      if (q) {
+        const next = await historyApi.search(q, LIST_LIMIT);
+        setRows(applyFilter(next, filter));
+      } else {
+        setRows(
+          await historyApi.list({
+            limit: LIST_LIMIT,
+            offset: 0,
+            onlyPinned: filter === 'pinned' ? true : undefined,
+            onlyStarred: filter === 'starred' ? true : undefined,
+          }),
+        );
+      }
+    } catch (e) {
+      setRows([]);
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, open, query]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [open, setOpen]);
+
+  const applyRow = (row: HistoryRow) => {
+    setContent(row.content);
+    setOpen(false);
+  };
+
+  const togglePin = async (row: HistoryRow) => {
+    await historyApi.pin(row.id, !row.pinned);
+    await load();
+  };
+
+  const toggleStar = async (row: HistoryRow) => {
+    await historyApi.star(row.id, !row.starred);
+    await load();
+  };
+
+  const clearPlainRows = async () => {
+    await historyApi.clear();
+    await load();
+  };
+
+  const title = useMemo(() => {
+    const suffix = rows.length > 0 ? ` (${rows.length})` : '';
+    return `${t('title')}${suffix}`;
+  }, [rows.length, t]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="history-modal-title"
+      style={overlayStyle}
+      onMouseDown={() => setOpen(false)}
+    >
+      <section style={modalStyle} onMouseDown={(event) => event.stopPropagation()}>
+        <header style={headerStyle}>
+          <div id="history-modal-title" style={titleStyle}>
+            {title}
+          </div>
+          <button type="button" onClick={() => setOpen(false)} style={iconButtonStyle} aria-label="Close history">
+            ×
+          </button>
+        </header>
+
+        <div style={toolbarStyle}>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('searchPlaceholder')}
+            aria-label={t('searchPlaceholder')}
+            autoFocus
+            style={searchStyle}
+          />
+          <div style={filterGroupStyle}>
+            {(['all', 'pinned', 'starred'] as const).map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setFilter(item)}
+                style={filter === item ? filterActiveStyle : filterButtonStyle}
+              >
+                {t(`filter.${item}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={listStyle}>
+          {loading ? (
+            <div style={emptyStyle}>Loading…</div>
+          ) : error ? (
+            <div style={{ ...emptyStyle, color: 'var(--danger)' }}>{error}</div>
+          ) : rows.length === 0 ? (
+            <div style={emptyStyle}>{t('empty')}</div>
+          ) : (
+            rows.map((row) => (
+              <HistoryItem
+                key={row.id}
+                row={row}
+                onApply={() => applyRow(row)}
+                onPin={() => togglePin(row)}
+                onStar={() => toggleStar(row)}
+              />
+            ))
+          )}
+        </div>
+
+        <footer style={footerStyle}>
+          <div style={{ color: 'var(--text-faint)' }}>
+            Pinned and starred items stay when clearing.
+          </div>
+          <button type="button" onClick={clearPlainRows} style={clearButtonStyle}>
+            Clear
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
+function HistoryItem({
+  row,
+  onApply,
+  onPin,
+  onStar,
+}: {
+  row: HistoryRow;
+  onApply: () => void;
+  onPin: () => void;
+  onStar: () => void;
+}) {
+  const op = opMeta(row.opType);
+  return (
+    <article style={itemStyle}>
+      <button type="button" onClick={onApply} onDoubleClick={onApply} style={itemMainStyle}>
+        <div style={itemMetaStyle}>
+          <span style={{ ...chipStyle, color: op.color, background: op.bg }}>{op.label}</span>
+          <span style={timeStyle}>
+            {row.pinned ? 'Pinned · ' : ''}
+            {row.starred ? 'Starred · ' : ''}
+            {formatRelativeTime(row.createdAt)}
+          </span>
+        </div>
+        <div style={summaryStyle}>{row.summary || compact(row.content)}</div>
+      </button>
+      <div style={actionsStyle}>
+        <button type="button" onClick={onPin} title={row.pinned ? 'Unpin' : 'Pin'} style={row.pinned ? actionActiveStyle : actionStyle}>
+          Pin
+        </button>
+        <button type="button" onClick={onStar} title={row.starred ? 'Unstar' : 'Star'} style={row.starred ? actionActiveStyle : actionStyle}>
+          Star
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function applyFilter(rows: HistoryRow[], filter: Filter): HistoryRow[] {
+  if (filter === 'pinned') return rows.filter((row) => row.pinned);
+  if (filter === 'starred') return rows.filter((row) => row.starred);
+  return rows;
+}
+
+function compact(content: string): string {
+  return content.trim().replace(/\s+/g, ' ').slice(0, 100);
+}
+
+function formatRelativeTime(createdAt: number): string {
+  const deltaMs = Date.now() - createdAt;
+  const seconds = Math.max(1, Math.floor(deltaMs / 1000));
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(createdAt).toLocaleDateString();
+}
+
+function opMeta(opType: OpType): { label: string; color: string; bg: string } {
+  switch (opType) {
+    case 'ai-fix':
+      return { label: 'AI FIX', color: 'var(--accent)', bg: 'var(--accent-soft)' };
+    case 'minify':
+      return { label: 'MINIFY', color: 'var(--primary)', bg: 'var(--primary-soft)' };
+    case 'json-to-str':
+      return { label: 'TO STR', color: 'var(--ok)', bg: 'var(--ok-bg)' };
+    case 'str-to-json':
+      return { label: 'TO JSON', color: 'var(--ok)', bg: 'var(--ok-bg)' };
+    case 'tree':
+      return { label: 'TREE', color: 'var(--info)', bg: 'var(--info-bg)' };
+    case 'format':
+    default:
+      return { label: 'FORMAT', color: 'var(--primary)', bg: 'var(--primary-soft)' };
+  }
+}
+
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 60,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'var(--bg-overlay)',
+};
+
+const modalStyle: React.CSSProperties = {
+  width: 620,
+  maxWidth: 'calc(100vw - 28px)',
+  height: 'min(620px, calc(100vh - 40px))',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  borderRadius: 'var(--radius-lg)',
+  border: '1px solid var(--border)',
+  background: 'var(--bg-card)',
+  boxShadow: 'var(--shadow-lg)',
+  color: 'var(--text)',
+  fontFamily: 'var(--font-sans)',
+};
+
+const headerStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '10px 14px',
+  borderBottom: '1px solid var(--border)',
+};
+
+const titleStyle: React.CSSProperties = {
+  fontSize: 'var(--fs-md)',
+  fontWeight: 600,
+};
+
+const toolbarStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  alignItems: 'center',
+  padding: 12,
+  borderBottom: '1px solid var(--border)',
+};
+
+const searchStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  padding: '6px 9px',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--border-strong)',
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--fs-sm)',
+  outline: 'none',
+};
+
+const filterGroupStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 5,
+};
+
+const filterButtonStyle: React.CSSProperties = {
+  padding: '5px 8px',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--border)',
+  background: 'var(--bg)',
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-xs)',
+  cursor: 'pointer',
+};
+
+const filterActiveStyle: React.CSSProperties = {
+  ...filterButtonStyle,
+  border: '1px solid var(--primary-edge)',
+  background: 'var(--primary-soft)',
+  color: 'var(--primary)',
+  fontWeight: 600,
+};
+
+const listStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  overflow: 'auto',
+};
+
+const emptyStyle: React.CSSProperties = {
+  padding: 24,
+  textAlign: 'center',
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-sm)',
+};
+
+const itemStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'stretch',
+  borderBottom: '1px solid var(--border)',
+};
+
+const itemMainStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  padding: '10px 12px',
+  border: 'none',
+  background: 'transparent',
+  color: 'inherit',
+  textAlign: 'left',
+  cursor: 'pointer',
+};
+
+const itemMetaStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 10,
+  marginBottom: 5,
+};
+
+const chipStyle: React.CSSProperties = {
+  padding: '2px 6px',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: 'calc(var(--fs-xs) - 1px)',
+  fontFamily: 'var(--font-mono)',
+  fontWeight: 700,
+};
+
+const timeStyle: React.CSSProperties = {
+  color: 'var(--text-faint)',
+  fontSize: 'var(--fs-xs)',
+  whiteSpace: 'nowrap',
+};
+
+const summaryStyle: React.CSSProperties = {
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--fs-sm)',
+  color: 'var(--text)',
+};
+
+const actionsStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
+  padding: '0 10px',
+};
+
+const actionStyle: React.CSSProperties = {
+  padding: '4px 7px',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--bg)',
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-xs)',
+  cursor: 'pointer',
+};
+
+const actionActiveStyle: React.CSSProperties = {
+  ...actionStyle,
+  color: 'var(--primary)',
+  border: '1px solid var(--primary-edge)',
+  background: 'var(--primary-soft)',
+  fontWeight: 600,
+};
+
+const footerStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 12,
+  padding: '8px 12px',
+  borderTop: '1px solid var(--border)',
+  fontSize: 'var(--fs-xs)',
+};
+
+const iconButtonStyle: React.CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-lg)',
+  cursor: 'pointer',
+  padding: '0 4px',
+};
+
+const clearButtonStyle: React.CSSProperties = {
+  padding: '4px 9px',
+  border: '1px solid var(--border-strong)',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  fontSize: 'var(--fs-xs)',
+  cursor: 'pointer',
+};

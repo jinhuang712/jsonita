@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { paneToOpType, runPaneApply } from '../editor/transforms';
-import { session, win } from '../ipc/commands';
+import { history as historyApi, session, win } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { on } from '../ipc/events';
 import { acceptAiFix } from '../panes/aiFixActions';
@@ -271,6 +271,7 @@ export function useGlobalHotkeys() {
               savedAt: Date.now(),
             })
             .catch(() => {});
+          historyApi.add(result, paneToOpType(activePane)).catch(() => {});
           setSinglePaneApplyState('success');
         })
         .catch((e: unknown) => {
