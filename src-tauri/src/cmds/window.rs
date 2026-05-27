@@ -43,11 +43,8 @@ pub async fn window_resize_for_content(
     let s = settings.get();
     let cur = window_store.get();
 
-    // 层 1: user_dragged 锁定
-    if cur.user_dragged {
-        return Ok((cur.width, cur.height));
-    }
-    // 层 2: settings.smart_width 关时跳过
+    // 用户拖边仍会记忆尺寸；是否继续按内容自动缩放只由 smart_width 控制。
+    // 这样粘贴 / 编辑 / 字体变化不会被历史上的 resize 事件永久锁住。
     if !s.smart_width {
         return Ok((cur.width, cur.height));
     }

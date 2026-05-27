@@ -354,7 +354,7 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
       <thead><tr><th>key</th><th>类型</th><th>说明</th></tr></thead>
       <tbody>
         <tr><td>width / height</td><td>u32</td><td>用户拖动 / 智能缩放后的尺寸</td></tr>
-        <tr><td>userDragged</td><td>bool</td><td>true 则锁定（plan F10 层 3）</td></tr>
+        <tr><td>userDragged</td><td>bool</td><td>记录用户曾手动拖边，用于恢复上次尺寸；不作为智能缩放硬锁</td></tr>
       </tbody>
     </table>
 

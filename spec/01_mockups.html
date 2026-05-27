@@ -413,8 +413,8 @@
         </tr>
         <tr>
           <td>error</td>
-          <td><div style="padding:6px 12px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px; color:var(--danger); font-weight:600;">● Line 3, Col 12: unexpected token ','</div></td>
-          <td><div style="padding:6px 12px; background:#1F2329; border:1px solid #343A46; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#F27A7A; font-weight:600;">● Line 3, Col 12: unexpected token ','</div></td>
+          <td><div style="padding:6px 12px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px; color:var(--danger); font-weight:600;">● Invalid JSON · Line 3, Col 12</div></td>
+          <td><div style="padding:6px 12px; background:#1F2329; border:1px solid #343A46; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#F27A7A; font-weight:600;">● Invalid JSON · Line 3, Col 12</div></td>
         </tr>
         <tr>
           <td>empty</td>
@@ -853,12 +853,12 @@
       <div class="mockup-statusbar"><span><span class="mockup-status-ok">● Valid JSON</span> · auto-sized for content</span><span>⚙</span></div>
     </div>
 
-    <h3><span class="h3-num">11.3</span>层 3 ── 手动拖动锁定</h3>
+    <h3><span class="h3-num">11.3</span>层 3 ── 手动拖动记忆尺寸</h3>
 
     <ul>
       <li>用户拖动后立即写 <code>window.json</code> + <code>user_dragged = true</code></li>
       <li>下次呼出沿用</li>
-      <li>之后再粘贴长内容 / 调整字体 <b>不再</b>自动缩放 ── 用户尺寸锁定</li>
+      <li>之后再粘贴长内容 / 调整字体时，只要 General「智能缩放」开启，仍会按内容重新调整</li>
       <li>设置 General "重置浮窗尺寸" 按钮可清</li>
     </ul>
 

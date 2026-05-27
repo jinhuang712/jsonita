@@ -190,7 +190,7 @@
       <thead><tr><th>状态</th><th>状态栏</th><th>额外呈现</th></tr></thead>
       <tbody>
         <tr><td>合法 JSON</td><td><span class="mockup-status-ok">● Valid JSON</span> · X lines · Y bytes</td><td>绿色圆点</td></tr>
-        <tr><td>语法错误</td><td><span style="color: var(--danger);">● Line X, Col Y: unexpected token</span></td><td>输入框红波浪线高亮 parser 位置，并补充标出常见非法 token + AI Fix 按钮</td></tr>
+        <tr><td>语法错误</td><td><span style="color: var(--danger);">● Invalid JSON · Line X, Col Y</span></td><td>输入框红波浪线高亮 parser 位置，并补充标出常见非法 token；详细 reason 由 inline lint tooltip 承载 + AI Fix 按钮</td></tr>
         <tr><td>空输入</td><td>—</td><td>右侧 placeholder: <code>Paste JSON to start</code></td></tr>
         <tr><td>过大 (&gt; 5 MB)</td><td><span style="color: var(--warn);">● Large file · X bytes</span></td><td>不调 JSON engine，避免卡顿</td></tr>
         <tr><td>AI 调用失败</td><td>—</td><td>AI Fix 面板显示错误信息（含上游 429 限流，透传 <code>retry-after</code>）</td></tr>

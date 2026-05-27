@@ -6,7 +6,10 @@
   },
   "statusBar": {
     "valid": "Valid JSON",
-    "empty": "Paste JSON to start"
+    "empty": "Paste JSON to start",
+    "invalid": "Invalid JSON",
+    "line": "Line",
+    "col": "Col"
   },
   "singlePane": {
     "run": "Run {{pane}}",

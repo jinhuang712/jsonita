@@ -30,10 +30,11 @@ export function StatusBar() {
     case 'error':
       left = error ? (
         <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
-          ● Line {error.line}, Col {error.col}: {error.msg}
+          ● {t('statusBar.invalid')} · {t('statusBar.line')} {error.line}, {t('statusBar.col')}{' '}
+          {error.col}
         </span>
       ) : (
-        <span style={{ color: 'var(--danger)' }}>● error</span>
+        <span style={{ color: 'var(--danger)' }}>● {t('statusBar.invalid')}</span>
       );
       break;
     case 'large':
