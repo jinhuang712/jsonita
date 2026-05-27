@@ -29,10 +29,10 @@ export function SinglePaneHint() {
   if (!settings.singlePaneMode || activePane === 'tree' || activePane === 'ai-fix') return null;
   if (editorStatus === 'error' && !settings.aiEnabled) return null;
 
-  const pane =
-    editorStatus === 'error' && settings.aiEnabled
-      ? t('panes:tab.aiFix')
-      : t(`panes:tab.${PANE_LABEL_KEY[activePane]}`);
+  const isAiFixPrimary = editorStatus === 'error' && settings.aiEnabled;
+  const pane = isAiFixPrimary
+    ? t('panes:tab.aiFix')
+    : t(`panes:tab.${PANE_LABEL_KEY[activePane]}`);
   const label =
     state === 'running'
       ? t('shell:singlePane.running', { pane })
@@ -55,11 +55,15 @@ export function SinglePaneHint() {
         gap: 6,
         maxWidth: 'calc(100% - 24px)',
         padding: '5px 8px',
-        border: '1px solid var(--border)',
+        border: isAiFixPrimary ? '1px solid var(--accent)' : '1px solid var(--border)',
         borderRadius: 'var(--radius-md)',
-        background: 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
-        boxShadow: 'var(--shadow-sm)',
-        color: STATE_COLOR[state],
+        background: isAiFixPrimary
+          ? 'var(--accent)'
+          : 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
+        boxShadow: isAiFixPrimary
+          ? '0 8px 24px rgba(251, 164, 58, 0.26), var(--shadow-sm)'
+          : 'var(--shadow-sm)',
+        color: isAiFixPrimary ? '#FFFFFF' : STATE_COLOR[state],
         fontFamily: 'var(--font-mono)',
         fontSize: 'var(--fs-xs)',
         lineHeight: 1.3,
@@ -71,9 +75,9 @@ export function SinglePaneHint() {
         style={{
           padding: '1px 5px',
           borderRadius: 'var(--radius-sm)',
-          border: '1px solid var(--border-strong)',
-          background: 'var(--bg)',
-          color: 'var(--text)',
+          border: isAiFixPrimary ? '1px solid rgba(255,255,255,0.58)' : '1px solid var(--border-strong)',
+          background: isAiFixPrimary ? 'rgba(255,255,255,0.16)' : 'var(--bg)',
+          color: isAiFixPrimary ? '#FFFFFF' : 'var(--text)',
           fontFamily: 'inherit',
           fontSize: 'inherit',
         }}
