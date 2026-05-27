@@ -9,6 +9,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "release:macos:dmg": "bash scripts/release-macos-dmg.sh",
+    "release:macos:app": "bash scripts/release-macos-app.sh",
+    "release:windows:exe": "bash scripts/release-windows-exe.sh",
+    "release:all": "bash scripts/release-all.sh",
     "tauri": "tauri",
     "tsc": "tsc --noEmit"
   },

@@ -23,7 +23,7 @@
 | **自定义快捷键** | 默认 `⌘⇧J` 呼出 / `⌘⇧L` 恢复；可改 + 冲突检测 + override 二次确认 |
 | **智能宽度** | 粘长行自动扩宽（4 层逻辑：手动拖锁定 / soft-wrap 跳过 / smartWidth 开关 / max-chars 阈值） |
 | **i18n** | English / 简体中文 |
-| **隐私** | 所有用户数据本地（SQLite + Keychain）· 仅 DeepSeek API key 加密存系统 Keychain · 日志不记 JSON 内容 |
+| **隐私** | 所有用户数据本地（SQLite + `secrets.json`）· DeepSeek API key 存用户数据目录并限制文件权限 · 日志不记 JSON 内容 |
 
 ## 系统需求
 
@@ -54,8 +54,19 @@ pnpm install                              # 装前端依赖
 cargo check --manifest-path src-tauri/Cargo.toml  # 装 Rust 依赖 + 生成 lockfile
 pnpm tauri dev                            # dev mode 启动（首次 ~5 min 编译）
 # 或：
-pnpm tauri build --target universal-apple-darwin  # 生产 dmg（未签名）
+pnpm release:macos:dmg                    # 生产 dmg（未签名或按本机签名环境）
 ```
+
+### 发布脚本
+
+```bash
+pnpm release:macos:dmg      # macOS：构建 .dmg → release-artifacts/macos-dmg/
+pnpm release:macos:app      # macOS：构建 .app → release-artifacts/macos-app/
+pnpm release:windows:exe    # Windows/MSVC：构建 NSIS installer .exe → release-artifacts/windows-exe/
+pnpm release:all            # 当前平台可构建的全部发布产物
+```
+
+Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `Jsonita.exe`。
 
 首次启动 macOS 会问 Accessibility 权限（全局快捷键需要）── 浮窗内 Modal 引导跳系统设置。授权后无需重启即生效。
 

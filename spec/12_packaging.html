@@ -17,7 +17,7 @@
     <div class="doc-header">
       <span class="doc-tag">SPEC · 章节 12</span>
       <h1 class="doc-title">打包、签名、验收</h1>
-      <p class="doc-subtitle">tauri.conf.json 全配置 · dmg 打包 · 签名 + notarization · 验收用例对齐 plan NFR。</p>
+      <p class="doc-subtitle">tauri.conf.json 全配置 · release scripts · dmg/app/Windows exe 打包 · 签名 + notarization。</p>
     </div>
 
     <h2><span class="h2-num">1</span>tauri.conf.json 全文</h2>
@@ -155,14 +155,44 @@
 pnpm tauri dev                       # 起 vite dev + tauri host
 pnpm icons regen                     # 重新生成图标派生</code></pre>
 
-    <h3><span class="h3-num">4.2</span>本地发布构建（无签名）</h3>
+    <h3><span class="h3-num">4.2</span>自动发布脚本</h3>
 
-    <pre><code>pnpm tauri build                     # 输出到 src-tauri/target/release/bundle/
-# 产物：
-#   src-tauri/target/release/bundle/dmg/Jsonita_0.3.0-m0_aarch64.dmg
-#   src-tauri/target/release/bundle/macos/Jsonita.app
-# universal binary（同时支持 Intel + Apple Silicon）：
-pnpm tauri build --target universal-apple-darwin</code></pre>
+    <table>
+      <thead><tr><th>命令</th><th>脚本</th><th>运行环境</th><th>产物目录</th></tr></thead>
+      <tbody>
+        <tr><td><code>pnpm release:macos:dmg</code></td><td><code>scripts/release-macos-dmg.sh</code></td><td>macOS</td><td><code>release-artifacts/macos-dmg/</code></td></tr>
+        <tr><td><code>pnpm release:macos:app</code></td><td><code>scripts/release-macos-app.sh</code></td><td>macOS</td><td><code>release-artifacts/macos-app/</code></td></tr>
+        <tr><td><code>pnpm release:windows:exe</code></td><td><code>scripts/release-windows-exe.sh</code></td><td>Windows Git Bash/MSYS + MSVC</td><td><code>release-artifacts/windows-exe/</code></td></tr>
+        <tr><td><code>pnpm release:all</code></td><td><code>scripts/release-all.sh</code></td><td>当前平台原生产物</td><td><code>release-artifacts/</code></td></tr>
+      </tbody>
+    </table>
+
+    <pre><code># macOS dmg（默认 universal-apple-darwin；可用 TAURI_MAC_TARGET 覆盖）
+pnpm release:macos:dmg
+
+# macOS .app
+pnpm release:macos:app
+
+# Windows NSIS installer .exe（在 Windows runner 上执行；不是裸 exe 分发）
+pnpm release:windows:exe
+
+# 当前平台能构建的全部发布产物：
+# - macOS：dmg + app，并提示 Windows exe 需 Windows runner
+# - Windows：NSIS exe，并提示 macOS 产物需 macOS runner
+pnpm release:all</code></pre>
+
+    <p>脚本公共逻辑在 <code>scripts/lib/release-common.sh</code>：统一检查运行平台、执行 <code>pnpm tauri build</code>、清空并收集本次产物到 <code>release-artifacts/</code>。本地临时无签名构建可加 <code>TAURI_NO_SIGN=1</code>；CI 非交互构建可加 <code>TAURI_CI=1</code> 或使用标准 <code>CI=true</code>。</p>
+
+    <h3><span class="h3-num">4.3</span>底层 Tauri 构建命令</h3>
+
+    <pre><code># dmg
+pnpm tauri build --target universal-apple-darwin --bundles dmg
+
+# app
+pnpm tauri build --target universal-apple-darwin --bundles app
+
+# Windows installer .exe（NSIS；需 Windows/MSVC 环境）
+pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis</code></pre>
 
     <h2><span class="h2-num">5</span>macOS 签名 + notarization</h2>
 
@@ -245,7 +275,9 @@ xcrun stapler staple "src-tauri/target/release/bundle/dmg/Jsonita_0.3.0-m0_unive
   "timestampUrl":          "http://timestamp.digicert.com"
 }
 
-pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis</code></pre>
+pnpm release:windows:exe</code></pre>
+
+    <p>Windows 对外分发的 <code>.exe</code> 指 NSIS installer exe。构建目录里的裸 <code>Jsonita.exe</code> 只适合开发或内部 smoke test，不作为正式发布物。</p>
 
     <h2><span class="h2-num">7</span>CI（GitHub Actions）</h2>
 

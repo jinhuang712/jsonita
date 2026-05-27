@@ -35,8 +35,8 @@
         <tr><td>HTTP 客户端</td><td>reqwest（Rust）</td><td>调 DeepSeek 用；Tauri 已默认集成 fetch plugin</td></tr>
         <tr><td>全局快捷键</td><td>tauri-plugin-global-shortcut</td><td>官方插件，多平台一致 API</td></tr>
         <tr><td>菜单栏图标</td><td>Tauri tray-icon API</td><td>原生 macOS NSStatusItem 封装</td></tr>
-        <tr><td>打包</td><td>tauri bundler → .dmg</td><td>官方推荐；code signing + notarization 支持完善</td></tr>
-        <tr><td>未来扩展</td><td>Windows 10+</td><td>同一份代码 + Tauri Windows 构建</td></tr>
+        <tr><td>打包</td><td>Tauri bundler + release scripts</td><td>macOS 输出 .dmg/.app；Windows 输出 NSIS installer .exe；产物统一收集到 <code>release-artifacts/</code></td></tr>
+        <tr><td>未来扩展</td><td>Windows 10+</td><td>同一份代码 + Windows/MSVC runner 构建安装包；正式分发需代码签名</td></tr>
       </tbody>
     </table>
 
