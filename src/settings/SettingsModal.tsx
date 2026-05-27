@@ -359,12 +359,40 @@ function Row({
   return (
     <label style={{ ...rowStyle, cursor: 'pointer' }}>
       <span>{label}</span>
+      <SettingsCheckbox checked={on} onChange={onChange} />
+    </label>
+  );
+}
+
+function SettingsCheckbox({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <span style={checkboxWrapStyle}>
       <input
         type="checkbox"
-        checked={on}
+        checked={checked}
         onChange={(e) => onChange(e.target.checked)}
+        style={checkboxInputStyle}
       />
-    </label>
+      <span aria-hidden="true" style={checked ? checkboxCheckedStyle : checkboxBoxStyle}>
+        {checked ? (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M3 6.1 5.1 8.2 9 3.8"
+              stroke="white"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : null}
+      </span>
+    </span>
   );
 }
 
@@ -409,6 +437,44 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   color: 'var(--text)',
+};
+
+const checkboxWrapStyle: React.CSSProperties = {
+  position: 'relative',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 22,
+  height: 22,
+};
+
+const checkboxInputStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  margin: 0,
+  opacity: 0,
+  cursor: 'pointer',
+};
+
+const checkboxBoxStyle: React.CSSProperties = {
+  width: 15,
+  height: 15,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 4,
+  border: '1px solid var(--border-strong)',
+  background: 'var(--bg)',
+  boxShadow: 'inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent)',
+  transition:
+    'background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)',
+};
+
+const checkboxCheckedStyle: React.CSSProperties = {
+  ...checkboxBoxStyle,
+  border: '1px solid var(--primary)',
+  background: 'var(--primary)',
+  boxShadow: 'none',
 };
 
 const btnGhost: React.CSSProperties = {
