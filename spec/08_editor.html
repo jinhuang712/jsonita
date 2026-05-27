@@ -535,7 +535,7 @@ function computeCopyText(meta: NodeMeta): string {
 
     <h3><span class="h3-num">5.1</span>单窗模式（F9）</h3>
 
-    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，输入编辑器成为唯一工作区。后台 debounce 只以 Format 逻辑校验 JSON 合法性并更新状态栏；当前 Tab 的实际转换由 <kbd>⌘Enter</kbd> 显式触发，成功后把结果 in-place 写回 input。</p>
+    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，主区域只承载一个工作视图。后台 debounce 只以 Format 逻辑校验 JSON 合法性并更新状态栏；Format / Minify / →Str / →JSON 的实际转换由 <kbd>⌘Enter</kbd> 显式触发，成功后把结果 in-place 写回 input。Tree 是视图，合法 JSON 时直接整栏显示 <code>TreeView</code>，不显示 <kbd>⌘Enter</kbd> 提示。</p>
 
     <pre><code>// src/shell/FloatingWindow.tsx
 const { singlePaneMode } = useSettings();
@@ -544,10 +544,10 @@ return singlePaneMode
   ? '1fr'
   : '1fr 1fr';</code></pre>
 
-    <p><b>关键</b>：当前没有独立 <code>SinglePaneLayout.tsx</code>；实现由 <code>FloatingWindow</code> 隐藏右栏、<code>SinglePaneHint</code> 显示右下角提示、<code>useGlobalHotkeys</code> 捕获 <kbd>⌘Enter</kbd> 并调用 <code>runPaneApply</code>。Tree 在单窗下等价 Format；AI Fix 在单窗下直接应用 fixed JSON，不展示 DiffView。</p>
+    <p><b>关键</b>：当前没有独立 <code>SinglePaneLayout.tsx</code>；实现由 <code>FloatingWindow</code> 隐藏右栏，并在 <code>singlePaneMode &amp;&amp; activePane === 'tree' &amp;&amp; treeData</code> 时把左栏内容替换为 <code>TreeView</code>。<code>SinglePaneHint</code> 只在非 Tree 功能显示右下角提示；<code>useGlobalHotkeys</code> 捕获非 Tree 的 <kbd>⌘Enter</kbd> 并调用 <code>runPaneApply</code>。AI Fix 在单窗下直接应用 fixed JSON，不展示 DiffView。</p>
 
     <pre><code>// src/hooks/useGlobalHotkeys.ts (single-pane)
-if (singlePaneMode &amp;&amp; event.metaKey &amp;&amp; event.key === 'Enter') {
+if (singlePaneMode &amp;&amp; activePane !== 'tree' &amp;&amp; event.metaKey &amp;&amp; event.key === 'Enter') {
   const result = await runPaneApply(content, activePane, editorError);
   setContent(result);
   session_save_last({ content: result, opType: paneToOpType(activePane) });

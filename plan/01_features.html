@@ -318,12 +318,13 @@
     <p><b>设置项</b>（General 分组）：<code>restoreWindow</code> 字段保留，当前版本不驱动自动恢复 UI。</p>
 
     <h2 id="f9"><span class="h2-num">F9</span>单窗模式 (Single-pane Mode)</h2>
-    <p>可选模式：默认是左右双栏（input | output）对比；开启后取消右侧 output 面板，输入编辑器成为唯一工作区。后台只做 JSON 合法性校验；当前功能（Format / Minify / →Str / →JSON / Tree 等价 Format）必须由用户按 <kbd>⌘Enter</kbd> 显式执行，成功后结果 in-place 写回输入编辑器。</p>
+    <p>可选模式：默认是左右双栏（input | output）对比；开启后取消右侧 output 面板，主区域只承载一个工作视图。Format / Minify / →Str / →JSON 由用户按 <kbd>⌘Enter</kbd> 显式执行，成功后结果 in-place 写回输入编辑器；Tree 是视图，不走执行动作，合法 JSON 时直接整栏显示树。</p>
 
     <ul>
       <li><b>适用场景</b>：屏幕小、希望只保留输入区域</li>
       <li><b>开关</b>：F7.1 General「☐ 单窗模式」（默认<b>关</b>）</li>
-      <li><b>执行</b>：右下角固定提示 <kbd>⌘↵</kbd> Run {pane}；运行中 / 成功 / 失败在同一位置短暂反馈</li>
+      <li><b>执行</b>：非 Tree 功能右下角固定提示 <kbd>⌘↵</kbd> Run {pane}；运行中 / 成功 / 失败在同一位置短暂反馈</li>
+      <li><b>Tree</b>：如果当前内容是合法 JSON，切到 Tree 后主区域直接显示 <code>TreeView</code>；空白 / 非法 JSON 时保留编辑器用于继续修正</li>
       <li><b>回滚</b>：因为结果写回同一个 CodeMirror 文档，<kbd>⌘Z</kbd> 可以撤销本次应用</li>
       <li><b>历史</b>：<kbd>⌘Enter</kbd> 应用成功后覆盖 <code>last_session</code>；SQLite history 仍只在 AI Fix 接受等显式路径写入</li>
       <li><b>AI Fix</b>：single-pane 下 <kbd>⌘Enter</kbd> 直接调用 <code>ai_fix</code> 并把 fixed JSON 写回输入区，不展示 DiffView；失败反馈在右下角 hint + 现有错误状态</li>

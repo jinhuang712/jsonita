@@ -42,6 +42,7 @@ export function FloatingWindow() {
       return null;
     }
   }, [activePane, outputText, status]);
+  const showTreeInSinglePane = singlePaneMode && activePane === 'tree' && treeData !== null;
 
   return (
     <div
@@ -73,12 +74,16 @@ export function FloatingWindow() {
             overflow: 'hidden',
           }}
         >
-          <Editor
-            theme={effectiveTheme}
-            value={content}
-            onChange={setContent}
-            softWrap={editorSoftWrap}
-          />
+          {showTreeInSinglePane ? (
+            <TreeView data={treeData} />
+          ) : (
+            <Editor
+              theme={effectiveTheme}
+              value={content}
+              onChange={setContent}
+              softWrap={editorSoftWrap}
+            />
+          )}
         </div>
         {!singlePaneMode && (
           <div style={{ overflow: 'hidden' }}>

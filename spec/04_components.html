@@ -139,7 +139,7 @@ interface TabBarProps {
 
     <h3><span class="h3-num">4.2.1</span>SinglePaneHint</h3>
 
-    <p>单窗模式专用的右下角提示组件。仅当 <code>settings.singlePaneMode=true</code> 渲染，位置固定在编辑器右下角、状态栏上方，提示 <kbd>⌘↵</kbd> Run {pane}；<kbd>⌘Enter</kbd> 执行时切换为 running / applied / failed 短反馈。</p>
+    <p>单窗模式专用的右下角提示组件。仅当 <code>settings.singlePaneMode=true</code> 且 active pane 不是 Tree 时渲染，位置固定在编辑器右下角、状态栏上方，提示 <kbd>⌘↵</kbd> Run {pane}；<kbd>⌘Enter</kbd> 执行时切换为 running / applied / failed 短反馈。Tree 是视图模式，直接整栏渲染 <code>TreeView</code>，不显示 Run hint。</p>
 
     <pre><code>// src/shell/SinglePaneHint.tsx
 type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';</code></pre>
