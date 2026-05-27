@@ -7,6 +7,8 @@
 use crate::error::JsonitaError;
 use crate::types::ClipboardSniff;
 
+const GITHUB_URL: &str = "https://github.com/jinhuang712/jsonita";
+
 #[tauri::command]
 pub async fn clipboard_read() -> Result<ClipboardSniff, JsonitaError> {
     // M1-N2 替换：tauri-plugin-clipboard-manager read_text + sniff JSON
@@ -40,6 +42,28 @@ pub fn open_db_path() -> Result<(), JsonitaError> {
             let _ = std::process::Command::new("open").arg(&path).spawn();
         }
     }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn open_github() -> Result<(), JsonitaError> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open").arg(GITHUB_URL).spawn();
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("cmd")
+            .args(["/C", "start", "", GITHUB_URL])
+            .spawn();
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let _ = std::process::Command::new("xdg-open").arg(GITHUB_URL).spawn();
+    }
+
     Ok(())
 }
 

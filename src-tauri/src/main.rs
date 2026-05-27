@@ -59,6 +59,7 @@ fn main() {
             cmds::system::clipboard_read,
             cmds::system::open_log_dir,
             cmds::system::open_db_path,
+            cmds::system::open_github,
             cmds::system::quit_app,
             // M2-N1: settings (real load/patch/persist)
             cmds::settings::settings_get_all,
