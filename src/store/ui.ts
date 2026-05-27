@@ -12,6 +12,7 @@ export type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 export const DEFAULT_EDITOR_FONT_SIZE = 13;
 export const MIN_EDITOR_FONT_SIZE = 10;
 export const MAX_EDITOR_FONT_SIZE = 24;
+export const EDITOR_FONT_ZOOM_STEP = 2;
 
 interface UiState {
   activePane: Pane;

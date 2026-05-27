@@ -12,7 +12,7 @@ import { isJsonitaError } from '../ipc/error';
 import { on } from '../ipc/events';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
-import { useUiStore, type Pane } from '../store/ui';
+import { EDITOR_FONT_ZOOM_STEP, useUiStore, type Pane } from '../store/ui';
 
 const PANE_ORDER: Pane[] = ['format', 'minify', 'tree', 'json-to-str', 'str-to-json'];
 
@@ -230,12 +230,12 @@ export function useGlobalHotkeys() {
 
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();
-        zoomEditorFont(1);
+        zoomEditorFont(EDITOR_FONT_ZOOM_STEP);
         return;
       }
       if (event.key === '-') {
         event.preventDefault();
-        zoomEditorFont(-1);
+        zoomEditorFont(-EDITOR_FONT_ZOOM_STEP);
         return;
       }
       if (event.key === '0') {
