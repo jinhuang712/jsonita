@@ -23,7 +23,6 @@ export function FloatingWindow() {
   const content = useEditorStore((s) => s.content);
   const outputText = useEditorStore((s) => s.outputText);
   const setContent = useEditorStore((s) => s.setContent);
-  const status = useEditorStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
   const editorFontSize = useUiStore((s) => s.editorFontSize);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
@@ -35,16 +34,16 @@ export function FloatingWindow() {
   // 智能缩放：内容 / 字号变化后自动调整窗口（spec/06 § 7）
   useSmartWidth();
 
-  // tree tab 时把 outputText parse 为 object 给 TreeView
-  const treeData = useMemo(() => {
-    if (activePane !== 'tree' || status !== 'valid') return null;
+  // Tree 是当前输入内容的视图；不依赖 output preview，避免非法状态时静默退回编辑器。
+  const treeState = useMemo(() => {
+    if (content.trim() === '') return { kind: 'empty' as const };
     try {
-      return JSON.parse(outputText);
+      return { kind: 'valid' as const, data: JSON.parse(content) as unknown };
     } catch {
-      return null;
+      return { kind: 'invalid' as const };
     }
-  }, [activePane, outputText, status]);
-  const showTreeInSinglePane = singlePaneMode && activePane === 'tree' && treeData !== null;
+  }, [content]);
+  const showTreeInSinglePane = singlePaneMode && activePane === 'tree';
 
   return (
     <div
@@ -79,7 +78,7 @@ export function FloatingWindow() {
           }}
         >
           {showTreeInSinglePane ? (
-            <TreeView data={treeData} />
+            <TreePanel state={treeState} />
           ) : (
             <Editor
               theme={effectiveTheme}
@@ -93,8 +92,8 @@ export function FloatingWindow() {
           <div style={{ overflow: 'hidden' }}>
             {activePane === 'ai-fix' ? (
               <AiFixPane />
-            ) : activePane === 'tree' && treeData !== null ? (
-              <TreeView data={treeData} />
+            ) : activePane === 'tree' ? (
+              <TreePanel state={treeState} />
             ) : (
               <Editor
                 theme={effectiveTheme}
@@ -110,6 +109,39 @@ export function FloatingWindow() {
       <SinglePaneHint />
       <StatusBar />
       <WindowResizeHandles />
+    </div>
+  );
+}
+
+type TreePanelState =
+  | { kind: 'valid'; data: unknown }
+  | { kind: 'empty' }
+  | { kind: 'invalid' };
+
+function TreePanel({ state }: { state: TreePanelState }) {
+  if (state.kind === 'valid') {
+    return <TreeView data={state.data} />;
+  }
+
+  return (
+    <div
+      className="jsonita-tree-container"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        color: state.kind === 'invalid' ? 'var(--danger)' : 'var(--text-faint)',
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 'calc(var(--fs-tree) + 8px)', marginBottom: 6 }}>
+          {state.kind === 'invalid' ? 'Tree unavailable' : '{ }'}
+        </div>
+        <div style={{ color: 'var(--text-muted)' }}>
+          {state.kind === 'invalid' ? 'Fix JSON to view the tree' : 'Paste JSON to view the tree'}
+        </div>
+      </div>
     </div>
   );
 }
