@@ -60,8 +60,9 @@ kbd {
   display: flex;
   align-items: center;
   min-height: 1.8em;
-  padding: 0 76px 0 0;
+  padding: 0 48px 0 0;
   border-radius: var(--radius-sm);
+  cursor: default;
   outline: none;
   white-space: pre;
 }
@@ -111,7 +112,7 @@ kbd {
   padding: 0;
   color: var(--json-key);
   font-weight: 600;
-  cursor: copy;
+  cursor: default;
 }
 
 .jsonita-tree-index {
@@ -154,22 +155,20 @@ kbd {
 .tree-copy-icon {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 10px;
   opacity: 0;
   transform: translateY(-50%);
-  padding: 1px 7px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
+  padding: 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--text-muted);
   font-size: var(--fs-xs);
-  line-height: 18px;
-  cursor: copy;
+  line-height: 1;
+  cursor: default;
   transition:
     opacity var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out);
 }
 
 .tree-copy-icon-visible {
@@ -177,20 +176,15 @@ kbd {
 }
 
 .tree-copy-icon-copied {
-  border-color: var(--primary-edge);
-  background: var(--primary-soft);
   color: var(--primary);
 }
 
 .tree-copy-icon:hover,
 .tree-copy-icon:focus {
-  border-color: var(--primary-edge);
-  background: var(--primary-soft);
   color: var(--primary);
   outline: none;
 }
 
 .tree-copy-icon:active {
-  background: var(--primary);
-  color: white;
+  color: var(--text);
 }

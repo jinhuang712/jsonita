@@ -389,7 +389,7 @@ function TreeNode({ value, path, label }) {
 }
 .jsonita-tree-node     { position: relative; display: flex; align-items: center; min-height: 1.8em; }
 .jsonita-tree-node:hover { background: var(--primary-soft); }
-.jsonita-tree-key      { color: var(--json-key);    font-weight: 600; cursor: copy; }
+.jsonita-tree-key      { color: var(--json-key);    font-weight: 600; cursor: default; }
 .jsonita-tree-string   { color: var(--json-string); }
 .jsonita-tree-number   { color: var(--json-number); }
 .jsonita-tree-bool     { color: var(--json-bool);   }
@@ -434,7 +434,7 @@ function TreeNode({ value, path, label }) {
       </tbody>
     </table>
 
-    <p><b>实现 ── 每行内置 copy button，但只允许一个 active action</b>：自渲染 <code>TreeNode</code> 已持有节点 path 与 raw value，不需要 DOM 注入。React 维护 <code>activeCopyKey</code> / <code>copiedKey</code>，确保父子节点 hover / focus 不会同时露出两个 copy 按钮；鼠标离开树或切到其他节点时立即清理 copied 反馈。</p>
+    <p><b>实现 ── 每行内置轻量 copy action，但只允许一个 active action</b>：自渲染 <code>TreeNode</code> 已持有节点 path 与 raw value，不需要 DOM 注入。React 维护 <code>activeCopyKey</code> / <code>copiedKey</code>，确保父子节点 hover / focus 不会同时露出两个 copy action；鼠标离开树或切到其他节点时立即清理 copied 反馈。copy action 无边框 / 无背景，hover 时不改变整行 cursor。</p>
 
     <pre><code>// src/tree/TreeView.tsx
 
@@ -465,30 +465,27 @@ function computeCopyText(meta: NodeMeta): string {
 }
 .tree-copy-icon {
   position: absolute;
-  top: 50%; right: 8px;
+  top: 50%; right: 10px;
   opacity: 0;                          /* 默认隐 */
   transform: translateY(-50%);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0 6px;
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
   font-size: 11px;
-  line-height: 18px;
-  cursor: pointer;
-  transition: opacity var(--dur-fast) var(--ease-out);
+  line-height: 1;
+  cursor: default;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 .tree-copy-icon-visible { opacity: 1; }
 .tree-copy-icon-copied {
-  background: var(--primary-soft);
-  border-color: var(--primary-edge);
   color: var(--primary);
 }
 .tree-copy-icon:hover {
-  background: var(--primary-soft);
-  border-color: var(--primary-edge);
   color: var(--primary);
 }
-.tree-copy-icon:active { background: var(--primary); color: white; }
+.tree-copy-icon:active { color: var(--text); }
 </code></pre>
 
     <p><b>键盘可达</b>：聚焦在某节点行（含 <code>tabindex="0"</code>）按 <kbd>⌘C</kbd> 等同于点 <code>📋</code>；Tree 容器内按 <kbd>⌘A</kbd> 选择 root / 整棵树，随后 <kbd>⌘C</kbd> 复制 root subtree。键盘焦点环用 <code>--shadow-focus</code>。应用 chrome 设置 <code>user-select: none</code> 并由全局 hotkey 拦截非编辑区 <kbd>⌘A</kbd>，避免 TabBar / StatusBar 被 DOM 选中。</p>
