@@ -5,7 +5,7 @@
  * 大文件 > 5 MB 直接标 `large` 不调 engine（spec/08 § 3.1）。
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { runPanePreview, paneToOpType } from '../editor/transforms';
 import { isJsonitaError } from '../ipc/error';
 import { session } from '../ipc/commands';
@@ -16,6 +16,7 @@ import { useUiStore } from '../store/ui';
 const LARGE_THRESHOLD = 5 * 1024 * 1024;
 
 export function useDebouncedTransform() {
+  const requestSeqRef = useRef(0);
   const content = useEditorStore((s) => s.content);
   const setOutput = useEditorStore((s) => s.setOutput);
   const setStatus = useEditorStore((s) => s.setStatus);
@@ -25,6 +26,9 @@ export function useDebouncedTransform() {
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
 
   useEffect(() => {
+    const requestSeq = ++requestSeqRef.current;
+    const isCurrentRequest = () => requestSeq === requestSeqRef.current;
+
     if (content.trim() === '') {
       setStatus('empty');
       setOutput('');
@@ -41,6 +45,7 @@ export function useDebouncedTransform() {
       try {
         const previewPane = singlePaneMode ? 'format' : activePane;
         const result = await runPanePreview(content, previewPane);
+        if (!isCurrentRequest()) return;
         setOutput(result);
         setStatus('valid');
         setError(null);
@@ -54,6 +59,7 @@ export function useDebouncedTransform() {
           })
           .catch(() => {});
       } catch (e: unknown) {
+        if (!isCurrentRequest()) return;
         if (isJsonitaError(e) && e.kind === 'Parse') {
           setStatus('error');
           setError({ line: e.data.line, col: e.data.col, msg: e.data.msg });
@@ -65,6 +71,8 @@ export function useDebouncedTransform() {
       }
     }, 300);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [content, activePane, setOutput, setStatus, setError, setShowAiFix, singlePaneMode]);
 }

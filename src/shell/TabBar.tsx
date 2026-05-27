@@ -60,7 +60,8 @@ export function TabBar() {
             onClick={() => setActive(tab.id)}
             style={{
               padding: '4px 10px',
-              fontSize: 12,
+              fontSize: 'var(--fs-sm)',
+              lineHeight: 'var(--lh-tight)',
               fontWeight: isActive ? 600 : 400,
               background: isActive ? 'var(--primary-soft)' : 'transparent',
               color: isActive ? 'var(--primary)' : 'var(--text-muted)',
@@ -84,7 +85,8 @@ export function TabBar() {
           title={t('tab.aiFixDisabledTooltip')}
           style={{
             padding: '4px 10px',
-            fontSize: 12,
+            fontSize: 'var(--fs-sm)',
+            lineHeight: 'var(--lh-tight)',
             fontWeight: 600,
             background: 'var(--accent-soft)',
             color: 'var(--accent)',

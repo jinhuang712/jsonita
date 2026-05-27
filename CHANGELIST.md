@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+### fix · 输入中的 invalid JSON 不再打断编辑器
+
+用户反馈：每输入一个字符就检测到 invalid JSON，随后编辑器像被拦截一样无法连续输入。根因不是键盘被拦截，而是 <code>Editor.tsx</code> 把 <code>cfg.error</code> 放进 CodeMirror 初始化 effect 依赖；debounce parse 每次更新错误位置都会销毁并重建 EditorView，导致焦点 / 光标 / 输入法上下文被打断。
+
+- `src/editor/Editor.tsx` ── 新增 `errorRef` 保存最新 external parse error；初始化 effect 不再依赖 `cfg.error`；error 变化时只调用 `forceLinting(view)` 刷新 lint 标注。
+- `src/editor/extensions.ts` ── `externalLinter` 永久挂载，支持 `getExternalError` 动态读取 ref；不再因 error 是否存在切换 extension 集合。
+- `spec/08_editor.html` 同步追认：parse error 是 lint 数据，不是 EditorView 生命周期配置。
+
+结果：输入半截 JSON 时仍可显示 inline lint / 状态栏错误，但不会重建 CodeMirror，也不会阻止继续输入。
+
+后续追修：用户补成合法 JSON 后状态栏已 valid，但左侧 lint gutter 仍残留红 marker。
+
+- `src/hooks/useDebouncedTransform.ts` ── debounce 后发出的 async preview 加 request sequence，只接受最新输入对应的结果；旧 invalid parse 返回不能覆盖新 valid 状态。
+- `src/editor/Editor.tsx` ── value / error 变化后立即 + 下一帧各 `forceLinting(view)` 一次；当 `error=null` 时先 `setDiagnostics([])`，明确清掉 CodeMirror 在 doc change 中映射保留的旧 diagnostics / lint gutter marker。
+
 ### chore · 删除 progress 文档区
 
 用户确认 `progress/` 不再必要。删除 5 篇 phase 进度 HTML，并同步清理当前文档入口：
@@ -15,6 +30,18 @@
 - `assets/nav.js` 删除 progress section 定义
 - `assets/style.css` 文档首页布局从三栏改为两栏
 - `TODO.md` / `scripts/verify_doc_links.mjs` / `spec/00_architecture.html` / `spec/05_icons_theme.html` 清掉当前引用
+
+### fix · Editor gutter 对齐 + 字号缩放覆盖浮窗 chrome
+
+用户截图反馈两个问题：行号 gutter 与编辑区当前行背景没有对齐；按 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 时顶部功能 Tab 没有跟着缩放。
+
+- `src/editor/theme.ts` ── CodeMirror `.cm-line`、`.cm-gutters`、`.cm-gutterElement` 显式共用 `--fs-editor` / `--lh-code`；行号列补 `minWidth`、左右 padding 和 right-align，确保 active line gutter 与正文行同高同 y。
+- `src/shell/FloatingWindow.tsx` ── 在浮窗根节点把 `editorFontSize` 映射到 `--fs-editor` / `--fs-tree`，并同步派生 `--fs-xs` / `--fs-sm`，让浮窗内紧凑 chrome 文本跟随字号缩放。
+- `src/shell/TabBar.tsx` ── Tab 按钮删除固定 `12px`，改走 `--fs-sm` + `--lh-tight`，所以顶部 Format / Minify / Tree / →Str / →JSON 会随缩放变化。
+- 同步文档：`plan/01_features.html`、`plan/02_interaction.html`、`spec/03_design_tokens.html`、`spec/04_components.html`、`spec/08_editor.html` 追认字号缩放覆盖范围与 gutter 对齐契约。
+- 后续视觉修正：chrome 字号不能和编辑器等比例放大；改为轻微跟随并封顶（`--fs-xs` max 12.5px，`--fs-sm` max 14px），避免放大后 TabBar / StatusBar 喧宾夺主。
+
+验证：本地模拟 <kbd>⌘=</kbd> 后，编辑器 / 行号从 13px → 15px，TabBar 从 12.5px → 12.94px；`pnpm build` 通过（仅保留 Vite bundle size warning）。
 
 ### fix · Keychain 切换的多处遗漏 + Single-pane mode 真接 + About 占位 + Test mock + spec/plan 大扫
 

@@ -46,6 +46,9 @@ export function FloatingWindow() {
     }
   }, [content]);
   const showTreeInSinglePane = singlePaneMode && activePane === 'tree';
+  const chromeFontDelta = editorFontSize - 13;
+  const chromeXsFontSize = clamp(11 + chromeFontDelta * 0.18, 10, 12.5);
+  const chromeSmFontSize = clamp(12.5 + chromeFontDelta * 0.22, 11, 14);
 
   return (
     <div
@@ -62,6 +65,8 @@ export function FloatingWindow() {
         position: 'relative',
         ['--fs-editor' as string]: `${editorFontSize}px`,
         ['--fs-tree' as string]: `${Math.max(10, editorFontSize - 1)}px`,
+        ['--fs-xs' as string]: `${chromeXsFontSize}px`,
+        ['--fs-sm' as string]: `${chromeSmFontSize}px`,
       }}
     >
       <TabBar />
@@ -117,6 +122,10 @@ export function FloatingWindow() {
       <WindowResizeHandles />
     </div>
   );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 type TreePanelState =

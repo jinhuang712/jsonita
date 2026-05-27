@@ -36,6 +36,7 @@ export interface EditorConfig {
   softWrap?: boolean;
   placeholderText?: string;
   error?: ExternalEditorError | null;
+  getExternalError?: () => ExternalEditorError | null;
 }
 
 export function makeExtensions(cfg: EditorConfig): Extension[] {
@@ -58,7 +59,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     json(),
     linter((view) => (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
     supplementalJsonLinter(),
-    cfg.error ? externalLinter(() => cfg.error ?? null) : [],
+    externalLinter(cfg.getExternalError ?? (() => cfg.error ?? null)),
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     jsonitaJsonHighlight,

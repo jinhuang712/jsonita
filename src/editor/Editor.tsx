@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { forceLinting, setDiagnostics } from '@codemirror/lint';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
@@ -20,6 +21,9 @@ interface EditorProps extends EditorConfig {
 export function Editor({ value, onChange, theme, ...cfg }: EditorProps) {
   const ref = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const errorRef = useRef(cfg.error ?? null);
+
+  errorRef.current = cfg.error ?? null;
 
   useEffect(() => {
     if (!ref.current) return;
@@ -29,7 +33,16 @@ export function Editor({ value, onChange, theme, ...cfg }: EditorProps) {
     const view = new EditorView({
       state: EditorState.create({
         doc: value,
-        extensions: [...makeExtensions({ theme, ...cfg }), updateListener],
+        extensions: [
+          ...makeExtensions({
+            theme,
+            readOnly: cfg.readOnly,
+            softWrap: cfg.softWrap,
+            placeholderText: cfg.placeholderText,
+            getExternalError: () => errorRef.current,
+          }),
+          updateListener,
+        ],
       }),
       parent: ref.current,
     });
@@ -38,9 +51,27 @@ export function Editor({ value, onChange, theme, ...cfg }: EditorProps) {
       view.destroy();
       viewRef.current = null;
     };
-    // theme / config 变化时重建 instance
+    // theme / config 变化时重建 instance；parse error 变化只刷新 lint，不重建。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, cfg.readOnly, cfg.softWrap, cfg.placeholderText, cfg.error]);
+  }, [theme, cfg.readOnly, cfg.softWrap, cfg.placeholderText]);
+
+  useEffect(() => {
+    const v = viewRef.current;
+    if (!v) return;
+    if (!cfg.error) {
+      v.dispatch(setDiagnostics(v.state, []));
+    }
+    forceLinting(v);
+    const id = window.requestAnimationFrame(() => {
+      const current = viewRef.current;
+      if (!current) return;
+      if (!cfg.error) {
+        current.dispatch(setDiagnostics(current.state, []));
+      }
+      forceLinting(current);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [cfg.error, value]);
 
   // 外部 setValue（store 调 setContent 用于 AI Fix / 历史恢复 / 上次会话）
   useEffect(() => {
