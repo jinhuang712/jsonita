@@ -129,7 +129,7 @@ interface TabBarProps {
       <thead><tr><th>status</th><th>左侧文案</th></tr></thead>
       <tbody>
         <tr><td><code>valid</code></td><td>"● Valid JSON · X lines · Y bytes"</td></tr>
-        <tr><td><code>error</code></td><td>"● Line X, Col Y: {msg}"（msg 截 80 字符）</td></tr>
+        <tr><td><code>error</code></td><td>"● Invalid JSON · Line X, Col Y"；详细 reason 交给 inline lint tooltip</td></tr>
         <tr><td><code>empty</code></td><td>"—"（无圆点）</td></tr>
         <tr><td><code>large</code></td><td>"● Large file · X bytes"</td></tr>
       </tbody>

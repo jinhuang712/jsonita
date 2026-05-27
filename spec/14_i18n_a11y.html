@@ -260,9 +260,8 @@ export function StatusBar({ status, errorLoc }: StatusBarProps) {
   const { t } = useTranslation('shell');  // namespace = shell
   if (status === 'error' &amp;&amp; errorLoc) {
     return &lt;span&gt;
-      ● {t('statusBar.errorAtLineCol', {
-            line: errorLoc.line, col: errorLoc.col, msg: errorLoc.msg
-          })}
+      ● {t('statusBar.invalid')} · {t('statusBar.line')} {errorLoc.line},
+        {t('statusBar.col')} {errorLoc.col}
     &lt;/span&gt;;
   }
   return &lt;span&gt;● {t('statusBar.valid')}&lt;/span&gt;;
@@ -312,7 +311,7 @@ pub enum Locale { EnUs, ZhCn }   // serialize: "en-us" | "zh-cn"</code></pre>
 
     <ol>
       <li><b>呼出浮窗 → 编辑器获焦</b>：用户应听到"JSON editor, edit text" + tabBar 当前激活 Tab 名</li>
-      <li><b>parse 错误</b>：状态栏 <code>aria-live="polite"</code> → 自动朗读 "Line 3, Col 12: unexpected token"</li>
+      <li><b>parse 错误</b>：状态栏 <code>aria-live="polite"</code> → 自动朗读 "Invalid JSON, Line 3, Col 12"；详细 reason 由 inline lint tooltip 承载</li>
       <li><b>AI Fix 完成</b>：DiffView Accept/Reject 按钮可 Tab；错误文本在 AI 面板内可读，未来 Toast 接入后再补 <code>role="status"</code></li>
     </ol>
 

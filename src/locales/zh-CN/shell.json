@@ -6,7 +6,10 @@
   },
   "statusBar": {
     "valid": "有效 JSON",
-    "empty": "粘贴 JSON 开始"
+    "empty": "粘贴 JSON 开始",
+    "invalid": "无效 JSON",
+    "line": "行",
+    "col": "列"
   },
   "singlePane": {
     "run": "执行{{pane}}",
