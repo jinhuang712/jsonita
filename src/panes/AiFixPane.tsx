@@ -121,6 +121,7 @@ export function AiFixPane() {
             Cancel
           </button>
           <button type="button" onClick={() => acceptAiFix(after, setContent, aiReset, setActivePane)} title="Cmd+Enter" style={btnPrimary}>
+            <span style={kbdStyle}>⌘↵</span>
             Accept
           </button>
         </div>
@@ -149,4 +150,17 @@ const btnPrimary: React.CSSProperties = {
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+};
+
+const kbdStyle: React.CSSProperties = {
+  padding: '1px 6px',
+  border: '1px solid rgba(255,255,255,0.45)',
+  borderRadius: 4,
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'calc(var(--fs-xs) - 1px)',
+  lineHeight: 1.2,
+  color: 'white',
 };
