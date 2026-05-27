@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { ai as aiApi, history as historyApi } from '../ipc/commands';
+import { ai as aiApi } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
+import { acceptAiFix } from './aiFixActions';
 import { DiffView } from './DiffView';
 
 /**
@@ -67,17 +68,6 @@ export function AiFixPane() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  const accept = async () => {
-    setContent(after);
-    try {
-      await historyApi.add(after, 'ai-fix');
-    } catch (_) {
-      /* ignore */
-    }
-    aiReset();
-    setActivePane('format');
-  };
-
   const reject = () => {
     aiReset();
     setActivePane('format');
@@ -104,7 +94,7 @@ export function AiFixPane() {
         <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', marginBottom: 8 }}>
           ✕ {aiError ?? 'AI Fix failed'}
         </div>
-        <button onClick={reject} style={btnGhost}>
+        <button type="button" onClick={reject} style={btnGhost}>
           Close
         </button>
       </div>
@@ -127,10 +117,10 @@ export function AiFixPane() {
             borderTop: '1px solid var(--border)',
           }}
         >
-          <button onClick={reject} style={btnGhost}>
+          <button type="button" onClick={reject} title="Esc" style={btnGhost}>
             Cancel
           </button>
-          <button onClick={accept} style={btnPrimary}>
+          <button type="button" onClick={() => acceptAiFix(after, setContent, aiReset, setActivePane)} title="Cmd+Enter" style={btnPrimary}>
             Accept
           </button>
         </div>

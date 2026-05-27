@@ -305,6 +305,9 @@ fn open_accessibility_settings() {
         <tr><td>切换功能 Tab</td><td><kbd>Tab</kbd> / <kbd>⇧Tab</kbd></td><td>window keydown capture；仅非编辑态拦截</td></tr>
         <tr><td>退出 editing</td><td><kbd>Esc</kbd>（焦点在 CodeMirror / 表单输入内）</td><td>window keydown capture → activeElement.blur()</td></tr>
         <tr><td>关闭浮窗</td><td><kbd>Esc</kbd>（非编辑态） / <kbd>⌘W</kbd></td><td>window_hide</td></tr>
+        <tr><td>错误 JSON 直接执行 AI Fix</td><td><kbd>⌘Enter</kbd></td><td>当 parse error 且 AI Fix 可用时优先拦截；单双栏一致，切到 <code>AiFixPane</code> 并自动请求</td></tr>
+        <tr><td>接受 AI Fix 结果</td><td><kbd>⌘Enter</kbd></td><td><code>awaiting-decision</code> 时优先拦截；替换输入、写 history、回到 Format</td></tr>
+        <tr><td>取消 AI Fix 结果</td><td><kbd>Esc</kbd></td><td><code>awaiting-decision</code> / <code>error</code> 时优先拦截；reset AI store、回到 Format，不隐藏窗口</td></tr>
         <tr><td>单窗模式应用当前功能</td><td><kbd>⌘Enter</kbd></td><td>window keydown capture；仅 <code>singlePaneMode=true</code> 时拦截并写回 input</td></tr>
         <tr><td>编辑器 / Tree 字体放大</td><td><kbd>⌘+</kbd></td><td>window keydown capture；每次 +2px，更新 UI store 字号并触发动态窗口缩放</td></tr>
         <tr><td>编辑器 / Tree 字体缩小</td><td><kbd>⌘-</kbd></td><td>window keydown capture；每次 -2px</td></tr>

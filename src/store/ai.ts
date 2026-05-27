@@ -17,6 +17,7 @@ interface AiState {
   startFix: (before: string) => void;
   setSuccess: (after: string) => void;
   setError: (err: string) => void;
+  retry: () => void;
   reset: () => void;
 }
 
@@ -29,5 +30,6 @@ export const useAiStore = create<AiState>((set) => ({
   startFix: (before) => set({ status: 'requesting', before, after: '', error: null }),
   setSuccess: (after) => set({ status: 'awaiting-decision', after, error: null }),
   setError: (err) => set({ status: 'error', error: err }),
+  retry: () => set({ status: 'idle', after: '', error: null }),
   reset: () => set({ status: 'idle', before: '', after: '', error: null }),
 }));
