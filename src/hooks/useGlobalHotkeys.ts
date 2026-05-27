@@ -10,6 +10,7 @@ import { paneToOpType, runPaneApply } from '../editor/transforms';
 import { history as historyApi, session, win } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { on } from '../ipc/events';
+import { hasPrimaryModifier, primaryHotkeyPrefix } from '../keyboard/accelerators';
 import { acceptAiFix } from '../panes/aiFixActions';
 import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
@@ -113,9 +114,8 @@ export function useGlobalHotkeys() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         event.key.toLowerCase() !== 'y' ||
-        !event.metaKey ||
+        !hasPrimaryModifier(event) ||
         event.altKey ||
-        event.ctrlKey ||
         event.shiftKey ||
         settingsModalOpen
       ) {
@@ -135,9 +135,8 @@ export function useGlobalHotkeys() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         event.key.toLowerCase() !== 'a' ||
-        !event.metaKey ||
+        !hasPrimaryModifier(event) ||
         event.altKey ||
-        event.ctrlKey ||
         event.shiftKey ||
         isTypingTarget(event.target) ||
         isTreeTarget(event.target)
@@ -160,9 +159,8 @@ export function useGlobalHotkeys() {
 
       const isCmdEnter =
         event.key === 'Enter' &&
-        event.metaKey &&
+        hasPrimaryModifier(event) &&
         !event.altKey &&
-        !event.ctrlKey &&
         !event.shiftKey;
       const isPlainEsc =
         event.key === 'Escape' &&
@@ -258,9 +256,8 @@ export function useGlobalHotkeys() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         event.key !== 'Enter' ||
-        !event.metaKey ||
+        !hasPrimaryModifier(event) ||
         event.altKey ||
-        event.ctrlKey ||
         event.shiftKey
       ) {
         return;
@@ -327,7 +324,7 @@ export function useGlobalHotkeys() {
 
   // ⌘K 清空 + 不污染 last_session（M1-N7：调 session_clear_last 显式清）
   useHotkeys(
-    'meta+k',
+    `${primaryHotkeyPrefix()}+k`,
     () => {
       clearEditor();
       session.clearLast().catch(() => {});
@@ -337,7 +334,7 @@ export function useGlobalHotkeys() {
 
   // ⌘⇧L 找回上次会话
   useHotkeys(
-    'meta+shift+l',
+    `${primaryHotkeyPrefix()}+shift+l`,
     restoreLast,
     { preventDefault: true },
   );
@@ -358,14 +355,14 @@ export function useGlobalHotkeys() {
   }, [setContent]);
 
   // ⌘W 关闭浮窗（spec/06 § 5.1 路由）
-  useHotkeys('meta+w', () => {
+  useHotkeys(`${primaryHotkeyPrefix()}+w`, () => {
     win.hide().catch(() => {});
   });
 
   // ⌘+ / ⌘- / ⌘0 调整编辑器与树视图字体大小。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!event.metaKey || event.altKey || event.ctrlKey) return;
+      if (!hasPrimaryModifier(event) || event.altKey) return;
 
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();

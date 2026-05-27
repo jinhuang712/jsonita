@@ -217,6 +217,8 @@ interface ToastOpts {
       <li>成功：变绿 1s 后回 default 状态</li>
     </ol>
 
+    <p><b>展示规则</b>：设置页不直接展示 <code>CmdOrCtrl</code> 占位符。macOS 显示 <kbd>⌘</kbd> / <kbd>⇧</kbd> / <kbd>⌥</kbd> 等符号；Windows 显示 <kbd>Ctrl</kbd> / <kbd>Shift</kbd> / <kbd>Alt</kbd> 文本。Shortcuts 分组同时展示不可编辑的内置 keymap（<kbd>Tab</kbd> / <kbd>⇧Tab</kbd>、<kbd>Esc</kbd>、<kbd>Esc</kbd><kbd>Esc</kbd>、<kbd>⌘↵</kbd>、<kbd>⌘Y</kbd>、<kbd>⌘K</kbd>、字号缩放等），避免用户只能从短提示里猜。</p>
+
     <h3><span class="h3-num">4.8</span>ApiKeyInput</h3>
 
     <p>设置面板 AI 分组内的 API key 录入 + 测试连接控件。视觉嵌入 <a href="01_mockups.html#4">01 § 4 设置 Modal</a>。</p>
