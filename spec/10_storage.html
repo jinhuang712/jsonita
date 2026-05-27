@@ -196,7 +196,7 @@ Pool::builder().max_size(4).build(mgr)?</code></pre>
 stateDiagram-v2
     [*] --> HiddenIdle: 应用启动
     HiddenIdle --> VisibleFresh: 呼出
-    VisibleFresh --> HiddenIdle: 非编辑态 Esc / 失焦 / ⌘W<br/>window.hide()
+    VisibleFresh --> HiddenIdle: 非编辑态双击 Esc / 失焦 / ⌘W<br/>window.hide()
     VisibleFresh --> VisibleFresh: ⌘K 清空<br/>(clear_last)
     VisibleFresh --> VisibleRestored: ⌘⇧L 找回<br/>(load_last)
     HiddenIdle --> [*]: 应用 Quit

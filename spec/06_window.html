@@ -56,7 +56,7 @@
 
     <h3><span class="h3-num">2.3</span>关闭 = hide 而非 close</h3>
 
-    <p>红色 traffic light / 非编辑态 <code>Esc</code> / <code>⌘W</code> 映射为 <code>window.hide()</code>，进程保留 ── 这样下次呼出依然是亚毫秒级。焦点在 CodeMirror 或表单输入内时，第一下 <code>Esc</code> 只 <code>blur()</code> 退出 editing；随后再按 <code>Esc</code> 才隐藏浮窗。<b>只有</b> <code>⌘Q</code> 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。</p>
+    <p>红色 traffic light / 非编辑态连续两次 <code>Esc</code> / <code>⌘W</code> 映射为 <code>window.hide()</code>，进程保留 ── 这样下次呼出依然是亚毫秒级。焦点在 CodeMirror 或表单输入内时，第一下 <code>Esc</code> 只 <code>blur()</code> 退出 editing；随后短时间内再按 <code>Esc</code> 才隐藏浮窗。<b>只有</b> <code>⌘Q</code> 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。</p>
 
     <h3><span class="h3-num">2.4</span>定位到光标所在屏，不记忆位置</h3>
 
@@ -175,7 +175,7 @@ window.set_position(tauri::LogicalPosition::new(x, y))?;</code></pre>
 graph TD
     subgraph Sources["关闭来源"]
         EE["Esc 键<br/>(editing 中)"]
-        E["Esc 键<br/>(非 editing)"]
+        E["Esc 键 ×2<br/>(非 editing)"]
         W[⌘W]
         B["失焦 (hide_on_blur=true)"]
         TL["红 traffic light"]
@@ -217,7 +217,7 @@ graph TD
       <thead><tr><th>来源</th><th>路由</th><th>是否保存 session</th></tr></thead>
       <tbody>
         <tr><td><kbd>Esc</kbd>（editing 中）</td><td>blur active editor/input，只退出 editing</td><td>否</td></tr>
-        <tr><td><kbd>Esc</kbd>（非 editing）</td><td>hide</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
+        <tr><td><kbd>Esc</kbd> ×2（非 editing）</td><td>hide；单次 Esc 只进入待关闭窗口</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
         <tr><td><kbd>⌘W</kbd></td><td>hide</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
         <tr><td>失焦（hide_on_blur=true）</td><td>hide</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
         <tr><td>红 traffic light 点击</td><td>hide（拦截 close → hide）</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
@@ -229,7 +229,7 @@ graph TD
     <h3><span class="h3-num">5.2</span>close interceptor（~6 行）</h3>
 
     <pre><code>// 把红 traffic light 触发的 CloseRequested 改写为 hide；
-// Esc / ⌘W 由前端 useGlobalHotkeys 直接调用 window_hide。
+// 双击 Esc / ⌘W 由前端 useGlobalHotkeys 调用 window_hide。
 fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
     let w = win.clone();
     win.on_window_event(move |event| {
@@ -338,7 +338,7 @@ stateDiagram-v2
     Hidden --> Showing: window_show() command<br/>(不重新定位)
     Showing --> Visible: window.show() + set_focus()<br/>WebView 保持当前 store 状态
     Visible --> Visible: Esc while editing<br/>activeElement.blur()
-    Visible --> Hidden: Esc 非 editing / 失焦 / ⌘W<br/>window.hide()
+    Visible --> Hidden: 双击 Esc 非 editing / 失焦 / ⌘W<br/>window.hide()
     Hidden --> Quitting: ⌘Q / Tray Quit
     Visible --> Quitting: ⌘Q
     Quitting --> [*]: app.exit

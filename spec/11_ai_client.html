@@ -264,7 +264,7 @@ pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt; {
 
     <p>状态转换由 <code>startFix</code> / <code>setSuccess</code> / <code>setError</code> / <code>reset</code> 触发。</p>
 
-    <p><b>键盘决策</b>：AI Fix 快捷键优先级高于普通 single-pane apply 和普通 <kbd>Esc</kbd> 隐藏窗口。当前内容明确是 parse error 且 AI Fix 可用时，<kbd>⌘Enter</kbd> 直接切到 <code>AiFixPane</code> 并触发请求；<code>awaiting-decision</code> 时 <kbd>⌘Enter</kbd> = Accept，<kbd>Esc</kbd> = Cancel；错误态 <kbd>Esc</kbd> 关闭 AI Fix 面板回 Format。</p>
+    <p><b>键盘决策</b>：AI Fix 快捷键优先级高于普通 single-pane apply 和双击 <kbd>Esc</kbd> 隐藏窗口。当前内容明确是 parse error 且 AI Fix 可用时，<kbd>⌘Enter</kbd> 直接切到 <code>AiFixPane</code> 并触发请求；<code>awaiting-decision</code> 时 <kbd>⌘Enter</kbd> = Accept，<kbd>Esc</kbd> = Cancel；错误态 <kbd>Esc</kbd> 关闭 AI Fix 面板回 Format。</p>
 
     <h3><span class="h3-num">8.2</span>Diff 算法</h3>
 

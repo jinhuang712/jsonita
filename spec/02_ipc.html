@@ -224,7 +224,7 @@ sequenceDiagram
     User->>React: Esc / 失焦 / ⌘W
     alt 焦点在 CodeMirror / 表单输入内
         React->>React: activeElement.blur()
-    else 非 editing Esc 或 ⌘W
+    else 非 editing 连续两次 Esc 或 ⌘W
         React->>Rust: invoke window_hide()
         Rust->>Rust: window.hide()
     else 失焦且 hideOnBlur=true

@@ -1,10 +1,10 @@
 /**
- * 浮窗内 hotkeys ── Tab 切功能 / Esc 退编辑或隐藏 / ⌘K 清空 / ⌘⇧L 恢复上次会话 / ⌘W 关。
+ * 浮窗内 hotkeys ── Tab 切功能 / 双击 Esc 隐藏 / ⌘K 清空 / ⌘⇧L 恢复上次会话 / ⌘W 关。
  *
  * Spec ref: spec/07 § 4 In-app 快捷键。
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { paneToOpType, runPaneApply } from '../editor/transforms';
 import { session, win } from '../ipc/commands';
@@ -17,6 +17,7 @@ import { useSettingsStore } from '../store/settings';
 import { EDITOR_FONT_ZOOM_STEP, useUiStore, type Pane } from '../store/ui';
 
 const PANE_ORDER: Pane[] = ['format', 'minify', 'tree', 'json-to-str', 'str-to-json'];
+const DOUBLE_ESC_HIDE_MS = 700;
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -44,6 +45,7 @@ function consume(event: KeyboardEvent) {
 }
 
 export function useGlobalHotkeys() {
+  const lastExitEscAtRef = useRef(0);
   const content = useEditorStore((s) => s.content);
   const setContent = useEditorStore((s) => s.setContent);
   const setOutput = useEditorStore((s) => s.setOutput);
@@ -165,7 +167,7 @@ export function useGlobalHotkeys() {
     showAiFix,
   ]);
 
-  // 编辑器 / 表单内第一下 Esc 只退出编辑态；焦点已在外面时 Esc 才隐藏浮窗。
+  // 单击 Esc 只退出编辑态 / 预备关闭；连续双击 Esc 才隐藏浮窗。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
@@ -174,9 +176,19 @@ export function useGlobalHotkeys() {
       event.preventDefault();
       event.stopPropagation();
 
-      if (!exitEditing(event.target)) {
-        win.hide().catch(() => {});
+      const now = Date.now();
+      if (exitEditing(event.target)) {
+        lastExitEscAtRef.current = now;
+        return;
       }
+
+      if (now - lastExitEscAtRef.current <= DOUBLE_ESC_HIDE_MS) {
+        lastExitEscAtRef.current = 0;
+        win.hide().catch(() => {});
+        return;
+      }
+
+      lastExitEscAtRef.current = now;
     };
 
     window.addEventListener('keydown', onKeyDown, true);
