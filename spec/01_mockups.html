@@ -496,7 +496,7 @@
             <div style="padding: 14px 18px; font-size: 12px;">
               <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>开机自启动</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>智能扩宽</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>智能缩放</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>初始宽度（reserved）</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">860</span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>主题</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">System ▾</span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:var(--danger);">重置浮窗尺寸（reserved）</span><button style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--danger); border-radius:4px; color:var(--danger);">Reset</button></div>
@@ -527,7 +527,7 @@
             <div style="padding: 14px 18px; font-size: 12px; color: #E6EAF0;">
               <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>开机自启动</span><span style="width:30px;height:17px;background:#4F74E8;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>智能扩宽</span><span style="width:30px;height:17px;background:#4F74E8;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>智能缩放</span><span style="width:30px;height:17px;background:#4F74E8;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>初始宽度（reserved）</span><span style="padding:2px 8px; background:#252B35; border:1px solid #343A46; border-radius:4px; color:#E6EAF0;">860</span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>主题</span><span style="padding:2px 8px; background:#252B35; border:1px solid #343A46; border-radius:4px; color:#E6EAF0;">System ▾</span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:#F27A7A;">重置浮窗尺寸（reserved）</span><button style="padding:2px 8px; background:#252B35; border:1px solid #F27A7A; border-radius:4px; color:#F27A7A;">Reset</button></div>
@@ -800,11 +800,11 @@
 
     <p>结构同上 ── "No history yet · 操作过的 JSON 自动保存" / "AI Fix 未配置 · 打开设置 ⚙ 配置 DeepSeek API key"。略。</p>
 
-    <h2 id="11"><span class="h2-num">11</span>浮窗智能宽度（plan F10）</h2>
+    <h2 id="11"><span class="h2-num">11</span>浮窗智能缩放（plan F10）</h2>
 
-    <p>4 层逻辑（首次 / 粘贴扩 / 拖动 / soft-wrap）的视觉示意。<b>克制：最大不占满屏 · 初次不能太小</b>。详细算法见 <a href="06_window.html">06 § 9 智能宽度</a>。</p>
+    <p>4 层逻辑（首次 / 内容动态缩放 / 手动拖边 / soft-wrap）的视觉示意。<b>克制：最大不占满屏 · 初次不能太小</b>。详细算法见 <a href="06_window.html">06 § 7 智能缩放</a>。</p>
 
-    <h3><span class="h3-num">11.1</span>层 1 ── 首次呼出（默认 920 × 560）</h3>
+    <h3><span class="h3-num">11.1</span>层 1 ── 首次呼出（默认 860 × 560）</h3>
 
     <div class="mockup-window" style="max-width: 460px;">
       <div class="mockup-tabs">
@@ -816,21 +816,21 @@
         <div class="mockup-tab-spacer"></div>
       </div>
       <div class="mockup-body" style="min-height: 100px;">
-        <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">920 × 560 · empty</div>
+        <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">860 × 560 · empty</div>
         <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">→</div>
       </div>
       <div class="mockup-statusbar"><span style="color:var(--text-faint);">— Paste JSON to start</span><span>⚙</span></div>
     </div>
 
-    <h3><span class="h3-num">11.2</span>层 2 ── 粘贴后自动扩宽</h3>
+    <h3><span class="h3-num">11.2</span>层 2 ── 内容 / 字号变化后动态缩放</h3>
 
     <table>
-      <thead><tr><th>maxLineChars</th><th>计算</th><th>ideal_w</th><th>行为</th></tr></thead>
+      <thead><tr><th>输入</th><th>计算</th><th>ideal size</th><th>行为</th></tr></thead>
       <tbody>
-        <tr><td>≤ 80</td><td>不触发</td><td>—</td><td>保持当前</td></tr>
-        <tr><td>100</td><td>100×8+64</td><td>864 px</td><td>仍为 920（已大于 ideal，不缩）</td></tr>
-        <tr><td>160</td><td>160×8+64</td><td>1344 px</td><td>920 → 1344（150ms 动画）</td></tr>
-        <tr><td>240</td><td>1984</td><td>clamp(720, min(1400, 屏宽×70%))</td><td>13" 屏 → 1008；27" 屏 → 1400</td></tr>
+        <tr><td>短 JSON</td><td>cols / lines 都小</td><td>720 × 480 起</td><td>保持克制尺寸</td></tr>
+        <tr><td>160 ch 长行</td><td>cols × char_px + padding</td><td>约 1210 × 480</td><td>自动加宽</td></tr>
+        <tr><td>多行 JSON</td><td>line_count × line_px + padding</td><td>宽度克制，高度增加</td><td>自动增高</td></tr>
+        <tr><td><kbd>⌘+</kbd> 放大字体</td><td>fontSize 参与 char_px / line_px</td><td>宽高重新估算</td><td>避免文字挤压</td></tr>
       </tbody>
     </table>
 
@@ -844,13 +844,13 @@
         <div class="mockup-tab-spacer"></div>
       </div>
       <div class="mockup-body" style="min-height: 80px;">
-        <div class="mockup-panel"><div class="mockup-panel-label">Input · 160 ch 长行</div><pre style="white-space: nowrap; overflow-x: auto;"><code>{"description":"a very long single-line description that triggers auto-widen","ok":true}</code></pre></div>
+        <div class="mockup-panel"><div class="mockup-panel-label">Input · 160 ch 长行</div><pre style="white-space: nowrap; overflow-x: auto;"><code>{"description":"a very long single-line description that triggers auto-size","ok":true}</code></pre></div>
         <div class="mockup-panel"><div class="mockup-panel-label">Output</div><pre><code>{
   "description": "a very long ...",
   "ok": true
 }</code></pre></div>
       </div>
-      <div class="mockup-statusbar"><span><span class="mockup-status-ok">● Valid JSON</span> · auto-widened to 1344 px</span><span>⚙</span></div>
+      <div class="mockup-statusbar"><span><span class="mockup-status-ok">● Valid JSON</span> · auto-sized for content</span><span>⚙</span></div>
     </div>
 
     <h3><span class="h3-num">11.3</span>层 3 ── 手动拖动锁定</h3>
@@ -858,13 +858,13 @@
     <ul>
       <li>用户拖动后立即写 <code>window.json</code> + <code>user_dragged = true</code></li>
       <li>下次呼出沿用</li>
-      <li>之后再粘贴长内容 <b>不再</b>自动扩宽 ── 用户尺寸锁定</li>
+      <li>之后再粘贴长内容 / 调整字体 <b>不再</b>自动缩放 ── 用户尺寸锁定</li>
       <li>设置 General "重置浮窗尺寸" 按钮可清</li>
     </ul>
 
-    <h3><span class="h3-num">11.4</span>层 4 ── soft-wrap 跳过自动扩宽</h3>
+    <h3><span class="h3-num">11.4</span>层 4 ── soft-wrap 保守估宽</h3>
 
-    <p>soft-wrap = on（默认）→ 长行换行不溢出，<b>不需要</b>扩宽，层 2 跳过。soft-wrap = off → 长行水平滚动，层 2 触发扩宽。</p>
+    <p>soft-wrap = on（默认）→ 长行换行不溢出，宽度按最多 96 列估算，但仍按行数 / 字号增高。soft-wrap = off → 长行水平滚动，宽度按实际最长行估算。</p>
 
     <h2 id="12"><span class="h2-num">12</span>Tree 节点 Hover 复制（plan F2 · spec 08 § 4.5）</h2>
 
@@ -939,7 +939,7 @@
       <tbody>
         <tr><td>04 组件库 · TreeView</td><td>§ 1.3 · § 12</td></tr>
         <tr><td>04 组件库 · SettingsModal / DiffView；HistoryItem 为保留设计</td><td>§ 4 · § 8；§ 5 reserved</td></tr>
-        <tr><td>06 窗口 runtime · 智能宽度</td><td>§ 11</td></tr>
+        <tr><td>06 窗口 runtime · 智能缩放</td><td>§ 11</td></tr>
         <tr><td>07 菜单栏 · tray / 权限</td><td>§ 3 · § 9</td></tr>
         <tr><td>08 编辑器 & 树 · hover 复制</td><td>§ 1.3 · § 12</td></tr>
         <tr><td>11 AI 客户端 · DiffView · 无 API key</td><td>§ 8 · § 10.2</td></tr>

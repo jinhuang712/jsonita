@@ -241,14 +241,15 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
         <tr><td><b>ClipboardSniff</b></td><td colspan="2"></td></tr>
         <tr><td>· text</td><td>String</td><td></td></tr>
         <tr><td>· looksLikeJson</td><td>bool</td><td>trim 后以 {[" 起结</td></tr>
-        <tr><td><b>ContentMetrics</b>（plan F10 智能宽度）</td><td colspan="2"></td></tr>
+        <tr><td><b>ContentMetrics</b>（plan F10 智能缩放）</td><td colspan="2"></td></tr>
         <tr><td>· maxLineChars</td><td>u32</td><td>最长行字符数</td></tr>
         <tr><td>· lineCount</td><td>u32</td><td></td></tr>
         <tr><td>· bytes</td><td>u64</td><td></td></tr>
-        <tr><td>· softWrapOn</td><td>bool</td><td>true → 跳过自动扩宽</td></tr>
+        <tr><td>· softWrapOn</td><td>bool</td><td>true → 宽度保守，仍按高度 / 字号动态缩放</td></tr>
+        <tr><td>· fontSize</td><td>f64</td><td>当前编辑器字号，参与宽高估算</td></tr>
         <tr><td><b>WindowResizedPayload</b>（event）</td><td colspan="2"></td></tr>
         <tr><td>· width / height</td><td>u32</td><td></td></tr>
-        <tr><td>· source</td><td>"user" | "auto"</td><td>用户拖动 / 智能扩宽触发</td></tr>
+        <tr><td>· source</td><td>"user" | "auto"</td><td>用户拖动 / 智能缩放触发</td></tr>
         <tr><td><b>ShortcutRegisterReq / Resp</b></td><td colspan="2">见 02 § 2.1.7</td></tr>
       </tbody>
     </table>
@@ -352,7 +353,7 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
     <table>
       <thead><tr><th>key</th><th>类型</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td>width / height</td><td>u32</td><td>用户拖动 / 智能扩宽后的尺寸</td></tr>
+        <tr><td>width / height</td><td>u32</td><td>用户拖动 / 智能缩放后的尺寸</td></tr>
         <tr><td>userDragged</td><td>bool</td><td>true 则锁定（plan F10 层 3）</td></tr>
       </tbody>
     </table>

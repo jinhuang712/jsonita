@@ -60,6 +60,7 @@ export interface ContentMetrics {
   lineCount: number;
   bytes: number;
   softWrapOn: boolean;
+  fontSize: number;
 }
 
 export interface WindowResizedPayload {

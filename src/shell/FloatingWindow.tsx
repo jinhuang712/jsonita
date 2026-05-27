@@ -11,12 +11,13 @@ import { TreeView } from '../tree/TreeView';
 import { StatusBar } from './StatusBar';
 import { SinglePaneHint } from './SinglePaneHint';
 import { TabBar } from './TabBar';
+import { WindowResizeHandles } from './WindowResizeHandles';
 
 /**
  * 浮窗主壳 — TabBar 上 + 左右双栏（input | output）+ StatusBar 下。
  *
  * Spec ref: spec/01_mockups.html § 1 主浮窗 6 态 · spec/08 § 5 编辑器 ↔ 树同步
- * M1-N4：双栏 CSS Grid 静态 50/50；M1-N9 起加智能宽度 ide_w 计算 + 可拖分隔条。
+ * M1-N4：双栏 CSS Grid 静态 50/50；M1-N9 起加智能缩放 + 可拖边 resize。
  */
 export function FloatingWindow() {
   const content = useEditorStore((s) => s.content);
@@ -24,13 +25,14 @@ export function FloatingWindow() {
   const setContent = useEditorStore((s) => s.setContent);
   const status = useEditorStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
+  const editorFontSize = useUiStore((s) => s.editorFontSize);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
   const effectiveTheme = useEffectiveTheme();
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
-  // 智能宽度：粘长行后自动扩宽（spec/06 § 7）
+  // 智能缩放：内容 / 字号变化后自动调整窗口（spec/06 § 7）
   useSmartWidth();
 
   // tree tab 时把 outputText parse 为 object 给 TreeView
@@ -57,6 +59,8 @@ export function FloatingWindow() {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        ['--fs-editor' as string]: `${editorFontSize}px`,
+        ['--fs-tree' as string]: `${Math.max(10, editorFontSize - 1)}px`,
       }}
     >
       <TabBar />
@@ -105,6 +109,7 @@ export function FloatingWindow() {
       </div>
       <SinglePaneHint />
       <StatusBar />
+      <WindowResizeHandles />
     </div>
   );
 }

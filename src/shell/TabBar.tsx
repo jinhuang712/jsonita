@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
 
@@ -23,11 +24,17 @@ export function TabBar() {
   const showAiFix = useUiStore((s) => s.showAiFix);
   const setActive = useUiStore((s) => s.setActivePane);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
+  const startDragging = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    if ((event.target as HTMLElement).closest('button')) return;
+    getCurrentWindow().startDragging().catch(() => {});
+  };
 
   return (
     <div
       role="tablist"
       aria-label="Pane tabs"
+      onMouseDown={startDragging}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -35,6 +42,8 @@ export function TabBar() {
         padding: '4px 8px',
         background: 'var(--bg-card)',
         borderBottom: '1px solid var(--border)',
+        cursor: 'grab',
+        userSelect: 'none',
       }}
     >
       {TABS.map((tab) => {
