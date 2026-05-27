@@ -339,46 +339,26 @@ export const editorStore = create&lt;EditorStore&gt;((set, get) =&gt; {
 
     <h2><span class="h2-num">4</span>JSON 树</h2>
 
-    <h3><span class="h3-num">4.1</span>渲染库选型</h3>
+    <h3><span class="h3-num">4.1</span>渲染实现</h3>
 
-    <p>用 <code>react-json-view-lite</code>（轻量、~10KB），但<b>套自己的颜色</b>：</p>
+    <p><code>TreeView</code> 自渲染递归节点，不依赖第三方 Tree 默认样式。每个 node 行直接持有 <code>path</code> 与 <code>raw value</code>，用于 key path 复制、hover value/subtree 复制和键盘 <kbd>⌘C</kbd>。</p>
 
     <pre><code>// src/tree/TreeView.tsx
-import { JsonView, allExpanded, collapseAllNested, darkStyles, defaultStyles } from 'react-json-view-lite';
-import 'react-json-view-lite/dist/index.css';
-import { useTheme } from '@/theme/ThemeProvider';
-
 interface TreeViewProps {
   data: unknown;
   initialExpandDepth?: number;     // 默认 2（大对象 &gt; 50 keys 时折叠到 2 层）
-  onPathClick?: (path: string) =&gt; void;
 }
 
-export function TreeView({ data, initialExpandDepth = 2, onPathClick }: TreeViewProps) {
-  const { effective } = useTheme();
-  const baseStyles = effective === 'dark' ? darkStyles : defaultStyles;
-
-  const styles = useMemo(() =&gt; ({
-    ...baseStyles,
-    container:           'jsonita-tree-container',
-    basicChildStyle:     'jsonita-tree-child',
-    label:               'jsonita-tree-key',
-    stringValue:         'jsonita-tree-string',
-    numberValue:         'jsonita-tree-number',
-    booleanValue:        'jsonita-tree-bool',
-    nullValue:           'jsonita-tree-null',
-    undefinedValue:      'jsonita-tree-null',
-    otherValue:          'jsonita-tree-other',
-    punctuation:         'jsonita-tree-punc',
-    expandIcon:          'jsonita-tree-icon',
-    collapseIcon:        'jsonita-tree-icon',
-    collapsedContent:    'jsonita-tree-collapsed',
-    childFieldsContainer:'jsonita-tree-children',
-  }), [effective]);
-
-  return &lt;JsonView data={data}
-                  shouldExpandNode={(level, value, field) =&gt; level &lt; initialExpandDepth}
-                  style={styles} /&gt;;
+function TreeNode({ value, path, label }) {
+  const isBranch = isContainer(value);
+  return (
+    &lt;div className="jsonita-tree-node" tabIndex={0}&gt;
+      {isBranch ? &lt;button className="jsonita-tree-toggle"&gt;▾&lt;/button&gt; : &lt;span /&gt;}
+      {label !== undefined ? &lt;button className="jsonita-tree-key"&gt;{label}&lt;/button&gt; : null}
+      {isBranch ? &lt;span className="jsonita-tree-punc"&gt;{summary(value)}&lt;/span&gt; : renderPrimitive(value)}
+      &lt;button className="tree-copy-icon"&gt;copy&lt;/button&gt;
+    &lt;/div&gt;
+  );
 }</code></pre>
 
     <h3><span class="h3-num">4.2</span>样式（global.css）</h3>
@@ -393,15 +373,17 @@ export function TreeView({ data, initialExpandDepth = 2, onPathClick }: TreeView
   height:      100%;
   overflow:    auto;
 }
-.jsonita-tree-key      { color: var(--json-key);    font-weight: 500; }
+.jsonita-tree-node     { position: relative; display: flex; align-items: center; min-height: 1.8em; }
+.jsonita-tree-node:hover { background: var(--primary-soft); }
+.jsonita-tree-key      { color: var(--json-key);    font-weight: 600; cursor: copy; }
 .jsonita-tree-string   { color: var(--json-string); }
 .jsonita-tree-number   { color: var(--json-number); }
 .jsonita-tree-bool     { color: var(--json-bool);   }
-.jsonita-tree-null     { color: var(--json-null);   font-style: italic; }
+.jsonita-tree-null     { color: var(--json-null);   }
 .jsonita-tree-punc     { color: var(--json-punc);   }
-.jsonita-tree-icon     { color: var(--text-faint);  cursor: pointer; }
-.jsonita-tree-icon:hover { color: var(--primary); }
-.jsonita-tree-children { padding-left: 18px;        border-left: 1px dashed var(--border); }</code></pre>
+.jsonita-tree-toggle   { color: var(--text-faint);  cursor: pointer; }
+.jsonita-tree-toggle:hover { color: var(--primary); }
+.jsonita-tree-children { padding-left: 16px;        border-left: 1px solid var(--editor-indent-guide); }</code></pre>
 
     <h3><span class="h3-num">4.3</span>JSON Path 复制</h3>
 
@@ -409,34 +391,18 @@ export function TreeView({ data, initialExpandDepth = 2, onPathClick }: TreeView
 
     <pre><code>// src/tree/jsonpath.ts
 //
-// JsonView 的内置 callback 不暴露完整 path。
-// 我们用 mutationObserver + 自定义 click handler 注入：
-
-export function attachPathCopyHandler(container: HTMLElement, raw: unknown) {
-  container.addEventListener('click', (e) =&gt; {
-    const target = e.target as HTMLElement;
-    if (!target.classList.contains('jsonita-tree-key')) return;
-    const path = computePath(target);
-    navigator.clipboard.writeText(path);
-    toast.ok(`Copied: ${path}`);
-  });
-}
-
-function computePath(el: HTMLElement): string {
-  // 沿 .jsonita-tree-children 向上找 sibling key + index，拼成 user.items[2].name 风格
-  const segments: string[] = [];
-  let node: HTMLElement | null = el;
-  while (node) {
-    const keyText = node.textContent?.replace(/[:"]/g, '').trim();
-    if (keyText) segments.unshift(keyText);
-    node = node.parentElement?.closest('.jsonita-tree-children')?.previousElementSibling as HTMLElement | null;
-  }
-  return segments.join('.').replace(/\.(\d+)/g, '[$1]');
-}</code></pre>
+// TreeNode 渲染时天然知道 path；点击 key 直接复制。
+&lt;button
+  className="jsonita-tree-key"
+  title={`Copy path ${pathToString(path)}`}
+  onClick={() =&gt; copyText(pathToString(path))}
+&gt;
+  {label}
+&lt;/button&gt;</code></pre>
 
     <h3><span class="h3-num">4.4</span>搜索 / 高亮 key & value</h3>
 
-    <p>v1 用 <a href="04_components.html">04 § 5</a> 的 SplitPane 顶部加一个搜索框，client-side filter ── 把 JSON 序列化后 substring match，匹配命中的 path 自动展开（用 react-json-view-lite 的 <code>shouldExpandNode</code> 配合自定义 state）。</p>
+    <p>v1 用 <a href="04_components.html">04 § 5</a> 的 SplitPane 顶部加一个搜索框，client-side filter ── 把 JSON 序列化后 substring match，匹配命中的 path 自动展开（更新 <code>expandedKeys</code>）。</p>
 
     <h3><span class="h3-num">4.5</span>Hover 复制节点（plan F2）</h3>
 
@@ -454,20 +420,11 @@ function computePath(el: HTMLElement): string {
       </tbody>
     </table>
 
-    <p><b>实现 ── 给每行注入 hover overlay</b>：react-json-view-lite 不内置此功能，需自行注入。方案：</p>
+    <p><b>实现 ── 每行内置 hover copy button</b>：自渲染 <code>TreeNode</code> 已持有节点 path 与 raw value，不需要 DOM 注入。</p>
 
-    <pre><code>// src/tree/TreeView.tsx 扩展
+    <pre><code>// src/tree/TreeView.tsx
 
 interface NodeMeta { path: string; raw: unknown; isLeaf: boolean }
-
-function attachHoverCopy(container: HTMLElement, rootData: unknown) {
-  // 1. 给容器加 mouseover/mouseleave delegate
-  // 2. 找到悬停的 .jsonita-tree-node，定位它在 rootData 中的对应 path
-  // 3. 在该行右侧绝对定位插入一个 .tree-copy-icon button
-  // 4. 点击 → computeCopyText(meta) → navigator.clipboard.writeText + toast.ok
-  //
-  // 离开时移除 .tree-copy-icon
-}
 
 function computeCopyText(meta: NodeMeta): string {
   if (meta.isLeaf) {
@@ -478,7 +435,11 @@ function computeCopyText(meta: NodeMeta): string {
   }
   // object / array → 递归 pretty
   return JSON.stringify(meta.raw, null, 2);
-}</code></pre>
+}
+
+&lt;button className="tree-copy-icon" onClick={() =&gt; copyText(computeCopyText(meta))}&gt;
+  copy
+&lt;/button&gt;</code></pre>
 
     <p><b>样式（global.css 新增）</b>：</p>
 
@@ -487,8 +448,9 @@ function computeCopyText(meta: NodeMeta): string {
 }
 .tree-copy-icon {
   position: absolute;
-  top: 0; right: 8px;
+  top: 50%; right: 8px;
   opacity: 0;                          /* 默认隐 */
+  transform: translateY(-50%);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -570,7 +532,7 @@ if (singlePaneMode &amp;&amp; activePane !== 'tree' &amp;&amp; event.metaKey &am
       <li><b>大文件优化</b>：CodeMirror 6 已是 viewport-based 渲染，1MB JSON 不需特殊处理</li>
       <li><b>linter delay 300 ms</b>：避免输入时频繁报错</li>
       <li><b>onChange debounce 300 ms</b>：debounce 在 store 内做，编辑器自身不 debounce（保持光标跟手）</li>
-      <li><b>树渲染懒加载</b>：react-json-view-lite 已实现 ── 只渲染展开层级</li>
+      <li><b>树渲染懒加载</b>：自渲染 TreeView 只递归渲染已展开分支，折叠子树不进入 DOM</li>
     </ul>
 
     <nav class="pagination" id="pagination"></nav>
