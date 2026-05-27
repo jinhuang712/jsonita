@@ -60,7 +60,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     supplementalJsonLinter(),
     cfg.error ? externalLinter(() => cfg.error ?? null) : [],
     lintGutter(),
-    syntaxHighlighting(defaultHighlightStyle),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     jsonitaJsonHighlight,
     cfg.theme === 'dark' ? jsonitaDarkTheme : jsonitaLightTheme,
     cfg.readOnly ? EditorState.readOnly.of(true) : [],

@@ -61,7 +61,7 @@ export function SinglePaneHint() {
           ? 'var(--accent)'
           : 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
         boxShadow: isAiFixPrimary
-          ? '0 8px 24px rgba(251, 164, 58, 0.26), var(--shadow-sm)'
+          ? '0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent), var(--shadow-sm)'
           : 'var(--shadow-sm)',
         color: isAiFixPrimary ? '#FFFFFF' : STATE_COLOR[state],
         fontFamily: 'var(--font-mono)',

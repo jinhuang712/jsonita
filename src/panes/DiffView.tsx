@@ -27,9 +27,9 @@ export function DiffView({ before, after }: Props) {
       {lines.map((l, i) => {
         const bg =
           l.type === 'add'
-            ? 'rgba(6,183,143,0.10)'
+            ? 'color-mix(in srgb, var(--ok) 12%, transparent)'
             : l.type === 'del'
-              ? 'rgba(220,38,38,0.08)'
+              ? 'color-mix(in srgb, var(--danger) 10%, transparent)'
               : 'transparent';
         const sigil = l.type === 'add' ? '+' : l.type === 'del' ? '-' : ' ';
         const sigilColor =

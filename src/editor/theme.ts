@@ -48,10 +48,10 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     outline: '1px solid var(--primary-edge)',
   },
   '.cm-searchMatch': {
-    backgroundColor: 'rgba(250, 155, 16, 0.18)',
+    backgroundColor: 'color-mix(in srgb, var(--accent) 18%, transparent)',
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: 'rgba(250, 155, 16, 0.36)',
+    backgroundColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
   },
   '.cm-lintRange-error': {
     backgroundImage:
