@@ -125,6 +125,7 @@ export function useGlobalHotkeys() {
         return;
       }
       if (!singlePaneMode || historyModalOpen || settingsModalOpen) return;
+      if (activePane === 'tree') return;
 
       event.preventDefault();
       event.stopPropagation();

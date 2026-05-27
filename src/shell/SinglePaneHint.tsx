@@ -24,7 +24,7 @@ export function SinglePaneHint() {
   const activePane = useUiStore((s) => s.activePane);
   const state = useUiStore((s) => s.singlePaneApplyState);
 
-  if (!singlePaneMode) return null;
+  if (!singlePaneMode || activePane === 'tree') return null;
 
   const pane = t(`panes:tab.${PANE_LABEL_KEY[activePane]}`);
   const label =
