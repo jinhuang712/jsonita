@@ -104,6 +104,7 @@
     <p><b>Hover 复制节点</b>（v1）：</p>
     <ul>
       <li>鼠标悬停任意 node → 右侧浮出 <code>📋</code> 小图标（仅 hover 出现）；点击复制并 toast 反馈</li>
+      <li><b>唯一 action</b>：父子节点 hover / focus 叠加时只显示当前节点的 copy 按钮；切换节点或离开 Tree 后立即清除 copied 反馈，避免按钮残留</li>
       <li><b>leaf 节点</b>（string / number / bool / null）→ 复制该 <b>raw value</b>，带原始引号或字面量：<code>"alice"</code> / <code>30</code> / <code>true</code> / <code>null</code></li>
       <li><b>object / array 节点</b>（含 root）→ 递归复制完整子树为 pretty-printed JSON（2 空格缩进），即"以该 node 为新 root 的合法 JSON"</li>
       <li><b>与点 key 复制 path 不冲突</b>：点 key 仍复制 path；hover 出现的 📋 与 key 点击行为分开</li>

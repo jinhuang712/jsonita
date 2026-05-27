@@ -434,7 +434,7 @@ function TreeNode({ value, path, label }) {
       </tbody>
     </table>
 
-    <p><b>实现 ── 每行内置 hover copy button</b>：自渲染 <code>TreeNode</code> 已持有节点 path 与 raw value，不需要 DOM 注入。</p>
+    <p><b>实现 ── 每行内置 copy button，但只允许一个 active action</b>：自渲染 <code>TreeNode</code> 已持有节点 path 与 raw value，不需要 DOM 注入。React 维护 <code>activeCopyKey</code> / <code>copiedKey</code>，确保父子节点 hover / focus 不会同时露出两个 copy 按钮；鼠标离开树或切到其他节点时立即清理 copied 反馈。</p>
 
     <pre><code>// src/tree/TreeView.tsx
 
@@ -451,7 +451,10 @@ function computeCopyText(meta: NodeMeta): string {
   return JSON.stringify(meta.raw, null, 2);
 }
 
-&lt;button className="tree-copy-icon" onClick={() =&gt; copyText(computeCopyText(meta))}&gt;
+&lt;button
+  className={`tree-copy-icon ${activeCopyKey === key ? 'tree-copy-icon-visible' : ''}`}
+  onClick={() =&gt; copyText(computeCopyText(meta))}
+&gt;
   copy
 &lt;/button&gt;</code></pre>
 
@@ -474,7 +477,12 @@ function computeCopyText(meta: NodeMeta): string {
   cursor: pointer;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
-.jsonita-tree-node:hover .tree-copy-icon { opacity: 1; }
+.tree-copy-icon-visible { opacity: 1; }
+.tree-copy-icon-copied {
+  background: var(--primary-soft);
+  border-color: var(--primary-edge);
+  color: var(--primary);
+}
 .tree-copy-icon:hover {
   background: var(--primary-soft);
   border-color: var(--primary-edge);

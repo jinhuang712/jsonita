@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { nodeCopyText, pathToString } from './jsonpath';
 
 /**
@@ -20,9 +20,12 @@ interface TreeNodeProps {
   path: PathSegment[];
   label?: string | number;
   expandedKeys: Set<string>;
+  activeCopyKey: string | null;
   copiedKey: string | null;
   toggle: (key: string) => void;
-  copyText: (key: string, text: string) => void;
+  setActiveCopyKey: (key: string | null) => void;
+  clearCopiedKey: (key?: string) => void;
+  copyText: (text: string, feedbackKey: string | null) => void;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -100,19 +103,32 @@ function TreeNode({
   path,
   label,
   expandedKeys,
+  activeCopyKey,
   copiedKey,
   toggle,
+  setActiveCopyKey,
+  clearCopiedKey,
   copyText,
 }: TreeNodeProps) {
   const key = pathKey(path);
   const isBranch = isContainer(value);
   const expanded = expandedKeys.has(key);
+  const isCopyVisible = activeCopyKey === key;
   const copyLabel = copiedKey === key ? 'copied' : 'copy';
 
-  const onCopyNode = () => copyText(key, nodeCopyText(value));
+  const activateCopy = () => {
+    setActiveCopyKey(key);
+    if (copiedKey !== null && copiedKey !== key) clearCopiedKey();
+  };
+  const deactivateCopy = () => {
+    setActiveCopyKey(null);
+    clearCopiedKey(key);
+  };
+
+  const onCopyNode = () => copyText(nodeCopyText(value), key);
   const onCopyPath = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    copyText(`${key}:path`, pathToString(path));
+    copyText(pathToString(path), null);
   };
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c') {
@@ -132,6 +148,15 @@ function TreeNode({
       <div
         className="jsonita-tree-node"
         tabIndex={0}
+        onMouseEnter={activateCopy}
+        onMouseLeave={deactivateCopy}
+        onFocus={activateCopy}
+        onBlur={(event) => {
+          const nextFocus = event.relatedTarget;
+          if (!(nextFocus instanceof Node) || !event.currentTarget.contains(nextFocus)) {
+            deactivateCopy();
+          }
+        }}
         onKeyDown={onKeyDown}
       >
         {isBranch ? (
@@ -169,9 +194,16 @@ function TreeNode({
 
         <button
           type="button"
-          className="tree-copy-icon"
+          className={[
+            'tree-copy-icon',
+            isCopyVisible ? 'tree-copy-icon-visible' : '',
+            copiedKey === key ? 'tree-copy-icon-copied' : '',
+          ].filter(Boolean).join(' ')}
           title="Copy node value"
-          onClick={onCopyNode}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCopyNode();
+          }}
         >
           {copyLabel}
         </button>
@@ -186,8 +218,11 @@ function TreeNode({
               path={[...path, childLabel]}
               label={childLabel}
               expandedKeys={expandedKeys}
+              activeCopyKey={activeCopyKey}
               copiedKey={copiedKey}
               toggle={toggle}
+              setActiveCopyKey={setActiveCopyKey}
+              clearCopiedKey={clearCopiedKey}
               copyText={copyText}
             />
           ))}
@@ -203,11 +238,31 @@ export function TreeView({ data, initialExpandDepth = 2 }: Props) {
     [data, initialExpandDepth],
   );
   const [expandedKeys, setExpandedKeys] = useState(defaultExpanded);
+  const [activeCopyKey, setActiveCopyKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const activeCopyKeyRef = useRef<string | null>(null);
+  const copyFeedbackTimerRef = useRef<number | null>(null);
+
+  const updateActiveCopyKey = (key: string | null) => {
+    activeCopyKeyRef.current = key;
+    setActiveCopyKey(key);
+  };
 
   useEffect(() => {
     setExpandedKeys(defaultExpanded);
+    updateActiveCopyKey(null);
+    setCopiedKey(null);
+    // defaultExpanded changes only when data / initial depth changes; reset tree UI state with it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultExpanded]);
+
+  useEffect(() => {
+    return () => {
+      if (copyFeedbackTimerRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimerRef.current);
+      }
+    };
+  }, []);
 
   const toggle = (key: string) => {
     setExpandedKeys((prev) => {
@@ -218,21 +273,41 @@ export function TreeView({ data, initialExpandDepth = 2 }: Props) {
     });
   };
 
-  const copyText = (key: string, text: string) => {
+  const clearCopiedKey = (key?: string) => {
+    setCopiedKey((current) => (key === undefined || current === key ? null : current));
+  };
+
+  const copyText = (text: string, feedbackKey: string | null) => {
     copyWithFallback(text).then(() => {
-      setCopiedKey(key);
-      window.setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), 900);
+      if (feedbackKey === null) return;
+      if (activeCopyKeyRef.current !== feedbackKey) return;
+      if (copyFeedbackTimerRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimerRef.current);
+      }
+      setCopiedKey(feedbackKey);
+      copyFeedbackTimerRef.current = window.setTimeout(() => {
+        setCopiedKey((current) => (current === feedbackKey ? null : current));
+      }, 900);
     });
   };
 
   return (
-    <div className="jsonita-tree-container">
+    <div
+      className="jsonita-tree-container"
+      onMouseLeave={() => {
+        updateActiveCopyKey(null);
+        clearCopiedKey();
+      }}
+    >
       <TreeNode
         value={data}
         path={[]}
         expandedKeys={expandedKeys}
+        activeCopyKey={activeCopyKey}
         copiedKey={copiedKey}
         toggle={toggle}
+        setActiveCopyKey={updateActiveCopyKey}
+        clearCopiedKey={clearCopiedKey}
         copyText={copyText}
       />
     </div>
