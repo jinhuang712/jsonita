@@ -55,10 +55,30 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   },
   '.cm-lintRange-error': {
     backgroundImage:
-      'linear-gradient(to top right, transparent calc(50% - 1px), var(--editor-error-underline) calc(50% - 1px), var(--editor-error-underline) calc(50% + 1px), transparent calc(50% + 1px))',
+      'linear-gradient(to top right, transparent calc(50% - 1px), color-mix(in srgb, var(--editor-error-underline) 70%, transparent) calc(50% - 1px), color-mix(in srgb, var(--editor-error-underline) 70%, transparent) calc(50% + 1px), transparent calc(50% + 1px))',
     backgroundRepeat: 'repeat-x',
     backgroundPosition: 'bottom',
     backgroundSize: '6px 2px',
+  },
+  '.cm-gutter-lint': {
+    width: '0.78em',
+  },
+  '.cm-gutter-lint .cm-gutterElement': {
+    padding: '0 2px',
+  },
+  '.cm-lint-marker': {
+    content: '""',
+    display: 'block',
+    width: '3px',
+    height: 'calc(var(--fs-editor) * 1.12)',
+    margin: '0.2em auto 0',
+    borderRadius: '999px',
+    background: 'transparent',
+  },
+  '.cm-lint-marker-error': {
+    content: '""',
+    backgroundColor: 'color-mix(in srgb, var(--editor-error-underline) 44%, transparent)',
+    boxShadow: 'none',
   },
   '.cm-tooltip-lint': {
     backgroundColor: 'var(--bg-card)',
