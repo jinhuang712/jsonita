@@ -1,6 +1,6 @@
-//! window 分组 ── show/hide/toggle 接 M0-N3 模块；resize/reset 接 M1-N9 智能宽度。
+//! window 分组 ── show/hide/toggle 接 M0-N3 模块；resize/reset 接 M1-N9 智能缩放。
 //!
-//! Spec ref: spec/06 § 7 智能宽度 4 层逻辑 · spec/02 § 6.1.6
+//! Spec ref: spec/06 § 7 智能缩放 4 层逻辑 · spec/02 § 6.1.6
 
 use tauri::{Manager, State};
 
@@ -32,7 +32,7 @@ pub async fn window_toggle(app: tauri::AppHandle) -> Result<(), JsonitaError> {
     Ok(())
 }
 
-/// 智能宽度 ── spec/06 § 7.1 4 层逻辑。
+/// 智能缩放 ── spec/06 § 7.1 4 层逻辑。
 #[tauri::command]
 pub async fn window_resize_for_content(
     app: tauri::AppHandle,
@@ -47,32 +47,47 @@ pub async fn window_resize_for_content(
     if cur.user_dragged {
         return Ok((cur.width, cur.height));
     }
-    // 层 2: soft_wrap 开时跳过
-    if metrics.soft_wrap_on {
-        return Ok((cur.width, cur.height));
-    }
-    // 层 3: settings.smart_width 关时跳过
+    // 层 2: settings.smart_width 关时跳过
     if !s.smart_width {
         return Ok((cur.width, cur.height));
     }
-    // 层 4: max_line_chars > 80 才触发
-    if metrics.max_line_chars <= 80 {
-        return Ok((cur.width, cur.height));
-    }
 
-    // ideal_w = clamp(needed, 720, min(1400, screen×70%))
-    let needed = metrics.max_line_chars * 8 + 64;
+    // ideal size = content-derived width/height, clamped to sane floating-panel bounds.
+    // Soft wrap keeps width conservative while still allowing height to grow with lines/font.
+    let font_size = metrics.font_size.clamp(10.0, 24.0);
+    let char_px = (font_size * 0.62).ceil() as u32;
+    let visible_cols = if metrics.soft_wrap_on {
+        metrics.max_line_chars.min(96)
+    } else {
+        metrics.max_line_chars
+    };
+    let needed_w = visible_cols.saturating_mul(char_px).saturating_add(220);
+    let line_px = (font_size * 1.55).ceil() as u32;
+    let needed_h = metrics.line_count.saturating_mul(line_px).saturating_add(120);
+
     let screen_w = app
         .primary_monitor()
         .ok()
         .flatten()
         .map(|m| m.size().width)
         .unwrap_or(1920);
+    let screen_h = app
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .map(|m| m.size().height)
+        .unwrap_or(1080);
     let max_w = std::cmp::min(1400, (screen_w as f64 * 0.7) as u32);
-    let ideal_w = needed.clamp(720, max_w);
+    let max_h = std::cmp::min(900, (screen_h as f64 * 0.72) as u32);
+    let ideal_w = needed_w.clamp(720, max_w);
+    let ideal_h = needed_h.clamp(480, max_h);
 
     let new_w = ideal_w;
-    let new_h = cur.height;
+    let new_h = ideal_h;
+
+    if new_w.abs_diff(cur.width) < 16 && new_h.abs_diff(cur.height) < 16 {
+        return Ok((cur.width, cur.height));
+    }
 
     // 自身 resize ── 不让 Resized handler 错标 userDragged
     window_store.begin_self_resize();

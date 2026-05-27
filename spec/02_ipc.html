@@ -54,7 +54,7 @@
         <tr><td><b>session</b></td><td>SQLite <code>last_session</code> 单行</td><td>SQLite</td><td>transform 成功写入；<kbd>⌘⇧L</kbd> 读取；<kbd>⌘K</kbd> 清空</td></tr>
         <tr><td><b>settings</b></td><td>自写 JSON 文件 Store</td><td>JSON 文件 + 内存缓存</td><td>写入后 emit <code>settings:changed</code></td></tr>
         <tr><td><b>ai</b></td><td>DeepSeek HTTP + secrets 读</td><td>secrets.json</td><td>外网调用；前端用本地 loading 状态展示进度</td></tr>
-        <tr><td><b>window</b></td><td>NSPanel 状态 + 智能宽度记忆</td><td>window.json + 内存 flag</td><td>show / hide / resize UI 动作 + emit <code>window:resized</code></td></tr>
+        <tr><td><b>window</b></td><td>NSPanel 状态 + 智能缩放记忆</td><td>window.json + 内存 flag</td><td>show / hide / resize UI 动作 + emit <code>window:resized</code></td></tr>
         <tr><td><b>system</b></td><td>全局快捷键 / 剪贴板 / 日志路径</td><td>系统级注册表</td><td>注册 / 释放快捷键 / Finder reveal</td></tr>
       </tbody>
     </table>
@@ -277,7 +277,7 @@ sequenceDiagram
             <td><code>window_show</code></td><td>—</td><td>&lt; 200 ms</td><td>显示浮窗 + focus（不重新定位）</td></tr>
         <tr><td><code>window_hide</code></td><td>—</td><td>&lt; 100 ms</td><td>隐藏浮窗（保持进程）</td></tr>
         <tr><td><code>window_toggle</code></td><td>—</td><td>&lt; 200 ms</td><td>show / hide 切换</td></tr>
-        <tr><td><code>window_resize_for_content</code></td><td>—</td><td>&lt; 50 ms</td><td>按内容尺寸智能扩宽（详见 plan F10 / 06 § 9）</td></tr>
+        <tr><td><code>window_resize_for_content</code></td><td>—</td><td>&lt; 50 ms</td><td>按内容 / 字号智能缩放（详见 plan F10 / 06 § 7）</td></tr>
         <tr><td><code>window_reset_size</code></td><td>—</td><td>&lt; 10 ms</td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
 
         <tr><td rowspan="8"><b>system</b></td>
@@ -368,7 +368,7 @@ sequenceDiagram
         <tr><td><code>window_show()</code></td><td><code>()</code></td><td>显示浮窗 + focus；定位由 shortcut / tray toggle 路径负责</td></tr>
         <tr><td><code>window_hide()</code></td><td><code>()</code></td><td>—</td></tr>
         <tr><td><code>window_toggle()</code></td><td><code>()</code></td><td>show / hide 切换</td></tr>
-        <tr><td><code>window_resize_for_content(metrics)</code></td><td><code>(u32, u32)</code></td><td>metrics: <a href="13_schemas.html">13 § 3.5 ContentMetrics</a>；算法 <a href="06_window.html">06 § 9</a></td></tr>
+        <tr><td><code>window_resize_for_content(metrics)</code></td><td><code>(u32, u32)</code></td><td>metrics: <a href="13_schemas.html">13 § 3.5 ContentMetrics</a>；按内容行长 / 行数 / 字号动态缩放，算法 <a href="06_window.html">06 § 7</a></td></tr>
         <tr><td><code>window_reset_size()</code></td><td><code>()</code></td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
       </tbody>
     </table>
@@ -397,7 +397,7 @@ sequenceDiagram
         <tr><td><code>tray:toggle</code></td><td>tray 左键 / Toggle Jsonita 菜单项</td><td><code>{}</code></td><td>Rust main listener → window::toggle</td></tr>
         <tr><td><code>tray:open-settings</code></td><td>tray Settings 菜单项</td><td><code>{}</code></td><td>App.tsx → setSettingsModalOpen(true)</td></tr>
         <tr><td><code>permission:accessibility_missing</code></td><td>macOS 快捷键权限缺失</td><td><code>{}</code></td><td>App.tsx → AccessibilityModal</td></tr>
-        <tr><td><code>window:resized</code></td><td>智能扩宽完成</td><td><code>WindowResizedPayload</code></td><td>shell / store 同步尺寸</td></tr>
+        <tr><td><code>window:resized</code></td><td>智能缩放完成</td><td><code>WindowResizedPayload</code></td><td>shell / store 同步尺寸</td></tr>
         <tr><td><code>shortcut:restore_last</code></td><td>全局 ⌘⇧L 触发（Rust 先 show/focus）</td><td><code>{}</code></td><td>shell（调 <code>session_load_last</code>）</td></tr>
         <tr><td><code>settings:changed</code></td><td><code>settings_set</code> / <code>settings_reset</code> 后</td><td><code>Settings</code></td><td>store/settings（更新本地缓存 + 重渲染）</td></tr>
       </tbody>

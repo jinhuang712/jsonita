@@ -183,6 +183,7 @@ pub struct ContentMetrics {
     pub line_count: u32,
     pub bytes: u64,
     pub soft_wrap_on: bool,
+    pub font_size: f64,
 }
 
 #[derive(Debug, Clone, Serialize)]

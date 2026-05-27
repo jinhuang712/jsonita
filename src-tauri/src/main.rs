@@ -96,7 +96,7 @@ fn main() {
             // Settings store ── M1-N8 起 default 占位；M2-N1 加 load(settings.json)
             app.manage(store::SettingsStore::load());
 
-            // Window store ── M1-N9 智能宽度：load window.json → app.manage（window_resize_for_content 走 State<WindowStore>）
+            // Window store ── M1-N9 智能缩放：load window.json → app.manage（window_resize_for_content 走 State<WindowStore>）
             app.manage(store::WindowStore::load());
 
             menubar::build(app.handle())?;

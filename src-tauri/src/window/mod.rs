@@ -2,7 +2,7 @@
 //!
 //! Spec ref: `spec/06_window.html` § 2-5 生命周期 / § 9 多屏定位
 //! 当前范围：promote 主窗口为 NSPanel + 失焦 hide + close intercept + 多屏定位；
-//! 智能宽度在 cmds::window 中实现；窗口 show/hide CSS 动效仍为保留设计。
+//! 智能缩放在 cmds::window 中实现；窗口 show/hide CSS 动效仍为保留设计。
 
 #[cfg(target_os = "macos")]
 mod nspanel;
@@ -73,7 +73,7 @@ fn install_window_events(win: &WebviewWindow) {
             let _ = w.hide();
         }
         tauri::WindowEvent::Resized(size) => {
-            // M1-N9：用户拖动 → mark userDragged；自身 resize（智能宽度）走 begin/end_self_resize 跳过
+            // M1-N9：用户拖动 → mark userDragged；自身 resize（智能缩放）走 begin/end_self_resize 跳过
             if let Some(store) = w.try_state::<crate::store::WindowStore>() {
                 if !store.is_self_resizing() {
                     let _ = store.mark_user_dragged(size.width, size.height);

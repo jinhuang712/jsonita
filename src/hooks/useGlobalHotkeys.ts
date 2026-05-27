@@ -51,6 +51,8 @@ export function useGlobalHotkeys() {
   const setActivePane = useUiStore((s) => s.setActivePane);
   const setShowAiFix = useUiStore((s) => s.setShowAiFix);
   const setSinglePaneApplyState = useUiStore((s) => s.setSinglePaneApplyState);
+  const zoomEditorFont = useUiStore((s) => s.zoomEditorFont);
+  const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
 
@@ -220,4 +222,29 @@ export function useGlobalHotkeys() {
   useHotkeys('meta+w', () => {
     win.hide().catch(() => {});
   });
+
+  // ⌘+ / ⌘- / ⌘0 调整编辑器与树视图字体大小。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.metaKey || event.altKey || event.ctrlKey) return;
+
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        zoomEditorFont(1);
+        return;
+      }
+      if (event.key === '-') {
+        event.preventDefault();
+        zoomEditorFont(-1);
+        return;
+      }
+      if (event.key === '0') {
+        event.preventDefault();
+        resetEditorFontSize();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [resetEditorFontSize, zoomEditorFont]);
 }
