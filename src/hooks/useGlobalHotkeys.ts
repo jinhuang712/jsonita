@@ -10,6 +10,8 @@ import { paneToOpType, runPaneApply } from '../editor/transforms';
 import { session, win } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { on } from '../ipc/events';
+import { acceptAiFix } from '../panes/aiFixActions';
+import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { EDITOR_FONT_ZOOM_STEP, useUiStore, type Pane } from '../store/ui';
@@ -35,12 +37,19 @@ function exitEditing(target: EventTarget | null): boolean {
   return true;
 }
 
+function consume(event: KeyboardEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+}
+
 export function useGlobalHotkeys() {
   const content = useEditorStore((s) => s.content);
   const setContent = useEditorStore((s) => s.setContent);
   const setOutput = useEditorStore((s) => s.setOutput);
   const setStatus = useEditorStore((s) => s.setStatus);
   const setError = useEditorStore((s) => s.setError);
+  const editorStatus = useEditorStore((s) => s.status);
   const editorError = useEditorStore((s) => s.error);
   const clearEditor = useEditorStore((s) => s.clear);
   const activePane = useUiStore((s) => s.activePane);
@@ -53,6 +62,10 @@ export function useGlobalHotkeys() {
   const setSinglePaneApplyState = useUiStore((s) => s.setSinglePaneApplyState);
   const zoomEditorFont = useUiStore((s) => s.zoomEditorFont);
   const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
+  const aiStatus = useAiStore((s) => s.status);
+  const aiAfter = useAiStore((s) => s.after);
+  const resetAi = useAiStore((s) => s.reset);
+  const retryAi = useAiStore((s) => s.retry);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
 
@@ -87,6 +100,70 @@ export function useGlobalHotkeys() {
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [activePane, aiEnabled, historyModalOpen, settingsModalOpen, setActivePane, showAiFix]);
+
+  // AI Fix 快捷键优先于普通 single-pane apply / Esc hide，单双栏一致。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (historyModalOpen || settingsModalOpen) return;
+
+      const isCmdEnter =
+        event.key === 'Enter' &&
+        event.metaKey &&
+        !event.altKey &&
+        !event.ctrlKey &&
+        !event.shiftKey;
+      const isPlainEsc =
+        event.key === 'Escape' &&
+        !event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey;
+
+      if (isCmdEnter && activePane === 'ai-fix' && aiStatus === 'awaiting-decision') {
+        consume(event);
+        acceptAiFix(aiAfter, setContent, resetAi, setActivePane).catch(() => {});
+        return;
+      }
+
+      if (
+        isCmdEnter &&
+        editorStatus === 'error' &&
+        showAiFix &&
+        aiEnabled &&
+        content.trim() !== '' &&
+        aiStatus !== 'requesting' &&
+        aiStatus !== 'awaiting-decision'
+      ) {
+        consume(event);
+        retryAi();
+        setActivePane('ai-fix');
+        return;
+      }
+
+      if (isPlainEsc && activePane === 'ai-fix' && (aiStatus === 'awaiting-decision' || aiStatus === 'error')) {
+        consume(event);
+        resetAi();
+        setActivePane('format');
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [
+    activePane,
+    aiAfter,
+    aiEnabled,
+    aiStatus,
+    content,
+    editorStatus,
+    historyModalOpen,
+    resetAi,
+    retryAi,
+    setActivePane,
+    setContent,
+    settingsModalOpen,
+    showAiFix,
+  ]);
 
   // 编辑器 / 表单内第一下 Esc 只退出编辑态；焦点已在外面时 Esc 才隐藏浮窗。
   useEffect(() => {
