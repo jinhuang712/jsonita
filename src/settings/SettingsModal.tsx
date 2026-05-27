@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { settings as settingsApi } from '../ipc/commands';
+import { settings as settingsApi, system as systemApi } from '../ipc/commands';
 import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
@@ -478,26 +478,45 @@ function SettingsCheckbox({
 
 function GroupAbout() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 'var(--fs-sm)' }}>
-      <div>
-        <span style={{ fontWeight: 600 }}>Jsonita</span>{' '}
-        <span style={{ color: 'var(--text-muted)' }}>v0.3.0-m0 · MIT License</span>
+    <div style={aboutStyle}>
+      <div style={aboutHeaderStyle}>
+        <div>
+          <div style={aboutTitleStyle}>Jsonita</div>
+          <div style={aboutSubtitleStyle}>Tiny menu-bar JSON toolkit</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => systemApi.openGithub().catch(() => {})}
+          style={aboutGithubButtonStyle}
+        >
+          GitHub
+        </button>
       </div>
-      <div style={{ color: 'var(--text-muted)' }}>
-        Tiny menu-bar JSON toolkit for macOS.
+
+      <div style={aboutMetaGridStyle}>
+        <AboutMeta label="Version" value="0.3.0-m0" />
+        <AboutMeta label="License" value="MIT" />
+        <AboutMeta label="Author" value="Jin Huang" />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
-        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)' }}>Data &amp; logs</div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>
+
+      <div style={aboutPathsStyle}>
+        <div style={sectionLabelStyle}>Data &amp; logs</div>
+        <div style={aboutPathStyle}>
           ~/Library/Application Support/Jsonita/
         </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>
+        <div style={aboutPathStyle}>
           ~/Library/Logs/Jsonita/
         </div>
       </div>
-      <div style={{ marginTop: 8, color: 'var(--text-muted)', fontSize: 'var(--fs-xs)' }}>
-        Author: Jin Huang
-      </div>
+    </div>
+  );
+}
+
+function AboutMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={aboutMetaStyle}>
+      <span style={aboutMetaLabelStyle}>{label}</span>
+      <span style={aboutMetaValueStyle}>{value}</span>
     </div>
   );
 }
@@ -516,6 +535,90 @@ const sectionLabelStyle: React.CSSProperties = {
   fontWeight: 600,
   textTransform: 'uppercase',
   letterSpacing: 0,
+};
+
+const aboutStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 16,
+  fontSize: 'var(--fs-sm)',
+};
+
+const aboutHeaderStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: 16,
+  paddingBottom: 12,
+  borderBottom: '1px solid var(--border)',
+};
+
+const aboutTitleStyle: React.CSSProperties = {
+  color: 'var(--text)',
+  fontSize: 'var(--fs-lg)',
+  fontWeight: 700,
+  lineHeight: 1.15,
+};
+
+const aboutSubtitleStyle: React.CSSProperties = {
+  marginTop: 4,
+  color: 'var(--text-muted)',
+  lineHeight: 1.35,
+};
+
+const aboutGithubButtonStyle: React.CSSProperties = {
+  flex: '0 0 auto',
+  padding: '4px 10px',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--border-strong)',
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--fs-xs)',
+  cursor: 'pointer',
+};
+
+const aboutMetaGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  gap: 8,
+};
+
+const aboutMetaStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 3,
+  minWidth: 0,
+};
+
+const aboutMetaLabelStyle: React.CSSProperties = {
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-xs)',
+};
+
+const aboutMetaValueStyle: React.CSSProperties = {
+  color: 'var(--text)',
+  fontWeight: 600,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+
+const aboutPathsStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+  paddingTop: 4,
+};
+
+const aboutPathStyle: React.CSSProperties = {
+  padding: '5px 8px',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--bg)',
+  color: 'var(--text-muted)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--fs-xs)',
+  overflowWrap: 'anywhere',
 };
 
 const shortcutDividerStyle: React.CSSProperties = {

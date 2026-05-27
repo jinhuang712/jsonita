@@ -70,6 +70,7 @@ export const system = {
   clipboardRead: () => invoke<ClipboardSniff>('clipboard_read'),
   openLogDir: () => invoke<void>('open_log_dir'),
   openDbPath: () => invoke<void>('open_db_path'),
+  openGithub: () => invoke<void>('open_github'),
   quitApp: () => invoke<void>('quit_app'),
 };
 
