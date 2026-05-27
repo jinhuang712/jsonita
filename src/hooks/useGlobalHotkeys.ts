@@ -31,6 +31,10 @@ function isTypingTarget(target: EventTarget | null): boolean {
   );
 }
 
+function isTreeTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && target.closest('.jsonita-tree-container') !== null;
+}
+
 function exitEditing(target: EventTarget | null): boolean {
   if (!isTypingTarget(target)) return false;
   const active = document.activeElement;
@@ -102,6 +106,29 @@ export function useGlobalHotkeys() {
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [activePane, aiEnabled, historyModalOpen, settingsModalOpen, setActivePane, showAiFix]);
+
+  // Cmd+A 只允许编辑器 / 表单走原生全选，其他 UI chrome 绝不触发 DOM 全页选择。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() !== 'a' ||
+        !event.metaKey ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        isTypingTarget(event.target) ||
+        isTreeTarget(event.target)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      window.getSelection()?.removeAllRanges();
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, []);
 
   // AI Fix 快捷键优先于普通 single-pane apply / Esc hide，单双栏一致。
   useEffect(() => {

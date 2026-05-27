@@ -15,6 +15,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     fontSize: 'var(--fs-editor)',
     fontFamily: 'var(--font-mono)',
     height: '100%',
+    userSelect: 'text',
   },
   '.cm-content': {
     caretColor: 'var(--editor-cursor)',

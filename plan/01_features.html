@@ -109,6 +109,7 @@
       <li><b>object / array 节点</b>（含 root）→ 递归复制完整子树为 pretty-printed JSON（2 空格缩进），即"以该 node 为新 root 的合法 JSON"</li>
       <li><b>与点 key 复制 path 不冲突</b>：点 key 仍复制 path；hover 出现的 📋 与 key 点击行为分开</li>
       <li><b>键盘可达</b>：聚焦在某个 node 行时按 <kbd>⌘C</kbd> 等同于点 📋</li>
+      <li><b><kbd>⌘A</kbd> 语义</b>：只在编辑器 / 表单内使用系统文本全选；Tree view 内 <kbd>⌘A</kbd> 选择整棵树，随后 <kbd>⌘C</kbd> 复制 root subtree；页面 Tab / 状态栏等 chrome 永远不会被 DOM 选中</li>
     </ul>
 
     <h2><span class="h2-num">F3</span>JSON ↔ String 互转</h2>
