@@ -11,6 +11,7 @@ export interface EventMap {
   'tray:toggle': Record<string, never>;
   'tray:open-settings': Record<string, never>;
   'permission:accessibility_missing': Record<string, never>;
+  'window:shown': Record<string, never>;
   'window:resized': WindowResizedPayload;
   'shortcut:restore_last': Record<string, never>;
   'settings:changed': Settings;

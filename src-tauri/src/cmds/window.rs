@@ -14,6 +14,7 @@ pub async fn window_show(app: tauri::AppHandle) -> Result<(), JsonitaError> {
     if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
         win.show()?;
         win.set_focus()?;
+        let _ = tauri::Emitter::emit(&app, "window:shown", ());
     }
     Ok(())
 }
