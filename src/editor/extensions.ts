@@ -27,7 +27,7 @@ import {
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 
 import { jsonitaJsonHighlight } from './highlight';
-import { externalLinter, type ExternalEditorError } from './lint';
+import { externalLinter, supplementalJsonLinter, type ExternalEditorError } from './lint';
 import { jsonitaDarkTheme, jsonitaLightTheme } from './theme';
 
 export interface EditorConfig {
@@ -57,6 +57,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),
     linter((view) => (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
+    supplementalJsonLinter(),
     cfg.error ? externalLinter(() => cfg.error ?? null) : [],
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle),

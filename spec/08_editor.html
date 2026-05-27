@@ -76,6 +76,7 @@ import { linter, lintGutter } from '@codemirror/lint';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { jsonitaLightTheme, jsonitaDarkTheme } from './theme';
 import { jsonitaJsonHighlight } from './highlight';
+import { externalLinter, supplementalJsonLinter } from './lint';
 
 export interface EditorConfig {
   theme: 'light' | 'dark';
@@ -104,6 +105,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),
     linter((view) =&gt; (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
+    supplementalJsonLinter(),
     cfg.error ? externalLinter(() =&gt; cfg.error ?? null) : [],
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle),
@@ -253,20 +255,26 @@ export const jsonitaJsonHighlight = syntaxHighlighting(style);</code></pre>
 
     <h2><span class="h2-num">2</span>错误标注</h2>
 
-    <h3><span class="h3-num">2.1</span>两路 lint 源</h3>
+    <h3><span class="h3-num">2.1</span>三路 lint 源</h3>
 
     <ol>
       <li><b>CodeMirror 自带</b> <code>jsonParseLinter()</code>（来自 @codemirror/lang-json）── 300ms debounce 实时；空白 / 仅空白文档返回空 diagnostic，不显示错误红点</li>
+      <li><b>前端辅助检查</b> <code>supplementalJsonLinter()</code> ── parser 通常只停在第一个致命错误；辅助检查继续标出未加引号 key、单引号字符串、<code>True</code>/<code>False</code>/<code>None</code>/<code>Null</code>/<code>undefined</code>、<code>//</code> 注释等常见非法 JSON token</li>
       <li><b>Rust 后端</b> 通过 IPC 返回的 <code>JsonitaError::Parse</code>（更精确，含 line/col）</li>
     </ol>
 
     <h3><span class="h3-num">2.2</span>合并策略</h3>
 
-    <p>前端 linter 实时给 squiggle；用户提交（debounce 完成）后 Rust 返回更精确的位置，覆盖前端 lint 结果。</p>
+    <p>前端 linter 实时给 squiggle；辅助检查补充多个常见非法 token；用户提交（debounce 完成）后 Rust 返回更精确的位置并作为额外 diagnostic 合并，不覆盖辅助标注。</p>
 
     <pre><code>// src/editor/lint.ts
 import { Diagnostic, linter } from '@codemirror/lint';
 import { EditorView } from '@codemirror/view';
+
+export function supplementalJsonDiagnostics(doc: string): Diagnostic[] {
+  // 轻量扫描：忽略字符串内部，标出 unquoted key / single-quoted string /
+  // capitalized literal / line comment 等常见 JSON 非法写法。
+}
 
 // 把外部错误（Rust 返回）转 CM Diagnostic
 export function externalErrorAsDiagnostic(
