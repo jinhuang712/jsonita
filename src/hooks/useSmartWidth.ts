@@ -8,11 +8,11 @@
 import { useEffect } from 'react';
 import { win } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
-
-const SOFT_WRAP_DEFAULT = true; // M2-N1 起从 settings.editorSoftWrap 读
+import { useSettingsStore } from '../store/settings';
 
 export function useSmartWidth() {
   const content = useEditorStore((s) => s.content);
+  const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
 
   useEffect(() => {
     if (content.length === 0) return;
@@ -26,10 +26,10 @@ export function useSmartWidth() {
           maxLineChars,
           lineCount: lines.length,
           bytes,
-          softWrapOn: SOFT_WRAP_DEFAULT,
+          softWrapOn: editorSoftWrap,
         })
         .catch(() => {});
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [content]);
+  }, [content, editorSoftWrap]);
 }

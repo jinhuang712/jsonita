@@ -9,6 +9,7 @@ import { useUiStore } from '../store/ui';
 import { useEffectiveTheme } from '../theme/useEffectiveTheme';
 import { TreeView } from '../tree/TreeView';
 import { StatusBar } from './StatusBar';
+import { SinglePaneHint } from './SinglePaneHint';
 import { TabBar } from './TabBar';
 
 /**
@@ -24,6 +25,7 @@ export function FloatingWindow() {
   const status = useEditorStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
+  const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
   const effectiveTheme = useEffectiveTheme();
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
@@ -53,6 +55,7 @@ export function FloatingWindow() {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
       }}
     >
       <TabBar />
@@ -70,7 +73,12 @@ export function FloatingWindow() {
             overflow: 'hidden',
           }}
         >
-          <Editor theme={effectiveTheme} value={content} onChange={setContent} softWrap={true} />
+          <Editor
+            theme={effectiveTheme}
+            value={content}
+            onChange={setContent}
+            softWrap={editorSoftWrap}
+          />
         </div>
         {!singlePaneMode && (
           <div style={{ overflow: 'hidden' }}>
@@ -83,13 +91,14 @@ export function FloatingWindow() {
                 theme={effectiveTheme}
                 value={outputText}
                 readOnly={true}
-                softWrap={true}
+                softWrap={editorSoftWrap}
                 placeholderText="→ output"
               />
             )}
           </div>
         )}
       </div>
+      <SinglePaneHint />
       <StatusBar />
     </div>
   );

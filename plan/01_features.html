@@ -239,9 +239,8 @@
         <tr><td>呼出 / 隐藏浮窗</td><td><kbd>⌘⇧J</kbd></td><td>是（全局）</td></tr>
         <tr><td>找回上次会话</td><td><kbd>⌘⇧L</kbd></td><td>是（全局可选）</td></tr>
         <tr><td>清空输入（<i>不</i>写入「上次」）</td><td><kbd>⌘K</kbd></td><td>否</td></tr>
-        <tr><td>打开历史</td><td><kbd>⌘H</kbd></td><td>否</td></tr>
-        <tr><td>设置</td><td><kbd>⌘,</kbd></td><td>否</td></tr>
-        <tr><td>关闭</td><td><kbd>Esc</kbd> / <kbd>⌘W</kbd></td><td>否</td></tr>
+        <tr><td>非编辑态切换功能 Tab</td><td><kbd>Tab</kbd> / <kbd>⇧Tab</kbd></td><td>否</td></tr>
+        <tr><td>关闭 / 退出编辑</td><td><kbd>Esc</kbd> / <kbd>⌘W</kbd></td><td>否；编辑器内 <kbd>Esc</kbd> 先退出 editing，再按才隐藏</td></tr>
       </tbody>
     </table>
 
@@ -252,15 +251,15 @@
 
     <h3><span class="h3-num">F7.1</span>General</h3>
     <ul>
-      <li>☑ <b>开机自启动</b> — 登录系统时自动后台运行 Jsonita</li>
-      <li>☑ <b>在菜单栏显示图标</b></li>
-      <li>☑ <b>呼出时自动粘贴剪贴板</b>（若内容像 JSON）</li>
+      <li>☑ <b>开机自启动</b> — 字段与开关已保留；当前未接系统 Login Items</li>
+      <li>☑ <b>在菜单栏显示图标</b> — 字段保留；当前 tray 始终创建</li>
+      <li>☑ <b>呼出时自动粘贴剪贴板</b>（若内容像 JSON）— 字段保留；当前未自动读取剪贴板</li>
       <li>☑ <b>失焦自动隐藏浮窗</b></li>
-      <li>☐ <b>单窗模式</b> — 取消右侧 output 面板，操作 in-place 替换 input，<kbd>⌘Z</kbd> 回滚（详见 <a href="#f9">F9</a>）</li>
+      <li>☐ <b>单窗模式</b> — 取消右侧 output 面板；按 <kbd>⌘Enter</kbd> 执行当前功能并 in-place 写回输入区（详见 <a href="#f9">F9</a>）</li>
       <li><b>主题</b>：跟随系统 / 亮 / 暗</li>
-      <li><b>恢复上次会话窗口期</b>：Off / 1 min / 5 min / 15 min / 1 hour（默认 5 min）</li>
+      <li><b>恢复上次会话窗口期</b>：字段保留；当前版本不做自动恢复，使用 <kbd>⌘⇧L</kbd> 手动找回</li>
       <li><b>浮窗默认位置</b>：屏幕中央偏上（v1 固定，v2 可记忆）</li>
-      <li><b>初始宽度</b>：720 / 860 / 920 / 1080 px（默认 920；见 <a href="#f10">F10</a>）</li>
+      <li><b>初始宽度</b>：字段保留为 720 / 860 / 920 / 1080 px（默认 920）；当前窗口配置与 <code>window.json</code> 默认是 860 px（见 <a href="#f10">F10</a>）</li>
       <li>☑ <b>智能扩宽</b> — 粘贴后按内容自动加宽（在 min-max 区间内，<b>不</b>占满屏；见 <a href="#f10">F10</a>）</li>
       <li><b>重置浮窗尺寸</b> 按钮 — 清掉记忆的尺寸，回到默认</li>
     </ul>
@@ -281,7 +280,7 @@
     <h3><span class="h3-num">F7.4</span>History</h3>
     <ul>
       <li><b>历史上限</b>：10 / 50 / 100 / 200（默认 100）</li>
-      <li><b>一键清空历史</b>按钮</li>
+      <li><b>一键清空历史</b>：IPC 已实现；当前 Settings UI 未渲染按钮</li>
     </ul>
 
     <h3><span class="h3-num">F7.5</span>JSON Transform</h3>
@@ -296,39 +295,38 @@
     </ul>
 
     <h2 id="f8"><span class="h2-num">F8</span>会话保留与恢复</h2>
-    <p>关闭浮窗后短期内再呼出，自动恢复上次内容；超时视为新会话；任何时刻 <kbd>⌘⇧L</kbd> 可手动找回。</p>
+    <p>合法 transform 成功后保存 last_session；任何时刻 <kbd>⌘⇧L</kbd> 可手动找回。当前版本不做关闭后自动恢复。</p>
 
     <table>
       <thead><tr><th>场景</th><th>行为</th></tr></thead>
       <tbody>
-        <tr><td>关闭后 5 min 内呼出（默认窗口期）</td><td>自动恢复内容 + 顶部提示「Restored from N min ago · Discard」</td></tr>
-        <tr><td>超过 5 min 呼出</td><td>视为新会话，输入框空白；需手动按 <kbd>⌘⇧L</kbd> 找回</td></tr>
-        <tr><td>应用 Quit 重启</td><td>同上：默认空白；按 <kbd>⌘⇧L</kbd> 仍可找回（sqlite 持久化）</td></tr>
-        <tr><td>按 <kbd>⌘⇧L</kbd>（任意时刻）</td><td>从 sqlite <code>last_session</code> 读取并载入</td></tr>
+        <tr><td>合法 transform 成功</td><td>覆盖保存到 sqlite <code>last_session</code></td></tr>
+        <tr><td>关闭后再次呼出</td><td>保持当前 WebView store；若应用重启则空白，需手动按 <kbd>⌘⇧L</kbd> 找回</td></tr>
+        <tr><td>应用 Quit 重启</td><td>默认空白；按 <kbd>⌘⇧L</kbd> 仍可找回（sqlite 持久化）</td></tr>
+        <tr><td>按 <kbd>⌘⇧L</kbd>（任意时刻）</td><td>先显示 / 聚焦浮窗，再从 sqlite <code>last_session</code> 读取并载入</td></tr>
         <tr><td>按 <kbd>⌘K</kbd> 主动清空</td><td>立即清空 + <i>不</i>写入「上次会话」（避免找回的是空）</td></tr>
       </tbody>
     </table>
 
     <p><b>实现要点</b>：</p>
     <ul>
-      <li>关闭时把当前内容写入 sqlite <code>last_session</code> 单行表（覆盖式）+ 同时写入普通 <code>history</code> 表</li>
-      <li>恢复窗口期由 in-memory 计时器维护，<b>不持久化</b> —— 应用 Quit 后计时器销毁，下次启动默认不自动恢复</li>
-      <li><kbd>⌘⇧L</kbd> 始终从 <code>last_session</code> 读取，与内存计时器无关</li>
-      <li>恢复提示 bar 显示在浮窗顶部，5 秒后自动淡出（或用户点 Discard 立即清空内容）</li>
+      <li>transform 成功时写 sqlite <code>last_session</code> 单行表（覆盖式）</li>
+      <li><kbd>⌘⇧L</kbd> 始终从 <code>last_session</code> 读取</li>
+      <li><kbd>⌘K</kbd> 同时清空编辑器与 <code>last_session</code>，避免找回空白</li>
     </ul>
 
-    <p><b>设置项</b>（General 分组）：<code>Restore session within</code> — <code>Off</code> / <code>1 min</code> / <code>5 min</code>（默认）/ <code>15 min</code> / <code>1 hour</code></p>
+    <p><b>设置项</b>（General 分组）：<code>restoreWindow</code> 字段保留，当前版本不驱动自动恢复 UI。</p>
 
     <h2 id="f9"><span class="h2-num">F9</span>单窗模式 (Single-pane Mode)</h2>
-    <p>可选模式：默认是左右双栏（input | output）对比；开启后取消右侧 output 面板，操作（Format / Minify / 互转 / AI Fix）直接 in-place 替换 input 内容；按 <kbd>⌘Z</kbd> 回滚到上一步。</p>
+    <p>可选模式：默认是左右双栏（input | output）对比；开启后取消右侧 output 面板，输入编辑器成为唯一工作区。后台只做 JSON 合法性校验；当前功能（Format / Minify / →Str / →JSON / Tree 等价 Format）必须由用户按 <kbd>⌘Enter</kbd> 显式执行，成功后结果 in-place 写回输入编辑器。</p>
 
     <ul>
-      <li><b>适用场景</b>：屏幕小、喜欢极简、习惯 sed / jq 风格的 in-place 编辑</li>
+      <li><b>适用场景</b>：屏幕小、希望只保留输入区域</li>
       <li><b>开关</b>：F7.1 General「☐ 单窗模式」（默认<b>关</b>）</li>
-      <li><b>回滚</b>：CodeMirror 6 内置 history extension 提供 undo 栈，原生 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd></li>
-      <li><b>回滚深度</b>：跟随 CodeMirror 默认（约 100 步），不另设上限</li>
-      <li><b>历史</b>：每次操作仍写入 sqlite history（不依赖 undo 栈，重启后仍可找回）</li>
-      <li><b>AI Fix</b>：单窗模式下不再 diff 双栏对比，改为 toast「已修复，<kbd>⌘Z</kbd> 撤销」</li>
+      <li><b>执行</b>：右下角固定提示 <kbd>⌘↵</kbd> Run {pane}；运行中 / 成功 / 失败在同一位置短暂反馈</li>
+      <li><b>回滚</b>：因为结果写回同一个 CodeMirror 文档，<kbd>⌘Z</kbd> 可以撤销本次应用</li>
+      <li><b>历史</b>：<kbd>⌘Enter</kbd> 应用成功后覆盖 <code>last_session</code>；SQLite history 仍只在 AI Fix 接受等显式路径写入</li>
+      <li><b>AI Fix</b>：single-pane 下 <kbd>⌘Enter</kbd> 直接调用 <code>ai_fix</code> 并把 fixed JSON 写回输入区，不展示 DiffView；失败反馈在右下角 hint + 现有错误状态</li>
     </ul>
 
     <h2 id="f10"><span class="h2-num">F10</span>浮窗智能宽度</h2>
@@ -341,8 +339,8 @@
         <tr>
           <td><b>1. 首次呼出宽度</b></td>
           <td>新光标屏第一次呼出 / 用户从未拖动过</td>
-          <td>固定 920 px（在 720-1400 区间偏中）；高度按光标屏可用区域 ≈ 65%</td>
-          <td>设置 General「初始宽度」可改预设档（720 / 860 / 920 / 1080）</td>
+          <td>固定 860 px（tauri.conf 与 window.json 默认）；高度 560 px</td>
+          <td><code>settings.initialWidth</code> 字段保留，当前 UI 未渲染，也不影响启动尺寸</td>
         </tr>
         <tr>
           <td><b>2. 粘贴自动扩宽</b></td>
@@ -359,7 +357,7 @@
         <tr>
           <td><b>4. soft-wrap</b></td>
           <td>编辑器内长行</td>
-          <td>开 → 长行换行不溢出，配合层 1-3；关 → 编辑器内水平滚动，浮窗本身不变宽</td>
+          <td>开 → 长行换行不溢出，智能扩宽跳过；关 → 编辑器内水平滚动，且可触发粘贴自动扩宽</td>
           <td>设置 F1 编辑器「Soft Wrap」（默认<b>开</b>，已在 F1 中）</td>
         </tr>
       </tbody>

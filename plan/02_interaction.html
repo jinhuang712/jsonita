@@ -72,7 +72,9 @@
     </ul>
 
     <h3><span class="h3-num">1.1</span>Tab 切换</h3>
-    <p>顶部 6 个功能 Tab：Format / Minify / Tree / →Str / →JSON / AI Fix。切换靠鼠标点击 或 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环。active 状态 = 冷色焦点态。</p>
+    <p>顶部功能 Tab：Format / Minify / Tree / →Str / →JSON；AI Fix 仅在 parse error 且 AI 可用时出现在最右。切换靠鼠标点击，或在非编辑态按 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环；焦点在 CodeMirror / 表单输入内时不拦截 Tab。active 状态 = 冷色焦点态。</p>
+
+    <p>单窗模式下切换 Tab 只改变待执行功能，不自动改写编辑器；右下角提示当前可按 <kbd>⌘Enter</kbd> 执行 active Tab 并把结果写回输入区。</p>
 
     <p><b>不绑定 <kbd>⌘1</kbd>-<kbd>⌘6</kbd></b> —— 避免污染系统级常用快捷键 + CodeMirror 编辑器内 <kbd>⌘+数字</kbd> 冲突。</p>
 
@@ -112,8 +114,7 @@
         <div style="flex:1;"></div>
       </div>
       <div style="padding: 6px 0; background: var(--bg-subtle);">
-        <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Open Jsonita</span><kbd>⌘⇧J</kbd></div>
-        <div style="padding: 7px 14px; font-size: 12.5px;">Show History…</div>
+        <div style="padding: 7px 14px; font-size: 12.5px;">Toggle Jsonita</div>
         <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd>⌘,</kbd></div>
         <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
         <div style="padding: 7px 14px; font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd>⌘Q</kbd></div>
@@ -144,7 +145,7 @@
       <div class="flow-step">
         <div class="flow-step-num">STEP 04</div>
         <div class="flow-step-title">关闭</div>
-        <div class="flow-step-desc"><kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> → 200 ms 淡出；入历史 + 暂存「上次会话」</div>
+        <div class="flow-step-desc">编辑器内第一下 <kbd>Esc</kbd> 退出 editing；非编辑态 <kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> → 隐藏浮窗；合法内容由实时 transform 持久化为「上次会话」</div>
       </div>
     </div>
 
@@ -184,8 +185,8 @@
         <tr><td>合法 JSON</td><td><span class="mockup-status-ok">● Valid JSON</span> · X lines · Y bytes</td><td>绿色圆点</td></tr>
         <tr><td>语法错误</td><td><span style="color: var(--danger);">● Line X, Col Y: unexpected token</span></td><td>输入框红波浪线高亮该位置 + AI Fix 按钮</td></tr>
         <tr><td>空输入</td><td>—</td><td>右侧 placeholder: <code>Paste JSON to start</code></td></tr>
-        <tr><td>过大 (&gt; 5 MB)</td><td>—</td><td>Toast: <code>Large file, may be slow. Continue?</code></td></tr>
-        <tr><td>AI 调用失败</td><td>—</td><td>Toast: 错误信息（含上游 429 限流，透传 <code>retry-after</code>）+ 重试 + 「打开原始返回」</td></tr>
+        <tr><td>过大 (&gt; 5 MB)</td><td><span style="color: var(--warn);">● Large file · X bytes</span></td><td>不调 JSON engine，避免卡顿</td></tr>
+        <tr><td>AI 调用失败</td><td>—</td><td>AI Fix 面板显示错误信息（含上游 429 限流，透传 <code>retry-after</code>）</td></tr>
       </tbody>
     </table>
 

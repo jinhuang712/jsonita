@@ -77,7 +77,7 @@
         <tr><td>间距</td><td><code>--sp-*</code></td><td>04 组件</td><td>§ 7</td></tr>
         <tr><td>圆角 / 边框 / 阴影</td><td><code>--radius-* / --bw-* / --shadow-*</code></td><td>04 组件 · 06 窗口</td><td>§ 8</td></tr>
         <tr><td>动效</td><td><code>--dur-* / --ease-*</code></td><td>06 窗口 · 04 组件</td><td>§ 9</td></tr>
-        <tr><td>Z-index</td><td><code>--z-*</code></td><td>04 组件（Modal / Toast / Tooltip）</td><td>§ 10</td></tr>
+        <tr><td>Z-index</td><td><code>--z-*</code></td><td>04 组件（Modal / Tooltip；Toast 为保留设计）</td><td>§ 10</td></tr>
       </tbody>
     </table>
 
@@ -134,7 +134,7 @@
         <tr><td><code>--ok</code> / <code>--ok-bg</code></td><td><code>#237B4B</code> / <code>#F0F8F3</code></td><td><code>#67C288</code> / <code>rgba(103,194,136,0.14)</code></td><td>状态文字 / valid badge</td></tr>
         <tr><td><code>--warn</code> / <code>--warn-bg</code></td><td><code>#A45F00</code> / <code>#FFF7E8</code></td><td><code>#E0A14A</code> / <code>rgba(224,161,74,0.14)</code></td><td>大文件 / 超时</td></tr>
         <tr><td><code>--danger</code> / <code>--danger-bg</code></td><td><code>#C92A2A</code> / <code>#FFF1F0</code></td><td><code>#F27A7A</code> / <code>rgba(242,122,122,0.14)</code></td><td>parse 错 / HTTP 错</td></tr>
-        <tr><td><code>--info</code> / <code>--info-bg</code></td><td><code>#245BDB</code> / <code>#F2F5FF</code></td><td><code>#8AADFF</code> / <code>rgba(103,142,255,0.14)</code></td><td>callout / RestoreBar</td></tr>
+        <tr><td><code>--info</code> / <code>--info-bg</code></td><td><code>#245BDB</code> / <code>#F2F5FF</code></td><td><code>#8AADFF</code> / <code>rgba(103,142,255,0.14)</code></td><td>callout / info toast</td></tr>
       </tbody>
     </table>
 
@@ -203,7 +203,7 @@
       <thead><tr><th>token</th><th>px</th><th>用途</th></tr></thead>
       <tbody>
         <tr><td><code>--fs-xs</code></td><td>11</td><td>tag / breadcrumb / meta</td></tr>
-        <tr><td><code>--fs-sm</code></td><td>12.5</td><td>表格 td / Toast / 状态栏</td></tr>
+        <tr><td><code>--fs-sm</code></td><td>12.5</td><td>表格 td / 状态栏；Toast 为保留设计</td></tr>
         <tr><td><code>--fs-base</code></td><td>13.5</td><td>UI 默认（按钮 / 输入框 / 列表）</td></tr>
         <tr><td><code>--fs-md</code></td><td>14</td><td>设置面板正文 / Modal body</td></tr>
         <tr><td><code>--fs-lg</code></td><td>16</td><td>Modal 标题 / Tab 文字</td></tr>
@@ -286,7 +286,7 @@
         <tr><td><code>--dur-fast</code></td><td>120 ms</td><td>按钮 active</td></tr>
         <tr><td><code>--dur-base</code></td><td>150 ms</td><td>浮窗淡入</td></tr>
         <tr><td><code>--dur-slow</code></td><td>200 ms</td><td>浮窗淡出 / Modal 出场</td></tr>
-        <tr><td><code>--dur-toast</code></td><td>5000 ms</td><td>Toast 自动消失</td></tr>
+        <tr><td><code>--dur-toast</code></td><td>5000 ms</td><td>保留 token；当前未接入 Toast</td></tr>
         <tr><td rowspan="3">缓动</td><td><code>--ease-standard</code></td><td><code>cubic-bezier(0.4, 0.0, 0.2, 1)</code></td><td>Material 风（默认）</td></tr>
         <tr><td><code>--ease-out</code></td><td><code>cubic-bezier(0.0, 0.0, 0.2, 1)</code></td><td>入场</td></tr>
         <tr><td><code>--ease-in</code></td><td><code>cubic-bezier(0.4, 0.0, 1, 1)</code></td><td>出场</td></tr>
@@ -307,8 +307,8 @@
       <tbody>
         <tr><td><code>window-fade-in</code></td><td>浮窗 show</td><td>opacity 0→1 + translateY -4px→0 + scale 0.98→1</td><td><code>--dur-base</code> / <code>--ease-out</code></td></tr>
         <tr><td><code>window-fade-out</code></td><td>浮窗 hide</td><td>opacity 1→0 + translateY 0→-2px + scale 1→0.99</td><td><code>--dur-slow</code> / <code>--ease-in</code></td></tr>
-        <tr><td><code>toast-in</code></td><td>Toast 入场</td><td>opacity 0→1 + translateY 8px→0</td><td><code>--dur-base</code> / <code>--ease-out</code></td></tr>
-        <tr><td><code>fade-out</code></td><td>RestoreBar 自动淡出</td><td>opacity 1→0</td><td><code>--dur-slow</code></td></tr>
+        <tr><td><code>toast-in</code></td><td>保留动画</td><td>opacity 0→1 + translateY 8px→0</td><td><code>--dur-base</code> / <code>--ease-out</code></td></tr>
+        <tr><td><code>fade-out</code></td><td>保留动画</td><td>opacity 1→0</td><td><code>--dur-slow</code></td></tr>
       </tbody>
     </table>
 
@@ -323,7 +323,7 @@
         <tr><td><code>--z-dropdown</code></td><td>30</td><td>select / autocomplete</td></tr>
         <tr><td><code>--z-modal-bg</code></td><td>40</td><td>Modal 遮罩</td></tr>
         <tr><td><code>--z-modal</code></td><td>50</td><td>Modal 容器</td></tr>
-        <tr><td><code>--z-toast</code></td><td>60</td><td>Toast</td></tr>
+        <tr><td><code>--z-toast</code></td><td>60</td><td>保留 token；当前未接入 Toast</td></tr>
         <tr><td><code>--z-tooltip</code></td><td>70</td><td>Tooltip（最顶）</td></tr>
       </tbody>
     </table>
@@ -354,12 +354,10 @@ graph TB
     subgraph Subscribe["订阅外部变化"]
         SUB1[matchMedia change<br/>OS 主题切换]
         SUB2["settings:changed event<br/>用户改设置"]
-        SUB3[NSDistributedNotification<br/>macOS Rust 端兜底]
     end
 
     SUB1 --> APPLY
     SUB2 --> R
-    SUB3 -.emit theme:system_changed.-> APPLY
 
     subgraph Boot["首屏 FOUC 避免"]
         IS[index.html inline script<br/>从 localStorage 读 effective<br/>提前设 data-theme]
@@ -380,7 +378,7 @@ graph TB
       <li><b>三态归一</b>：<code>settings.theme = 'system'</code> 时查 <code>matchMedia('(prefers-color-scheme: dark)')</code> 算出 effective theme（light / dark）</li>
       <li><b>挂 data-theme</b>：所有 CSS 变量切换由 <code>[data-theme="dark"] { ... }</code> 覆盖触发 ── 无 JS 计算颜色</li>
       <li><b>CodeMirror 单独通知</b>：编辑器有自己的 theme extension（不读 CSS variables），需 <code>editorStore.setTheme()</code> 同步</li>
-      <li><b>三重订阅</b>：matchMedia change（OS 切换）+ settings:changed（用户改设置）+ Rust NSDistributedNotification（macOS WebView 偶发不响应 OS 切换的兜底）</li>
+      <li><b>双重订阅</b>：matchMedia change（OS 切换）+ settings:changed（用户改设置）</li>
       <li><b>避免 FOUC</b>：index.html <code>&lt;head&gt;</code> 内联一段 script 先于 React bundle 读 localStorage cache 设 <code>data-theme</code></li>
     </ul>
 
@@ -422,17 +420,6 @@ useEffect(() =&gt; {
   } catch (e) {}
 })();
 &lt;/script&gt;</code></pre>
-
-    <h3><span class="h3-num">11.4</span>Rust 端配合（macOS）</h3>
-
-    <p>Rust 监听 macOS <code>NSDistributedNotificationCenter</code> 的 <code>AppleInterfaceThemeChangedNotification</code>，转发为 <code>theme:system_changed</code> event ── 解决某些 Tauri 版本 WebView 内 <code>matchMedia</code> 不响应外部切换的问题。</p>
-
-    <pre><code>// src-tauri/src/system/theme.rs（macOS 兜底）
-#[cfg(target_os = "macos")]
-pub fn watch_system_theme(app: tauri::AppHandle) {
-    // 注册 NSDistributedNotificationCenter observer，
-    // 触发后 app.emit("theme:system_changed", json!({ "mode": current_mode() }))
-}</code></pre>
 
     <p class="section-divider"><b>四 · Tailwind 集成</b></p>
 

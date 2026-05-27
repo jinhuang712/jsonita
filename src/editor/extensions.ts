@@ -37,6 +37,8 @@ export interface EditorConfig {
 }
 
 export function makeExtensions(cfg: EditorConfig): Extension[] {
+  const parseLinter = jsonParseLinter();
+
   return [
     lineNumbers(),
     highlightActiveLine(),
@@ -52,7 +54,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     EditorState.allowMultipleSelections.of(true),
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),
-    linter(jsonParseLinter(), { delay: 300 }),
+    linter((view) => (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle),
     jsonitaJsonHighlight,

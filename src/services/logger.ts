@@ -2,8 +2,8 @@
  * 前端日志薄层。
  *
  * Spec ref: spec/15_logging.html § 8 WebView 端薄层。
- * M0 阶段仅 `console.*` 输出，**不**走 IPC ── M1 接 `log_write` 转发到
- * Rust 同一文件（双进程合流，spec/15 § 2.2）。
+ * 当前仅 `console.*` 输出，**不**走 IPC。`log_write` 转发到 Rust 同一文件是
+ * reserved / future（spec/15 § 2.2）。
  *
  * API 形状已锁定：M1 加入 IPC 时调用点（其它模块的 `logger.error/warn/...`）零改动。
  */
@@ -19,7 +19,7 @@ function emit(
   const consoleFn =
     level === 'debug' ? console.log : level === 'info' ? console.info : console[level];
   consoleFn(`[${target}] ${event}`, fields ?? {});
-  // M1 起：if level !== 'debug' → invoke('log_write', {level, target, event, fields})
+  // Reserved: if level !== 'debug' → invoke('log_write', { level, target, event, fields })
 }
 
 export const logger = {

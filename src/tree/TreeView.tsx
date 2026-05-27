@@ -15,6 +15,12 @@ interface Props {
   initialExpandDepth?: number;
 }
 
+function toJsonViewData(data: unknown): object | unknown[] {
+  if (Array.isArray(data)) return data;
+  if (data !== null && typeof data === 'object') return data;
+  return { value: data };
+}
+
 export function TreeView({ data, initialExpandDepth = 2 }: Props) {
   // 简化：直接走 lib 默认 styles，用 css var 二次覆盖（M3-N1 polish 时拆自定义 class）
   return (
@@ -43,7 +49,7 @@ export function TreeView({ data, initialExpandDepth = 2 }: Props) {
       }}
     >
       <JsonView
-        data={data}
+        data={toJsonViewData(data)}
         shouldExpandNode={(level) => level < initialExpandDepth}
         style={defaultStyles}
       />

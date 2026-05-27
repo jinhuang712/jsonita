@@ -77,15 +77,15 @@
     <ul>
       <li><b>崩溃容忍</b>：前端崩溃不影响菜单栏（Rust 端独立）；可一键 reload 浮窗</li>
       <li><b>数据丢失</b>：所有用户输入在浮窗关闭前自动入历史；历史写入用事务保证一致</li>
-      <li><b>升级安全</b>：自动检测旧版本数据 schema，自动迁移；迁移失败保留备份</li>
+      <li><b>升级安全</b>：自动检测旧版本数据 schema，自动迁移；当前迁移失败会回滚并报错，备份文件为保留设计</li>
       <li><b>网络容错</b>：DeepSeek 调用失败时清晰报错 + 重试按钮；不重试到死</li>
     </ul>
 
     <h2><span class="h2-num">6</span>可观察性</h2>
     <ul>
-      <li>v1 不做任何上报，仅在本地写一份滚动日志：<code>~/Library/Logs/Jsonita/app.log</code></li>
-      <li>日志级别：错误 / 警告（不记录用户 JSON 内容）</li>
-      <li>设置面板提供「打开日志目录」按钮，方便排障</li>
+      <li>v1 不做任何上报，仅在本地写按天滚动日志：<code>~/Library/Logs/Jsonita/jsonita.YYYY-MM-DD.log</code></li>
+      <li>日志级别：INFO / WARN / ERROR（不记录用户 JSON 内容）</li>
+      <li><code>open_log_dir</code> IPC 已实现；设置面板「打开日志目录」按钮为保留 UI</li>
     </ul>
 
     <h2><span class="h2-num">7</span>分发</h2>

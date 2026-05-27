@@ -38,7 +38,7 @@
         <tr><td>呼出 &lt; 500 ms</td><td><a href="../plan/04_nfr.html">04 § 1</a></td><td>§ 2.1 预热 + § 8 生命周期</td></tr>
         <tr><td>定位到光标屏中央偏上</td><td>02 § 1</td><td>§ 4 多屏定位</td></tr>
         <tr><td>失焦自动隐藏（可关）</td><td>02 § 1</td><td>§ 6 失焦监听</td></tr>
-        <tr><td>关闭浮窗保存 last_session</td><td>plan/01 F8</td><td>§ 5 关闭事件路由</td></tr>
+        <tr><td>关闭浮窗保留 last_session</td><td>plan/01 F8</td><td>§ 5 关闭事件路由；合法内容由实时 transform 持久化</td></tr>
         <tr><td>150 ms 淡入 / 200 ms 淡出</td><td>02 § 3</td><td>§ 8 动效（CSS only）</td></tr>
         <tr><td>记忆大小（不记忆位置）</td><td>02 § 1</td><td>§ 7 智能宽度 / 持久化</td></tr>
       </tbody>
@@ -56,7 +56,7 @@
 
     <h3><span class="h3-num">2.3</span>关闭 = hide 而非 close</h3>
 
-    <p>红色 traffic light / <code>Esc</code> / <code>⌘W</code> 全部映射为 <code>window.hide()</code>，进程保留 ── 这样下次呼出依然是亚毫秒级。<b>只有</b> <code>⌘Q</code> 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。</p>
+    <p>红色 traffic light / 非编辑态 <code>Esc</code> / <code>⌘W</code> 映射为 <code>window.hide()</code>，进程保留 ── 这样下次呼出依然是亚毫秒级。焦点在 CodeMirror 或表单输入内时，第一下 <code>Esc</code> 只 <code>blur()</code> 退出 editing；随后再按 <code>Esc</code> 才隐藏浮窗。<b>只有</b> <code>⌘Q</code> 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。</p>
 
     <h3><span class="h3-num">2.4</span>定位到光标所在屏，不记忆位置</h3>
 
@@ -64,7 +64,7 @@
 
     <h3><span class="h3-num">2.5</span>动效全部 CSS / 前端实现</h3>
 
-    <p>Rust 端只管 <code>show()</code> / <code>hide()</code>，不参与动效。淡入淡出由 CSS keyframes + React 加 <code>.enter</code> / <code>.exit</code> 类驱动，对应 <a href="03_design_tokens.html">03 § 9.2</a> 的 <code>window-fade-in</code> / <code>window-fade-out</code> 动画 token。这样动效预算 / 缓动曲线属于设计 token，跨章节统一。</p>
+    <p>当前 Rust 端只管 <code>show()</code> / <code>hide()</code>，前端尚未接入 show/hide 过渡类；03 章里的窗口淡入淡出 token 是保留设计。</p>
 
     <p class="section-divider"><b>二 · 工作机制</b></p>
 
@@ -169,12 +169,13 @@ window.set_position(tauri::LogicalPosition::new(x, y))?;</code></pre>
 
     <h2><span class="h2-num">5</span>关闭事件路由</h2>
 
-    <p>"关闭"这个动作来自 6 个来源，分别走 <b>hide</b> 或 <b>真 close + quit</b>。下图是完整路由：</p>
+    <p>"关闭"这个动作来自 6 个来源，分别走 <b>退出 editing</b>、<b>hide</b> 或 <b>真 close + quit</b>。下图是完整路由：</p>
 
     <div class="mermaid">
 graph TD
     subgraph Sources["关闭来源"]
-        E[Esc 键]
+        EE["Esc 键<br/>(editing 中)"]
+        E["Esc 键<br/>(非 editing)"]
         W[⌘W]
         B["失焦 (hide_on_blur=true)"]
         TL["红 traffic light"]
@@ -182,8 +183,9 @@ graph TD
         Q[⌘Q]
     end
 
-    E --> CR[CloseRequested<br/>WindowEvent]
-    W --> CR
+    EE --> ExitEdit[activeElement.blur<br/>退出 editing]
+    E --> FrontHide[前端 window_hide]
+    W --> FrontHide
     B --> Blur[on_window_event<br/>Focused false]
     TL --> CR
     TQ --> Quit[app.exit]
@@ -194,19 +196,17 @@ graph TD
     CheckBlur -->|false| NoOp[no-op]
 
     CR --> Intercept[api.prevent_close<br/>拦截关闭]
-    Intercept --> Save[invoke<br/>session_save_last]
-    Save --> Fade[加 .floating-window-exit<br/>200 ms 淡出]
-    Fade --> Hide[window.hide<br/>+ emit window:hidden]
+    Intercept --> Hide
+    FrontHide --> Hide
 
-    Quit --> SaveQ[最后一次<br/>session_save_last]
-    SaveQ --> Exit[app.exit<br/>+ emit app:will_quit]
+    Quit --> Exit[app.exit]
 
     classDef src fill:#F2F5FF,stroke:#245BDB
     classDef act fill:#F1F3F6,stroke:#3F4A5A
     classDef end1 fill:#F0F8F3,stroke:#237B4B
     classDef end2 fill:#FFF1F0,stroke:#C92A2A
-    class E,W,B,TL,TQ,Q src
-    class CR,Blur,Intercept,Save,Fade,Quit,SaveQ,CheckBlur,NoOp act
+    class EE,E,W,B,TL,TQ,Q src
+    class ExitEdit,FrontHide,CR,Blur,Intercept,Quit,CheckBlur,NoOp act
     class Hide end1
     class Exit end2
     </div>
@@ -216,10 +216,11 @@ graph TD
     <table>
       <thead><tr><th>来源</th><th>路由</th><th>是否保存 session</th></tr></thead>
       <tbody>
-        <tr><td><kbd>Esc</kbd></td><td>hide</td><td>是</td></tr>
-        <tr><td><kbd>⌘W</kbd></td><td>hide</td><td>是</td></tr>
-        <tr><td>失焦（hide_on_blur=true）</td><td>hide</td><td>是</td></tr>
-        <tr><td>红 traffic light 点击</td><td>hide（拦截 close → hide）</td><td>是</td></tr>
+        <tr><td><kbd>Esc</kbd>（editing 中）</td><td>blur active editor/input，只退出 editing</td><td>否</td></tr>
+        <tr><td><kbd>Esc</kbd>（非 editing）</td><td>hide</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
+        <tr><td><kbd>⌘W</kbd></td><td>hide</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
+        <tr><td>失焦（hide_on_blur=true）</td><td>hide</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
+        <tr><td>红 traffic light 点击</td><td>hide（拦截 close → hide）</td><td>否；合法内容已由实时 transform 保存 last_session</td></tr>
         <tr><td>menubar → Quit</td><td>close + app exit</td><td>是（quit 前最后一次）</td></tr>
         <tr><td><kbd>⌘Q</kbd></td><td>close + app exit</td><td>是</td></tr>
       </tbody>
@@ -227,7 +228,8 @@ graph TD
 
     <h3><span class="h3-num">5.2</span>close interceptor（~6 行）</h3>
 
-    <pre><code>// 把红 traffic light / Esc / ⌘W 触发的 CloseRequested 改写为 hide
+    <pre><code>// 把红 traffic light 触发的 CloseRequested 改写为 hide；
+// Esc / ⌘W 由前端 useGlobalHotkeys 直接调用 window_hide。
 fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
     let w = win.clone();
     win.on_window_event(move |event| {
@@ -263,7 +265,6 @@ fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
             if !app_handle.state::&lt;SettingsStore&gt;().get().hide_on_blur { return; }
             if let Some(w) = app_handle.get_webview_window(&amp;win_label) {
                 let _ = w.hide();
-                let _ = app_handle.emit_to(&amp;win_label, "window:hidden", ());
             }
         }
     });
@@ -301,7 +302,7 @@ graph TD
     <table>
       <thead><tr><th>层</th><th>触发点</th><th>实现位置</th></tr></thead>
       <tbody>
-        <tr><td>1 · 首次呼出宽度</td><td><code>window_show</code> 前</td><td><code>system::window_state::resolve_initial_size</code></td></tr>
+        <tr><td>1 · 首次呼出宽度</td><td>启动窗口配置 / <code>WindowStore::default()</code></td><td>当前固定 860 × 560；<code>settings.initialWidth</code> 尚未接入</td></tr>
         <tr><td>2 · 粘贴自动扩宽</td><td>编辑器 onChange 首次填充 → 前端调 <code>window_resize_for_content</code></td><td>前端 editor store + Rust <code>cmds::window</code></td></tr>
         <tr><td>3 · 手动拖动</td><td><code>WindowEvent::Resized</code></td><td><code>install_size_persist</code>（§ 7.4）</td></tr>
         <tr><td>4 · soft-wrap</td><td>纯前端 EditorView.lineWrapping toggle</td><td>不涉及窗口（详见 <a href="08_editor.html">08</a>）</td></tr>
@@ -320,11 +321,11 @@ graph TD
 
     <h3><span class="h3-num">7.4</span>用户拖动监听</h3>
 
-    <p>监听 <code>WindowEvent::Resized</code> → debounce 500 ms → 写 <code>window.json</code> + 设 <code>userDragged = true</code> + emit <code>window:resized { source: "user" }</code>。<b>智能扩宽内部</b> <code>set_size()</code> 时通过"操作前后 sentinel 标志"或 <code>source: "auto"</code> 区分，避免误标 <code>userDragged</code>。</p>
+    <p>监听 <code>WindowEvent::Resized</code> → 立即写 <code>window.json</code> + 设 <code>userDragged = true</code>。<b>智能扩宽内部</b> <code>set_size()</code> 时通过操作前后 sentinel 标志区分，避免误标 <code>userDragged</code>；当前只有智能扩宽会 emit <code>window:resized { source: "auto" }</code>。</p>
 
     <h3><span class="h3-num">7.5</span>重置入口</h3>
 
-    <p>设置面板 General "重置浮窗尺寸" 按钮 → 调 <code>window_reset_size</code> command → 删除 <code>window.json</code> → 下次呼出回到首次状态。</p>
+    <p><code>window_reset_size</code> command 会删除 <code>window.json</code> 并把内存状态重置为 860 × 560；当前 Settings UI 未渲染"重置浮窗尺寸"按钮。</p>
 
     <h2><span class="h2-num">8</span>窗口生命周期</h2>
 
@@ -332,19 +333,20 @@ graph TD
 stateDiagram-v2
     [*] --> Setup: 应用启动
     Setup --> Hidden: 创建窗口 (visible:false)<br/>+ NSPanel-like<br/>+ 注册事件
-    Hidden --> Locating: window_show() 触发
+    Hidden --> Locating: shortcut / tray toggle 触发
     Locating --> Showing: locate_window<br/>(光标屏 + 中央偏上)
-    Showing --> Visible: window.show() + set_focus()<br/>emit "window:shown"<br/>淡入 150ms · sniff 剪贴板
-    Visible --> SavingSession: Esc / 失焦 / ⌘W
-    SavingSession --> Hidden: session_save_last<br/>淡出 200ms<br/>window.hide()<br/>emit "window:hidden"
+    Hidden --> Showing: window_show() command<br/>(不重新定位)
+    Showing --> Visible: window.show() + set_focus()<br/>WebView 保持当前 store 状态
+    Visible --> Visible: Esc while editing<br/>activeElement.blur()
+    Visible --> Hidden: Esc 非 editing / 失焦 / ⌘W<br/>window.hide()
     Hidden --> Quitting: ⌘Q / Tray Quit
     Visible --> Quitting: ⌘Q
-    Quitting --> [*]: emit "app:will_quit"<br/>最后一次 session_save_last
+    Quitting --> [*]: app.exit
     </div>
 
-    <h3><span class="h3-num">8.1</span>动效（前端 CSS only）</h3>
+    <h3><span class="h3-num">8.1</span>动效（reserved / future）</h3>
 
-    <p>Rust 端只调 <code>show() / hide()</code>；淡入淡出由 CSS keyframes 驱动，对应 <a href="03_design_tokens.html">03 § 9.2</a> 的动画 token。</p>
+    <p>当前实现没有窗口 show/hide CSS 动画；Rust 直接 <code>show()</code> / <code>hide()</code>。下表是保留设计，后续接入时需同步 <code>src/styles</code>。</p>
 
     <table>
       <thead><tr><th>阶段</th><th>React 类名</th><th>动画</th><th>时长 / 缓动</th></tr></thead>
@@ -355,7 +357,7 @@ stateDiagram-v2
       </tbody>
     </table>
 
-    <p><b>淡出后再调 hide 的同步</b>：React 加 <code>.floating-window-exit</code> → <code>await sleep(200)</code> → <code>invoke window_hide</code>。这样用户看到完整动效再窗口消失。</p>
+    <p><b>未来淡出同步</b>：若后续接入动效，可用 React 加 <code>.floating-window-exit</code> → <code>await sleep(200)</code> → <code>invoke window_hide</code>。当前不做这层延迟。</p>
 
     <p class="section-divider"><b>三 · 契约</b></p>
 
@@ -367,7 +369,7 @@ stateDiagram-v2
       <thead><tr><th>字段</th><th>值</th><th>原因</th></tr></thead>
       <tbody>
         <tr><td>label</td><td><code>"main"</code></td><td>所有 window_* command 通过 label 路由</td></tr>
-        <tr><td>width / height</td><td>860 / 560</td><td>默认尺寸（用户可改成 720 / 920 / 1080）</td></tr>
+        <tr><td>width / height</td><td>860 / 560</td><td>默认尺寸；<code>settings.initialWidth</code> 字段尚未接入窗口创建</td></tr>
         <tr><td>minWidth / minHeight</td><td>720 / 480</td><td>最小尺寸，避免拖太小</td></tr>
         <tr><td>resizable</td><td>true</td><td>允许用户拖动 resize（智能宽度兼容）</td></tr>
         <tr><td>decorations</td><td>false</td><td>无系统标题栏 → 自定义 chrome</td></tr>
@@ -376,7 +378,7 @@ stateDiagram-v2
         <tr><td>alwaysOnTop</td><td>true</td><td>常驻置顶（macOS 上 NSPanel 进一步加强）</td></tr>
         <tr><td>visible</td><td><b>false</b></td><td>启动不显示，预建好等待呼出</td></tr>
         <tr><td>focus</td><td>false</td><td>创建时不抢焦点</td></tr>
-        <tr><td>fileDropEnabled</td><td>false</td><td>v1 不读 fs，禁止 drag-drop</td></tr>
+        <tr><td>dragDropEnabled</td><td>false</td><td>v1 不读 fs，禁止 drag-drop</td></tr>
         <tr><td>titleBarStyle</td><td>"Overlay"</td><td>macOS：traffic light 浮在内容上，无 title 文字</td></tr>
         <tr><td>hiddenTitle</td><td>true</td><td>macOS：隐藏标题文字但保留 traffic light</td></tr>
         <tr><td>acceptFirstMouse</td><td>true</td><td>macOS：未聚焦时也响应首次点击</td></tr>
@@ -393,9 +395,7 @@ stateDiagram-v2
         <tr><td><code>window_show / hide / toggle</code></td><td>command</td><td>UI 显隐控制（快捷键 / tray / 关闭按钮）</td></tr>
         <tr><td><code>window_resize_for_content(metrics)</code></td><td>command</td><td>智能宽度（§ 7）；metrics: ContentMetrics</td></tr>
         <tr><td><code>window_reset_size</code></td><td>command</td><td>清掉 window.json 记忆</td></tr>
-        <tr><td><code>window:shown</code></td><td>event</td><td>show 完成（含 clipboard / lastSession / source）</td></tr>
-        <tr><td><code>window:hidden</code></td><td>event</td><td>hide 完成（前端清 transient state）</td></tr>
-        <tr><td><code>window:resized</code></td><td>event</td><td>用户拖动 / 智能扩宽后；source = user / auto</td></tr>
+        <tr><td><code>window:resized</code></td><td>event</td><td>智能扩宽后；source = auto</td></tr>
       </tbody>
     </table>
 

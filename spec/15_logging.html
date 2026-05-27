@@ -38,9 +38,9 @@
       <tbody>
         <tr><td><b>不上报</b></td><td>无任何 telemetry endpoint；日志只写本地文件</td><td>Cargo.toml 不引 sentry / opentelemetry / posthog 等</td></tr>
         <tr><td><b>不记敏感</b></td><td>API key / JSON 内容 / 用户家目录路径 ── 永远不入日志</td><td>tracing field 黑名单 + Debug 实现自定义脱敏</td></tr>
-        <tr><td><b>双进程合流</b></td><td>Rust + WebView 两端日志合流到<b>同一个文件</b>同一格式</td><td>WebView 端通过 IPC 转发；Rust 是唯一写者</td></tr>
-        <tr><td><b>用户可审计</b></td><td>路径公开（<code>~/Library/Logs/Jsonita/</code>）；用户可直接打开、复制、附 issue</td><td>"打开日志目录"按钮 + 导出最近 N 日 zip</td></tr>
-        <tr><td><b>资源可控</b></td><td>按天滚动 + 保留 7 天 + 单文件上限 5 MB ── 不会无限增长</td><td>tracing-appender 滚动策略 + 启动时清理 7 天前文件</td></tr>
+        <tr><td><b>双进程合流</b></td><td>当前只有 Rust 写本地文件；WebView 端只写 console</td><td><code>log_write</code> IPC 合流为保留设计</td></tr>
+        <tr><td><b>用户可审计</b></td><td>路径公开（<code>~/Library/Logs/Jsonita/</code>）；用户可直接打开、复制、附 issue</td><td><code>open_log_dir</code> 已实现；导出 zip 为保留设计</td></tr>
+        <tr><td><b>资源可控</b></td><td>按天滚动 + 保留 7 天；单文件 5 MB 分片为保留设计</td><td>tracing-appender daily rolling + 启动时清理 7 天前文件</td></tr>
       </tbody>
     </table>
 
@@ -59,7 +59,7 @@
 
     <h3><span class="h3-num">2.2</span>双进程合流</h3>
 
-    <p><b>Rust 是唯一写者</b>。WebView 端通过新 IPC <code>log_write(level, target, msg, fields)</code> 转发，Rust 接收后用相同的 tracing 路径写入。这样：</p>
+    <p><b>Rust 是唯一文件写者</b>。当前 WebView 端 <code>src/services/logger.ts</code> 只写 <code>console.*</code>；通过新 IPC <code>log_write(level, target, msg, fields)</code> 合流到 Rust 是保留设计。未来接入后：</p>
 
     <ul>
       <li>同一文件，同一格式 ── 排障时不用看两个地方</li>
@@ -116,10 +116,10 @@ graph TD
     <table>
       <thead><tr><th>策略</th><th>值</th><th>原因</th></tr></thead>
       <tbody>
-        <tr><td>滚动节奏</td><td>按天（00:00 切新文件）</td><td>命名规则 <code>jsonita-YYYY-MM-DD.log</code> ── 用户附 issue 时容易找当天</td></tr>
-        <tr><td>单文件上限</td><td>5 MB</td><td>超过则当天追加序号 <code>jsonita-2026-05-22.1.log</code>；防极端场景爆盘</td></tr>
+        <tr><td>滚动节奏</td><td>按天（00:00 切新文件）</td><td>命名规则 <code>jsonita.YYYY-MM-DD.log</code> ── 用户附 issue 时容易找当天</td></tr>
+        <tr><td>单文件上限</td><td>保留设计</td><td>当前仅 daily rolling；5 MB 分片尚未实现</td></tr>
         <tr><td>保留天数</td><td>7 天</td><td>启动时清理 8 天前文件；够用户回溯一周内的问题</td></tr>
-        <tr><td>启动写入</td><td>第一行：app start banner（version / OS / arch / Tauri / app_data_dir）</td><td>定位问题先看启动配置</td></tr>
+        <tr><td>启动写入</td><td><code>app.start</code>（version / OS / arch）</td><td>当前不写 app_data_dir / tauri version</td></tr>
       </tbody>
     </table>
 
@@ -139,13 +139,13 @@ graph LR
     subgraph WV["WebView (React)"]
         W1["业务代码<br/>logger.error(target, msg, fields)"]
         W2["薄层 logger.ts<br/>console.* + invoke"]
-        W3[invoke log_write IPC]
+        W3["invoke log_write IPC<br/>(reserved)"]
     end
 
-    F[(jsonita-YYYY-MM-DD.log<br/>~/Library/Logs/Jsonita/)]
+    F[(jsonita.YYYY-MM-DD.log<br/>~/Library/Logs/Jsonita/)]
 
     R1 --> R2
-    W1 --> W2 --> W3 --> R2
+    W1 --> W2 -.reserved.-> W3 -.future.-> R2
     R2 --> R3 --> R4 --> F
 
     R2 -.console out<br/>开发模式.-> Term[终端 stdout]
@@ -159,7 +159,7 @@ graph LR
     class F,Term,DT file
     </div>
 
-    <p><b>注意 R3 脱敏 layer</b>：tracing 提供 <code>Layer</code> trait，可拦截所有 event。我们实现一个 <code>RedactLayer</code>，对字段名匹配黑名单（<code>api_key</code> / <code>token</code> / <code>password</code> / <code>content</code> / <code>text</code> / <code>body</code>）的，自动替换为占位符或 sha256 前缀（详 § 7）。</p>
+    <p><b>注意 R3 脱敏 layer</b>：当前 <code>RedactLayer</code> 已挂入 subscriber chain，但实现仍是占位，不会改写字段。新日志调用仍需在调用点避免传 API key / JSON 原文；字段级自动脱敏是保留设计。</p>
 
     <h2><span class="h2-num">4</span>关键事件 catalog</h2>
 
@@ -168,25 +168,13 @@ graph LR
     <table>
       <thead><tr><th>事件名</th><th>级别</th><th>触发</th><th>字段</th></tr></thead>
       <tbody>
-        <tr><td><code>app.start</code></td><td>INFO</td><td>main() 入口</td><td>version, os, arch, app_data_dir(脱敏), tauri_version</td></tr>
-        <tr><td><code>app.quit</code></td><td>INFO</td><td>退出前最后一行</td><td>uptime_sec, reason: 'user' | 'crash'</td></tr>
-        <tr><td><code>db.migrate</code></td><td>INFO</td><td>migration 应用</td><td>from_v, to_v, ms</td></tr>
-        <tr><td><code>db.migrate.failed</code></td><td>ERROR</td><td>migration 失败</td><td>at_v, error_msg（不含 SQL 内容）, backup_path(~ 脱敏)</td></tr>
-        <tr><td><code>db.open.failed</code></td><td>ERROR</td><td>SQLite open 失败</td><td>error_msg, path(~ 脱敏)</td></tr>
-        <tr><td><code>window.shown</code></td><td>INFO</td><td>window_show 完成</td><td>source: hotkey/tray/manual, elapsed_ms</td></tr>
-        <tr><td><code>window.hidden</code></td><td>DEBUG</td><td>hide 完成</td><td>reason: esc/blur/cmdW/redCross</td></tr>
-        <tr><td><code>shortcut.registered</code></td><td>INFO</td><td>注册全局快捷键</td><td>action, accelerator</td></tr>
-        <tr><td><code>shortcut.conflict</code></td><td>WARN</td><td>注册冲突</td><td>action, accelerator, with_app(若可识别)</td></tr>
-        <tr><td><code>ipc.cmd</code></td><td>DEBUG</td><td>每次 invoke（默认关）</td><td>cmd, ok, elapsed_ms（参数完全不记）</td></tr>
-        <tr><td><code>ipc.error</code></td><td>ERROR</td><td>command 返 Err</td><td>cmd, error_kind, （payload 不记）</td></tr>
-        <tr><td><code>ai.call.start</code></td><td>INFO</td><td>ai_fix 开始</td><td>model_id, input_len, input_hash[:8]</td></tr>
-        <tr><td><code>ai.call.done</code></td><td>INFO</td><td>ai_fix 成功</td><td>elapsed_ms, tokens_in, tokens_out（不记 fixed 内容）</td></tr>
-        <tr><td><code>ai.call.failed</code></td><td>ERROR</td><td>ai_fix 失败</td><td>error_kind, status（不记 body）</td></tr>
-        <tr><td><code>ai.rateLimited</code></td><td>WARN</td><td>429</td><td>retry_after_sec</td></tr>
-        <tr><td><code>unwrap.timeout</code></td><td>WARN</td><td>UnwrapTimeout</td><td>depth, input_len（不记内容）</td></tr>
-        <tr><td><code>secrets.io_error</code></td><td>ERROR</td><td>secrets.json 读/写/chmod 失败</td><td>op: get/set/delete, account（不记 value）</td></tr>
-        <tr><td><code>settings.changed</code></td><td>INFO</td><td>settings_set / reset</td><td>changed_keys（只记 key 名，不记 value）</td></tr>
-        <tr><td><code>panic</code></td><td>ERROR</td><td>Rust panic handler</td><td>thread, location, msg, backtrace（不含内联数据）</td></tr>
+        <tr><td><code>app.start</code></td><td>INFO</td><td>main() 入口</td><td>version, os, arch</td></tr>
+        <tr><td><code>db.open</code></td><td>INFO</td><td>SQLite open 成功</td><td>path</td></tr>
+        <tr><td><code>db.open.failed</code></td><td>ERROR</td><td>SQLite open 失败</td><td>error, path</td></tr>
+        <tr><td><code>window.toggle</code></td><td>INFO</td><td>tray / shortcut 切换显隐</td><td>action: show | hide</td></tr>
+        <tr><td><code>shortcut.registered</code></td><td>INFO</td><td>启动期快捷键注册成功</td><td>action = toggle-window</td></tr>
+        <tr><td><code>shortcut.register_failed</code></td><td>WARN</td><td>启动期快捷键注册失败</td><td>error</td></tr>
+        <tr><td><code>reserved</code></td><td>—</td><td>AI 调用、IPC 错误、panic hook、settings.changed 等细粒度事件</td><td>当前未统一打点</td></tr>
       </tbody>
     </table>
 
@@ -199,20 +187,20 @@ graph LR
     <p><b>JSON Lines</b>（ndjson）格式 ── 一行一个 event，便于 <code>jq</code> / <code>grep</code> / 第三方 viewer 处理。</p>
 
     <pre><code>// 示例：3 个 events
-{"ts":"2026-05-22T14:23:01.103Z","level":"INFO","target":"jsonita::app","event":"app.start","version":"0.3.0-m0","os":"macos","arch":"arm64","app_data_dir":"~/Library/Application Support/Jsonita","tauri":"2.1.0"}
-{"ts":"2026-05-22T14:23:01.842Z","level":"INFO","target":"jsonita::window","event":"window.shown","source":"hotkey","elapsed_ms":312}
-{"ts":"2026-05-22T14:23:04.117Z","level":"ERROR","target":"jsonita::ai","event":"ai.call.failed","error_kind":"Http","status":401}</code></pre>
+{"timestamp":"2026-05-22T14:23:01.103Z","level":"INFO","fields":{"message":"app.start","version":"0.3.0-m0","os":"macos","arch":"aarch64"},"target":"jsonita"}
+{"timestamp":"2026-05-22T14:23:01.842Z","level":"INFO","fields":{"message":"db.open","path":"/Users/.../Jsonita/history.db"},"target":"jsonita"}
+{"timestamp":"2026-05-22T14:23:04.117Z","level":"INFO","fields":{"message":"window.toggle","action":"show"},"target":"jsonita::window"}</code></pre>
 
     <h3><span class="h3-num">5.2</span>必填字段</h3>
 
     <table>
       <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td><code>ts</code></td><td>string</td><td>RFC 3339 / ISO 8601 / UTC（<code>Z</code> 结尾）</td></tr>
+        <tr><td><code>timestamp</code></td><td>string</td><td>tracing-subscriber JSON formatter 时间戳</td></tr>
         <tr><td><code>level</code></td><td><code>'ERROR' | 'WARN' | 'INFO' | 'DEBUG'</code></td><td>大写</td></tr>
         <tr><td><code>target</code></td><td>string</td><td>模块路径 <code>jsonita::ai</code> / WebView 端用 <code>web::editor</code></td></tr>
-        <tr><td><code>event</code></td><td>string</td><td>从 § 4 catalog 取</td></tr>
-        <tr><td>… 自定义 fields</td><td>各类型</td><td>结构化字段，每个 event 不同（参 § 4 catalog 列）</td></tr>
+        <tr><td><code>fields.message</code></td><td>string</td><td>事件名，例如 <code>app.start</code></td></tr>
+        <tr><td><code>fields.*</code></td><td>各类型</td><td>结构化字段，每个 event 不同（参 § 4 catalog 列）</td></tr>
       </tbody>
     </table>
 
@@ -222,9 +210,9 @@ graph LR
       <thead><tr><th>项</th><th>值</th></tr></thead>
       <tbody>
         <tr><td>目录</td><td><code>~/Library/Logs/Jsonita/</code>（macOS）/ <code>%LOCALAPPDATA%\Jsonita\Logs\</code>（Windows）</td></tr>
-        <tr><td>文件名</td><td><code>jsonita-YYYY-MM-DD.log</code> 主文件 / 超 5 MB 时 <code>jsonita-YYYY-MM-DD.N.log</code></td></tr>
-        <tr><td>滚动时机</td><td>00:00 本地时间 / 单文件 ≥ 5 MB</td></tr>
-        <tr><td>保留</td><td>启动时删除 8 天前的所有 <code>jsonita-*.log</code>（含 .N.log 分片）</td></tr>
+        <tr><td>文件名</td><td><code>jsonita.YYYY-MM-DD.log</code>（tracing-appender daily rolling）</td></tr>
+        <tr><td>滚动时机</td><td>00:00 本地时间；单文件 ≥ 5 MB 分片为保留设计</td></tr>
+        <tr><td>保留</td><td>启动时删除 8 天前的旧文件；当前实现按文件修改时间判断，不限制文件名</td></tr>
         <tr><td>权限</td><td>0600（仅当前用户可读）</td></tr>
       </tbody>
     </table>
@@ -236,11 +224,11 @@ graph LR
     <table>
       <thead><tr><th>字段名匹配</th><th>处理</th></tr></thead>
       <tbody>
-        <tr><td><code>api_key</code> / <code>access_token</code> / <code>refresh_token</code> / <code>password</code> / <code>secret</code></td><td><b>完全拒绝</b> ── 替换为 <code>"[REDACTED]"</code></td></tr>
-        <tr><td><code>content</code> / <code>text</code> / <code>body</code> / <code>raw</code> / <code>prompt</code>（指用户输入或 AI 返回）</td><td>只记 <code>len</code> + <code>sha256[:8]</code></td></tr>
-        <tr><td><code>fixed</code>（AI 修复后 JSON）</td><td>同上</td></tr>
-        <tr><td>路径字段（<code>path</code> / <code>dir</code> / <code>file</code>）</td><td>替换 <code>$HOME</code> → <code>~</code>（避免泄漏用户名）</td></tr>
-        <tr><td>HTTP <code>body</code>（DeepSeek 响应）</td><td>只记 <code>status</code> + body 长度，不记内容</td></tr>
+        <tr><td><code>api_key</code> / <code>access_token</code> / <code>refresh_token</code> / <code>password</code> / <code>secret</code></td><td>调用点禁止传入；自动替换为 <code>"[REDACTED]"</code> 是保留设计</td></tr>
+        <tr><td><code>content</code> / <code>text</code> / <code>body</code> / <code>raw</code> / <code>prompt</code>（指用户输入或 AI 返回）</td><td>调用点只记元数据；自动 <code>len</code> + <code>sha256[:8]</code> 是保留设计</td></tr>
+        <tr><td><code>fixed</code>（AI 修复后 JSON）</td><td>调用点禁止传入</td></tr>
+        <tr><td>路径字段（<code>path</code> / <code>dir</code> / <code>file</code>）</td><td>当前可能直接写入；<code>$HOME</code> → <code>~</code> 自动替换为保留设计</td></tr>
+        <tr><td>HTTP <code>body</code>（DeepSeek 响应）</td><td>当前错误 payload 可能包含 body；日志调用点不应直接记录 body</td></tr>
       </tbody>
     </table>
 
@@ -256,7 +244,9 @@ graph LR
       <li>哈希前缀（<code>sha256[:8]</code>）</li>
     </ul>
 
-    <h3><span class="h3-num">7.3</span>RedactLayer 核心（≤ 20 行）</h3>
+    <h3><span class="h3-num">7.3</span>RedactLayer（reserved / future）</h3>
+
+    <p>当前 <code>src-tauri/src/logging/redact.rs</code> 的 <code>on_event</code> 是 no-op 占位。以下为未来字段级脱敏方向，不代表当前已实现。</p>
 
     <pre><code>// src-tauri/src/log/redact.rs ── 自定义 tracing Layer
 const DENY: &amp;[&amp;str] = &amp;["api_key","access_token","password","secret","prompt","raw"];
@@ -281,17 +271,14 @@ impl&lt;S: Subscriber&gt; Layer&lt;S&gt; for RedactLayer {
 
     <h2><span class="h2-num">8</span>WebView 端薄层</h2>
 
-    <pre><code>// src/log/logger.ts ── 前端日志薄层（≤ 20 行）
-import { invoke } from '@tauri-apps/api/core';
-
+    <pre><code>// src/services/logger.ts ── 前端日志薄层（当前实现）
 type Level = 'error' | 'warn' | 'info' | 'debug';
 
-async function emit(level: Level, target: string, event: string, fields: Record&lt;string, unknown&gt;) {
-  console[level === 'debug' ? 'log' : level](`[${target}] ${event}`, fields);
-  // 转发给 Rust 写文件（debug 默认不转，节省 IPC）
-  if (level !== 'debug') {
-    await invoke('log_write', { level, target, event, fields }).catch(() =&gt; {});
-  }
+function emit(level: Level, target: string, event: string, fields?: Record&lt;string, unknown&gt;) {
+  const consoleFn =
+    level === 'debug' ? console.log : level === 'info' ? console.info : console[level];
+  consoleFn(`[${target}] ${event}`, fields ?? {});
+  // reserved: invoke('log_write', { level, target, event, fields })
 }
 
 export const logger = {
@@ -302,14 +289,14 @@ export const logger = {
 
     <p><b>注意</b>：前端调用 <code>logger.*</code> 时仍要遵守 § 7 黑名单 ── 不能传 <code>content</code> 原文给 fields。约定通过 ESLint 自定义规则 + code review 双保险。</p>
 
-    <h2><span class="h2-num">9</span>新 IPC 命令</h2>
+    <h2><span class="h2-num">9</span>IPC 命令</h2>
 
-    <p>需要在 <a href="02_ipc.html">02 IPC 合约</a> 中新增（待 02 章节同步增补）：</p>
+    <p>当前只有 <code>open_log_dir</code> 已实现；其余是保留设计。</p>
 
     <table>
       <thead><tr><th>命令</th><th>返回</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td><code>log_write(level, target, event, fields)</code></td><td><code>()</code></td><td>WebView → Rust 日志转发；Rust 端再走 RedactLayer + tracing</td></tr>
+        <tr><td><code>log_write(level, target, event, fields)</code></td><td><code>()</code></td><td>reserved；WebView → Rust 日志转发</td></tr>
         <tr><td><code>log_open_dir()</code></td><td><code>()</code></td><td>Finder 打开日志目录 ── 复用 <a href="02_ipc.html">02 § 6.1.7</a> <code>open_log_dir</code>，无需新命令</td></tr>
         <tr><td><code>log_export_recent(days)</code></td><td><code>String</code>（zip 路径）</td><td>v1.1+：打包最近 N 日日志为 zip，返回路径供用户附 issue</td></tr>
       </tbody>
@@ -318,9 +305,9 @@ export const logger = {
     <h2><span class="h2-num">10</span>用户视角：导出 & 反馈</h2>
 
     <ul>
-      <li><b>设置面板 About → "打开日志目录"</b>：调 <code>open_log_dir</code>，用户 Finder 中直接复制日志附 issue</li>
+      <li><b>打开日志目录</b>：<code>open_log_dir</code> command 已实现；Settings About 按钮为保留 UI</li>
       <li><b>"导出最近 N 日"</b>（v1.1）：调 <code>log_export_recent(7)</code>，弹保存对话框，生成 <code>jsonita-logs-YYYY-MM-DD.zip</code></li>
-      <li><b>反馈引导</b>：<code>AiInvalidJson</code> Modal / <code>Sqlite</code> Toast 等错误 UI 加 "Report issue" 链接 → 跳 GitHub Issues 模板（预填 OS / version / 引导用户附最近 1 日日志）</li>
+      <li><b>反馈引导（reserved / future）</b>：未来在 <code>AiInvalidJson</code> raw Modal / SQLite 错误 UI 加 "Report issue" 链接 → 跳 GitHub Issues 模板（预填 OS / version / 引导用户附最近 1 日日志）</li>
     </ul>
 
     <h2><span class="h2-num">11</span>与其他章节对接</h2>
@@ -328,12 +315,12 @@ export const logger = {
     <table>
       <thead><tr><th>章节</th><th>对接点</th></tr></thead>
       <tbody>
-        <tr><td>02 IPC § 6.1.7 system</td><td>新增 <code>log_write</code> command；现有 <code>open_log_dir</code> 沿用</td></tr>
-        <tr><td>10 storage § 4.4 migration</td><td>migration 失败时 emit <code>db.migrate.failed</code> ERROR；备份路径走 § 7 ~ 脱敏</td></tr>
-        <tr><td>11 ai client § 7</td><td>所有错误透传同时 emit <code>ai.call.failed</code> ERROR；调用开始 / 结束 emit INFO（含 input_hash[:8] 不含内容）</td></tr>
-        <tr><td>06 window § 5</td><td>关闭路由 emit <code>window.hidden</code> DEBUG（默认不记）；启动 emit <code>window.shown</code> INFO</td></tr>
-        <tr><td>07 menubar</td><td>shortcut 冲突 emit <code>shortcut.conflict</code> WARN</td></tr>
-        <tr><td>04 components</td><td>错误 Toast / Modal 加 "Report issue" 链接（10 章覆盖的用户反馈链路）</td></tr>
+        <tr><td>02 IPC § 6.1.7 system</td><td>现有 <code>open_log_dir</code> 沿用；<code>log_write</code> 为保留命令</td></tr>
+        <tr><td>10 storage § 4.4 migration</td><td>migration 失败时返回 <code>JsonitaError::Sqlite</code>；备份路径为保留设计</td></tr>
+        <tr><td>11 ai client § 7</td><td>AI 细粒度日志为保留设计；当前未统一 emit <code>ai.call.*</code></td></tr>
+        <tr><td>06 window § 5</td><td>当前窗口切换记录 <code>window.toggle</code> INFO；<code>window.hidden/window.shown</code> 细分事件为保留设计</td></tr>
+        <tr><td>07 menubar</td><td>当前启动期注册成功 / 失败有日志；shortcut 冲突细粒度事件为保留设计</td></tr>
+        <tr><td>04 components</td><td>未来错误 Toast / Modal 加 "Report issue" 链接（10 章覆盖的用户反馈链路）</td></tr>
         <tr><td>plan/01 F7</td><td>设置 About 面板加"打开日志目录"按钮（已规划）；v1.1 加"导出最近 7 日"按钮</td></tr>
       </tbody>
     </table>

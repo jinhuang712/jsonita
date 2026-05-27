@@ -105,6 +105,7 @@ fn register_one(app: &AppHandle, action: &str, accelerator: &str) -> Result<(), 
                         let _ = window::toggle(&app_clone);
                     }
                     "restore-last" => {
+                        let _ = window::toggle_show_only(&app_clone);
                         let _ = app_clone.emit("shortcut:restore_last", ());
                     }
                     _ => {}

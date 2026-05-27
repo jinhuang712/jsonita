@@ -1,7 +1,7 @@
 /**
  * Effective theme 计算 + DOM data-theme 同步 + matchMedia 订阅。
  *
- * Spec ref: spec/03_design_tokens.html § 11 主题切换流程（3 数据源 + 三重订阅）。
+ * Spec ref: spec/03_design_tokens.html § 11 主题切换流程（3 数据源 + 双重订阅）。
  * 数据源：(1) settings.theme (2) prefers-color-scheme (system 时) (3) localStorage cache。
  * 应用到 `document.documentElement.dataset.theme` → CSS [data-theme="dark"] 覆盖触发整套 token 切换。
  */

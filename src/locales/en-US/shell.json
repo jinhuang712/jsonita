@@ -7,5 +7,11 @@
   "statusBar": {
     "valid": "Valid JSON",
     "empty": "Paste JSON to start"
+  },
+  "singlePane": {
+    "run": "Run {{pane}}",
+    "running": "Running {{pane}}…",
+    "applied": "Applied {{pane}}",
+    "failed": "Could not run {{pane}}"
   }
 }

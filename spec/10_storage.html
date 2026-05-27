@@ -48,13 +48,13 @@
       <thead><tr><th>介质</th><th>承载</th><th>选型理由</th><th>路径</th></tr></thead>
       <tbody>
         <tr><td><b>SQLite</b></td><td>历史记录 + last_session</td><td>需要 FTS5 全文搜索 / pinned-starred 索引 / 事务原子性</td><td><code>~/Library/Application Support/Jsonita/history.db</code></td></tr>
-        <tr><td><b>tauri-plugin-store (JSON)</b></td><td>设置项 · window.json 尺寸记忆</td><td>纯 KV 配置 + 启动一次加载 ── 不值得开 SQLite 连接池</td><td><code>~/Library/Application Support/Jsonita/{settings,window}.json</code></td></tr>
+        <tr><td><b>JSON 文件 Store</b></td><td>设置项 · window.json 尺寸记忆</td><td>纯 KV 配置 + 启动一次加载 ── 不值得开 SQLite 连接池；当前用自写 <code>SettingsStore</code> / <code>WindowStore</code> 读写 JSON</td><td><code>~/Library/Application Support/Jsonita/{settings,window}.json</code></td></tr>
         <tr><td><b>secrets.json</b></td><td>DeepSeek API key</td><td>无 keychain 弹窗、无 codesign 依赖、dev rebuild 不丢；<code>chmod 600</code> 限制只本人可读</td><td><code>~/Library/Application Support/Jsonita/secrets.json</code></td></tr>
-        <tr><td><b>本地日志文件</b></td><td>error / warn 级别日志</td><td>调试反馈用；不放 SQLite 是因为日志写入频繁 + 不需要查询</td><td><code>~/Library/Logs/Jsonita/app.log</code>（按天滚动，保留 7 天）</td></tr>
+        <tr><td><b>本地日志文件</b></td><td>error / warn / info 级别日志</td><td>调试反馈用；不放 SQLite 是因为日志写入频繁 + 不需要查询</td><td><code>~/Library/Logs/Jsonita/jsonita.YYYY-MM-DD.log</code>（按天滚动，保留 7 天）</td></tr>
       </tbody>
     </table>
 
-    <p><b>为何不全用 SQLite</b>：设置项是<b>读密集 + 写稀疏 + 全量加载</b>的小 KV，开 SQLite 反而是过度工程；JSON 文件一次 <code>fs::read</code> 进内存即可，write 用 tauri-plugin-store 自动节流。</p>
+    <p><b>为何不全用 SQLite</b>：设置项是<b>读密集 + 写稀疏 + 全量加载</b>的小 KV，开 SQLite 反而是过度工程；JSON 文件一次 <code>fs::read</code> 进内存即可，write-through 持久化。</p>
 
     <h2><span class="h2-num">3</span>不变量与数据策略</h2>
 
@@ -83,7 +83,7 @@
     <ul>
       <li><b><code>history</code></b>：主键 AUTOINCREMENT；<code>content_hash</code> 加 UNIQUE 实现 UPSERT 去重；<code>op_type</code> 加 CHECK 约束防写错值；<code>pinned</code> / <code>starred</code> 用 0/1 + CHECK（SQLite 没原生 bool）；<code>tags</code> 预留为 NULL JSON array，v2 加标签时不用改 schema</li>
       <li><b><code>last_session</code></b>：<code>CHECK (id = 1)</code> 强制单行 ── 比"每次先 DELETE 再 INSERT"原子且省一次 round trip，用 UPSERT 直接覆盖</li>
-      <li><b><code>app_meta</code></b>：KV 形态（key TEXT PRIMARY KEY），承载 <code>schema_version</code> / <code>install_at</code> 等元数据 ── 不开新表，让 v2 加新元数据时零迁移成本</li>
+      <li><b><code>app_meta</code></b>：KV 形态（key TEXT PRIMARY KEY），当前已建表但未写入业务数据；保留给 <code>install_at</code> 等未来元数据</li>
       <li><b><code>schema_version</code></b>：独立单字段表（v INTEGER），不放 app_meta 的原因是 <code>MAX(v)</code> 查询比 KV 解析快，且语义更明确</li>
     </ul>
 
@@ -101,7 +101,7 @@
 
     <h3><span class="h3-num">4.3</span>FTS5 索引与触发器</h3>
 
-    <p>FTS5 虚拟表 + 3 个 trigger（insert / update / delete）保证主表与索引同步。tokenizer 用 <code>unicode61 remove_diacritics 2</code> ── <b>这是中文搜索可用的关键</b>：unicode61 按 Unicode 字符切词，不依赖空格；remove_diacritics 把"é → e"等变体归一。</p>
+    <p>FTS5 虚拟表 + 3 个 trigger（insert / update / delete）保证主表与索引同步。tokenizer 用 <code>unicode61 remove_diacritics 2</code>；搜索命令会把 query 包进双引号执行 <code>MATCH</code>。</p>
 
     <pre><code>-- 索引同步 trigger（完整 SQL 见 13 § 4 / migrations/0001_init.sql）
 CREATE TRIGGER history_ai AFTER INSERT ON history BEGIN
@@ -120,7 +120,7 @@ END;
     <ul>
       <li>每个 migration 是一个 <code>.sql</code> 文件，<code>include_str!</code> 编译进二进制 ── 用户不需要管 migration 文件</li>
       <li>启动时读 <code>schema_version.MAX(v)</code>，未达到的逐一 apply，全部在单一事务里执行</li>
-      <li>任一 migration 失败 → 事务回滚 + 备份 <code>history.db.backup-{ts}</code> + 弹 Modal "存储升级失败，已备份原数据"</li>
+      <li>任一 migration 失败 → 事务回滚并返回 <code>JsonitaError::Sqlite</code>；备份与 Modal 提示为保留设计，当前未实现</li>
     </ul>
 
     <pre><code>// src-tauri/src/store/db.rs ── 核心 ~20 行
@@ -168,23 +168,23 @@ Pool::builder().max_size(4).build(mgr)?</code></pre>
 
     <p>用户场景：<b>打开浮窗 → 编辑 30s → 切走应用 → 5 min 后回来</b>。我们希望第二次呼出能直接接续，而不是从空白开始。但又要保留"主动放弃"出口（⌘K）。</p>
 
-    <p><b>双重存储</b>是关键设计：</p>
+    <p><b>单行持久化</b>是关键设计：</p>
 
     <ul>
       <li><b>SQLite <code>last_session</code></b>：长期保留 ── 即使应用 Quit + 重启，用户按 <code>⌘⇧L</code> 仍可找回</li>
-      <li><b>内存 RestoreTimer</b>：短期"窗口期"概念 ── 默认 5 min 内呼出自动恢复 + 显示 RestoreBar；超时后需用户主动按 <code>⌘⇧L</code></li>
+      <li><b>保存时机</b>：前端 transform 成功后调用 <code>session_save_last</code>，避免关闭时用空白 / 非法内容覆盖</li>
     </ul>
 
-    <p><b>为何不只用 SQLite + 时间戳判断</b>：内存 timer 是<b>状态机的显式句柄</b>，未来扩展（如"窗口期内每次呼出延长 timer"）有挂载点；现在只是 sleep，但语义清晰。</p>
+    <p>当前实现不做 RestoreTimer / RestoreBar 自动恢复；恢复入口是用户主动按 <kbd>⌘⇧L</kbd>。</p>
 
     <h3><span class="h3-num">5.2</span>三种呼出场景</h3>
 
     <table>
       <thead><tr><th>场景</th><th>行为</th><th>UI</th></tr></thead>
       <tbody>
-        <tr><td>关闭后<b>窗口期内</b>呼出（默认 5 min）</td><td>自动恢复 + RestoreBar 显示「上次会话 · 5 秒前」</td><td><a href="01_mockups.html">01 § RestoreBar mockup</a></td></tr>
-        <tr><td>关闭后<b>超过窗口期</b> / 应用 Quit 后重启</td><td>空白浮窗，无 RestoreBar</td><td>等用户操作</td></tr>
-        <tr><td>用户主动按 <code>⌘⇧L</code> 找回</td><td>读 sqlite last_session → setEditorContent + 显示 RestoreBar</td><td>RestoreBar</td></tr>
+        <tr><td>合法 transform 成功</td><td>保存为 last_session</td><td>无额外 UI</td></tr>
+        <tr><td>用户主动按 <code>⌘⇧L</code> 找回</td><td>全局快捷键先显示 / 聚焦浮窗，再读 sqlite last_session → setEditorContent</td><td>编辑器恢复内容</td></tr>
+        <tr><td>用户按 <code>⌘K</code> 清空</td><td>clear_last + 清空编辑器</td><td>空白态</td></tr>
       </tbody>
     </table>
 
@@ -195,50 +195,26 @@ Pool::builder().max_size(4).build(mgr)?</code></pre>
     <div class="mermaid">
 stateDiagram-v2
     [*] --> HiddenIdle: 应用启动
-    HiddenIdle --> VisibleRestored: 呼出 + last_session 在窗口期内
-    HiddenIdle --> VisibleFresh: 呼出 + 无 last_session / 已超期
-    VisibleFresh --> HiddenArmed: 用户关闭<br/>(保存 last_session)
-    VisibleRestored --> HiddenArmed: 用户关闭<br/>(保存 last_session)
+    HiddenIdle --> VisibleFresh: 呼出
+    VisibleFresh --> HiddenIdle: 非编辑态 Esc / 失焦 / ⌘W<br/>window.hide()
     VisibleFresh --> VisibleFresh: ⌘K 清空<br/>(clear_last)
-    VisibleRestored --> VisibleFresh: ⌘K 清空<br/>(clear_last)
     VisibleFresh --> VisibleRestored: ⌘⇧L 找回<br/>(load_last)
-    HiddenArmed --> VisibleRestored: 窗口期内再呼出
-    HiddenArmed --> HiddenIdle: timer 超时<br/>(sqlite 仍保留)
-    HiddenArmed --> [*]: 应用 Quit<br/>(timer 销毁 · sqlite 保留)
     HiddenIdle --> [*]: 应用 Quit
 
     note right of HiddenIdle
       sqlite last_session 可能保留
       ⌘⇧L 仍可找回
     end note
-    note right of HiddenArmed
-      in-memory timer 倒计时
-      默认 5 min
-    end note
     </div>
 
     <table>
       <thead><tr><th>状态</th><th>含义</th></tr></thead>
       <tbody>
-        <tr><td><b>HiddenIdle</b></td><td>浮窗不可见 · 无活跃计时器（应用启动 / 窗口期超时后）</td></tr>
+        <tr><td><b>HiddenIdle</b></td><td>浮窗不可见；SQLite last_session 可能仍保留</td></tr>
         <tr><td><b>VisibleFresh</b></td><td>浮窗可见 · 当前编辑器是用户新输入的内容</td></tr>
-        <tr><td><b>VisibleRestored</b></td><td>浮窗可见 · 当前编辑器内容来自 last_session（显示 RestoreBar）</td></tr>
-        <tr><td><b>HiddenArmed</b></td><td>浮窗不可见 · 计时器进行中（在窗口期内）</td></tr>
+        <tr><td><b>VisibleRestored</b></td><td>浮窗可见 · 当前编辑器内容来自 <kbd>⌘⇧L</kbd> 载入的 last_session</td></tr>
       </tbody>
     </table>
-
-    <h3><span class="h3-num">5.4</span>内存计时器接口</h3>
-
-    <p>RestoreTimer 只暴露 2 个动作：<code>arm(ms)</code> / <code>disarm()</code>。<b>不需要 timer fire 回调</b> ── 是否"在窗口期内"由 <code>window:shown</code> 触发时 Rust 端读 last_session.saved_at + 比较当前时间决定。timer 仅作为"窗口期生命周期"概念的状态承载。</p>
-
-    <pre><code>// 接口签名（实现见 src-tauri/src/system/restore_timer.rs）
-pub struct RestoreTimer { /* Arc&lt;Mutex&lt;Option&lt;JoinHandle&gt;&gt;&gt; */ }
-
-impl RestoreTimer {
-    pub fn new() -&gt; Self;
-    pub async fn arm(&amp;self, ms: u64);   // 取消旧 timer + spawn 新的 sleep task
-    pub async fn disarm(&amp;self);          // 取消当前 timer（⌘K / 重新呼出时调用）
-}</code></pre>
 
     <h2><span class="h2-num">6</span>secrets store（本地文件）</h2>
 
@@ -343,7 +319,7 @@ pub fn patch(&amp;self, patch: serde_json::Map&lt;String, serde_json::Value&gt;)
 
     <ul>
       <li>启动时跑 <code>migrate()</code>，按 <code>schema_version</code> 自动 apply 缺失的 migration</li>
-      <li>失败 → 备份原文件 <code>history.db.backup-{timestamp}</code> + Modal 提示报告</li>
+      <li>失败 → 返回 <code>JsonitaError::Sqlite</code> 并记录日志；备份原文件 + Modal 提示为保留设计</li>
       <li>v1 不支持 down-migration</li>
     </ul>
 
@@ -356,7 +332,6 @@ pub fn patch(&amp;self, patch: serde_json::Map&lt;String, serde_json::Value&gt;)
 echo "Removing Jsonita data..."
 rm -rf "$HOME/Library/Application Support/Jsonita"
 rm -rf "$HOME/Library/Logs/Jsonita"
-security delete-generic-password -s "com.jsonita.app" -a "deepseek_api_key" 2&gt;/dev/null
 echo "Done. (Application itself is at /Applications/Jsonita.app, rm manually.)"</code></pre>
 
     <nav class="pagination" id="pagination"></nav>

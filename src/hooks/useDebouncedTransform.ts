@@ -6,51 +6,14 @@
  */
 
 import { useEffect } from 'react';
+import { runPanePreview, paneToOpType } from '../editor/transforms';
 import { isJsonitaError } from '../ipc/error';
-import { json, session } from '../ipc/commands';
+import { session } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
-import { useUiStore, type Pane } from '../store/ui';
-import type { OpType } from '../types/enums';
-
-function paneToOpType(p: Pane): OpType {
-  switch (p) {
-    case 'minify':
-      return 'minify';
-    case 'tree':
-      return 'tree';
-    case 'json-to-str':
-      return 'json-to-str';
-    case 'str-to-json':
-      return 'str-to-json';
-    case 'ai-fix':
-      return 'ai-fix';
-    case 'format':
-    default:
-      return 'format';
-  }
-}
+import { useSettingsStore } from '../store/settings';
+import { useUiStore } from '../store/ui';
 
 const LARGE_THRESHOLD = 5 * 1024 * 1024;
-
-async function runOp(text: string, op: Pane): Promise<string> {
-  switch (op) {
-    case 'minify':
-      return json.minify(text);
-    case 'json-to-str':
-      return json.stringify(text, { quote: 'double', escapeUnicode: false, minify: true });
-    case 'str-to-json':
-      return json.parse(text);
-    case 'format':
-    case 'tree':
-    case 'ai-fix':
-    default:
-      return json.format(text, {
-        indent: 'spaces2',
-        sortKeys: false,
-        trailingNewline: true,
-      });
-  }
-}
 
 export function useDebouncedTransform() {
   const content = useEditorStore((s) => s.content);
@@ -59,6 +22,7 @@ export function useDebouncedTransform() {
   const setError = useEditorStore((s) => s.setError);
   const activePane = useUiStore((s) => s.activePane);
   const setShowAiFix = useUiStore((s) => s.setShowAiFix);
+  const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
 
   useEffect(() => {
     if (content.trim() === '') {
@@ -75,7 +39,8 @@ export function useDebouncedTransform() {
 
     const timer = window.setTimeout(async () => {
       try {
-        const result = await runOp(content, activePane);
+        const previewPane = singlePaneMode ? 'format' : activePane;
+        const result = await runPanePreview(content, previewPane);
         setOutput(result);
         setStatus('valid');
         setError(null);
@@ -94,12 +59,12 @@ export function useDebouncedTransform() {
           setError({ line: e.data.line, col: e.data.col, msg: e.data.msg });
           setShowAiFix(true);
         } else {
-          // Io / 其他 ── 退回 empty 不闪屏（M3-N1 polish 时加 Toast）
+          // Io / 其他 ── 退回 empty 不闪屏；未来可接统一错误 UI。
           setStatus('empty');
         }
       }
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [content, activePane, setOutput, setStatus, setError, setShowAiFix]);
+  }, [content, activePane, setOutput, setStatus, setError, setShowAiFix, singlePaneMode]);
 }
