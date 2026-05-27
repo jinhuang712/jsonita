@@ -1,7 +1,6 @@
 # Jsonita TODO
 
-> Phase 1-5 实施任务已转入 `progress/` 跟踪（CLAUDE.md § 1.4 / § 6.1 防重复）。
-> 本文件只列**未规划入任何 Phase / spec** 的疑似工作；已规划的进 `progress/0N_*.html` 看。
+> 本文件只列**未规划入 spec** 的疑似工作。
 > 实施期 session-level 步骤进 `TaskCreate`。
 
 ## 未分到对应 Phase 的疑似工作
