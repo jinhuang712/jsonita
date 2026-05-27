@@ -144,6 +144,10 @@ interface TabBarProps {
     <pre><code>// src/shell/SinglePaneHint.tsx
 type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';</code></pre>
 
+    <h3><span class="h3-num">4.2.2</span>ShortcutHint</h3>
+
+    <p>浮窗每次被呼出 / show 时，右下角主动作区域附近短暂显示快捷键提示并自动淡出：<kbd>Esc</kbd> 退出编辑、<kbd>Esc</kbd><kbd>Esc</kbd> 隐藏、<kbd>Tab</kbd> / <kbd>⇧Tab</kbd> 切换功能。AI Fix Diff 决策态改为提示 <kbd>⌘↵</kbd> Accept、<kbd>Esc</kbd> Cancel，位置保持靠近 Accept / Run 区域。</p>
+
     <h3><span class="h3-num">4.3</span>Toast（reserved / future）</h3>
 
     <p>当前代码没有 <code>src/shell/Toast.tsx</code>，也未接入 <code>sonner</code>。运行时错误目前由状态栏、AI 面板局部错误、Accessibility / Settings Modal 呈现；以下 API 是后续接入 Toast 时的保留契约。</p>

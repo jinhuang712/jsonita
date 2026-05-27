@@ -395,6 +395,7 @@ stateDiagram-v2
         <tr><td><code>window_show / hide / toggle</code></td><td>command</td><td>UI 显隐控制（快捷键 / tray / 关闭按钮）</td></tr>
         <tr><td><code>window_resize_for_content(metrics)</code></td><td>command</td><td>智能缩放（§ 7）；metrics: ContentMetrics</td></tr>
         <tr><td><code>window_reset_size</code></td><td>command</td><td>清掉 window.json 记忆</td></tr>
+        <tr><td><code>window:shown</code></td><td>event</td><td>窗口 show / focus 后；用于刷新右下角快捷键短提示</td></tr>
         <tr><td><code>window:resized</code></td><td>event</td><td>智能缩放后；source = auto</td></tr>
       </tbody>
     </table>

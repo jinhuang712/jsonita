@@ -397,6 +397,7 @@ sequenceDiagram
         <tr><td><code>tray:toggle</code></td><td>tray 左键 / Toggle Jsonita 菜单项</td><td><code>{}</code></td><td>Rust main listener → window::toggle</td></tr>
         <tr><td><code>tray:open-settings</code></td><td>tray Settings 菜单项</td><td><code>{}</code></td><td>App.tsx → setSettingsModalOpen(true)</td></tr>
         <tr><td><code>permission:accessibility_missing</code></td><td>macOS 快捷键权限缺失</td><td><code>{}</code></td><td>App.tsx → AccessibilityModal</td></tr>
+        <tr><td><code>window:shown</code></td><td>浮窗被 show/focus</td><td><code>{}</code></td><td>ShortcutHint（短暂展示快捷键提示）</td></tr>
         <tr><td><code>window:resized</code></td><td>智能缩放完成</td><td><code>WindowResizedPayload</code></td><td>shell / store 同步尺寸</td></tr>
         <tr><td><code>shortcut:restore_last</code></td><td>全局 ⌘⇧L 触发（Rust 先 show/focus）</td><td><code>{}</code></td><td>shell（调 <code>session_load_last</code>）</td></tr>
         <tr><td><code>settings:changed</code></td><td><code>settings_set</code> / <code>settings_reset</code> 后</td><td><code>Settings</code></td><td>store/settings（更新本地缓存 + 重渲染）</td></tr>
@@ -416,6 +417,7 @@ type EventMap = {
   'tray:toggle':           Record&lt;string, never&gt;;
   'tray:open-settings':    Record&lt;string, never&gt;;
   'permission:accessibility_missing': Record&lt;string, never&gt;;
+  'window:shown':          Record&lt;string, never&gt;;
   'window:resized':        WindowResizedPayload;
   'shortcut:restore_last': Record&lt;string, never&gt;;
   'settings:changed':      Settings;

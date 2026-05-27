@@ -12,6 +12,10 @@ use tauri::{AppHandle, Manager, WebviewWindow};
 
 pub const MAIN_LABEL: &str = "main";
 
+fn emit_window_shown(app: &AppHandle) {
+    let _ = tauri::Emitter::emit(app, "window:shown", ());
+}
+
 /// 启动时调一次：把主窗口转为 NSPanel + 装事件钩子。
 pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     let win = app
@@ -38,6 +42,7 @@ pub fn toggle(app: &AppHandle) -> tauri::Result<()> {
         let _ = locate::position_for_cursor(&win);
         win.show()?;
         win.set_focus()?;
+        emit_window_shown(app);
         tracing::info!(action = "show", "window.toggle");
     }
     Ok(())
@@ -53,6 +58,7 @@ pub fn toggle_show_only(app: &AppHandle) -> tauri::Result<()> {
         win.show()?;
     }
     win.set_focus()?;
+    emit_window_shown(app);
     Ok(())
 }
 
