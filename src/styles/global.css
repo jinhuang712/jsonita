@@ -30,3 +30,149 @@ kbd {
   font-size: var(--fs-xs);
   color: var(--text);
 }
+
+.jsonita-tree-container {
+  height: 100%;
+  overflow: auto;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--editor-bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-tree);
+  line-height: var(--lh-code);
+}
+
+.jsonita-tree-item {
+  min-width: max-content;
+}
+
+.jsonita-tree-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 1.8em;
+  padding: 0 76px 0 0;
+  border-radius: var(--radius-sm);
+  outline: none;
+  white-space: pre;
+}
+
+.jsonita-tree-node:hover,
+.jsonita-tree-node:focus-within,
+.jsonita-tree-node:focus {
+  background: var(--primary-soft);
+}
+
+.jsonita-tree-node:focus {
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-tree-toggle,
+.jsonita-tree-key,
+.jsonita-tree-index,
+.tree-copy-icon {
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.jsonita-tree-toggle {
+  width: 20px;
+  padding: 0;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.jsonita-tree-toggle:hover {
+  color: var(--primary);
+}
+
+.jsonita-tree-toggle-placeholder {
+  display: inline-block;
+  cursor: default;
+}
+
+.jsonita-tree-key,
+.jsonita-tree-index {
+  padding: 0;
+  color: var(--json-key);
+  font-weight: 600;
+  cursor: copy;
+}
+
+.jsonita-tree-index {
+  color: var(--text-muted);
+}
+
+.jsonita-tree-key:hover,
+.jsonita-tree-index:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.jsonita-tree-string {
+  color: var(--json-string);
+}
+
+.jsonita-tree-number {
+  color: var(--json-number);
+}
+
+.jsonita-tree-bool {
+  color: var(--json-bool);
+}
+
+.jsonita-tree-null,
+.jsonita-tree-other {
+  color: var(--json-null);
+}
+
+.jsonita-tree-punc {
+  color: var(--json-punc);
+}
+
+.jsonita-tree-children {
+  margin-left: 10px;
+  padding-left: 16px;
+  border-left: 1px solid var(--editor-indent-guide);
+}
+
+.tree-copy-icon {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  opacity: 0;
+  transform: translateY(-50%);
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 18px;
+  cursor: copy;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-tree-node:hover .tree-copy-icon,
+.jsonita-tree-node:focus-within .tree-copy-icon,
+.jsonita-tree-node:focus .tree-copy-icon {
+  opacity: 1;
+}
+
+.tree-copy-icon:hover,
+.tree-copy-icon:focus {
+  border-color: var(--primary-edge);
+  background: var(--primary-soft);
+  color: var(--primary);
+  outline: none;
+}
+
+.tree-copy-icon:active {
+  background: var(--primary);
+  color: white;
+}
