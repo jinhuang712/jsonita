@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane, type SinglePaneApplyState } from '../store/ui';
 
@@ -20,13 +21,18 @@ const STATE_COLOR: Record<SinglePaneApplyState, string> = {
 
 export function SinglePaneHint() {
   const { t } = useTranslation(['shell', 'panes']);
-  const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
+  const settings = useSettingsStore((s) => s.settings);
+  const editorStatus = useEditorStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
   const state = useUiStore((s) => s.singlePaneApplyState);
 
-  if (!singlePaneMode || activePane === 'tree' || activePane === 'ai-fix') return null;
+  if (!settings.singlePaneMode || activePane === 'tree' || activePane === 'ai-fix') return null;
+  if (editorStatus === 'error' && !settings.aiEnabled) return null;
 
-  const pane = t(`panes:tab.${PANE_LABEL_KEY[activePane]}`);
+  const pane =
+    editorStatus === 'error' && settings.aiEnabled
+      ? t('panes:tab.aiFix')
+      : t(`panes:tab.${PANE_LABEL_KEY[activePane]}`);
   const label =
     state === 'running'
       ? t('shell:singlePane.running', { pane })
