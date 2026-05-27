@@ -13,7 +13,6 @@ Icon
 *.swp
 *.swo
 *~
-.cursor/
 
 # ===== Node / pnpm / npm / yarn =====
 node_modules/
@@ -60,6 +59,15 @@ pnpm-debug.log*
 *.pem
 *.key
 
+# ===== AI assistant local artifacts =====
+AGENTS.md
+CLAUDE.md
+.claude/
+.codex/
+.cursor/
+.continue/
+.windsurf/
+.aider*
+
 # ===== Project local =====
-.claude/local-settings.json
 scratch/
