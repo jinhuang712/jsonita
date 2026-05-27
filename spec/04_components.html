@@ -45,7 +45,7 @@
         <tr><td><code>Input</code></td><td>shadcn</td><td>设置 / API key 输入</td><td>border <code>--border-strong</code> · focus ring <code>--shadow-focus</code></td></tr>
         <tr><td><code>Label</code></td><td>shadcn</td><td>表单项标签</td><td>color <code>--text-muted</code> · fs <code>--fs-sm</code></td></tr>
         <tr><td><code>Select</code></td><td>shadcn</td><td>主题 / 缩进 / 历史上限选择</td><td>下拉浮层 bg <code>--bg-card</code> · 阴影 <code>--shadow-lg</code></td></tr>
-        <tr><td><code>Switch</code></td><td>shadcn</td><td>设置面板所有 checkbox 项</td><td>checked bg <code>--primary</code></td></tr>
+        <tr><td><code>Switch / Checkbox</code></td><td>shadcn / custom</td><td>设置面板所有 boolean 项</td><td>低饱和 checked bg <code>--primary</code>；自定义 checkbox 保留原生 input 可访问性</td></tr>
         <tr><td><code>Tabs</code></td><td>shadcn</td><td>设置面板分组（General / Shortcuts / AI / ...）</td><td>border-bottom + active underline 样式</td></tr>
         <tr><td><code>Dialog</code></td><td>shadcn (Radix)</td><td>设置 / 历史 / AI 错误 modal</td><td>背景 <code>--bg-overlay</code> · 容器 radius <code>--radius-2xl</code></td></tr>
         <tr><td><code>DropdownMenu</code></td><td>shadcn</td><td>历史项右键菜单 / Tray 替代菜单</td><td>同 Select</td></tr>
@@ -194,6 +194,8 @@ interface ToastOpts {
     <p>Dialog 整体 W 720 × H 540（最大）。左侧 nav（W 180）+ 右侧 panel + 底部 footer（Done / Reset）。视觉与布局见 <a href="01_mockups.html#4">01 § 4 设置 Modal</a>。</p>
 
     <p><b>规则</b>：所有改动<b>即时生效</b>（不需要 Done 按钮提交，每个 Switch / Select 变化立刻 <code>settings_set</code>）。Done 仅关闭 Modal。Reset 弹二次确认 Dialog。</p>
+
+    <p><b>Boolean 控件</b>：当前实现使用自定义 <code>SettingsCheckbox</code> 包裹原生 <code>input[type=checkbox]</code>。视觉为小号圆角方块 + 低饱和 primary checked 态，避免系统默认蓝色 checkbox 与深色浮窗割裂；原生 input 透明覆盖，保留点击、键盘和屏阅器语义。</p>
 
     <h3><span class="h3-num">4.7</span>ShortcutInput</h3>
 
