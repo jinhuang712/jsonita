@@ -214,6 +214,8 @@
       </tbody>
     </table>
 
+    <p><b>浮窗缩放域</b>：<code>--fs-editor</code> 是 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 的源值；浮窗根节点用它派生 <code>--fs-tree</code>、<code>--fs-xs</code>、<code>--fs-sm</code>。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、ShortcutHint、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（<code>--fs-xs</code> ≤ 12.5px，<code>--fs-sm</code> ≤ 14px），避免 chrome 喧宾夺主。Settings Modal / History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。</p>
+
     <h3><span class="h3-num">6.3</span>字重 + 行高</h3>
 
     <table>
@@ -223,11 +225,11 @@
         <tr><td><code>--fw-medium</code></td><td>500</td><td>UI 标签 / 按钮</td></tr>
         <tr><td><code>--fw-semibold</code></td><td>600</td><td>标题 / 强调</td></tr>
         <tr><td><code>--fw-bold</code></td><td>700</td><td>顶层标题 / 链接 hover</td></tr>
-        <tr><td rowspan="5">行高</td><td><code>--lh-tight</code></td><td>1.25</td><td>标题</td></tr>
+        <tr><td rowspan="5">行高</td><td><code>--lh-tight</code></td><td>1.25</td><td>标题 / 紧凑 TabBar</td></tr>
         <tr><td><code>--lh-snug</code></td><td>1.4</td><td>UI / 状态栏</td></tr>
         <tr><td><code>--lh-normal</code></td><td>1.6</td><td>正文</td></tr>
         <tr><td><code>--lh-loose</code></td><td>1.75</td><td>Markdown 渲染</td></tr>
-        <tr><td><code>--lh-code</code></td><td>1.55</td><td>编辑器 + tree</td></tr>
+        <tr><td><code>--lh-code</code></td><td>1.55</td><td>编辑器正文 + line number gutter + tree</td></tr>
       </tbody>
     </table>
 

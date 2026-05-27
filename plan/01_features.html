@@ -52,6 +52,7 @@
       <li><b>缩进引导垂直线</b>：每层缩进一条浅色 vertical guide line，方便定位嵌套层级（类似 VSCode indent guides；<code>indentationMarkers</code> extension）</li>
       <li><b>大数组 / 大对象折叠</b>：超过阈值的 array / object 自动折叠为 <code>[ … ]</code> / <code>{ … }</code>，点击展开 / 收起（CodeMirror <code>foldGutter</code> + <code>codeFolding</code>）</li>
       <li><b>行号 / 当前行高亮 / <kbd>⌘F</kbd> 搜索 / <kbd>⌘D</kbd> 多光标 / <kbd>⌘Z</kbd> undo</b>：CodeMirror 6 内置</li>
+      <li><b>行号对齐</b>：line number gutter 与正文行必须共用编辑器字号和 code 行高，当前行 gutter 高亮与正文当前行背景在 y / height 上保持一致</li>
     </ul>
 
     <h2><span class="h2-num">F2</span>JSON TreeView</h2>
@@ -374,7 +375,7 @@
       <li><b>max 宽度</b>：min(1400 px, 当前屏宽 × 70%) ── 13 寸屏 ≈ 1440 × 0.7 = 1008 px；27 寸屏 ≈ 2560 × 0.7 = 1792 px 但被 1400 上限封顶</li>
       <li><b>min 高度</b>：480 px（同上）</li>
       <li><b>max 高度</b>：屏高 × 75% ── 防止占满</li>
-      <li><b>字号</b>：<kbd>⌘+</kbd> / <kbd>⌘-</kbd> 每次以 2px 改变编辑器 / Tree 字号，<kbd>⌘0</kbd> 重置，并参与动态缩放计算</li>
+      <li><b>字号</b>：<kbd>⌘+</kbd> / <kbd>⌘-</kbd> 每次以 2px 改变编辑器 / Tree 字号，<kbd>⌘0</kbd> 重置，并参与动态缩放计算；顶部功能 Tab、快捷键提示、单窗 Run hint、状态栏等浮窗 chrome 的紧凑文字只轻微跟随且有上限，避免编辑区变大后 controls 过度放大</li>
     </ul>
 
     <p><b>层 2 与层 3 的关系</b>：</p>

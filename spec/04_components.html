@@ -109,6 +109,7 @@ interface TabBarProps {
     <ul>
       <li><b>AI Fix Tab 条件渲染</b>：仅 <code>showAiFix = true</code>（编辑器 parse error）时渲染；从 idle 到出现走 fade-in 150ms</li>
       <li><b>ai variant 视觉</b>：橙色渐变背景 ── 与其他 Tab 视觉上明显区分，提示这是"修复"入口（颜色用 <code>--accent</code> 系列 token）</li>
+      <li><b>字号缩放</b>：Tab button 不允许 hardcode <code>12px</code>；必须使用浮窗根节点派生的 <code>--fs-sm</code> 与 <code>--lh-tight</code>，随 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 轻微变化并封顶，避免放大后变成正文级标题</li>
       <li><b>键盘</b>：当焦点不在 CodeMirror / input / textarea / select / contenteditable 内时，裸 <kbd>Tab</kbd> 正向、<kbd>⇧Tab</kbd> 反向循环切换功能 Tab；焦点在 Tab 按钮本身时，<kbd>Enter</kbd> / <kbd>Space</kbd> 走原生 button 激活。AI Fix 仅在可见且启用时加入循环。<b>不绑</b> <kbd>⌘1-6</kbd>（见 <a href="../plan/02_interaction.html">plan/02 § 1.1</a>）</li>
     </ul>
 
@@ -135,18 +136,18 @@ interface TabBarProps {
       </tbody>
     </table>
 
-    <p>右侧固定两个按钮：<code>History ({n}) · ⚙ Settings</code>（均 <code>Button variant=ghost size=sm</code>）。</p>
+    <p>右侧固定两个按钮：<code>History ({n}) · ⚙ Settings</code>（均 <code>Button variant=ghost size=sm</code>）。StatusBar 使用浮窗缩放域中的 <code>--fs-xs</code>，随编辑器字号轻微缩放并封顶，保持单行高度紧凑。</p>
 
     <h3><span class="h3-num">4.2.1</span>SinglePaneHint</h3>
 
-    <p>单窗模式专用的右下角提示组件。仅当 <code>settings.singlePaneMode=true</code> 且 active pane 不是 Tree 时渲染，位置固定在编辑器右下角、状态栏上方，提示 <kbd>⌘↵</kbd> Run {pane}；<kbd>⌘Enter</kbd> 执行时切换为 running / applied / failed 短反馈。Tree 是视图模式，直接整栏渲染 <code>TreeView</code>，不显示 Run hint。</p>
+    <p>单窗模式专用的右下角提示组件。仅当 <code>settings.singlePaneMode=true</code> 且 active pane 不是 Tree 时渲染，位置固定在编辑器右下角、状态栏上方，提示 <kbd>⌘↵</kbd> Run {pane}；<kbd>⌘Enter</kbd> 执行时切换为 running / applied / failed 短反馈。Tree 是视图模式，直接整栏渲染 <code>TreeView</code>，不显示 Run hint。字号使用浮窗缩放域中的 <code>--fs-xs</code>。</p>
 
     <pre><code>// src/shell/SinglePaneHint.tsx
 type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';</code></pre>
 
     <h3><span class="h3-num">4.2.2</span>ShortcutHint</h3>
 
-    <p>浮窗每次被呼出 / show 时，右下角主动作区域附近短暂显示快捷键提示并自动淡出：<kbd>Esc</kbd> 退出编辑、<kbd>Esc</kbd><kbd>Esc</kbd> 隐藏、<kbd>Tab</kbd> / <kbd>⇧Tab</kbd> 切换功能。AI Fix Diff 决策态改为提示 <kbd>⌘↵</kbd> Accept、<kbd>Esc</kbd> Cancel，位置保持靠近 Accept / Run 区域。</p>
+    <p>浮窗每次被呼出 / show 时，右下角主动作区域附近短暂显示快捷键提示并自动淡出：<kbd>Esc</kbd> 退出编辑、<kbd>Esc</kbd><kbd>Esc</kbd> 隐藏、<kbd>Tab</kbd> / <kbd>⇧Tab</kbd> 切换功能。AI Fix Diff 决策态改为提示 <kbd>⌘↵</kbd> Accept、<kbd>Esc</kbd> Cancel，位置保持靠近 Accept / Run 区域。字号使用浮窗缩放域中的 <code>--fs-xs</code>，键帽继承同一字号。</p>
 
     <h3><span class="h3-num">4.3</span>Toast（reserved / future）</h3>
 

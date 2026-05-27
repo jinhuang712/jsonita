@@ -84,6 +84,7 @@ export interface EditorConfig {
   softWrap?: boolean;        // 默认 true
   placeholderText?: string;
   error?: EditorError | null; // Rust debounce parse error，用于精确红波浪线
+  getExternalError?: () =&gt; EditorError | null;
 }
 
 export function makeExtensions(cfg: EditorConfig): Extension[] {
@@ -106,7 +107,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     json(),
     linter((view) =&gt; (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
     supplementalJsonLinter(),
-    cfg.error ? externalLinter(() =&gt; cfg.error ?? null) : [],
+    externalLinter(cfg.getExternalError ?? (() =&gt; cfg.error ?? null)),
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle),
     jsonitaJsonHighlight,
@@ -126,6 +127,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 
     <pre><code>// src/editor/Editor.tsx
 import { useEffect, useRef } from 'react';
+import { forceLinting, setDiagnostics } from '@codemirror/lint';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { makeExtensions, type EditorConfig } from './extensions';
@@ -142,6 +144,9 @@ export interface EditorError { line: number; col: number; msg: string; }
 export function Editor({ value, onChange, onErrorChange, theme, ...cfg }: EditorProps) {
   const ref = useRef&lt;HTMLDivElement&gt;(null);
   const viewRef = useRef&lt;EditorView | null&gt;(null);
+  const errorRef = useRef(cfg.error ?? null);
+
+  errorRef.current = cfg.error ?? null;
 
   useEffect(() =&gt; {
     const updateListener = EditorView.updateListener.of((update) =&gt; {
@@ -151,16 +156,31 @@ export function Editor({ value, onChange, onErrorChange, theme, ...cfg }: Editor
     const view = new EditorView({
       state: EditorState.create({
         doc: value,
-        extensions: [...makeExtensions({ theme, ...cfg }), updateListener],
+        extensions: [
+          ...makeExtensions({
+            theme,
+            readOnly: cfg.readOnly,
+            softWrap: cfg.softWrap,
+            placeholderText: cfg.placeholderText,
+            getExternalError: () =&gt; errorRef.current,
+          }),
+          updateListener,
+        ],
       }),
       parent: ref.current!,
     });
     viewRef.current = view;
     return () =&gt; view.destroy();
-    // theme 变化时重建（CodeMirror 主题切换的标准做法是 reconfigure compartment，
-    // 但 v1 为简洁直接重建）
+    // theme / config 变化时重建；parse error 变化只刷新 lint，不重建。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]);
+  }, [theme, cfg.readOnly, cfg.softWrap, cfg.placeholderText]);
+
+  useEffect(() =&gt; {
+    const v = viewRef.current;
+    if (!v) return;
+    if (!cfg.error) v.dispatch(setDiagnostics(v.state, []));
+    forceLinting(v);
+  }, [cfg.error]);
 
   // 外部 setValue（用于 AI Fix 应用 / 历史恢复 / 上次会话恢复）
   useEffect(() =&gt; {
@@ -174,6 +194,8 @@ export function Editor({ value, onChange, onErrorChange, theme, ...cfg }: Editor
 
   return &lt;div ref={ref} className="jsonita-editor" /&gt;;
 }</code></pre>
+
+    <p><b>生命周期契约</b>：<code>cfg.error</code> 是 lint 数据，不是 EditorView 生命周期配置。输入半截 JSON 时 debounce parse 会频繁改变错误位置；这只能触发 <code>forceLinting(view)</code> 刷新红线，不能销毁 / 重建 CodeMirror，否则会打断连续输入、焦点、光标和输入法上下文。<code>value</code> / <code>cfg.error</code> 变化后需要立即并在下一帧再次 force lint；当 <code>cfg.error=null</code> 时先 <code>setDiagnostics([])</code>，清掉 CodeMirror 在 doc change 映射阶段保留的旧 diagnostics / lint gutter marker。</p>
 
     <h3><span class="h3-num">1.5</span>Light theme extension</h3>
 
@@ -190,7 +212,12 @@ export const jsonitaLightTheme = EditorView.theme({
   },
   '.cm-content': {
     caretColor: 'var(--editor-cursor)',
-    padding:    '12px 0',
+    padding:    'var(--sp-3) 0',
+    fontFamily: 'var(--font-mono)',
+    lineHeight: 'var(--lh-code)',
+  },
+  '.cm-line': {
+    lineHeight: 'var(--lh-code)',
   },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--editor-cursor)' },
   '&amp;.cm-focused .cm-selectionBackground, ::selection': {
@@ -200,6 +227,17 @@ export const jsonitaLightTheme = EditorView.theme({
     backgroundColor: 'var(--editor-gutter)',
     color:           'var(--text-faint)',
     border:          'none',
+    fontFamily:      'var(--font-mono)',
+    fontSize:        'var(--fs-editor)',
+    lineHeight:      'var(--lh-code)',
+  },
+  '.cm-gutterElement': {
+    lineHeight: 'var(--lh-code)',
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    minWidth: '2.4ch',
+    padding:  '0 var(--sp-2)',
+    textAlign: 'right',
   },
   '.cm-activeLineGutter, .cm-activeLine': {
     backgroundColor: 'var(--editor-line-active)',
@@ -235,6 +273,8 @@ export const jsonitaLightTheme = EditorView.theme({
 export const jsonitaDarkTheme = EditorView.theme({ /* same selectors */ }, { dark: true });</code></pre>
 
     <p>实现简化：<b>所有选择器只取 CSS variables</b>，不写死 hex。<code>data-theme</code> 切换时整个 token table 跟着变 ── 编辑器主题不需要"内部双套"。但 CM 的 <code>dark: true/false</code> flag 影响默认 highlightStyle 选择，必须切，所以我们仍需要两个 instance。</p>
+
+    <p><b>对齐契约</b>：<code>.cm-line</code>、<code>.cm-gutters</code>、<code>.cm-gutterElement</code> 必须共用 <code>--fs-editor</code> 与 <code>--lh-code</code>。当前行正文背景与 <code>.cm-activeLineGutter</code> 在 y / height 上必须一致；任何字号缩放都不能只作用于正文而漏掉 line number gutter。</p>
 
     <h3><span class="h3-num">1.7</span>自定义 JSON 高亮风格</h3>
 

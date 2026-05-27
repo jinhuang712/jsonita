@@ -227,7 +227,7 @@ sequenceDiagram
 
     U->>CM: 粘贴 / 输入 JSON
     CM->>ES: onChange(text)
-    ES->>ES: debounce 300 ms · 合并连续 onChange
+    ES->>ES: debounce 300 ms · 合并连续 onChange · 生成 requestSeq
     ES->>IPC: invoke("json_format", { text, opts })
     IPC->>CMD: json_format(text, opts) [async]
     CMD->>CMD: spawn_blocking (CPU 密集)
@@ -235,11 +235,13 @@ sequenceDiagram
     alt 成功
         ENG-->>CMD: Ok(formatted)
         CMD-->>IPC: Ok(formatted)
+        IPC-->>ES: 若 requestSeq 不是最新则丢弃
         IPC-->>ES: 解析成功 · setOutput(formatted)
         ES->>CM: 更新输出栏 + 状态栏 "● Valid"
     else Parse 失败
         ENG-->>CMD: Err(Parse { line, col, msg })
         CMD-->>IPC: Err(JsonitaError::Parse)
+        IPC-->>ES: 若 requestSeq 不是最新则丢弃
         IPC-->>ES: setError({ line, col, msg })
         ES->>CM: 高亮 line:col · 状态栏 "● Line X, Col Y"
         ES->>ES: showAiFix = true (出现 AI Fix Tab)

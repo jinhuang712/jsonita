@@ -23,6 +23,9 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     fontFamily: 'var(--font-mono)',
     lineHeight: 'var(--lh-code)',
   },
+  '.cm-line': {
+    lineHeight: 'var(--lh-code)',
+  },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: 'var(--editor-cursor)',
   },
@@ -33,6 +36,17 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     backgroundColor: 'var(--editor-gutter)',
     color: 'var(--text-faint)',
     border: 'none',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 'var(--fs-editor)',
+    lineHeight: 'var(--lh-code)',
+  },
+  '.cm-gutterElement': {
+    lineHeight: 'var(--lh-code)',
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    minWidth: '2.4ch',
+    padding: '0 var(--sp-2)',
+    textAlign: 'right',
   },
   '.cm-activeLineGutter, .cm-activeLine': {
     backgroundColor: 'var(--editor-line-active)',
