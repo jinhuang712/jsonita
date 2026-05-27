@@ -306,8 +306,8 @@ fn open_accessibility_settings() {
         <tr><td>退出 editing</td><td><kbd>Esc</kbd>（焦点在 CodeMirror / 表单输入内）</td><td>window keydown capture → activeElement.blur()</td></tr>
         <tr><td>关闭浮窗</td><td><kbd>Esc</kbd>（非编辑态） / <kbd>⌘W</kbd></td><td>window_hide</td></tr>
         <tr><td>单窗模式应用当前功能</td><td><kbd>⌘Enter</kbd></td><td>window keydown capture；仅 <code>singlePaneMode=true</code> 时拦截并写回 input</td></tr>
-        <tr><td>编辑器 / Tree 字体放大</td><td><kbd>⌘+</kbd></td><td>window keydown capture；更新 UI store 字号并触发动态窗口缩放</td></tr>
-        <tr><td>编辑器 / Tree 字体缩小</td><td><kbd>⌘-</kbd></td><td>window keydown capture</td></tr>
+        <tr><td>编辑器 / Tree 字体放大</td><td><kbd>⌘+</kbd></td><td>window keydown capture；每次 +2px，更新 UI store 字号并触发动态窗口缩放</td></tr>
+        <tr><td>编辑器 / Tree 字体缩小</td><td><kbd>⌘-</kbd></td><td>window keydown capture；每次 -2px</td></tr>
         <tr><td>重置编辑器 / Tree 字号</td><td><kbd>⌘0</kbd></td><td>window keydown capture；回到 13px</td></tr>
         <tr><td>清空输入（不污染上次会话）</td><td><kbd>⌘K</kbd></td><td>React useHotkeys + session_clear_last</td></tr>
         <tr><td>恢复上次会话</td><td><kbd>⌘⇧L</kbd></td><td>React useHotkeys + session_load_last</td></tr>
