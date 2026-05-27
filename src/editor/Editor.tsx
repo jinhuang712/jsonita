@@ -12,12 +12,6 @@ import { EditorView } from '@codemirror/view';
 
 import { makeExtensions, type EditorConfig } from './extensions';
 
-export interface EditorError {
-  line: number;
-  col: number;
-  msg: string;
-}
-
 interface EditorProps extends EditorConfig {
   value: string;
   onChange?: (v: string) => void;
@@ -46,7 +40,7 @@ export function Editor({ value, onChange, theme, ...cfg }: EditorProps) {
     };
     // theme / config 变化时重建 instance
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, cfg.readOnly, cfg.softWrap, cfg.placeholderText]);
+  }, [theme, cfg.readOnly, cfg.softWrap, cfg.placeholderText, cfg.error]);
 
   // 外部 setValue（store 调 setContent 用于 AI Fix / 历史恢复 / 上次会话）
   useEffect(() => {

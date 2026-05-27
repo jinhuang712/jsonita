@@ -82,6 +82,7 @@ export interface EditorConfig {
   readOnly?: boolean;
   softWrap?: boolean;        // 默认 true
   placeholderText?: string;
+  error?: EditorError | null; // Rust debounce parse error，用于精确红波浪线
 }
 
 export function makeExtensions(cfg: EditorConfig): Extension[] {
@@ -103,6 +104,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),
     linter((view) =&gt; (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
+    cfg.error ? externalLinter(() =&gt; cfg.error ?? null) : [],
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle),
     jsonitaJsonHighlight,
@@ -277,7 +279,11 @@ export function externalErrorAsDiagnostic(
   let from = 0;
   for (let i = 0; i &lt; err.line - 1; i++) from += lines[i].length + 1;
   from += Math.max(0, err.col - 1);
-  const to = Math.min(doc.length, from + 1);
+  const lineText = lines[Math.max(0, err.line - 1)] ?? '';
+  const colIndex = Math.max(0, err.col - 1);
+  const tokenMatch = lineText.slice(colIndex).match(/^[^\s,}\]]+/);
+  const tokenLength = tokenMatch?.[0]?.length ?? 1;
+  const to = Math.min(doc.length, from + Math.max(1, tokenLength));
   return [{ from, to, severity: 'error', message: err.msg, source: 'jsonita-engine' }];
 }
 

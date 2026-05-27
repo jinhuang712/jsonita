@@ -23,6 +23,7 @@ export function FloatingWindow() {
   const content = useEditorStore((s) => s.content);
   const outputText = useEditorStore((s) => s.outputText);
   const setContent = useEditorStore((s) => s.setContent);
+  const editorError = useEditorStore((s) => s.error);
   const activePane = useUiStore((s) => s.activePane);
   const editorFontSize = useUiStore((s) => s.editorFontSize);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
@@ -87,6 +88,7 @@ export function FloatingWindow() {
               value={content}
               onChange={setContent}
               softWrap={editorSoftWrap}
+              error={editorError}
             />
           )}
         </div>
