@@ -11,7 +11,6 @@ import { useUiStore } from '../store/ui';
 export function StatusBar() {
   const { t } = useTranslation('shell');
   const status = useEditorStore((s) => s.status);
-  const error = useEditorStore((s) => s.error);
   const bytes = useEditorStore((s) => s.bytes);
   const lines = useEditorStore((s) => s.lines);
   const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
@@ -28,13 +27,10 @@ export function StatusBar() {
       );
       break;
     case 'error':
-      left = error ? (
+      left = (
         <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
-          ● {t('statusBar.invalid')} · {t('statusBar.line')} {error.line}, {t('statusBar.col')}{' '}
-          {error.col}
+          ● {t('statusBar.invalid')}
         </span>
-      ) : (
-        <span style={{ color: 'var(--danger)' }}>● {t('statusBar.invalid')}</span>
       );
       break;
     case 'large':
