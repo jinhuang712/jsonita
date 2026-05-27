@@ -127,7 +127,7 @@ export function useGlobalHotkeys() {
         return;
       }
       if (!singlePaneMode || historyModalOpen || settingsModalOpen) return;
-      if (activePane === 'tree') return;
+      if (activePane === 'tree' || activePane === 'ai-fix') return;
 
       event.preventDefault();
       event.stopPropagation();
@@ -155,7 +155,6 @@ export function useGlobalHotkeys() {
               savedAt: Date.now(),
             })
             .catch(() => {});
-          if (activePane === 'ai-fix') setActivePane('format');
           setSinglePaneApplyState('success');
         })
         .catch((e: unknown) => {
