@@ -66,8 +66,9 @@ export function StatusBar() {
           onClick={() => setHistoryModalOpen(true)}
           style={btnStyle}
           aria-label="Open history"
+          title="Cmd+Y"
         >
-          History
+          <span style={kbdStyle}>⌘Y</span> History
         </button>
         <button
           onClick={() => setSettingsModalOpen(true)}
@@ -89,4 +90,14 @@ const btnStyle: React.CSSProperties = {
   fontSize: 'inherit',
   cursor: 'pointer',
   padding: 0,
+};
+
+const kbdStyle: React.CSSProperties = {
+  padding: '0 4px',
+  border: '1px solid var(--border-strong)',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--bg)',
+  color: 'var(--text-muted)',
+  fontFamily: 'inherit',
+  fontSize: 'calc(var(--fs-xs) - 1px)',
 };

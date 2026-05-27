@@ -170,7 +170,7 @@ interface ToastOpts {
 
     <h3><span class="h3-num">4.4</span>HistoryModal + HistoryItem</h3>
 
-    <p><code>src/history/HistoryModal.tsx</code> 在 <code>App.tsx</code> 中常驻渲染，由 <code>historyModalOpen</code> 控制显隐。底部 StatusBar 的 History 按钮打开 Modal；<kbd>Esc</kbd> 或点击遮罩关闭。Modal 支持列表、搜索、All / Pinned / Starred 筛选、点击条目载入编辑器、Pin / Star，以及 Clear 非 pinned/starred 条目。</p>
+    <p><code>src/history/HistoryModal.tsx</code> 在 <code>App.tsx</code> 中常驻渲染，由 <code>historyModalOpen</code> 控制显隐。底部 StatusBar 的 History 按钮或 <kbd>⌘Y</kbd> 打开 Modal；<kbd>Esc</kbd>、再次 <kbd>⌘Y</kbd> 或点击遮罩关闭。Modal 支持列表、搜索、All / Pinned / Starred 筛选、点击条目载入编辑器、Pin / Star，以及 Clear 非 pinned/starred 条目。</p>
 
     <pre><code>interface HistoryItemProps {
   row: HistoryRow;
