@@ -65,6 +65,7 @@ export function useGlobalHotkeys() {
   const singlePaneApplyState = useUiStore((s) => s.singlePaneApplyState);
   const setActivePane = useUiStore((s) => s.setActivePane);
   const setShowAiFix = useUiStore((s) => s.setShowAiFix);
+  const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
   const setSinglePaneApplyState = useUiStore((s) => s.setSinglePaneApplyState);
   const zoomEditorFont = useUiStore((s) => s.zoomEditorFont);
   const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
@@ -106,6 +107,28 @@ export function useGlobalHotkeys() {
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [activePane, aiEnabled, historyModalOpen, settingsModalOpen, setActivePane, showAiFix]);
+
+  // ⌘Y 打开 / 关闭 History。即使编辑器聚焦也响应，方便随手找回历史。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() !== 'y' ||
+        !event.metaKey ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        settingsModalOpen
+      ) {
+        return;
+      }
+
+      consume(event);
+      setHistoryModalOpen(!historyModalOpen);
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [historyModalOpen, setHistoryModalOpen, settingsModalOpen]);
 
   // Cmd+A 只允许编辑器 / 表单走原生全选，其他 UI chrome 绝不触发 DOM 全页选择。
   useEffect(() => {
