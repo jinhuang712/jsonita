@@ -1,7 +1,7 @@
 /* ==========================================================================
    Jsonita Documentation Navigation
    - Renders sidebar + pagination based on body data attributes
-   - Each plan/spec/progress HTML file declares its chapter via:
+   - Each plan/spec HTML file declares its chapter via:
        <body data-section="plan" data-chapter="00">
    ========================================================================== */
 
@@ -35,16 +35,6 @@ const SECTIONS = {
       { num: '13', slug: 'schemas',       title: '数据模型参考' },
       { num: '14', slug: 'i18n_a11y',     title: '国际化 & 无障碍' },
       { num: '15', slug: 'logging',       title: '日志 & 可观测性' }
-    ]
-  },
-  progress: {
-    label: 'Progress',
-    chapters: [
-      { num: '01', slug: 'm0_skeleton',      title: 'M0 Skeleton' },
-      { num: '02', slug: 'm1_core_json',     title: 'M1 Core JSON' },
-      { num: '03', slug: 'm2_ai_settings',   title: 'M2 AI + Settings' },
-      { num: '04', slug: 'm3_polish_cross',  title: 'M3 Polish + Cross' },
-      { num: '05', slug: 'v11_distribution', title: 'v1.1+ Distribution' }
     ]
   }
 };

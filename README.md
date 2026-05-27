@@ -87,7 +87,6 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | [`index.html`](index.html) | 📍 文档导航入口（用浏览器打开） |
 | [`plan/`](plan/) | 5 篇产品设计：产品边界 / 功能 / 交互 / 技术栈 / NFR |
 | [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块 ... |
-| [`progress/`](progress/) | 5 篇实施进度（M0 / M1 / M2 / M3 / v1.1+） |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史（按 Phase 顺序） |
 
 ## 当前进度（agent 实施）

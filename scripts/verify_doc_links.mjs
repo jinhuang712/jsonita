@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Jsonita 本地链接 + 锚点校验脚本
 //
-// 用途：扫描 plan / spec / progress / docs / index.html / *.md 中的本地链接，
+// 用途：扫描 plan / spec / docs / index.html / *.md 中的本地链接，
 // 验证 target 文件存在 + #anchor 对应 id 存在。外部 URL（http/https/mailto/tel）跳过。
 //
 // 用法：node scripts/verify_doc_links.mjs

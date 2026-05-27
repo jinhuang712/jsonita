@@ -1,6 +1,6 @@
 /* ==========================================================================
    Jsonita Documentation Stylesheet (shared)
-   - Used by root index.html, plan/*.html, spec/*.html, progress/*.html
+   - Used by root index.html, plan/*.html, spec/*.html
    ========================================================================== */
 
 :root {
@@ -1109,10 +1109,10 @@ body.is-index .index-wrap {
   background: var(--border);
 }
 
-/* ===== Three-column layout (Plan / Spec / Progress) ===== */
-.index-three-col {
+/* ===== Documentation columns (Plan / Spec) ===== */
+.index-doc-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
   margin: 32px 0 52px;
 }

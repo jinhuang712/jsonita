@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+### chore · 删除 progress 文档区
+
+用户确认 `progress/` 不再必要。删除 5 篇 phase 进度 HTML，并同步清理当前文档入口：
+
+- `index.html` 首页移除 Progress 栏，保留 Plan / Spec 两栏
+- `README.md` 项目文档表删 `progress/`
+- `assets/nav.js` 删除 progress section 定义
+- `assets/style.css` 文档首页布局从三栏改为两栏
+- `TODO.md` / `scripts/verify_doc_links.mjs` / `spec/00_architecture.html` / `spec/05_icons_theme.html` 清掉当前引用
+
 ### fix · Keychain 切换的多处遗漏 + Single-pane mode 真接 + About 占位 + Test mock + spec/plan 大扫
 
 用户连发 4 张截图反馈：
