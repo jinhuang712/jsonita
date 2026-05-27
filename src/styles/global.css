@@ -158,10 +158,14 @@ kbd {
     background var(--dur-fast) var(--ease-out);
 }
 
-.jsonita-tree-node:hover .tree-copy-icon,
-.jsonita-tree-node:focus-within .tree-copy-icon,
-.jsonita-tree-node:focus .tree-copy-icon {
+.tree-copy-icon-visible {
   opacity: 1;
+}
+
+.tree-copy-icon-copied {
+  border-color: var(--primary-edge);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .tree-copy-icon:hover,
