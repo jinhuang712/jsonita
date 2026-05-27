@@ -43,7 +43,7 @@
     </div>
 
     <p><b>错误处理</b>：实时高亮非法位置（行号 + col）；错误时显示「AI Fix」入口（前提 AI 已启用）。</p>
-    <p>非法 JSON 且 AI Fix 可用时，<kbd>⌘Enter</kbd> 直接执行 AI Fix；修复结果进入 Diff 决策态后，<kbd>⌘Enter</kbd> 接受，<kbd>Esc</kbd> 取消。该规则在单窗 / 双栏模式下保持一致。</p>
+    <p>非法 JSON 且 AI Fix 可用时，<kbd>⌘Enter</kbd> 直接执行 AI Fix；单窗模式右下角主动作显示 Run AI Fix，不再显示 Run Format。AI Fix 未启用时不展示任何错误 JSON 的 Run Format 动作，右上角仅保留弱化 AI Fix 提示入口，表示能力尚未开启。修复结果进入 Diff 决策态后，<kbd>⌘Enter</kbd> 接受，<kbd>Esc</kbd> 取消。该规则在单窗 / 双栏模式下保持一致。</p>
 
     <p><b>编辑器交互</b>（左侧 input panel · CodeMirror 6 内置；同样适用于 F3 / F4 等所有 input 区）：</p>
     <ul>

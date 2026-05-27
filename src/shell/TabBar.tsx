@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
 
@@ -24,6 +25,8 @@ export function TabBar() {
   const showAiFix = useUiStore((s) => s.showAiFix);
   const setActive = useUiStore((s) => s.setActivePane);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
+  const editorStatus = useEditorStore((s) => s.status);
+  const showAiFixPrompt = showAiFix && editorStatus === 'error' && !aiEnabled;
   const startDragging = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
     if ((event.target as HTMLElement).closest('button')) return;
@@ -71,25 +74,24 @@ export function TabBar() {
         );
       })}
       <div style={{ flex: 1 }} />
-      {showAiFix && (
+      {showAiFixPrompt && (
         <button
           role="tab"
           aria-selected={active === 'ai-fix'}
-          aria-disabled={!aiEnabled}
+          aria-disabled="true"
           tabIndex={active === 'ai-fix' ? 0 : -1}
-          onClick={() => aiEnabled && setActive('ai-fix')}
-          title={aiEnabled ? undefined : t('tab.aiFixDisabledTooltip')}
+          onClick={() => undefined}
+          title={t('tab.aiFixDisabledTooltip')}
           style={{
             padding: '4px 10px',
             fontSize: 12,
             fontWeight: 600,
-            background:
-              active === 'ai-fix' ? 'var(--accent)' : 'var(--accent-soft)',
-            color: active === 'ai-fix' ? '#FFFFFF' : 'var(--accent)',
+            background: 'var(--accent-soft)',
+            color: 'var(--accent)',
             border: 'none',
             borderRadius: 'var(--radius-sm)',
-            cursor: aiEnabled ? 'pointer' : 'not-allowed',
-            opacity: aiEnabled ? 1 : 0.45,
+            cursor: 'not-allowed',
+            opacity: 0.55,
           }}
         >
           ✨ {t('tab.aiFix')}
