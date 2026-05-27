@@ -23,7 +23,7 @@
     <div class="callout callout-info">
       <span class="callout-icon">REF</span>
       <div class="callout-body">
-        <p>对外 IPC 类型 <code>AiFixReq</code> / <code>AiFixResp</code> / <code>AiProgress</code> 定义见 <a href="13_schemas.html">13 § 3.4</a>；API key 走本地 <code>secrets.json</code>（<a href="13_schemas.html">13 § 6</a>），不进 Keychain ── 设计动因见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a> / <a href="10_storage.html">10 § 6</a>。本章描述<b>设计原则 + 协议构造 + 算法</b>。</p>
+        <p>对外 IPC 类型 <code>AiFixReq</code> / <code>AiFixResp</code> 定义见 <a href="13_schemas.html">13 § 3.4</a>；API key 走本地 <code>secrets.json</code>（<a href="13_schemas.html">13 § 6</a>），不进 Keychain ── 设计动因见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a> / <a href="10_storage.html">10 § 6</a>。本章描述<b>设计原则 + 协议构造 + 算法</b>。</p>
       </div>
     </div>
 
@@ -38,7 +38,7 @@
       <tbody>
         <tr><td><b>用户用自己 API key</b></td><td>不当家长，<b>不限频</b>，<b>不缓存</b>请求结果</td><td>没有 client-side rate limit；每次都打 DeepSeek</td></tr>
         <tr><td><b>仅修复，不解释</b></td><td>prompt 严格要求"只返回合法 JSON"</td><td>system prompt 5 条规则 + <code>response_format: json_object</code> 双保险</td></tr>
-        <tr><td><b>错误透传</b></td><td>上游 429 / 5xx 原样回前端 + 携带 retry-after</td><td>错误结构带 status / body / retry_after_sec</td></tr>
+        <tr><td><b>错误透传</b></td><td>上游 429 / 5xx 原样回前端 + 携带 retry-after</td><td>Rust 错误结构带 status / body / retry_after_sec；IPC 到前端为 retryAfterSec</td></tr>
         <tr><td><b>开关完全关</b></td><td><code>ai_enabled = false</code> 时入口隐藏 + Rust 端 early return</td><td>命令入口检查 settings；UI 不渲染 AI Fix Tab</td></tr>
         <tr><td><b>无 telemetry</b></td><td>用户 JSON 不发到任何 Jsonita 自己的后端</td><td>只有 <code>api.deepseek.com</code> 出网；tauri.conf http allowlist 限定</td></tr>
       </tbody>
@@ -120,7 +120,7 @@ pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&g
 
     <h3><span class="h3-num">5.1</span>关键步骤</h3>
 
-    <p>整体走"<b>同步主流程 + 异步 keepalive 进度</b>"模型。主流程是阻塞的 reqwest 调用；同时 spawn 一个进度任务，每 500 ms 推 <code>ai:progress Waiting { elapsed_ms }</code>，让前端可以显示"已等待 N 秒"避免界面假死。</p>
+    <p>整体走单次 <code>ai_fix</code> command：前端进入 <code>requesting</code> loading 状态，Rust 在 60s timeout 内完成 HTTP、状态码映射、响应抽取和二次 JSON 验证后一次性返回结果或错误。</p>
 
     <table>
       <thead><tr><th>步骤</th><th>动作</th><th>失败处理</th></tr></thead>
@@ -128,7 +128,7 @@ pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&g
         <tr><td>1. 双重开关</td><td>检查 <code>settings.ai_enabled</code></td><td>false 时 early return <code>AiDisabled</code>（UI 友好提示"在 Settings 启用 AI Fix"）</td></tr>
         <tr><td>2. 取 key</td><td><code>secrets::get("deepseek_api_key")</code></td><td>None → <code>Keychain("no api key")</code>（变体名遗留 = secrets 取错）</td></tr>
         <tr><td>3. 构造 body</td><td>system + user 拼装 + 设置默认参数</td><td>纯字符串操作，无失败</td></tr>
-        <tr><td>4. spawn 进度任务</td><td>每 500 ms emit Waiting</td><td>主流程完成时 abort()</td></tr>
+        <tr><td>4. 构造 HTTP client</td><td>60s timeout</td><td>构建失败 → <code>Http { status: 0, body }</code></td></tr>
         <tr><td>5. POST</td><td>reqwest 60s timeout</td><td>网络错 → <code>Http { status: 0, body }</code></td></tr>
         <tr><td>6. 状态码分支</td><td>429 / 5xx / 4xx / 200</td><td>分别映射为 RateLimit / Http</td></tr>
         <tr><td>7. 抽 content</td><td><code>choices[0].message.content</code></td><td>空 → 当成 AiInvalidJson</td></tr>
@@ -153,27 +153,24 @@ pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&g
     <h3><span class="h3-num">5.3</span>fix 核心骨架</h3>
 
     <pre><code>// src-tauri/src/ai/deepseek.rs ── 完整实现见源码；这里只展示骨架
-pub async fn fix(app: &amp;AppHandle, req: AiFixReq) -&gt; Result&lt;AiFixResp, JsonitaError&gt; {
+pub async fn fix(settings: &amp;Settings, req: &amp;AiFixReq) -&gt; Result&lt;AiFixResp, JsonitaError&gt; {
     let started = Instant::now();
-    app.emit("ai:progress", AiProgress::Started).ok();
 
     // 1-2: 检查开关 + 取 key
-    if !app.state::&lt;SettingsStore&gt;().get().ai_enabled {
+    if !settings.ai_enabled {
         return Err(JsonitaError::AiDisabled);
     }
     let key = secrets::get("deepseek_api_key")?
         .ok_or_else(|| JsonitaError::Keychain("no api key".into()))?;
 
-    // 3-4: body + 异步 keepalive
-    let body = build_request(&amp;req, &amp;app.state::&lt;SettingsStore&gt;().get())?;
-    let progress = spawn_progress_emitter(app.clone(), started);
+    // 3-4: body + HTTP client
+    let body = build_request(req, settings)?;
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(60)).build()?;
 
     // 5-6: HTTP + 状态码分支（完整实现 ~40 行，含 RateLimit / Http 映射）
-    let resp = post(&amp;key, &amp;body).await?;
-    progress.abort();
+    let resp = client.post(ENDPOINT).bearer_auth(&amp;key).json(&amp;body).send().await?;
 
     // 7-8: extract + 验证
-    app.emit("ai:progress", AiProgress::Validating).ok();
     let resp_struct: ChatResponse = resp.json().await
         .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
     let content = resp_struct.choices.first()
@@ -183,7 +180,6 @@ pub async fn fix(app: &amp;AppHandle, req: AiFixReq) -&gt; Result&lt;AiFixResp, 
     serde_json::from_str::&lt;serde_json::Value&gt;(&amp;fixed)
         .map_err(|_| JsonitaError::AiInvalidJson { raw: content })?;
 
-    app.emit("ai:progress", AiProgress::Done).ok();
     Ok(AiFixResp { fixed, model: resp_struct.model.unwrap_or_default(),
                    tokens_in: ..., tokens_out: ..., elapsed_ms: ... })
 }</code></pre>
@@ -237,17 +233,17 @@ pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt; {
 
     <h2><span class="h2-num">7</span>错误透传策略</h2>
 
-    <p>所有错误都映射到 <code>JsonitaError</code> 8 个变体（<a href="13_schemas.html">13 § 1</a>）。本章特有的映射：</p>
+    <p>所有错误都映射到 <code>JsonitaError</code> 9 个变体（<a href="13_schemas.html">13 § 1</a>）。本章特有的映射：</p>
 
     <table>
       <thead><tr><th>上游情况</th><th>映射为</th><th>UI 呈现</th></tr></thead>
       <tbody>
-        <tr><td>HTTP 401</td><td><code>Http { status: 401, body }</code></td><td>Toast.danger("API key invalid") + 跳设置面板 AI 分组</td></tr>
-        <tr><td>HTTP 429</td><td><code>RateLimit { retry_after_sec }</code></td><td>Toast.warn 倒计时</td></tr>
-        <tr><td>HTTP 5xx</td><td><code>Http { status, body }</code></td><td>Toast.danger("DeepSeek 服务异常") + [重试]</td></tr>
-        <tr><td>网络错（reqwest）</td><td><code>Http { status: 0, body }</code></td><td>Toast.danger("网络错误") + [重试]</td></tr>
-        <tr><td>AI 返回不合法</td><td><code>AiInvalidJson { raw }</code></td><td>Modal 显示 raw + [复制] + [重试] + 提示 issue</td></tr>
-        <tr><td>无 API key</td><td><code>Keychain("no api key")</code></td><td>Toast.danger + 跳设置</td></tr>
+        <tr><td>HTTP 401</td><td><code>Http { status: 401, body }</code></td><td>AI Fix 面板错误；API key 测试时显示在输入区下方</td></tr>
+        <tr><td>HTTP 429</td><td><code>RateLimit { retry_after_sec }</code>（IPC <code>retryAfterSec</code>）</td><td>AI Fix 面板显示 retry-after</td></tr>
+        <tr><td>HTTP 5xx</td><td><code>Http { status, body }</code></td><td>AI Fix 面板显示 HTTP 状态和 body 摘要</td></tr>
+        <tr><td>网络错（reqwest）</td><td><code>Http { status: 0, body }</code></td><td>AI Fix 面板 / API key 输入区显示错误文本</td></tr>
+        <tr><td>AI 返回不合法</td><td><code>AiInvalidJson { raw }</code></td><td>AI Fix 面板错误文本；raw Modal 为保留设计</td></tr>
+        <tr><td>无 API key</td><td><code>Keychain("no api key")</code></td><td>AI Fix 面板提示 Settings → AI</td></tr>
       </tbody>
     </table>
 
@@ -261,11 +257,12 @@ pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt; {
 
     <ul>
       <li><b>idle</b>：默认；用户未触发 / 上次已 Accept/Reject</li>
-      <li><b>requesting</b>：fix command 进行中；显示 loading + ai:progress 文案</li>
+      <li><b>requesting</b>：fix command 进行中；显示本地 loading 文案</li>
       <li><b>awaiting-decision</b>：fix 完成，展示 DiffView；等待 Accept / Reject</li>
+      <li><b>error</b>：命令失败；展示错误信息，用户可修改输入或设置后重试</li>
     </ul>
 
-    <p>三态转换由 <code>startFix</code> / <code>accept</code> / <code>reject</code> 触发，错误时回 idle 并记录 error。</p>
+    <p>状态转换由 <code>startFix</code> / <code>setSuccess</code> / <code>setError</code> / <code>reset</code> 触发。</p>
 
     <h3><span class="h3-num">8.2</span>Diff 算法</h3>
 
@@ -325,7 +322,6 @@ export function computeDiff(before: string, after: string): DiffLine[] {
       <tbody>
         <tr><td><code>AiFixReq</code> · <code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
         <tr><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
-        <tr><td><code>AiProgress</code>（5 个 phase 变体）</td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
         <tr><td><code>JsonitaError::Http / RateLimit / AiInvalidJson / AiDisabled / Keychain</code>（最后一个变体名遗留）</td><td><a href="13_schemas.html">13 § 1</a></td></tr>
       </tbody>
     </table>
@@ -366,7 +362,7 @@ pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt;;</code></pre>
       <thead><tr><th>指标</th><th>目标</th><th>说明</th></tr></thead>
       <tbody>
         <tr><td>typical fix latency</td><td>P50 &lt; 3s / P95 &lt; 8s</td><td>跟随 DeepSeek 当前性能；客户端开销 &lt; 100ms</td></tr>
-        <tr><td>最大输入</td><td>100 KB</td><td>大于此值时弹 Toast.warn 提示 token 可能超限</td></tr>
+        <tr><td>最大输入</td><td>100 KB</td><td>大于此值时仍会请求；输入上限提示为保留 UI</td></tr>
         <tr><td>请求超时</td><td>60 s（fix）/ 15 s（test_connection）</td><td>reqwest client timeout</td></tr>
         <tr><td>进度推送频率</td><td>500 ms / 次</td><td>tokio::time::interval</td></tr>
         <tr><td>token 上限</td><td>clamp(512, 8192)</td><td>避免模型截断 / 失控扣费</td></tr>

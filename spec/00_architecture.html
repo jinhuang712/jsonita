@@ -52,7 +52,7 @@ graph TB
 
     subgraph WebView["WebView 进程（浮窗，~80 MB）"]
         direction TB
-        SHELL["shell<br/>FloatingWindow · TabBar · StatusBar · Toast"]
+        SHELL["shell<br/>FloatingWindow · TabBar · StatusBar"]
         PANES["panes<br/>Format · Minify · Tree · Str↔JSON · AiFix"]
         EDIT["editor<br/>CodeMirror 6 + JSON 树"]
         STORE["store (zustand)<br/>editor · ui · settings · ai"]
@@ -62,7 +62,7 @@ graph TB
     subgraph External["外部资源"]
         SQL[(SQLite<br/>history.db)]
         KC[(secrets.json<br/>chmod 600)]
-        JSON[(tauri-plugin-store<br/>settings.json · window.json)]
+        JSON[(JSON store<br/>settings.json · window.json)]
         DS([DeepSeek API])
     end
 
@@ -97,7 +97,7 @@ graph TB
     <table>
       <thead><tr><th>层</th><th>位置</th><th>承载</th><th>边界硬约束</th></tr></thead>
       <tbody>
-        <tr><td>表现层</td><td>WebView</td><td>浮窗 UI / 设置面板 / 历史 / Toast / 状态栏</td><td>不直访 fs / net / clipboard</td></tr>
+        <tr><td>表现层</td><td>WebView</td><td>浮窗 UI / 设置面板 / 状态栏 / AI 面板</td><td>不直访 fs / net / clipboard</td></tr>
         <tr><td>逻辑层</td><td>WebView</td><td>编辑器状态机、UI store、IPC 客户端</td><td>调 Tauri command / listen event；不持有持久数据</td></tr>
         <tr><td>IPC 层</td><td>跨进程</td><td>commands / events 合约</td><td>序列化经 serde_json；payload &lt; 4 MB</td></tr>
         <tr><td>领域层</td><td>Rust</td><td>JSON 引擎、AI 调度、设置、会话、历史</td><td>纯函数优先；不持有 Tauri runtime context</td></tr>
@@ -114,7 +114,7 @@ graph TB
       <thead><tr><th>进程</th><th>启动</th><th>退出</th><th>常驻目标</th></tr></thead>
       <tbody>
         <tr><td>Rust host</td><td>开机自启动 / 用户首次启动</td><td>菜单栏 Quit / <kbd>⌘Q</kbd></td><td>≤ 40 MB（无浮窗时）</td></tr>
-        <tr><td>WebView 浮窗</td><td><kbd>⌘⇧J</kbd> / tray 点击</td><td>失焦 / <kbd>Esc</kbd> / <kbd>⌘W</kbd> = <b>hide 不 close</b>；进程保留</td><td>≤ 80 MB（含编辑器空闲）</td></tr>
+        <tr><td>WebView 浮窗</td><td><kbd>⌘⇧J</kbd> / tray 点击</td><td>非编辑态 <kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> = <b>hide 不 close</b>；编辑态 <kbd>Esc</kbd> 先 blur；进程保留</td><td>≤ 80 MB（含编辑器空闲）</td></tr>
       </tbody>
     </table>
 
@@ -132,7 +132,8 @@ stateDiagram-v2
     [*] --> Bootstrapping: launchd · 用户首次启动
     Bootstrapping --> Ready: tokio · SQLite · settings · tray · shortcuts · WebView prebuilt
     Ready --> Visible: ⌘⇧J · tray click<br/>window.show
-    Visible --> Ready: Esc · 失焦 · ⌘W<br/>window.hide · 进程保留
+    Visible --> Visible: Esc while editing<br/>blur active editor/input
+    Visible --> Ready: Esc 非编辑态 · 失焦 · ⌘W<br/>window.hide · 进程保留
     Ready --> Quitting: ⌘Q · Tray Quit
     Visible --> Quitting: ⌘Q
     Quitting --> [*]: emit app·will_quit<br/>最后一次 session_save_last
@@ -148,9 +149,9 @@ stateDiagram-v2
     <table>
       <thead><tr><th>不变量</th><th>规则</th><th>违反后果</th></tr></thead>
       <tbody>
-        <tr><td><b>I-1 单一数据源</b></td><td>浮窗内容只存在 React 编辑器 state；关闭时落 sqlite；重呼出从 sqlite 读 ── 不在两处同步</td><td>恢复后内容与用户输入不一致</td></tr>
+        <tr><td><b>I-1 单一数据源</b></td><td>浮窗内容只存在 React 编辑器 state；合法 transform 成功时落 sqlite last_session；手动恢复从 sqlite 读</td><td>恢复后内容与用户输入不一致</td></tr>
         <tr><td><b>I-2 设置项单源</b></td><td>所有可配置项以 Rust 端 <code>SettingsStore</code> 为准；前端启动 load + 监听 <code>settings:changed</code></td><td>设置生效延迟 / 多窗口不同步</td></tr>
-        <tr><td><b>I-3 错误不藏</b></td><td>所有 IPC 错误必须有 UI 呈现（Toast / 状态栏 / Modal），不允许 silent fail</td><td>用户看不到为什么操作没反应</td></tr>
+        <tr><td><b>I-3 错误不藏</b></td><td>所有 IPC 错误必须有 UI 呈现（状态栏 / 面板局部错误 / Modal），不允许 silent fail</td><td>用户看不到为什么操作没反应</td></tr>
         <tr><td><b>I-4 main 进程不阻塞</b></td><td>所有 IO（SQLite / HTTP / secrets fs）走 <code>tokio::spawn_blocking</code> 或 async client</td><td>菜单栏 / 快捷键 / 窗口卡顿</td></tr>
         <tr><td><b>I-5 UI 不直访 fs/net</b></td><td>WebView 不开 <code>fs</code> / <code>http</code> allowlist；所有外部 IO 走 commands</td><td>WebView 漏洞可读用户文件 / 偷 API key</td></tr>
         <tr><td><b>I-6 AI 完全可关</b></td><td><code>settings.ai_enabled = false</code> 时 UI Tab 隐藏 + Rust early return ── 双重保险</td><td>用户关了 AI 仍出网</td></tr>
@@ -197,22 +198,18 @@ sequenceDiagram
     participant GS as GlobalShortcut
     participant R as Rust host
     participant W as Tauri Window
-    participant RC as React
 
     U->>GS: ⌘⇧J
     GS->>R: handler triggered (T+0)
     R->>R: cursor_position() → 找鼠标所在屏 (T+~10ms)
-    R->>R: clipboard_sniff() · session.load_if_in_window()
     R->>W: set_position(光标屏中央偏上 1/3)
     R->>W: show() + set_focus() (T+~80ms)
     W-->>R: ok
-    R->>RC: emit "window:shown" { clipboard, lastSession, source }
-    RC->>RC: editor.focus() · 应用剪贴板 sniff · 显示 RestoreBar
-    RC->>RC: CodeMirror reflow + 150 ms fade-in
-    Note over U,RC: T+~380ms 总耗时（P95 &lt; 500ms）
+    W->>W: WebView 已预热，React 保持当前 store 状态
+    Note over U,W: T+~250ms 总耗时（P95 &lt; 500ms）
     </div>
 
-    <p><b>预算</b>：shortcut handler 20 ms · 屏 + sniff + session 30 ms · window.show 80 ms · IPC + React 50 ms · CodeMirror reflow 50 ms · 淡入 150 ms ≈ 380 ms 稳态。</p>
+    <p><b>预算</b>：shortcut handler 20 ms · 光标屏定位 30 ms · window.show/focus 80 ms · WebView 已驻留 ≈ 250 ms 稳态。</p>
 
     <h2><span class="h2-num">6</span>典型数据流：format JSON</h2>
 
@@ -251,7 +248,7 @@ sequenceDiagram
 
     <h2><span class="h2-num">7</span>错误传播模型</h2>
 
-    <p>所有 Rust 错误统一映射到单一 <code>JsonitaError</code> enum（8 个变体，完整定义见 <a href="13_schemas.html">13 § 1</a>），经 serde 序列化跨 IPC 边界传到前端，由前端按 <b>UI 分级</b> 渲染。</p>
+    <p>所有 Rust 错误统一映射到单一 <code>JsonitaError</code> enum（9 个变体，完整定义见 <a href="13_schemas.html">13 § 1</a>），经 serde 序列化跨 IPC 边界传到前端，由前端按 <b>UI 分级</b> 渲染。</p>
 
     <div class="mermaid">
 graph LR
@@ -275,10 +272,10 @@ graph LR
 
     subgraph UI["UI 分级响应"]
         U1[状态栏红<br/>+ 高亮位置]
-        U2[Toast.warn]
-        U3[Toast.danger<br/>+ 日志链接]
+        U2[局部 warning<br/>或状态栏]
+        U3[局部 error<br/>或 Modal]
         U4[Modal.danger]
-        U5[Toast 倒计时 / 重试]
+        U5[AI 面板错误 / 重试]
         U6[Modal 显示 raw]
     end
 
@@ -301,7 +298,7 @@ graph LR
 
     <ul>
       <li><b>状态栏（轻）</b>：用户输入边解决，如 <code>Parse</code> ── 不打断</li>
-      <li><b>Toast（中）</b>：操作失败但应用可继续，如 <code>Http</code> / <code>RateLimit</code> / <code>UnwrapTimeout</code></li>
+      <li><b>局部错误（中）</b>：操作失败但应用可继续，如 <code>Http</code> / <code>RateLimit</code> / <code>UnwrapTimeout</code></li>
       <li><b>Modal（重）</b>：必须用户决策才继续，如 <code>AiInvalidJson</code> raw 决定 / secrets fs 写失败</li>
     </ul>
 
@@ -337,7 +334,7 @@ graph TD
 
     subgraph LIB["领域 / 系统层（同层不互调）"]
         engine["engine/<br/>json · unwrap · stringify · error_loc<br/>纯函数 · 可独立单测"]
-        store["store/<br/>db · history · session · settings<br/>SQLite + tauri-plugin-store"]
+        store["store/<br/>db · history · session · settings<br/>SQLite + JSON files"]
         ai["ai/<br/>deepseek · prompt · validate<br/>reqwest HTTP"]
         system["system/<br/>tray · shortcuts · window_panel · secrets<br/>平台 cfg 抽象"]
     end
@@ -360,7 +357,7 @@ graph TD
       <tbody>
         <tr><td><code>commands/</code></td><td>20+ Tauri command handlers（见 <a href="02_ipc.html">02 § 6</a>）</td><td>engine / store / ai / system</td></tr>
         <tr><td><code>engine/</code></td><td><code>format / minify / unwrap / json_to_string / string_to_json</code> 5 个纯函数（<a href="09_json_engine.html">09</a>）</td><td>serde_json</td></tr>
-        <tr><td><code>store/</code></td><td><code>Db / SettingsStore / KeyStore</code> + history/session CRUD（<a href="10_storage.html">10</a>）</td><td>rusqlite + r2d2 + tauri-plugin-store</td></tr>
+        <tr><td><code>store/</code></td><td><code>Db / SettingsStore / secrets</code> + history/session CRUD（<a href="10_storage.html">10</a>）</td><td>rusqlite + r2d2 + JSON files</td></tr>
         <tr><td><code>ai/</code></td><td><code>fix / test_connection</code>（<a href="11_ai_client.html">11</a>）</td><td>reqwest + secrets store（读）</td></tr>
         <tr><td><code>system/</code></td><td>tray + shortcuts + NSPanel + secrets store（<a href="06_window.html">06</a> · <a href="07_menubar.html">07</a>）</td><td>tauri-plugin-* + cocoa（macOS）</td></tr>
         <tr><td><code>error.rs</code></td><td><code>JsonitaError</code>（<a href="13_schemas.html">13 § 1</a>）</td><td>thiserror + serde</td></tr>
@@ -382,8 +379,6 @@ graph TD
         s1[FloatingWindow]
         s2[TabBar]
         s3[StatusBar]
-        s4[Toast]
-        s5[RestoreBar]
     end
 
     shell --> panes
@@ -395,7 +390,7 @@ graph TD
     tree["tree/<br/>JSON 树 + path 复制"]
 
     subgraph state["状态 / 通信（叶层）"]
-        store["store/ (zustand)<br/>editor · ui · settings · ai · history"]
+        store["store/ (zustand)<br/>editor · ui · settings · ai"]
         ipc["ipc/<br/>类型化 invoke + listen<br/>(events.ts + commands.ts)"]
         types["types/<br/>13 章数据模型镜像"]
     end
@@ -418,15 +413,15 @@ graph TD
     <table>
       <thead><tr><th>目录</th><th>职责</th><th>典型文件</th></tr></thead>
       <tbody>
-        <tr><td><code>shell/</code></td><td>浮窗壳 + 全局 UI（TabBar / 状态栏 / Toast / RestoreBar）</td><td>FloatingWindow.tsx</td></tr>
+        <tr><td><code>shell/</code></td><td>浮窗壳 + 全局 UI（TabBar / 状态栏）</td><td>FloatingWindow.tsx · TabBar.tsx · StatusBar.tsx</td></tr>
         <tr><td><code>panes/</code></td><td>5 个功能面板</td><td>FormatPane · MinifyPane · TreePane · Str↔JSON · AiFixPane</td></tr>
         <tr><td><code>editor/</code></td><td>CodeMirror 6 封装 + linter + theme</td><td>Editor.tsx · extensions.ts · lint.ts · theme.ts</td></tr>
         <tr><td><code>tree/</code></td><td>JSON 树视图 + path / hover 复制</td><td>TreeView.tsx · jsonpath.ts</td></tr>
         <tr><td><code>settings/</code></td><td>设置 Modal + 6 个分组面板</td><td>SettingsModal · General · Shortcuts · Ai · History · JsonTransform · About</td></tr>
-        <tr><td><code>history/</code></td><td>历史 Modal + Item</td><td>HistoryModal.tsx · HistoryItem.tsx</td></tr>
-        <tr><td><code>store/</code></td><td>zustand store（4 个域）</td><td>editor.ts · ui.ts · settings.ts · ai.ts · history.ts</td></tr>
+        <tr><td><code>history/</code></td><td>保留目录；历史 Modal UI 当前未实现</td><td>—</td></tr>
+        <tr><td><code>store/</code></td><td>zustand store（4 个域）</td><td>editor.ts · ui.ts · settings.ts · ai.ts</td></tr>
         <tr><td><code>ipc/</code></td><td>类型化 invoke / listen wrapper</td><td>commands.ts · events.ts · error.ts</td></tr>
-        <tr><td><code>types/</code></td><td>与 Rust 镜像（13 章导出）</td><td>commands.ts · events.ts · models.ts</td></tr>
+        <tr><td><code>types/</code></td><td>与 Rust 镜像（13 章导出）</td><td>commands.ts · events.ts · enums.ts · error.ts</td></tr>
       </tbody>
     </table>
 

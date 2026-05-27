@@ -1,8 +1,8 @@
 //! Window runtime — NSPanel-like 浮窗管理。
 //!
 //! Spec ref: `spec/06_window.html` § 2-5 生命周期 / § 9 多屏定位
-//! M0-N3 范围：promote 主窗口为 NSPanel + 失焦 hide + close intercept + 多屏定位；
-//! 不含智能宽度（属 M1-N9）、动效（CSS 由 M3-N1 落地）。
+//! 当前范围：promote 主窗口为 NSPanel + 失焦 hide + close intercept + 多屏定位；
+//! 智能宽度在 cmds::window 中实现；窗口 show/hide CSS 动效仍为保留设计。
 
 #[cfg(target_os = "macos")]
 mod nspanel;
@@ -65,7 +65,11 @@ fn install_window_events(win: &WebviewWindow) {
             let _ = w.hide();
         }
         tauri::WindowEvent::Focused(false) => {
-            // M2-N1 起按 settings.hide_on_blur 判读；M0 默认开
+            if let Some(settings) = w.try_state::<crate::store::SettingsStore>() {
+                if !settings.get().hide_on_blur {
+                    return;
+                }
+            }
             let _ = w.hide();
         }
         tauri::WindowEvent::Resized(size) => {

@@ -77,16 +77,6 @@ pub enum InitialWidth {
     W1080,
 }
 
-/// spec/13 § 2 conformance；window:shown event payload 留 M3 polish 时 emit。
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum ShowSource {
-    Hotkey,
-    Tray,
-    Manual,
-}
-
 // ──────────── § 3.1 json_ops 选项 ────────────
 
 #[derive(Debug, Clone, Deserialize)]
@@ -175,16 +165,6 @@ pub struct LastSession {
 }
 
 // ──────────── § 3.5 窗口 / 系统 ────────────
-
-/// spec/13 § 3.5 window:shown event payload；M3 polish 时 emit 接 WindowEvent。
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WindowShown {
-    pub clipboard: Option<ClipboardSniff>,
-    pub last_session: Option<LastSession>,
-    pub source: ShowSource,
-}
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

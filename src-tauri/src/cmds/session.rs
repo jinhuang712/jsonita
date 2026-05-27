@@ -1,6 +1,6 @@
 //! session 分组 ── last_session SQLite 单行表（spec/02 § 2.3）。
 //!
-//! M1-N7：真实实现走 `crate::store::session`；M2-N1 起加 RestoreTimer 完整状态机。
+//! M1-N7：真实实现走 `crate::store::session`；last_session 由前端 transform 成功时保存。
 
 use tauri::State;
 

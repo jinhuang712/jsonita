@@ -34,7 +34,7 @@
     "@codemirror/search":      "^6.5.0",
     "@codemirror/lint":        "^6.8.0",
     "@codemirror/autocomplete":"^6.18.0",
-    "@uiw/codemirror-extensions-indentation-markers": "^4.23.0"
+    "@replit/codemirror-indentation-markers": "^6.5.3"
   }
 }</code></pre>
 
@@ -55,7 +55,7 @@
         <tr><td>EditorView.lineWrapping</td><td>@codemirror/view</td><td>软换行（不出水平滚动）</td></tr>
         <tr><td>json (lang-json)</td><td>@codemirror/lang-json</td><td>JSON 语法高亮</td></tr>
         <tr><td>linter（自定义）</td><td>@codemirror/lint + serde 错误</td><td>错误位置标注</td></tr>
-        <tr><td>indentationMarkers</td><td>@uiw/codemirror-extensions-indentation-markers</td><td>缩进引导竖线</td></tr>
+        <tr><td>indentationMarkers</td><td>@replit/codemirror-indentation-markers</td><td>缩进引导竖线</td></tr>
       </tbody>
     </table>
 
@@ -73,7 +73,7 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { keymap } from '@codemirror/view';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
-import { indentationMarkers } from '@uiw/codemirror-extensions-indentation-markers';
+import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { jsonitaLightTheme, jsonitaDarkTheme } from './theme';
 import { jsonitaJsonHighlight } from './highlight';
 
@@ -81,10 +81,12 @@ export interface EditorConfig {
   theme: 'light' | 'dark';
   readOnly?: boolean;
   softWrap?: boolean;        // 默认 true
-  showFoldGutter?: boolean;  // 默认 true
+  placeholderText?: string;
 }
 
 export function makeExtensions(cfg: EditorConfig): Extension[] {
+  const parseLinter = jsonParseLinter();
+
   return [
     lineNumbers(),
     highlightActiveLine(),
@@ -96,16 +98,17 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     history(),
     drawSelection(),
     highlightSelectionMatches(),
-    indentationMarkers({ thickness: 1, hideFirstIndent: true }),
+    indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),
     EditorState.allowMultipleSelections.of(true),
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),
-    linter(jsonParseLinter(), { delay: 300 }),
+    linter((view) =&gt; (view.state.doc.toString().trim() === '' ? [] : parseLinter(view)), { delay: 300 }),
     lintGutter(),
     syntaxHighlighting(defaultHighlightStyle),
     jsonitaJsonHighlight,
     cfg.theme === 'dark' ? jsonitaDarkTheme : jsonitaLightTheme,
     cfg.readOnly ? EditorState.readOnly.of(true) : [],
+    cfg.placeholderText ? placeholder(cfg.placeholderText) : [],
     keymap.of([
       ...defaultKeymap,
       ...historyKeymap,
@@ -251,7 +254,7 @@ export const jsonitaJsonHighlight = syntaxHighlighting(style);</code></pre>
     <h3><span class="h3-num">2.1</span>两路 lint 源</h3>
 
     <ol>
-      <li><b>CodeMirror 自带</b> <code>jsonParseLinter()</code>（来自 @codemirror/lang-json）── 300ms debounce 实时</li>
+      <li><b>CodeMirror 自带</b> <code>jsonParseLinter()</code>（来自 @codemirror/lang-json）── 300ms debounce 实时；空白 / 仅空白文档返回空 diagnostic，不显示错误红点</li>
       <li><b>Rust 后端</b> 通过 IPC 返回的 <code>JsonitaError::Parse</code>（更精确，含 line/col）</li>
     </ol>
 
@@ -532,25 +535,23 @@ function computeCopyText(meta: NodeMeta): string {
 
     <h3><span class="h3-num">5.1</span>单窗模式（F9）</h3>
 
-    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，操作 in-place 替换 input：</p>
+    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，输入编辑器成为唯一工作区。后台 debounce 只以 Format 逻辑校验 JSON 合法性并更新状态栏；当前 Tab 的实际转换由 <kbd>⌘Enter</kbd> 显式触发，成功后把结果 in-place 写回 input。</p>
 
     <pre><code>// src/shell/FloatingWindow.tsx
 const { singlePaneMode } = useSettings();
 
 return singlePaneMode
-  ? &lt;SinglePaneLayout /&gt;
-  : &lt;SplitPane left={&lt;InputPane /&gt;} right={&lt;OutputPane /&gt;} /&gt;;</code></pre>
+  ? '1fr'
+  : '1fr 1fr';</code></pre>
 
-    <pre><code>// src/shell/SinglePaneLayout.tsx
-const handleApply = async (op: Pane) =&gt; {
-  const result = await runOp(op, editor.content);     // 调 IPC
-  editor.setContent(result);                          // CodeMirror history 自动记录
-  toast.ok(`Applied. ⌘Z to undo`);
-  // 同时写历史
-  history.add({ content: result, opType: op });
-};</code></pre>
+    <p><b>关键</b>：当前没有独立 <code>SinglePaneLayout.tsx</code>；实现由 <code>FloatingWindow</code> 隐藏右栏、<code>SinglePaneHint</code> 显示右下角提示、<code>useGlobalHotkeys</code> 捕获 <kbd>⌘Enter</kbd> 并调用 <code>runPaneApply</code>。Tree 在单窗下等价 Format；AI Fix 在单窗下直接应用 fixed JSON，不展示 DiffView。</p>
 
-    <p><b>关键</b>：CodeMirror history extension 在 dispatch 修改时自动建 undo 项，<kbd>⌘Z</kbd> 回滚（包括 AI Fix 的应用）── 无需自己维护栈。</p>
+    <pre><code>// src/hooks/useGlobalHotkeys.ts (single-pane)
+if (singlePaneMode &amp;&amp; event.metaKey &amp;&amp; event.key === 'Enter') {
+  const result = await runPaneApply(content, activePane, editorError);
+  setContent(result);
+  session_save_last({ content: result, opType: paneToOpType(activePane) });
+}</code></pre>
 
     <h2><span class="h2-num">6</span>编辑器配置项 → 设置面板映射</h2>
 

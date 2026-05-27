@@ -11,4 +11,3 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 export type RestoreWindow = 'off' | 'min-1' | 'min-5' | 'min-15' | 'hour-1';
 export type ShortcutAction = 'toggle-window' | 'restore-last';
 export type InitialWidth = 'w-720' | 'w-860' | 'w-920' | 'w-1080';
-export type ShowSource = 'hotkey' | 'tray' | 'manual';

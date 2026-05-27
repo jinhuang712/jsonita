@@ -13,7 +13,7 @@ import { ShortcutInput } from './ShortcutInput';
  * 视觉锚：spec/01_mockups.html § 4 设置 Modal
  * Spec ref: spec/04 § 4.6 SettingsModal
  * M2-N1 minimal：General + AI + JSON Transform + History 4 组（Shortcuts M2-N5；About M3）；
- * 字段：launchAtLogin / hideOnBlur / autoUnwrap / aiEnabled / historyLimit / smartWidth。
+ * 字段：launchAtLogin / hideOnBlur / autoUnwrap / aiEnabled / historyLimit / smartWidth / editorSoftWrap。
  * 即时生效：onChange 立即 settings_set。
  */
 
@@ -41,8 +41,8 @@ export function SettingsModal() {
   // 监听 settings:changed event（其他窗口 patch 后同步）
   useEffect(() => {
     let unlisten: (() => void) | null = null;
-    on('settings:changed' as 'window:hidden', (payload: unknown) => {
-      setSettings(payload as Settings);
+    on('settings:changed', (payload) => {
+      setSettings(payload);
     }).then((fn) => {
       unlisten = fn;
     });
@@ -365,14 +365,6 @@ function Row({
         onChange={(e) => onChange(e.target.checked)}
       />
     </label>
-  );
-}
-
-function Placeholder({ text }: { text: string }) {
-  return (
-    <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', padding: 'var(--sp-4)' }}>
-      {text}
-    </div>
   );
 }
 

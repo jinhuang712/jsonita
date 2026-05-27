@@ -4,7 +4,7 @@
  * Spec ref: spec/13_schemas.html § 3.1-3.5
  */
 
-import type { IndentMode, OpType, QuoteStyle, ShowSource } from './enums';
+import type { IndentMode, OpType, QuoteStyle } from './enums';
 
 // § 3.1 json_ops 选项
 export interface FormatOpts {
@@ -60,12 +60,6 @@ export interface ContentMetrics {
   lineCount: number;
   bytes: number;
   softWrapOn: boolean;
-}
-
-export interface WindowShown {
-  clipboard: ClipboardSniff | null;
-  lastSession: LastSession | null;
-  source: ShowSource;
 }
 
 export interface WindowResizedPayload {

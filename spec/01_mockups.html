@@ -356,16 +356,17 @@
           </div>
           <div class="mockup-body" style="grid-template-columns: 1fr;">
             <div class="mockup-panel">
-              <div class="mockup-panel-label">In-place editor · ⌘Z 撤销</div>
+              <div class="mockup-panel-label">In-place editor · ⌘Enter applies active tab</div>
 <pre><code>{
   "name": "alice",
   "age": 30
 }</code></pre>
+              <div style="position:absolute;right:10px;bottom:34px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);font-size:11px;color:var(--text-muted);box-shadow:var(--shadow-sm);"><kbd>⌘↵</kbd> Run Format</div>
             </div>
           </div>
           <div class="mockup-statusbar">
             <span><span class="mockup-status-ok">● Valid JSON</span> · single-pane</span>
-            <span>⌘Z to undo</span>
+            <span>History ⚙</span>
           </div>
         </div>
       </div>
@@ -382,16 +383,17 @@
           </div>
           <div class="mockup-body" style="grid-template-columns: 1fr;">
             <div class="mockup-panel">
-              <div class="mockup-panel-label">In-place editor · ⌘Z 撤销</div>
+              <div class="mockup-panel-label">In-place editor · ⌘Enter applies active tab</div>
 <pre><code>{
   "name": "alice",
   "age": 30
 }</code></pre>
+              <div style="position:absolute;right:10px;bottom:34px;padding:5px 8px;border:1px solid #3F3F46;border-radius:6px;background:#232326;font-size:11px;color:#9BA3AF;box-shadow:var(--shadow-sm);"><kbd>⌘↵</kbd> Run Format</div>
             </div>
           </div>
           <div class="mockup-statusbar">
             <span><span class="mockup-status-ok">● Valid JSON</span> · single-pane</span>
-            <span>⌘Z to undo</span>
+            <span>History ⚙</span>
           </div>
         </div>
       </div>
@@ -441,10 +443,7 @@
             <span style="color: var(--text-muted); font-size: 11px; font-family: var(--font-mono);">10:42</span>
           </div>
           <div style="padding: 6px 0; background: #FBFCFE;">
-            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Open Jsonita</span><kbd>⌘⇧J</kbd></div>
-            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Restore Last</span><kbd>⌘⇧L</kbd></div>
-            <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
-            <div style="padding: 7px 14px; font-size: 12.5px;">Show History…</div>
+            <div style="padding: 7px 14px; font-size: 12.5px;">Toggle Jsonita</div>
             <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd>⌘,</kbd></div>
             <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
             <div style="padding: 7px 14px; font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd>⌘Q</kbd></div>
@@ -462,10 +461,7 @@
             <span style="color: rgba(255,255,255,0.55); font-size: 11px; font-family: var(--font-mono);">10:42</span>
           </div>
           <div style="padding: 6px 0; background: #252B35; color: #E6EAF0;">
-            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Open Jsonita</span><kbd style="background:#1F2329; border-color:#343A46; color:#E6EAF0;">⌘⇧J</kbd></div>
-            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Restore Last</span><kbd style="background:#1F2329; border-color:#343A46; color:#E6EAF0;">⌘⇧L</kbd></div>
-            <div style="border-top: 1px solid #343A46; margin: 4px 0;"></div>
-            <div style="padding: 7px 14px; font-size: 12.5px;">Show History…</div>
+            <div style="padding: 7px 14px; font-size: 12.5px;">Toggle Jsonita</div>
             <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd style="background:#1F2329; border-color:#343A46; color:#E6EAF0;">⌘,</kbd></div>
             <div style="border-top: 1px solid #343A46; margin: 4px 0;"></div>
             <div style="padding: 7px 14px; font-size: 12.5px; color: #A8B0BD; display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd style="background:#1F2329; border-color:#343A46; color:#E6EAF0;">⌘Q</kbd></div>
@@ -476,7 +472,7 @@
 
     <h2 id="4"><span class="h2-num">4</span>设置 Modal</h2>
 
-    <p>整体 W 720 × H 540（最大）。左 nav 180 + 右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset 弹二次确认。</p>
+    <p>当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset all 直接恢复默认。截图内"初始宽度 / 重置浮窗尺寸"为保留设计，当前 UI 未渲染。</p>
 
     <div class="mock-row">
       <div>
@@ -499,9 +495,9 @@
               <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>开机自启动</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>智能扩宽</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>初始宽度</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">920 ▾</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>初始宽度（reserved）</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">860</span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>主题</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">System ▾</span></div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:var(--danger);">重置浮窗尺寸</span><button style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--danger); border-radius:4px; color:var(--danger);">Reset</button></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:var(--danger);">重置浮窗尺寸（reserved）</span><button style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--danger); border-radius:4px; color:var(--danger);">Reset</button></div>
             </div>
           </div>
           <div style="padding: 8px 16px; background: var(--bg-card); border-top: 1px solid var(--border); text-align: right;">
@@ -530,9 +526,9 @@
               <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>开机自启动</span><span style="width:30px;height:17px;background:#4F74E8;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>智能扩宽</span><span style="width:30px;height:17px;background:#4F74E8;border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>初始宽度</span><span style="padding:2px 8px; background:#252B35; border:1px solid #343A46; border-radius:4px; color:#E6EAF0;">920 ▾</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>初始宽度（reserved）</span><span style="padding:2px 8px; background:#252B35; border:1px solid #343A46; border-radius:4px; color:#E6EAF0;">860</span></div>
               <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #343A46;"><span>主题</span><span style="padding:2px 8px; background:#252B35; border:1px solid #343A46; border-radius:4px; color:#E6EAF0;">System ▾</span></div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:#F27A7A;">重置浮窗尺寸</span><button style="padding:2px 8px; background:#252B35; border:1px solid #F27A7A; border-radius:4px; color:#F27A7A;">Reset</button></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color:#F27A7A;">重置浮窗尺寸（reserved）</span><button style="padding:2px 8px; background:#252B35; border:1px solid #F27A7A; border-radius:4px; color:#F27A7A;">Reset</button></div>
             </div>
           </div>
           <div style="padding: 8px 16px; background: #252B35; border-top: 1px solid #343A46; text-align: right;">
@@ -543,7 +539,9 @@
       </div>
     </div>
 
-    <h2 id="5"><span class="h2-num">5</span>历史 Modal</h2>
+    <h2 id="5"><span class="h2-num">5</span>历史 Modal（reserved / future）</h2>
+
+    <p class="callout callout-warn">当前实现没有渲染历史 Modal / HistoryItem；本节只保留未来历史 UI 视觉。</p>
 
     <p>结构：搜索框 + 筛选 chips（All / Pinned / Starred）+ ScrollArea 列表。op-type chip 配色见 <a href="04_components.html">04 § 4.5</a>。</p>
 
@@ -608,7 +606,9 @@
       </div>
     </div>
 
-    <h2 id="6"><span class="h2-num">6</span>RestoreBar</h2>
+    <h2 id="6"><span class="h2-num">6</span>RestoreBar（reserved / future）</h2>
+
+    <p class="callout callout-warn">当前实现不渲染 RestoreBar；上次会话通过 <kbd>⌘⇧L</kbd> 手动恢复。本节仅保留未来自动恢复 UI 的视觉备选，不作为当前实现契约。</p>
 
     <div class="mock-row">
       <div>
@@ -627,9 +627,11 @@
       </div>
     </div>
 
-    <p>5 秒后自动淡出，点 Discard 立即清空 + 隐藏。</p>
+    <p>未来自动恢复版本可采用：5 秒后自动淡出，点 Discard 立即清空 + 隐藏。</p>
 
-    <h2 id="7"><span class="h2-num">7</span>Toast ── 4 variant × light/dark</h2>
+    <h2 id="7"><span class="h2-num">7</span>Toast ── 4 variant × light/dark（reserved / future）</h2>
+
+    <p class="callout callout-warn">当前实现未接入 Toast / sonner；错误反馈走状态栏、AI 面板、设置项行内消息。本节只保留未来 Toast 视觉。</p>
 
     <table>
       <thead><tr><th>variant</th><th>light</th><th>dark</th></tr></thead>
@@ -884,7 +886,7 @@
 <div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[2]</span></div>
 </div>
               </div>
-              <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px;">点 📋 → 剪贴板 = <code>"alice"</code>（带引号 raw）→ Toast "Copied"</p>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px;">点 📋 → 剪贴板 = <code>"alice"</code>（带引号 raw）；复制反馈为未来 Toast 设计</p>
             </div>
           </div>
         </div>
@@ -934,7 +936,7 @@
       <thead><tr><th>章节</th><th>引用本章哪节</th></tr></thead>
       <tbody>
         <tr><td>04 组件库 · TreeView</td><td>§ 1.3 · § 12</td></tr>
-        <tr><td>04 组件库 · RestoreBar / HistoryItem / SettingsModal / DiffView</td><td>§ 6 · § 5 · § 4 · § 8</td></tr>
+        <tr><td>04 组件库 · SettingsModal / DiffView；HistoryItem 为保留设计</td><td>§ 4 · § 8；§ 5 reserved</td></tr>
         <tr><td>06 窗口 runtime · 智能宽度</td><td>§ 11</td></tr>
         <tr><td>07 菜单栏 · tray / 权限</td><td>§ 3 · § 9</td></tr>
         <tr><td>08 编辑器 & 树 · hover 复制</td><td>§ 1.3 · § 12</td></tr>

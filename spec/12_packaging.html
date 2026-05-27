@@ -25,7 +25,7 @@
     <pre><code>{
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Jsonita",
-  "version":     "0.5.0",
+  "version":     "0.3.0-m0",
   "identifier":  "com.jsonita.app",
 
   "build": {
@@ -55,7 +55,7 @@
         "visible":        false,
         "focus":          false,
         "skipTaskbar":    false,
-        "fileDropEnabled":false,
+        "dragDropEnabled":false,
         "center":         true,
         "titleBarStyle":  "Overlay",
         "hiddenTitle":    true,
@@ -63,15 +63,8 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: data: blob:; connect-src 'self' ipc: https://api.deepseek.com",
-      "capabilities": ["main-capability"]
-    },
-    "trayIcon": {
-      "iconPath":         "icons/menubar/jsonita-menubar-template-22@2x.png",
-      "iconAsTemplate":   true,
-      "menuOnLeftClick":  false,
-      "title":            null,
-      "tooltip":          "Jsonita"
+      "csp": null,
+      "capabilities": ["default"]
     }
   },
 
@@ -91,9 +84,6 @@
       "../assets/icons/light/png/icon-512.png",
       "../assets/icons/light/png/icon-1024.png"
     ],
-    "resources": [
-      "../assets/icons/menubar/**"
-    ],
     "macOS": {
       "minimumSystemVersion": "11.0",
       "frameworks": [],
@@ -108,48 +98,26 @@
         "applicationFolderPosition": { "x": 480, "y": 170 }
       }
     },
-    "windows": {
-      "certificateThumbprint": null,              /* v1.1+ */
-      "digestAlgorithm":       "sha256",
-      "timestampUrl":          "http://timestamp.digicert.com",
-      "wix":  null,
-      "nsis": { "displayLanguageSelector": false, "installMode": "currentUser" }
-    },
+    "windows": null,
     "linux": null
   },
 
   "plugins": {
-    "shell":   { "open": true },
-    "process": { "active": true },
-    "store":   { },
-    "global-shortcut":     {},
-    "clipboard-manager":   { "readText": true, "writeText": true }
+    "global-shortcut": {}
   }
 }</code></pre>
 
     <h2><span class="h2-num">2</span>capabilities</h2>
 
-    <pre><code>// src-tauri/capabilities/main-capability.json
+    <pre><code>// src-tauri/capabilities/default.json
 {
-  "$schema": "https://schema.tauri.app/capability/2",
-  "identifier": "main-capability",
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
   "description": "default permissions for main window",
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "core:window:allow-show",
-    "core:window:allow-hide",
-    "core:window:allow-set-position",
-    "core:window:allow-set-size",
-    "core:window:allow-set-focus",
-    "core:window:allow-center",
-    "core:tray:default",
-    "core:event:default",
-    "store:default",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister",
-    "clipboard-manager:allow-read-text",
-    "clipboard-manager:allow-write-text"
+    "global-shortcut:default"
   ]
 }</code></pre>
 
@@ -189,7 +157,7 @@ pnpm icons regen                     # 重新生成图标派生</code></pre>
 
     <pre><code>pnpm tauri build                     # 输出到 src-tauri/target/release/bundle/
 # 产物：
-#   src-tauri/target/release/bundle/dmg/Jsonita_0.5.0_aarch64.dmg
+#   src-tauri/target/release/bundle/dmg/Jsonita_0.3.0-m0_aarch64.dmg
 #   src-tauri/target/release/bundle/macos/Jsonita.app
 # universal binary（同时支持 Intel + Apple Silicon）：
 pnpm tauri build --target universal-apple-darwin</code></pre>
@@ -251,7 +219,7 @@ xcrun notarytool submit Jsonita.zip \
 
 # 5. 装订
 xcrun stapler staple "src-tauri/target/release/bundle/macos/Jsonita.app"
-xcrun stapler staple "src-tauri/target/release/bundle/dmg/Jsonita_0.5.0_universal.dmg"</code></pre>
+xcrun stapler staple "src-tauri/target/release/bundle/dmg/Jsonita_0.3.0-m0_universal.dmg"</code></pre>
 
     <h2><span class="h2-num">6</span>Windows 签名（v1.1+）</h2>
 

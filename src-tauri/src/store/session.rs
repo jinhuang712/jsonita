@@ -1,4 +1,4 @@
-//! last_session 表 CRUD ── M1-N7 起完整接入（RestoreTimer 等）。
+//! last_session 表 CRUD ── M1-N7 起完整接入。
 //!
 //! Spec ref: spec/10 § 5 last_session 状态机 · spec/13 § 4.2
 
