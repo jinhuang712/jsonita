@@ -27,7 +27,11 @@ export function externalErrorAsDiagnostic(
     from += lines[i].length + 1;
   }
   from += Math.max(0, err.col - 1);
-  const to = Math.min(doc.length, from + 1);
+  const lineText = lines[Math.max(0, err.line - 1)] ?? '';
+  const colIndex = Math.max(0, err.col - 1);
+  const tokenMatch = lineText.slice(colIndex).match(/^[^\s,}\]]+/);
+  const tokenLength = tokenMatch?.[0]?.length ?? 1;
+  const to = Math.min(doc.length, from + Math.max(1, tokenLength));
   return [{ from, to, severity: 'error', message: err.msg, source: 'jsonita-engine' }];
 }
 
