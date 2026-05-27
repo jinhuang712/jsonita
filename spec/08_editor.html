@@ -491,7 +491,7 @@ function computeCopyText(meta: NodeMeta): string {
 .tree-copy-icon:active { background: var(--primary); color: white; }
 </code></pre>
 
-    <p><b>键盘可达</b>：聚焦在某节点行（含 <code>tabindex="0"</code>）按 <kbd>⌘C</kbd> 等同于点 <code>📋</code>。键盘焦点环用 <code>--shadow-focus</code>。</p>
+    <p><b>键盘可达</b>：聚焦在某节点行（含 <code>tabindex="0"</code>）按 <kbd>⌘C</kbd> 等同于点 <code>📋</code>；Tree 容器内按 <kbd>⌘A</kbd> 选择 root / 整棵树，随后 <kbd>⌘C</kbd> 复制 root subtree。键盘焦点环用 <code>--shadow-focus</code>。应用 chrome 设置 <code>user-select: none</code> 并由全局 hotkey 拦截非编辑区 <kbd>⌘A</kbd>，避免 TabBar / StatusBar 被 DOM 选中。</p>
 
     <p><b>与点击 key 复制 path 的关系</b>：</p>
 

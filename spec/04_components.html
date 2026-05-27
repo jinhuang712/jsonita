@@ -256,7 +256,7 @@ interface CopyNodeInfo {
       </tbody>
     </table>
 
-    <p>交互约束：TreeView 维护唯一 <code>activeCopyKey</code>，父子节点不会同时显示 copy 按钮；复制后的 <code>copied</code> 反馈在离开当前节点、切到其他节点或离开 Tree 容器时立即清理。</p>
+    <p>交互约束：TreeView 维护唯一 <code>activeCopyKey</code>，父子节点不会同时显示 copy 按钮；复制后的 <code>copied</code> 反馈在离开当前节点、切到其他节点或离开 Tree 容器时立即清理。Tree 获焦时 <kbd>⌘A</kbd> 选择 root，随后 <kbd>⌘C</kbd> 复制整棵树；应用 chrome 通过全局 hotkey 阻止 DOM 全页选择。</p>
 
     <h3><span class="h3-num">4.10</span>DiffView</h3>
 

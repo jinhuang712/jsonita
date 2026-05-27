@@ -14,6 +14,15 @@ body {
 
 #root {
   height: 100%;
+  user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'],
+.cm-editor {
+  user-select: text;
 }
 
 * {
@@ -61,6 +70,11 @@ kbd {
 .jsonita-tree-node:focus-within,
 .jsonita-tree-node:focus {
   background: var(--primary-soft);
+}
+
+.jsonita-tree-node-selected {
+  background: var(--editor-line-active);
+  box-shadow: inset 0 0 0 1px var(--primary-edge);
 }
 
 .jsonita-tree-node:focus {
