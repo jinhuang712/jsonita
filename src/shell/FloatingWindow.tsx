@@ -77,7 +77,9 @@ export function FloatingWindow() {
             overflow: 'hidden',
           }}
         >
-          {showTreeInSinglePane ? (
+          {singlePaneMode && activePane === 'ai-fix' ? (
+            <AiFixPane />
+          ) : showTreeInSinglePane ? (
             <TreePanel state={treeState} />
           ) : (
             <Editor

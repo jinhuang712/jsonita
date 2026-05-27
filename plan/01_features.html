@@ -327,7 +327,7 @@
       <li><b>Tree</b>：切到 Tree 后主区域始终是 Tree 面板；合法 JSON 显示 <code>TreeView</code>，空白 / 非法 JSON 显示明确状态，不再静默退回编辑器</li>
       <li><b>回滚</b>：因为结果写回同一个 CodeMirror 文档，<kbd>⌘Z</kbd> 可以撤销本次应用</li>
       <li><b>历史</b>：<kbd>⌘Enter</kbd> 应用成功后覆盖 <code>last_session</code>；SQLite history 仍只在 AI Fix 接受等显式路径写入</li>
-      <li><b>AI Fix</b>：single-pane 下 <kbd>⌘Enter</kbd> 直接调用 <code>ai_fix</code> 并把 fixed JSON 写回输入区，不展示 DiffView；失败反馈在右下角 hint + 现有错误状态</li>
+      <li><b>AI Fix</b>：single-pane 下点击 AI Fix tab 直接进入 <code>AiFixPane</code> 并自动调用 <code>ai_fix</code>，展示同双栏一致的 loading / DiffView / Accept / Cancel；不再通过右下角 <kbd>⌘Enter</kbd> hint 触发</li>
     </ul>
 
     <h2 id="f10"><span class="h2-num">F10</span>浮窗智能缩放</h2>

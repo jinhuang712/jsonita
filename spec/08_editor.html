@@ -497,7 +497,7 @@ function computeCopyText(meta: NodeMeta): string {
 
     <h3><span class="h3-num">5.1</span>单窗模式（F9）</h3>
 
-    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，主区域只承载一个工作视图。后台 debounce 只以 Format 逻辑校验 JSON 合法性并更新状态栏；Format / Minify / →Str / →JSON 的实际转换由 <kbd>⌘Enter</kbd> 显式触发，成功后把结果 in-place 写回 input。Tree 是视图，合法 JSON 时直接整栏显示 <code>TreeView</code>，非法 / 空白时显示 Tree 状态面板，不显示 <kbd>⌘Enter</kbd> 提示。</p>
+    <p>单窗模式（<a href="../plan/01_features.html">plan/01 F9</a>）下取消右侧面板，主区域只承载一个工作视图。后台 debounce 只以 Format 逻辑校验 JSON 合法性并更新状态栏；Format / Minify / →Str / →JSON 的实际转换由 <kbd>⌘Enter</kbd> 显式触发，成功后把结果 in-place 写回 input。Tree 是视图，合法 JSON 时直接整栏显示 <code>TreeView</code>，非法 / 空白时显示 Tree 状态面板，不显示 <kbd>⌘Enter</kbd> 提示。AI Fix 也是独立工作视图，进入 tab 后直接渲染 <code>AiFixPane</code> 并自动请求。</p>
 
     <pre><code>// src/shell/FloatingWindow.tsx
 const { singlePaneMode } = useSettings();
@@ -506,7 +506,7 @@ return singlePaneMode
   ? '1fr'
   : '1fr 1fr';</code></pre>
 
-    <p><b>关键</b>：当前没有独立 <code>SinglePaneLayout.tsx</code>；实现由 <code>FloatingWindow</code> 隐藏右栏，并在 <code>singlePaneMode &amp;&amp; activePane === 'tree'</code> 时把左栏内容替换为 <code>TreePanel</code>。<code>TreePanel</code> 直接解析当前输入，合法时渲染 <code>TreeView</code>，非法 / 空白时渲染状态面板。<code>SinglePaneHint</code> 只在非 Tree 功能显示右下角提示；<code>useGlobalHotkeys</code> 捕获非 Tree 的 <kbd>⌘Enter</kbd> 并调用 <code>runPaneApply</code>。AI Fix 在单窗下直接应用 fixed JSON，不展示 DiffView。</p>
+    <p><b>关键</b>：当前没有独立 <code>SinglePaneLayout.tsx</code>；实现由 <code>FloatingWindow</code> 隐藏右栏，并在 <code>singlePaneMode &amp;&amp; activePane === 'tree'</code> 时把左栏内容替换为 <code>TreePanel</code>，在 <code>activePane === 'ai-fix'</code> 时替换为 <code>AiFixPane</code>。<code>TreePanel</code> 直接解析当前输入，合法时渲染 <code>TreeView</code>，非法 / 空白时渲染状态面板。<code>SinglePaneHint</code> 只在非 Tree / 非 AI Fix 功能显示右下角提示；<code>useGlobalHotkeys</code> 捕获非 Tree / 非 AI Fix 的 <kbd>⌘Enter</kbd> 并调用 <code>runPaneApply</code>。</p>
 
     <pre><code>// src/hooks/useGlobalHotkeys.ts (single-pane)
 if (singlePaneMode &amp;&amp; activePane !== 'tree' &amp;&amp; event.metaKey &amp;&amp; event.key === 'Enter') {
