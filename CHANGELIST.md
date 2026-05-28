@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### chore · 切到 1.0.0-beta.1 内测版本
+
+这不是正式 1.0 发布，而是 `.dmg` + GitHub Releases 小范围内测用的 v1 候选版本。
+
+- `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json` 版本号统一切到 `1.0.0-beta.1`。
+- Settings → About 面板显示版本同步为 `1.0.0-beta.1`。
+- `spec/12_packaging.html`、`spec/15_logging.html` 中的打包路径和日志示例同步到 beta 版本号。
+
 ### refactor · API key 存储彻底切到 Secrets 命名 + v1 内测发布路线
 
 用户确认系统凭据库体验太差，要求全部清理。此前实现已改为 `secrets.json`，但错误枚举和文档契约仍保留旧命名，容易继续误导。
