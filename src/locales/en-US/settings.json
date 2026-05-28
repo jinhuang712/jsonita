@@ -19,7 +19,13 @@
   },
   "ai": {
     "enabled": "Enable AI Fix",
-    "apiKey": "DeepSeek API Key"
+    "apiKey": "DeepSeek API Key",
+    "apiKeySavedPlaceholder": "•••••••• (saved; enter a new key to replace)",
+    "apiKeySaved": "Saved",
+    "apiKeyRemoved": "Removed",
+    "test": "Test",
+    "save": "Save",
+    "remove": "Remove"
   },
   "history": {
     "limit": "History limit"
