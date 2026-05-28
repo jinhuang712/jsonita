@@ -697,13 +697,14 @@ td code { font-size: 12px; }
   border-color: var(--primary-edge);
 }
 .mockup-settings-btn {
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--border);
+  width: 34px;
+  height: 30px;
+  border: 1px solid var(--primary-edge);
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-size: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 650;
   line-height: 1;
   font-family: var(--font-sans);
 }
