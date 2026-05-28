@@ -3,9 +3,7 @@ import { on } from '../ipc/events';
 import { formatAccelerator } from '../keyboard/accelerators';
 import { useAiStore } from '../store/ai';
 import { useUiStore } from '../store/ui';
-
-const HOLD_MS = 3600;
-const FADE_MS = 420;
+import { HINT_FADE_MS, HINT_HOLD_MS } from './hintTiming';
 
 export function ShortcutHint() {
   const activePane = useUiStore((s) => s.activePane);
@@ -32,8 +30,11 @@ export function ShortcutHint() {
     clearTimers();
     setMounted(true);
     window.requestAnimationFrame(() => setVisible(true));
-    fadeTimerRef.current = window.setTimeout(() => setVisible(false), HOLD_MS);
-    removeTimerRef.current = window.setTimeout(() => setMounted(false), HOLD_MS + FADE_MS);
+    fadeTimerRef.current = window.setTimeout(() => setVisible(false), HINT_HOLD_MS);
+    removeTimerRef.current = window.setTimeout(
+      () => setMounted(false),
+      HINT_HOLD_MS + HINT_FADE_MS,
+    );
   }, [clearTimers]);
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export function ShortcutHint() {
         lineHeight: 1.25,
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(4px)',
-        transition: `opacity ${FADE_MS}ms ease, transform ${FADE_MS}ms ease`,
+        transition: `opacity ${HINT_FADE_MS}ms ease, transform ${HINT_FADE_MS}ms ease`,
         pointerEvents: 'none',
       }}
     >
