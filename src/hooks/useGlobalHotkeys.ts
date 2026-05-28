@@ -67,6 +67,7 @@ export function useGlobalHotkeys() {
   const setActivePane = useUiStore((s) => s.setActivePane);
   const setShowAiFix = useUiStore((s) => s.setShowAiFix);
   const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
+  const setSettingsModalOpen = useUiStore((s) => s.setSettingsModalOpen);
   const setSinglePaneApplyState = useUiStore((s) => s.setSinglePaneApplyState);
   const zoomEditorFont = useUiStore((s) => s.zoomEditorFont);
   const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
@@ -129,6 +130,27 @@ export function useGlobalHotkeys() {
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [historyModalOpen, setHistoryModalOpen, settingsModalOpen]);
+
+  // ⌘, 打开 Settings。跟 macOS app menu 保持一致，编辑器聚焦时也可用。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key !== ',' ||
+        !hasPrimaryModifier(event) ||
+        event.altKey ||
+        event.shiftKey ||
+        historyModalOpen
+      ) {
+        return;
+      }
+
+      consume(event);
+      setSettingsModalOpen(true);
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [historyModalOpen, setSettingsModalOpen]);
 
   // Cmd+A 只允许编辑器 / 表单走原生全选，其他 UI chrome 绝不触发 DOM 全页选择。
   useEffect(() => {

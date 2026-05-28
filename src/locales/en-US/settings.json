@@ -42,6 +42,7 @@
       "runCurrent": "Run current action / accept AI Fix",
       "aiFixCancel": "Cancel AI Fix",
       "history": "Open / close History",
+      "settings": "Open Settings",
       "clearInput": "Clear input",
       "zoom": "Adjust font size"
     },

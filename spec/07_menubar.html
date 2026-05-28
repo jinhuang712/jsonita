@@ -309,6 +309,7 @@ fn open_accessibility_settings() {
         <tr><td>接受 AI Fix 结果</td><td><kbd>⌘Enter</kbd></td><td><code>awaiting-decision</code> 时优先拦截；替换输入、写 history、回到 Format</td></tr>
         <tr><td>取消 AI Fix 结果</td><td><kbd>Esc</kbd></td><td><code>awaiting-decision</code> / <code>error</code> 时优先拦截；reset AI store、回到 Format，不隐藏窗口</td></tr>
         <tr><td>打开 / 关闭 History</td><td><kbd>⌘Y</kbd></td><td>window keydown capture；即使编辑器聚焦也响应；Settings 打开时不拦截</td></tr>
+        <tr><td>打开 Settings</td><td><kbd>⌘,</kbd></td><td>window keydown capture；与 macOS menu accelerator 一致；History 打开时不拦截</td></tr>
         <tr><td>单窗模式应用当前功能</td><td><kbd>⌘Enter</kbd></td><td>window keydown capture；仅 <code>singlePaneMode=true</code> 时拦截并写回 input</td></tr>
         <tr><td>编辑器 / Tree 字体放大</td><td><kbd>⌘+</kbd></td><td>window keydown capture；每次 +2px，更新 UI store 字号并触发动态窗口缩放</td></tr>
         <tr><td>编辑器 / Tree 字体缩小</td><td><kbd>⌘-</kbd></td><td>window keydown capture；每次 -2px</td></tr>

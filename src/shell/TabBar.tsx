@@ -1,11 +1,13 @@
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
+import { formatAccelerator } from '../keyboard/accelerators';
 
 /**
- * 顶部 5 个功能 Tab + AI Fix（仅 parse error 时显示）。
+ * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
  *
  * 视觉锚：spec/01_mockups.html § 1.1-1.5
  * Spec ref: spec/04_components.html § 4.1 TabBar
@@ -21,12 +23,59 @@ const TABS: { id: Pane; key: string }[] = [
 
 export function TabBar() {
   const { t } = useTranslation('panes');
+  const { t: tShell } = useTranslation('shell');
   const active = useUiStore((s) => s.activePane);
   const showAiFix = useUiStore((s) => s.showAiFix);
   const setActive = useUiStore((s) => s.setActivePane);
+  const setSettingsModalOpen = useUiStore((s) => s.setSettingsModalOpen);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
   const editorStatus = useEditorStore((s) => s.status);
   const showAiFixPrompt = showAiFix && editorStatus === 'error' && !aiEnabled;
+  const tabListRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Partial<Record<Pane, HTMLButtonElement | null>>>({});
+  const [activeRect, setActiveRect] = useState<{ left: number; width: number } | null>(null);
+
+  const measureActiveTab = useCallback(() => {
+    const container = tabListRef.current;
+    const activeTab = tabRefs.current[active];
+    if (!container || !activeTab) {
+      setActiveRect(null);
+      return;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const tabRect = activeTab.getBoundingClientRect();
+    const next = {
+      left: tabRect.left - containerRect.left,
+      width: tabRect.width,
+    };
+
+    setActiveRect((prev) => {
+      if (
+        prev &&
+        Math.abs(prev.left - next.left) < 0.5 &&
+        Math.abs(prev.width - next.width) < 0.5
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, [active]);
+
+  useLayoutEffect(() => {
+    measureActiveTab();
+  }, [measureActiveTab, t, showAiFixPrompt]);
+
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => measureActiveTab());
+    if (tabListRef.current) observer.observe(tabListRef.current);
+    Object.values(tabRefs.current).forEach((tab) => {
+      if (tab) observer.observe(tab);
+    });
+    return () => observer.disconnect();
+  }, [measureActiveTab, showAiFixPrompt]);
+
   const startDragging = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
     if ((event.target as HTMLElement).closest('button')) return;
@@ -35,8 +84,6 @@ export function TabBar() {
 
   return (
     <div
-      role="tablist"
-      aria-label="Pane tabs"
       onMouseDown={startDragging}
       style={{
         display: 'flex',
@@ -46,41 +93,55 @@ export function TabBar() {
         background: 'var(--bg-card)',
         borderBottom: '1px solid var(--border)',
         cursor: 'grab',
+        position: 'relative',
         userSelect: 'none',
       }}
     >
-      {TABS.map((tab) => {
-        const isActive = active === tab.id;
-        return (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={isActive}
-            tabIndex={isActive ? 0 : -1}
-            onClick={() => setActive(tab.id)}
+      <div
+        role="tablist"
+        aria-label="Pane tabs"
+        ref={tabListRef}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          position: 'relative',
+        }}
+      >
+        {activeRect && (
+          <span
+            aria-hidden="true"
+            className="jsonita-tab-active-pill"
             style={{
-              padding: '4px 10px',
-              fontSize: 'var(--fs-sm)',
-              lineHeight: 'var(--lh-tight)',
-              fontWeight: isActive ? 600 : 400,
-              background: isActive ? 'var(--primary-soft)' : 'transparent',
-              color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-              border: 'none',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
+              width: activeRect.width,
+              transform: `translateX(${activeRect.left}px)`,
             }}
-          >
-            {t(`tab.${tab.key}` as 'tab.format')}
-          </button>
-        );
-      })}
+          />
+        )}
+        {TABS.map((tab) => {
+          const isActive = active === tab.id;
+          return (
+            <button
+              key={tab.id}
+              ref={(node) => {
+                tabRefs.current[tab.id] = node;
+              }}
+              role="tab"
+              aria-selected={isActive}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActive(tab.id)}
+              className={isActive ? 'jsonita-tab-button jsonita-tab-button-active' : 'jsonita-tab-button'}
+            >
+              {t(`tab.${tab.key}` as 'tab.format')}
+            </button>
+          );
+        })}
+      </div>
       <div style={{ flex: 1 }} />
       {showAiFixPrompt && (
         <button
-          role="tab"
-          aria-selected={active === 'ai-fix'}
           aria-disabled="true"
-          tabIndex={active === 'ai-fix' ? 0 : -1}
+          tabIndex={-1}
           onClick={() => undefined}
           title={t('tab.aiFixDisabledTooltip')}
           style={{
@@ -94,11 +155,22 @@ export function TabBar() {
             borderRadius: 'var(--radius-sm)',
             cursor: 'not-allowed',
             opacity: 0.55,
+            transition:
+              'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)',
           }}
         >
           ✨ {t('tab.aiFix')}
         </button>
       )}
+      <button
+        type="button"
+        className="jsonita-chrome-icon-button"
+        onClick={() => setSettingsModalOpen(true)}
+        aria-label={tShell('actions.openSettings')}
+        title={`${tShell('actions.openSettings')} (${formatAccelerator('CmdOrCtrl+,')})`}
+      >
+        ⚙
+      </button>
     </div>
   );
 }

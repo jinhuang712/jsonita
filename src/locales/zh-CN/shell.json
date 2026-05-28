@@ -11,6 +11,11 @@
     "line": "行",
     "col": "列"
   },
+  "actions": {
+    "history": "历史",
+    "openHistory": "打开历史",
+    "openSettings": "打开设置"
+  },
   "singlePane": {
     "run": "执行{{pane}}",
     "running": "正在执行{{pane}}…",

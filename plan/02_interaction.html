@@ -60,7 +60,7 @@
       </div>
       <div class="mockup-statusbar">
         <span><span class="mockup-status-ok">● Valid JSON</span> · 5 lines · 76 bytes</span>
-        <span>History (12) · ⚙ Settings</span>
+        <span>⌘Y History</span>
       </div>
     </div>
 
@@ -73,7 +73,7 @@
     </ul>
 
     <h3><span class="h3-num">1.1</span>Tab 切换</h3>
-    <p>顶部功能 Tab：Format / Minify / Tree / →Str / →JSON；AI Fix 仅在 parse error 且 AI 可用时出现在最右。切换靠鼠标点击，或在非编辑态按 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环；焦点在 CodeMirror / 表单输入内时不拦截 Tab。active 状态 = 冷色焦点态。</p>
+    <p>顶部功能 Tab：Format / Minify / Tree / →Str / →JSON；AI Fix 仅在 parse error 且 AI 可用时出现在最右，右上角固定设置按钮。切换靠鼠标点击，或在非编辑态按 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环；焦点在 CodeMirror / 表单输入内时不拦截 Tab。active 状态 = 冷色焦点态，并通过 180ms 胶囊位移 / 宽度过渡强化键盘切换手感。</p>
 
     <p>单窗模式下切换 Tab 只改变待执行功能，不自动改写编辑器；右下角提示当前可按 <kbd>⌘Enter</kbd> 执行 active Tab 并把结果写回输入区。</p>
 
@@ -150,7 +150,7 @@
       <div class="flow-step">
         <div class="flow-step-num">STEP 04</div>
         <div class="flow-step-title">关闭</div>
-        <div class="flow-step-desc">编辑器内第一下 <kbd>Esc</kbd> 退出 editing；非编辑态连续两次 <kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> → 隐藏浮窗；每次呼出时右下角短暂提示 Esc / 双 Esc / Tab / ⇧Tab；合法内容由实时 transform 持久化为「上次会话」</div>
+        <div class="flow-step-desc">编辑器内第一下 <kbd>Esc</kbd> 退出 editing；非编辑态连续两次 <kbd>Esc</kbd> / 失焦 / <kbd>⌘W</kbd> → 隐藏浮窗；每次呼出时右下角短暂提示 Esc / 双 Esc / Tab / ⇧Tab，不重复提示 <kbd>⌘Y</kbd> History；合法内容由实时 transform 持久化为「上次会话」</div>
       </div>
     </div>
 
