@@ -11,6 +11,11 @@
     "line": "Line",
     "col": "Col"
   },
+  "actions": {
+    "history": "History",
+    "openHistory": "Open history",
+    "openSettings": "Open settings"
+  },
   "singlePane": {
     "run": "Run {{pane}}",
     "running": "Running {{pane}}…",

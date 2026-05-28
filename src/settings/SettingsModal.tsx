@@ -225,6 +225,10 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
       keys: [formatAccelerator('CmdOrCtrl+Y')],
     },
     {
+      label: t('shortcuts.builtIn.settings'),
+      keys: [formatAccelerator('CmdOrCtrl+,')],
+    },
+    {
       label: t('shortcuts.builtIn.clearInput'),
       keys: [formatAccelerator('CmdOrCtrl+K')],
     },

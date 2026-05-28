@@ -67,7 +67,6 @@ export function ShortcutHint() {
       { keys: ['Esc'], label: 'Exit edit' },
       { keys: ['Esc', 'Esc'], label: 'Hide' },
       { keys: ['Tab', formatAccelerator('Shift+Tab')], label: 'Switch' },
-      { keys: [formatAccelerator('CmdOrCtrl+Y')], label: 'History' },
     ];
   }, [activePane, aiStatus]);
 

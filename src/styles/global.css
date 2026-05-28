@@ -40,6 +40,142 @@ kbd {
   color: var(--text);
 }
 
+.jsonita-tab-active-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-edge) 55%, transparent);
+  pointer-events: none;
+  transition:
+    transform 180ms var(--ease-out),
+    width 180ms var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+
+.jsonita-tab-button {
+  position: relative;
+  z-index: 1;
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: var(--lh-tight);
+  cursor: pointer;
+  transform: translateY(0);
+  transition:
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-tab-button:hover {
+  color: var(--text);
+}
+
+.jsonita-tab-button:active {
+  transform: translateY(1px);
+}
+
+.jsonita-tab-button-active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.jsonita-chrome-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-chrome-icon-button:hover,
+.jsonita-chrome-icon-button:focus-visible {
+  background: var(--primary-soft);
+  border-color: var(--primary-edge);
+  color: var(--primary);
+  outline: none;
+}
+
+.jsonita-chrome-icon-button:active {
+  transform: translateY(1px);
+}
+
+.jsonita-history-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 58px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.jsonita-history-button:hover,
+.jsonita-history-button:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.jsonita-history-shortcut {
+  display: inline-flex;
+  align-items: center;
+  max-width: 0;
+  padding: 0;
+  border: 0 solid transparent;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateX(4px);
+  white-space: nowrap;
+  transition:
+    max-width 180ms var(--ease-out),
+    padding 180ms var(--ease-out),
+    border-width 180ms var(--ease-out),
+    opacity 150ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    margin-right 180ms var(--ease-out);
+}
+
+.jsonita-history-button-hint-visible .jsonita-history-shortcut {
+  max-width: 38px;
+  padding: 0 4px;
+  border-width: 1px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.jsonita-history-shortcut {
+  border-color: var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: calc(var(--fs-xs) - 1px);
+  line-height: 1.35;
+}
+
 .jsonita-tree-container {
   height: 100%;
   overflow: auto;

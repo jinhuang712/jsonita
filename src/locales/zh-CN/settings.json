@@ -42,6 +42,7 @@
       "runCurrent": "执行当前功能 / 接受 AI Fix",
       "aiFixCancel": "取消 AI Fix",
       "history": "打开 / 关闭历史",
+      "settings": "打开设置",
       "clearInput": "清空输入",
       "zoom": "调整字体大小"
     },
