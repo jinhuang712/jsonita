@@ -49,7 +49,7 @@
       <tbody>
         <tr><td><b>SQLite</b></td><td>历史记录 + last_session</td><td>需要 FTS5 全文搜索 / pinned-starred 索引 / 事务原子性</td><td><code>~/Library/Application Support/Jsonita/history.db</code></td></tr>
         <tr><td><b>JSON 文件 Store</b></td><td>设置项 · window.json 尺寸记忆</td><td>纯 KV 配置 + 启动一次加载 ── 不值得开 SQLite 连接池；当前用自写 <code>SettingsStore</code> / <code>WindowStore</code> 读写 JSON</td><td><code>~/Library/Application Support/Jsonita/{settings,window}.json</code></td></tr>
-        <tr><td><b>secrets.json</b></td><td>DeepSeek API key</td><td>无 keychain 弹窗、无 codesign 依赖、dev rebuild 不丢；<code>chmod 600</code> 限制只本人可读</td><td><code>~/Library/Application Support/Jsonita/secrets.json</code></td></tr>
+        <tr><td><b>secrets.json</b></td><td>DeepSeek API key</td><td>无系统凭据弹窗、无 codesign 身份依赖、dev rebuild 不丢；<code>chmod 600</code> 限制只本人可读</td><td><code>~/Library/Application Support/Jsonita/secrets.json</code></td></tr>
         <tr><td><b>本地日志文件</b></td><td>error / warn / info 级别日志</td><td>调试反馈用；不放 SQLite 是因为日志写入频繁 + 不需要查询</td><td><code>~/Library/Logs/Jsonita/jsonita.YYYY-MM-DD.log</code>（按天滚动，保留 7 天）</td></tr>
       </tbody>
     </table>
@@ -226,7 +226,7 @@ stateDiagram-v2
       <li><b>"不存在" 不是错误</b>：<code>get</code> 返回 <code>Result&lt;Option&lt;String&gt;&gt;</code>，文件不存在 / key 不存在都映射为 <code>Ok(None)</code> ── 让首次启动正常走"AI 未配置"路径</li>
       <li><b>删除幂等</b>：<code>delete</code> 不存在的 entry 也返回 <code>Ok(())</code></li>
       <li><b>权限 chmod 600</b>：写文件后立刻 <code>set_permissions</code>，限制只本进程拥有者可读</li>
-      <li><b>不选 Keychain 的理由</b>：每次 codesign 身份变（dev rebuild / app 更新）系统都弹"jsonita wants to use confidential information" 密码框；对个人本地工具体验过差。安全权衡见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a></li>
+      <li><b>不依赖系统凭据库</b>：API key 文件随 Jsonita 数据目录一并备份 / 删除，不受 dev rebuild、签名身份或应用更新影响；安全边界由用户家目录权限 + <code>chmod 600</code> 承担</li>
     </ul>
 
     <h3><span class="h3-num">6.2</span>Account 清单（见 <a href="13_schemas.html">13 § 6</a>）</h3>
@@ -246,7 +246,7 @@ pub fn set(account: &amp;str, value: &amp;str)   -&gt; Result&lt;(), JsonitaErro
 pub fn get(account: &amp;str)                 -&gt; Result&lt;Option&lt;String&gt;, JsonitaError&gt;;
 pub fn delete(account: &amp;str)              -&gt; Result&lt;(), JsonitaError&gt;;   // 幂等</code></pre>
 
-    <p>内部用 <code>OnceLock&lt;Mutex&lt;HashMap&gt;&gt;</code> 缓存避免反复读盘；fs IO 错误（write / chmod）映射为 <code>JsonitaError::Keychain</code>（命名遗留，含义是"secrets 存取错"）。</p>
+    <p>内部用 <code>OnceLock&lt;Mutex&lt;HashMap&gt;&gt;</code> 缓存避免反复读盘；fs IO 错误（write / chmod）映射为 <code>JsonitaError::Secrets</code>。</p>
 
     <h2><span class="h2-num">7</span>settings store</h2>
 

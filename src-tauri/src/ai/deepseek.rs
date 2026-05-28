@@ -1,7 +1,7 @@
 //! DeepSeek HTTP 客户端 ── spec/11 § 3 流程 / § 5 默认参数。
 //!
 //! M2-N3 minimal：fix() 主流程 + 状态码分支 + extract+二次验证；
-//! 心跳进度推送 / 重试 / 复杂错误透传留 M2-N4 polish。
+//! 心跳进度推送 / 重试 / 复杂错误透传留 polish。
 
 use std::error::Error as StdError;
 use std::time::Duration;
@@ -105,7 +105,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         return Err(JsonitaError::AiDisabled);
     }
     let key = secrets::get(DEEPSEEK_ACCOUNT)?
-        .ok_or_else(|| JsonitaError::Keychain("no api key".into()))?;
+        .ok_or_else(|| JsonitaError::Secrets("no api key".into()))?;
 
     let started = std::time::Instant::now();
 
@@ -211,7 +211,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
     })
 }
 
-/// settings.ai_enabled 提前检查 + Keychain 提前检查（避免无 key 时白白发包）。
+/// settings.ai_enabled 提前检查 + secrets 提前检查（避免无 key 时白白发包）。
 pub async fn fix_via_store(
     store: &SettingsStore,
     req: AiFixReq,

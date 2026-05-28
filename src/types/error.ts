@@ -9,7 +9,7 @@ export type JsonitaError =
   | { kind: 'Parse'; data: { line: number; col: number; msg: string } }
   | { kind: 'UnwrapTimeout'; data: { ms: number; depth: number } }
   | { kind: 'Sqlite'; data: string }
-  | { kind: 'Keychain'; data: string }
+  | { kind: 'Secrets'; data: string }
   | { kind: 'Http'; data: { status: number; body: string } }
   | { kind: 'AiInvalidJson'; data: { raw: string } }
   | { kind: 'RateLimit'; data: { retryAfterSec: number } }

@@ -1,4 +1,4 @@
-//! AI 分组 ── DeepSeek HTTP + 本地 secrets.json 存 key（之前的 Keychain 已替）。
+//! AI 分组 ── DeepSeek HTTP + 本地 secrets.json 存 key。
 //!
 //! Spec ref: spec/02 § 2.5 · spec/11 AI 客户端
 

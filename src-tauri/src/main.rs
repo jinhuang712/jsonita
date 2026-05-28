@@ -65,7 +65,7 @@ fn main() {
             cmds::settings::settings_get_all,
             cmds::settings::settings_set,
             cmds::settings::settings_reset,
-            // M2-N2: ai api key (Keychain) + test connection (mock until M2-N3)
+            // AI API key lives in secrets.json; test connection validates without saving.
             cmds::ai::ai_set_api_key,
             cmds::ai::ai_delete_api_key,
             cmds::ai::ai_test_connection,

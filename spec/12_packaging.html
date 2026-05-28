@@ -196,6 +196,8 @@ pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis</code></pre>
 
     <h2><span class="h2-num">5</span>macOS 签名 + notarization</h2>
 
+    <p>当前发布节奏：v1 先用 <code>.dmg</code> + GitHub Releases 做小范围内测；内测包可先未签名或使用本机签名环境构建。扩大测试范围或公开发布前，再补 Developer ID 签名与 notarization，避免 Gatekeeper 警告。</p>
+
     <h3><span class="h3-num">5.1</span>前置</h3>
 
     <ul>
