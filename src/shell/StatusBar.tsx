@@ -4,8 +4,7 @@ import { formatAccelerator } from '../keyboard/accelerators';
 import { on } from '../ipc/events';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
-
-const HISTORY_HINT_HOLD_MS = 2600;
+import { HINT_HOLD_MS } from './hintTiming';
 
 /**
  * 底部状态栏 — 4 态文案（valid / error / empty / large）+ 右侧 History 入口。
@@ -31,7 +30,7 @@ export function StatusBar() {
       historyHintTimerRef.current = window.setTimeout(() => {
         setHistoryHintVisible(false);
         historyHintTimerRef.current = null;
-      }, HISTORY_HINT_HOLD_MS);
+      }, HINT_HOLD_MS);
     };
 
     let unlisten: (() => void) | undefined;

@@ -138,7 +138,7 @@ interface TabBarProps {
       </tbody>
     </table>
 
-    <p>右侧固定 History 按钮，点击或 <kbd>⌘Y</kbd> 打开历史。History 左侧的 <kbd>⌘Y</kbd> badge 在浮窗刚显示时短暂露出，随后淡出 / 收起；hover 或键盘 focus History 时再次展开，使用 150-180ms opacity / translate / width 过渡。设置入口不再放在状态栏，改由 TabBar 右上角按钮与 <kbd>⌘,</kbd> 承担。StatusBar 使用浮窗缩放域中的 <code>--fs-xs</code>，随编辑器字号轻微缩放并封顶，保持单行高度紧凑。</p>
+    <p>右侧固定 History 按钮，点击或 <kbd>⌘Y</kbd> 打开历史。History 左侧的 <kbd>⌘Y</kbd> badge 与 temporary keymap hint 使用同一组 hold / fade timing：浮窗刚显示时短暂露出，随后与右下角 <kbd>Tab</kbd> / <kbd>⇧Tab</kbd> hint 同步淡出 / 收起；hover 或键盘 focus History 时再次展开。设置入口不再放在状态栏，改由 TabBar 右上角按钮与 <kbd>⌘,</kbd> 承担。StatusBar 使用浮窗缩放域中的 <code>--fs-xs</code>，随编辑器字号轻微缩放并封顶，保持单行高度紧凑。</p>
 
     <h3><span class="h3-num">4.2.1</span>SinglePaneHint</h3>
 
