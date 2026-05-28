@@ -49,7 +49,7 @@ export function AiFixPane() {
             setError(`Rate limited · retry in ${e.data.retryAfterSec}s`);
           } else if (e.kind === 'Http') {
             setError(`HTTP ${e.data.status}: ${e.data.body.slice(0, 120)}`);
-          } else if (e.kind === 'Keychain') {
+          } else if (e.kind === 'Secrets') {
             setError(`No API key configured (Settings → AI)`);
           } else if (e.kind === 'AiInvalidJson') {
             setError(`AI returned invalid JSON`);

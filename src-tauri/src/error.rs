@@ -19,8 +19,8 @@ pub enum JsonitaError {
     #[error("SQLite: {0}")]
     Sqlite(String),
 
-    #[error("Keychain: {0}")]
-    Keychain(String),
+    #[error("Secrets: {0}")]
+    Secrets(String),
 
     #[error("HTTP {status}: {body}")]
     Http { status: u16, body: String },
@@ -39,7 +39,7 @@ pub enum JsonitaError {
     AiDisabled,
 }
 
-// 常用 From impls；其他 (rusqlite / reqwest / keyring) 在引入对应 crate 时加。
+// 常用 From impls；其他 (rusqlite / reqwest) 在引入对应 crate 时加。
 impl From<std::io::Error> for JsonitaError {
     fn from(e: std::io::Error) -> Self {
         JsonitaError::Io(e.to_string())

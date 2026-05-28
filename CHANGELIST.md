@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+### refactor · API key 存储彻底切到 Secrets 命名 + v1 内测发布路线
+
+用户确认系统凭据库体验太差，要求全部清理。此前实现已改为 `secrets.json`，但错误枚举和文档契约仍保留旧命名，容易继续误导。
+
+- 旧凭据错误枚举 → `JsonitaError::Secrets`，同步 TS union 与 `AiFixPane` 错误分支；API key 缺失现在通过 `Secrets("no api key")` 表达。
+- `store/secrets.rs` 写入 / chmod / 序列化错误统一映射为 `JsonitaError::Secrets`，不再借用 `Io` 或旧命名。
+- `spec/02_ipc.html`、`spec/10_storage.html`、`spec/11_ai_client.html`、`spec/13_schemas.html`、`plan/00_overview.html`、`plan/03_tech_stack.html` 同步：API key 方案只叫 `secrets.json` / `Secrets`；隐私约束从“不存明文”改成“不外泄”（本地 `secrets.json` + chmod 600，不进 settings / 日志 / event payload）。
+- `README.md` / `plan/04_nfr.html` / `spec/12_packaging.html` 同步发布策略：v1 先用 `.dmg` + GitHub Releases 做小范围内测；Homebrew / updater / Windows 正式分发后置到 v1.1+。签名公证仍是扩大分发前要补的发布门槛。
+- 保留 `spec/12_packaging.html` 中 macOS 证书导入相关系统命令；那是 codesign/notarization 环境，不是 Jsonita API key 存储。
+- 验证时发现 `engine::unwrap` 的 `maxDepth=1` 没有按 spec 解开第一层；顺手修正边界为 `depth > max_depth`，并补断言确认第二层仍保留。
+
 ### fix · 输入中的 invalid JSON 不再打断编辑器
 
 用户反馈：每输入一个字符就检测到 invalid JSON，随后编辑器像被拦截一样无法连续输入。根因不是键盘被拦截，而是 <code>Editor.tsx</code> 把 <code>cfg.error</code> 放进 CodeMirror 初始化 effect 依赖；debounce parse 每次更新错误位置都会销毁并重建 EditorView，导致焦点 / 光标 / 输入法上下文被打断。
@@ -43,42 +54,42 @@
 
 验证：本地模拟 <kbd>⌘=</kbd> 后，编辑器 / 行号从 13px → 15px，TabBar 从 12.5px → 12.94px；`pnpm build` 通过（仅保留 Vite bundle size warning）。
 
-### fix · Keychain 切换的多处遗漏 + Single-pane mode 真接 + About 占位 + Test mock + spec/plan 大扫
+### fix · secrets.json 切换的多处遗漏 + Single-pane mode 真接 + About 占位 + Test mock + spec/plan 大扫
 
 用户连发 4 张截图反馈：
 
-1. **ApiKeyInput placeholder 还说"已存 Keychain"** ── 后端切了 UI 没跟着改，撒谎。改：placeholder "已存 Keychain，可输入新 key 覆盖" → "已保存，可输入新 key 覆盖"；2 条 toast "Saved to Keychain" / "Removed from Keychain" 去掉后缀；JSDoc + commands.ts 注释也清
+1. **ApiKeyInput placeholder 还在说旧凭据方案** ── 后端切了 UI 没跟着改，撒谎。改：placeholder "已存凭据，可输入新 key 覆盖" → "已保存，可输入新 key 覆盖"；2 条 toast 去掉旧方案后缀；JSDoc + commands.ts 注释也清
 2. **Settings → AI Test 按钮还在 mock**（"OK · (M2-N2 mock — M2-N3 starts real HTTP)"）── M2-N3 漏改。改 `cmds/ai.rs ai_test_connection`：实打 `POST chat/completions` max_tokens=1，返 ok + 真实 latency + 服务端 echo model 名；err 走 err_chain 展开 source
 3. **About 面板只显示"M3-N6"占位** ── 我自己留的字符串泄漏 UI。改：版本 + License + 数据/日志路径 + 作者
 4. **Single-pane mode 永远没接** ── settings 字段是死字段。`FloatingWindow.tsx` grid 改 `singlePaneMode ? '1fr' : '1fr 1fr'`，true 时只渲染左 input editor（右栏隐藏）
-5. **spec/ + plan/ 散落旧 Keychain 描述** ── 用户怒命令"每次改动必须再重新审查一遍 spec+plan，写进 CLAUDE.md"。完成扫描：
-   - `plan/03_tech_stack.html` § 2.4 密钥存储行 + § 2.5 整段（重写为"为什么 secrets.json 而不是 Keychain"）+ Crate 列表删 `keyring`
+5. **spec/ + plan/ 散落旧凭据方案描述** ── 用户怒命令"每次改动必须再重新审查一遍 spec+plan，写进 CLAUDE.md"。完成扫描：
+   - `plan/03_tech_stack.html` § 2.4 密钥存储行 + § 2.5 整段（重写为"为什么 secrets.json"）+ Crate 列表删旧凭据依赖
    - `plan/04_nfr.html` 隐私段 3 处 + 卸载脚本描述
-   - `spec/00_architecture.html` 8 处描述 + mermaid 节点 `KC[Keychain]` → `KC[secrets.json]` / `E4[Keychain]` → `E4[secrets.json]` + 各 system 层 label
+   - `spec/00_architecture.html` 8 处描述 + mermaid 节点改成 `secrets.json` + 各 system 层 label
    - `spec/02_ipc.html` 唯一通道描述 + ai 分组表 + sequence 图 + 错误矩阵
    - `spec/04_components.html` ApiKeyInputProps 注释
-   - `spec/10_storage.html` § 6 整段重写 "Keychain 封装" → "secrets store"，含设计要点 / Account 清单 / 接口签名 / 性能数字
+   - `spec/10_storage.html` § 6 整段重写为 "secrets store"，含设计要点 / Account 清单 / 接口签名 / 性能数字
    - `spec/11_ai_client.html` 5 处文字 + 代码示例
-   - `spec/13_schemas.html` § 6 整段 "Keychain entry" → "secrets.json schema"（含 JSON 示例）+ JsonitaError 表 + Rust enum + TS 镜像
-   - `spec/15_logging.html` ERROR 示例 + `keychain.denied` event → `secrets.io_error`
-   - `JsonitaError::Keychain` 变体名<b>不动</b>（不破坏 M2-N2 commit），所有引用处加注释"命名遗留 = secrets 存取错"
+   - `spec/13_schemas.html` § 6 整段改为 "secrets.json schema"（含 JSON 示例）+ JsonitaError 表 + Rust enum + TS 镜像
+   - `spec/15_logging.html` ERROR 示例 + 旧凭据错误 event → `secrets.io_error`
+   - 当时错误变体名暂时不动（不破坏 M2-N2 commit），所有引用处加注释"命名遗留 = secrets 存取错"
 6. **CLAUDE.md 加 § 5.4** "源码/UI 改了某个概念后必扫 spec/ + plan/" ── 永远防再犯
 
 涉及 18 个文件 / ~250 行净改动。
 
-### refactor · Keychain → 本地 secrets.json（用户反馈"太麻烦"）
+### refactor · 系统凭据库 → 本地 secrets.json（用户反馈"太麻烦"）
 
-每次 dev rebuild macOS 都把 binary 当新身份，弹"jsonita wants to use confidential information in com.jsonita.app keychain"密码框。生产环境签了名也会首次弹一次。用户反馈"太麻烦，删了改本地保存"。换法：
+每次 dev rebuild macOS 都把 binary 当新身份并弹系统授权框。生产环境签了名也会首次弹一次。用户反馈"太麻烦，删了改本地保存"。换法：
 
 - 新建 `src-tauri/src/store/secrets.rs` ── file-backed { account → value }，路径 `~/Library/Application Support/Jsonita/secrets.json`，进程内 `OnceLock<Mutex<HashMap>>` 缓存，写文件 chmod 600
-- 删 `src-tauri/src/store/keychain.rs`
-- `store/mod.rs` `pub mod keychain` → `pub mod secrets`
-- `cmds/ai.rs` + `ai/deepseek.rs` ── 5 处 `keychain::` 调用 → `secrets::`，API 完全等价
-- `Cargo.toml` ── 删 `security-framework = "3"` 依赖
+- 删除旧系统凭据 store 文件
+- `store/mod.rs` 旧模块 → `pub mod secrets`
+- `cmds/ai.rs` + `ai/deepseek.rs` ── 5 处旧 store 调用 → `secrets::`，API 完全等价
+- `Cargo.toml` ── 删旧系统凭据依赖
 - `README.md` 卸载 ── 删 `security delete-generic-password` 行（前面 `rm -rf ~/Library/Application Support/Jsonita` 已经把 secrets.json 一起带走）
-- 错误 variant `JsonitaError::Keychain` 名字保留不动（少改动；意义上是"secrets 存取出错"）
+- 错误 variant 名字当时保留不动（少改动；意义上是"secrets 存取出错"）
 
-安全权衡：相比 Keychain 失去 OS 加密；换来**无弹窗、无 codesign 依赖、dev rebuild 不丢 key**。对个人本地工具足够（数据目录已 per-user 隔离 0700）。
+安全权衡：相比系统凭据库失去 OS 加密；换来**无弹窗、无 codesign 依赖、dev rebuild 不丢 key**。对个人本地工具足够（数据目录已 per-user 隔离 0700）。
 
 7 文件 / +75 / -65 行。
 
@@ -86,7 +97,7 @@
 
 用户多轮反馈：
 
-1. **Model ID 输入框不需要** ── DeepSeek 现在主推 v4 系列，UI 让用户填 model 名字反而误导。删 Settings → AI 的 Model ID 文本输入；字段仍在 Settings struct 里（ApiKeyInput 拿它做 keychain account name），只是 UI 不展示
+1. **Model ID 输入框不需要** ── DeepSeek 现在主推 v4 系列，UI 让用户填 model 名字反而误导。删 Settings → AI 的 Model ID 文本输入；字段仍在 Settings struct 里，只是 UI 不展示
 2. **`× Io` 是啥意思** ── AI 关时点 AI Fix，UI 只显示 enum 变体名 `Io`（因为 `setError(e.kind)` 把 data 吃掉了）。
    - Rust: 加 `JsonitaError::AiDisabled` 专用 variant；`deepseek.rs` 用它替换之前误用的 `Io("ai disabled")`
    - UI: AiFixPane 给 `AiDisabled` 友好文案"AI Fix is disabled. Enable it in Settings → AI."；`Io` / `Sqlite` fallback 也至少显示 `kind: data` 不再裸 enum 名
@@ -151,7 +162,7 @@
 
 #### M3-N6 · README 重写（done · agent-side；screenshot/GIF + release 留用户）
 
-- `README.md` 全文重写：1 段 tagline + 9 行功能表 + 系统需求 + 安装（brew/dmg/源码 3 渠道） + 基本使用 7 步 + 文档链接表 + 当前进度表（5 Phase × 节点） + 卸载脚本（4 行清 app + 数据 + 日志 + Keychain） + MIT License
+- `README.md` 全文重写：1 段 tagline + 9 行功能表 + 系统需求 + 安装（brew/dmg/源码 3 渠道） + 基本使用 7 步 + 文档链接表 + 当前进度表（5 Phase × 节点） + 卸载脚本（清 app + 数据 + 日志） + MIT License
 - `progress/manifest.json` M3-N3 + M3-N6 status: completed
 - `progress/04_m3_polish_cross.html` M3-N6 status: done · agent-side
 
@@ -235,7 +246,7 @@ CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）�
 - `src/store/ai.ts` ── 4 态 zustand：idle / requesting / awaiting-decision / error；before/after/error 字段 + startFix/setSuccess/setError/reset
 - `src/panes/diff.ts` ── computeDiff 走 `diffLines` 行级（spec/11 § 8.2）；输出 `{type: 'eq'|'add'|'del', text}[]`
 - `src/panes/DiffView.tsx` ── unified diff 渲染：add 绿底 `+` / del 红底 `-` / eq 透明（spec/01 § 8 视觉）
-- `src/panes/AiFixPane.tsx` ── orchestrator：mount 时 status===idle → 调 ai.fix（crypto.randomUUID + editor.error 注入）→ setSuccess / setError；DiffView + Accept (替换 editor + history.add op_type='ai-fix' + 切回 format tab) / Reject (reset + 切回)；错误分支文案分类（RateLimit / Http / Keychain / AiInvalidJson）
+- `src/panes/AiFixPane.tsx` ── orchestrator：mount 时 status===idle → 调 ai.fix（crypto.randomUUID + editor.error 注入）→ setSuccess / setError；DiffView + Accept (替换 editor + history.add op_type='ai-fix' + 切回 format tab) / Reject (reset + 切回)；错误分支文案分类（RateLimit / Http / Secrets / AiInvalidJson）
 - `src/shell/FloatingWindow.tsx` ── 右侧条件：activePane==='ai-fix' 渲染 AiFixPane（之前是 Editor / Tree 路由）
 - `src/ipc/commands.ts` ── `ai.fix(req)` + `history.add(content, opType)` 两个 IPC wrapper；AiFixReq + AiFixResp TS 类型
 - `src-tauri/src/cmds/history.rs` ── `history_add` IPC 命令（State&lt;Db&gt; + State&lt;SettingsStore&gt; → spawn_blocking + h::add）；spec/02 § 6.1.2 扩展（spec 待追认）
@@ -244,7 +255,7 @@ CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）�
 关键决策：
 - **AiFixPane mount 自动触发 fix**：用户切到 AI Fix tab 即开始；无显式"Fix" 按钮（spec/01 § 8 mockup 直接展示 DiffView）
 - **crypto.randomUUID() 前端生成 requestId**：spec/11 § 5.2 幂等
-- **错误文案前端 fallback 映射 4 类**：RateLimit/Http/Keychain/AiInvalidJson；其他 kind 透传
+- **错误文案前端 fallback 映射 4 类**：RateLimit/Http/Secrets/AiInvalidJson；其他 kind 透传
 - **Accept 写 history(op_type='ai-fix')**：UPSERT 走 content_hash UNIQUE 自动去重；Reject 不写
 - **行级 diff 而非字符级**：spec/11 § 8.2 v1 简化；M3-N1 polish 不引 Monaco-diff
 
@@ -255,7 +266,7 @@ CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）�
 - `src-tauri/Cargo.toml` ── reqwest 0.12 [json + rustls-tls, default-features=false] + uuid 1 [v4] + tokio 1 [time, macros]
 - `src-tauri/src/ai/prompt.rs` ── system_prompt 5 条规则 (spec/11 § 4.2) + user_prompt 含 hint 注入；3 inline test
 - `src-tauri/src/ai/validate.rs` ── extract_json 3-case fallback (pure JSON / markdown fenced / 文本夹缝)；5 inline test
-- `src-tauri/src/ai/deepseek.rs` ── fix() 主流程：检查 ai_enabled → Keychain.get → reqwest POST 60s timeout → 状态码 429/5xx/200 分支 → choices[0].content → extract → serde from_str 二次验证 → AiFixResp。temperature=0 + response_format=json_object 双保险；max_tokens=clamp(input/3×2, 512, 8192)
+- `src-tauri/src/ai/deepseek.rs` ── fix() 主流程：检查 ai_enabled → secrets.get → reqwest POST 60s timeout → 状态码 429/5xx/200 分支 → choices[0].content → extract → serde from_str 二次验证 → AiFixResp。temperature=0 + response_format=json_object 双保险；max_tokens=clamp(input/3×2, 512, 8192)
 - `src-tauri/src/cmds/ai.rs` ── ai_fix 命令真实化（接 SettingsStore State）
 - `src-tauri/src/main.rs` ── mod ai + 注册 ai_fix 命令
 
@@ -265,21 +276,20 @@ CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）�
 
 待用户验证：粘真实 sk- key + ai_enabled=true + DevTools 调 ai_fix → 应回修复 JSON。
 
-#### M2-N2 · API key Keychain（done · pending-user-verification）
+#### M2-N2 · API key secrets.json（done · pending-user-verification）
 
-- `src-tauri/Cargo.toml` ── macOS target 加 `security-framework = "3"`
-- `src-tauri/src/store/keychain.rs` ── set / get(NoEntry → None) / delete(幂等) 3 方法；service=`com.jsonita.app`；macOS 走 security_framework::passwords，其他平台 stub
-- `src-tauri/src/cmds/ai.rs` ── 4 命令：ai_set_api_key (Keychain) / ai_delete_api_key (幂等) / ai_test_connection (M2-N2 mock 验 sk- 前缀；M2-N3 起接 reqwest GET /v1/models) / ai_has_api_key (前端初始化查询)
+- `src-tauri/src/store/secrets.rs` ── set / get(None when missing) / delete(幂等) 3 方法；路径 `~/Library/Application Support/Jsonita/secrets.json`；写入后 chmod 600
+- `src-tauri/src/cmds/ai.rs` ── 4 命令：ai_set_api_key / ai_delete_api_key (幂等) / ai_test_connection / ai_has_api_key (前端初始化查询)
 - `src-tauri/src/cmds/mod.rs` ── re-export ai 模块
 - `src-tauri/src/main.rs` ── 注册 4 个 ai 命令
-- `src/settings/ApiKeyInput.tsx` ── input 不显示 raw key（type="password"）+ Test/Save/Remove 按钮 + ok/err msg；key 直接传 test 不先存 Keychain（避免污染）
+- `src/settings/ApiKeyInput.tsx` ── input 不显示 raw key（type="password"）+ Test/Save/Remove 按钮 + ok/err msg；key 直接传 test 不先存 secrets.json（避免污染）
 - `src/settings/SettingsModal.tsx` ── AI 分组接 ApiKeyInput（modelId 由 SettingsModal 传入）
 - `src/ipc/commands.ts` ── ai namespace 4 命令封装
 
 关键决策：
-- **不存 settings.json**：spec/10 § 6 I-4 凭证隔离；key 仅在 Keychain
-- **test 用 input 现值而非 Keychain 已存值**：spec/11 § 9，避免"测试失败时已存 key 被覆盖"
-- **service id `com.jsonita.app` 锁定**：与 tauri.conf identifier 一致；卸载时 `security delete-generic-password -s com.jsonita.app -a deepseek_api_key` 一行清
+- **不存 settings.json**：spec/10 § 6 I-4 凭证隔离；key 仅在 secrets.json
+- **test 用 input 现值而非已存值**：spec/11 § 9，避免"测试失败时已存 key 被覆盖"
+- **卸载清理简单**：删除 `~/Library/Application Support/Jsonita` 即同时清理 history / settings / secrets
 
 #### M2-N1 · 设置面板（done · minimal · pending-user-verification）
 
@@ -489,7 +499,7 @@ minimal 范围：完整 RestoreTimer 5min 窗口期 + window:shown 主动 restor
 
 Rust 端（8 个新文件）：
 
-- `src-tauri/src/error.rs` ── `JsonitaError` 8 变体（Parse / UnwrapTimeout / Sqlite / Keychain / Http / AiInvalidJson / RateLimit / Io），`#[serde(tag="kind", content="data")]` 跨 IPC 序列化；From&lt;std::io::Error&gt; + From&lt;tauri::Error&gt;（其他 crate-specific From 在引入时加）；spec/13 § 1.1 对齐
+- `src-tauri/src/error.rs` ── `JsonitaError` 8 变体（Parse / UnwrapTimeout / Sqlite / Secrets / Http / AiInvalidJson / RateLimit / Io），`#[serde(tag="kind", content="data")]` 跨 IPC 序列化；From&lt;std::io::Error&gt; + From&lt;tauri::Error&gt;（其他 crate-specific From 在引入时加）；spec/13 § 1.1 对齐
 - `src-tauri/src/types.rs` ── 8 enum（IndentMode / QuoteStyle / OpType / ThemeMode / RestoreWindow / ShortcutAction / InitialWidth / ShowSource，全 `rename_all="kebab-case"`）+ 11 个 IPC payload struct（FormatOpts / UnwrapOpts / StringifyOpts / HistoryRow / ListOpts / LastSession / WindowShown / ClipboardSniff / ContentMetrics / WindowResizedPayload + 各 default helper），全 `rename_all="camelCase"`；spec/13 § 2-3 对齐
 - `src-tauri/src/cmds/mod.rs` ── re-exports
 - `src-tauri/src/cmds/json.rs` ── 4 stubs（json_format / json_minify / json_unwrap_stringified / json_stringify）返回 input unchanged 作 mock；M1-N2 起接 engine::*
@@ -758,10 +768,10 @@ TS 端（8 个新文件）：
 
 新增文件：
 
-- `src-tauri/Cargo.toml` ── Tauri 2.x · `tauri` / `tauri-build` v2 · `serde` / `serde_json` v1（scaffold 默认依赖，<b>未引</b> M1+ 业务依赖如 rusqlite / reqwest / security-framework / CodeMirror）；`profile.release` 锁定 `lto=true` + `codegen-units=1` + `opt-level="s"` + `strip=true`（对齐 plan/04 NFR § 6 dmg &lt; 15 MB 红线）
+- `src-tauri/Cargo.toml` ── Tauri 2.x · `tauri` / `tauri-build` v2 · `serde` / `serde_json` v1（scaffold 默认依赖，<b>未引</b> M1+ 业务依赖如 rusqlite / reqwest / CodeMirror）；`profile.release` 锁定 `lto=true` + `codegen-units=1` + `opt-level="s"` + `strip=true`（对齐 plan/04 NFR § 6 dmg &lt; 15 MB 红线）
 - `src-tauri/build.rs` ── 调 `tauri_build::build()`，Tauri 2.x 必需
 - `src-tauri/src/main.rs` ── 最小 builder：`tauri::Builder::default().run(generate_context!())`；不含菜单栏 / 窗口 / 快捷键 / 日志等（属 M0-N2…N5）
-- `src-tauri/tauri.conf.json` ── 关键字段锁死：`identifier=com.jsonita.app`（<b>发版后不可改</b>，影响 Keychain service id）/ `productName=Jsonita` / `version=0.3.0-m0` / `bundle.targets=["dmg","app"]` / `minimumSystemVersion=11.0`；`bundle.icon=[]`（M0-N7 填）
+- `src-tauri/tauri.conf.json` ── 关键字段锁死：`identifier=com.jsonita.app`（<b>发版后不可改</b>，macOS bundle id 长期合约）/ `productName=Jsonita` / `version=0.3.0-m0` / `bundle.targets=["dmg","app"]` / `minimumSystemVersion=11.0`；`bundle.icon=[]`（M0-N7 填）
 - `src-tauri/capabilities/default.json` ── Tauri 2.x 必需的最小 capability：仅 `core:default`（M2-N5+ 扩展 shortcut / clipboard 等，spec/12 § 2 完整版）
 - `package.json` ── React 18 + TypeScript 5 + Vite 5 + `@tauri-apps/api` / `@tauri-apps/cli` v2；`engines: node ≥ 20 / pnpm ≥ 9`；`packageManager: pnpm@9.12.0`
 - `tsconfig.json` ── strict + `noUnusedLocals` + `noUnusedParameters` + path alias `@/*` → `./src/*` + `types: ['vite/client']`
@@ -777,7 +787,7 @@ TS 端（8 个新文件）：
 关键决策记录：
 
 - **Vite root = `src/`** 而非项目根：项目根 `index.html` 是文档导航入口（plan / spec / progress），不能被 Tauri React 覆盖；Vite 支持 `root` 配置，clean 共存
-- **identifier `com.jsonita.app` 一次锁死**：发版后不可改（Keychain service id / macOS bundle id 长期合约）
+- **identifier `com.jsonita.app` 一次锁死**：发版后不可改（macOS bundle id 长期合约）
 - **未 commit Cargo.lock 例外加在 `.gitignore`**：偏离原始 .gitignore"忽略全部 Cargo.lock"的策略，符合 Rust 应用层 best practice
 
 待用户本机验证（agent 不替跑 install / build · CLAUDE.md § 2.3）：
@@ -838,7 +848,7 @@ TS 端（8 个新文件）：
 #### progress/ 5 篇规划文档（统一结构：前置 / 退出 / 节点 / 验收 / 测试 / 风险 / 跨章速查）
 - 新增 `progress/01_m0_skeleton.html` (**active**) M0 Skeleton ── 7 节点 + 7 退出条件 + 13 验收用例（A1-A13）；从 `pnpm create tauri-app` 到本地 dmg 跑通；含日志框架 / i18n 框架的早期接入
 - 新增 `progress/02_m1_core_json.html` (planned) M1 Core JSON ── 9 节点 + 12 退出条件 + 22 验收用例；核心价值落地（Formatter / Tree / String 互转 / 历史 / 会话 / 嵌套 unwrap / 智能宽度 / 单窗）
-- 新增 `progress/03_m2_ai_settings.html` (planned) M2 AI Fix + Settings ── 6 节点 + 12 退出条件 + 21 验收用例；DeepSeek + Keychain + 设置面板 + 自定义快捷键 + macOS code signing & notarization
+- 新增 `progress/03_m2_ai_settings.html` (planned) M2 AI Fix + Settings ── 6 节点 + 12 退出条件 + 21 验收用例；DeepSeek + secrets.json + 设置面板 + 自定义快捷键 + macOS code signing & notarization
 - 新增 `progress/04_m3_polish_cross.html` (planned) M3 Polish + Cross ── 6 节点 + 13 退出条件 + 20 验收用例；主题 / 中文 UI 解锁 / a11y 完整验收 / macOS 多版本回归 / Windows 实验构建 / v1.0 GitHub Releases 发布
 - 新增 `progress/05_v11_distribution.html` (planned) v1.1+ Distribution ── 5 独立节点（brew tap / npm 启动器 / 自动更新 / Windows EV 签名 + winget / 日志导出 zip）；推荐 v1.1 / v1.2 / v1.3 滚动发布节奏；首个"非串行" Phase
 
@@ -928,7 +938,7 @@ TS 端（8 个新文件）：
   - 06 菜单栏 & 快捷键（tray API · global-shortcut 注册 · 冲突检测 · macOS 权限）
   - 07 编辑器 & 树 UI（CodeMirror 6 扩展清单 · light/dark theme extension · JSON 树自定义颜色 · JSON Path 复制）
   - 08 JSON 引擎（serde_json 封装 · 嵌套解开算法 + 超时 · 错误位置定位 · ↔ string 互转）
-  - 09 存储 & 会话（SQLite schema 含 FTS5 · migration 框架 · Keychain 封装 · last_session 状态机）
+  - 09 存储 & 会话（SQLite schema 含 FTS5 · migration 框架 · secrets store · last_session 状态机）
   - 10 AI 客户端（DeepSeek 请求 · prompt 模板 · 响应验证 · 进度推送 · 错误透传含 429）
   - 11 打包、签名、验收（tauri.conf 全文 · entitlements · CI workflow · 9 类验收用例对齐 plan NFR）
   - 12 原型图 & 交互细节（主浮窗 6 态 + 单窗模式 + 状态栏 4 态 + 菜单栏 tray + 设置 Modal + 历史 Modal + RestoreBar + Toast 四 variant + AI Fix DiffView + 权限引导 + Empty States + light vs dark 对照）
@@ -1010,7 +1020,7 @@ TS 端（8 个新文件）：
 - **编辑器**：CodeMirror 6（~150KB，比 Monaco 轻量）
 - **JSON 树**：react-json-view-lite
 - **状态**：Zustand
-- **本地存储**：SQLite（rusqlite）+ macOS Keychain（API key）
+- **本地存储**：SQLite（rusqlite）+ secrets.json（API key）
 - **交互**：菜单栏常驻图标 + 全局快捷键浮窗
 - **历史**：SQLite 限制最近 100 条
 

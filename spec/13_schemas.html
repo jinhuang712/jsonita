@@ -39,7 +39,7 @@
         <tr><td><code>Parse</code></td><td><code>{ line: u32, col: u32, msg: String }</code></td><td>JSON 解析失败</td><td>状态栏红 + AI Fix Tab 出现</td></tr>
         <tr><td><code>UnwrapTimeout</code></td><td><code>{ ms: u64, depth: u32 }</code></td><td>嵌套 unwrap 超时</td><td>状态栏 / 局部错误</td></tr>
         <tr><td><code>Sqlite</code></td><td><code>String</code></td><td>SQLite 错误</td><td>调用方捕获；当前多处静默忽略</td></tr>
-        <tr><td><code>Keychain</code></td><td><code>String</code></td><td>secrets.json 存取错（变体名遗留 ── v1 走 Keychain，后切本地文件，名字未改）</td><td>AI 面板 / 设置项错误</td></tr>
+        <tr><td><code>Secrets</code></td><td><code>String</code></td><td>secrets.json 存取错（读写 / chmod / 序列化失败）</td><td>AI 面板 / 设置项错误</td></tr>
         <tr><td><code>Http</code></td><td><code>{ status: u16, body: String }</code></td><td>DeepSeek HTTP 错</td><td>AI 面板 / API key 输入区错误</td></tr>
         <tr><td><code>AiInvalidJson</code></td><td><code>{ raw: String }</code></td><td>AI 返回非合法 JSON</td><td>AI 面板错误文本；raw Modal 为保留设计</td></tr>
         <tr><td><code>RateLimit</code></td><td><code>{ retry_after_sec: u64 }</code>（IPC 为 <code>retryAfterSec</code>）</td><td>上游 429</td><td>AI 面板显示 retryAfterSec</td></tr>
@@ -58,8 +58,8 @@ pub enum JsonitaError {
     #[error("Unwrap timeout after {ms}ms (depth {depth})")]
     UnwrapTimeout { ms: u64, depth: u32 },
 
-    #[error("SQLite: {0}")]   Sqlite(String),
-    #[error("Keychain: {0}")] Keychain(String),    // 变体名遗留 = secrets.json 存取错
+    #[error("SQLite: {0}")]  Sqlite(String),
+    #[error("Secrets: {0}")] Secrets(String),
     #[error("HTTP {status}: {body}")] Http { status: u16, body: String },
     #[error("AI invalid JSON: {raw}")] AiInvalidJson { raw: String },
     #[error("Rate limited; retry after {retry_after_sec}s")]
@@ -75,7 +75,7 @@ pub enum JsonitaError {
   | { kind: 'Parse';          data: { line: number; col: number; msg: string } }
   | { kind: 'UnwrapTimeout';  data: { ms: number; depth: number } }
   | { kind: 'Sqlite';         data: string }
-  | { kind: 'Keychain';       data: string }    // 变体名遗留 = secrets.json 存取错
+  | { kind: 'Secrets';        data: string }
   | { kind: 'Http';           data: { status: number; body: string } }
   | { kind: 'AiInvalidJson';  data: { raw: string } }
   | { kind: 'RateLimit';      data: { retryAfterSec: number } }
@@ -379,7 +379,7 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
   "deepseek_api_key": "sk-xxxxxxxxxxxxxxxx"
 }</code></pre>
 
-    <p>不放 Keychain 的原因：见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a>。封装实现见 <a href="10_storage.html">10 § 6</a>。</p>
+    <p>封装实现见 <a href="10_storage.html">10 § 6</a>。此文件只保存 API key，不进入 settings、日志或事件 payload。</p>
 
     <h2><span class="h2-num">7</span>命名规范汇总</h2>
 

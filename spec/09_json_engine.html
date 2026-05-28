@@ -203,7 +203,7 @@ fn walk(v: &amp;mut Value, deadline: Instant, max_depth: Option&lt;u32&gt;, dept
     if Instant::now() &gt;= deadline {
         return Err(JsonitaError::UnwrapTimeout { ms: 0, depth });
     }
-    if let Some(md) = max_depth { if depth &gt;= md { return Ok(()); } }
+    if let Some(md) = max_depth { if depth &gt; md { return Ok(()); } }
 
     match v {
         Value::String(s) =&gt; {

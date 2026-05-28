@@ -33,7 +33,7 @@ fn walk(
         return Err(JsonitaError::UnwrapTimeout { ms: 0, depth });
     }
     if let Some(md) = max_depth {
-        if depth >= md {
+        if depth > md {
             return Ok(());
         }
     }
@@ -120,6 +120,7 @@ mod tests {
         let out = unwrap(input, opts(200, Some(1))).unwrap();
         // 第 1 层解开 → b 是 stringified inner 应保留
         assert!(out.contains("\"b\""));
+        assert!(!out.contains("\"c\": 1"));
     }
 
     #[test]

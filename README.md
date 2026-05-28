@@ -19,7 +19,7 @@
 | **嵌套 stringified 解开** | Golang proto 多层 wrap 一键展开（200 ms 全局超时兜底） |
 | **AI Auto-Fix** | 粘非法 JSON → ✨ AI Fix tab → DiffView → Accept（DeepSeek，需用户自带 API key） |
 | **历史记录** | SQLite FTS5 · 自动去重 · pin / star · 100 条上限 |
-| **会话保留** | 关闭浮窗 5 分钟内自动恢复 · `⌘⇧L` 手动找回 · `⌘K` 清空 |
+| **会话保留** | 合法 transform 成功后保存上次会话 · `⌘⇧L` 手动找回 · `⌘K` 清空 |
 | **自定义快捷键** | 默认 `⌘⇧J` 呼出 / `⌘⇧L` 恢复；可改 + 冲突检测 + override 二次确认 |
 | **智能宽度** | 粘长行自动扩宽（4 层逻辑：手动拖锁定 / soft-wrap 跳过 / smartWidth 开关 / max-chars 阈值） |
 | **i18n** | English / 简体中文 |
@@ -33,14 +33,12 @@
 
 ## 安装
 
-### v1.0 发布后（待 M2-N6 签名 + M3-N6 release 完成）
+### v1 内测发布（优先）
 
 ```bash
-# Homebrew Cask（v1.1 起，待 D-N1）
-brew tap jinhuang712/jsonita && brew install --cask jsonita
-
-# 直装 dmg（v1.0 起）
-# 从 https://github.com/jinhuang712/jsonita/releases/latest 下载 .dmg
+# 从 GitHub Releases 下载 .dmg，拖到 /Applications 后启动。
+# v1 先用 .dmg + GitHub Release 小范围内测；Homebrew / updater 后置到 v1.1+。
+open https://github.com/jinhuang712/jsonita/releases/latest
 ```
 
 ### 当前（开发期）── 从源码构建
@@ -95,9 +93,9 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 |---|---|---|
 | M0 Skeleton | 7/7 | ✅ agent-side 完成（待用户验收 M0-A1..A13） |
 | M1 Core JSON | 9/9 | ✅ agent-side 完成（待用户验收 M1-A1..A22） |
-| M2 AI + Settings | 5/6 | ✅ N1..N5 完成 · N6 macOS 签名 (需 Apple Developer 证书) 留用户 |
-| M3 Polish | 3/6 | ✅ N1..N3 完成 · N4 多版本回归 / N5 Windows / N6 release 留用户 |
-| v1.1+ Distribution | 0/5 | 全 user-only ops（brew / npm / updater / Win EV / 日志导出） |
+| M2 AI + Settings | 5/6 | ✅ N1..N5 完成 · N6 macOS 签名 / 公证待整理 |
+| M3 Polish | 3/6 | ✅ N1..N3 完成 · N4 多版本回归 / N6 release 待整理；Windows 不阻塞 v1 |
+| v1.1+ Distribution | 0/5 | 后置（brew / npm / updater / Win EV / 日志导出） |
 
 ## 卸载
 
