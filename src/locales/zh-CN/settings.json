@@ -19,7 +19,13 @@
   },
   "ai": {
     "enabled": "启用 AI Fix",
-    "apiKey": "DeepSeek API Key"
+    "apiKey": "DeepSeek API Key",
+    "apiKeySavedPlaceholder": "••••••••（已保存，可输入新 key 覆盖）",
+    "apiKeySaved": "已保存",
+    "apiKeyRemoved": "已移除",
+    "test": "测试",
+    "save": "保存",
+    "remove": "移除"
   },
   "history": {
     "limit": "历史上限"

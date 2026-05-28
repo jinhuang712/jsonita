@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ai } from '../ipc/commands';
 
 /**
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function ApiKeyInput({ modelId }: Props) {
+  const { t } = useTranslation('settings');
   const [hasKey, setHasKey] = useState(false);
   const [keyInput, setKeyInput] = useState('');
   const [testing, setTesting] = useState(false);
@@ -45,7 +47,7 @@ export function ApiKeyInput({ modelId }: Props) {
       await ai.setApiKey(keyInput);
       setKeyInput('');
       setHasKey(true);
-      setMsg({ kind: 'ok', text: 'Saved' });
+      setMsg({ kind: 'ok', text: t('ai.apiKeySaved') });
     } catch (e) {
       setMsg({ kind: 'err', text: String(e) });
     }
@@ -55,7 +57,7 @@ export function ApiKeyInput({ modelId }: Props) {
     try {
       await ai.deleteApiKey();
       setHasKey(false);
-      setMsg({ kind: 'ok', text: 'Removed' });
+      setMsg({ kind: 'ok', text: t('ai.apiKeyRemoved') });
     } catch (e) {
       setMsg({ kind: 'err', text: String(e) });
     }
@@ -68,7 +70,7 @@ export function ApiKeyInput({ modelId }: Props) {
           type="password"
           value={keyInput}
           onChange={(e) => setKeyInput(e.target.value)}
-          placeholder={hasKey ? '••••••••（已保存，可输入新 key 覆盖）' : 'sk-...'}
+          placeholder={hasKey ? t('ai.apiKeySavedPlaceholder') : 'sk-...'}
           style={inputStyle}
           autoComplete="off"
         />
@@ -77,18 +79,18 @@ export function ApiKeyInput({ modelId }: Props) {
           disabled={testing || !keyInput}
           style={btnGhost}
         >
-          {testing ? '...' : 'Test'}
+          {testing ? '...' : t('ai.test')}
         </button>
         <button
           onClick={save}
           disabled={!keyInput}
           style={btnPrimary}
         >
-          Save
+          {t('ai.save')}
         </button>
         {hasKey && (
           <button onClick={remove} style={btnDanger}>
-            Remove
+            {t('ai.remove')}
           </button>
         )}
       </div>
