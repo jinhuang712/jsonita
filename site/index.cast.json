@@ -1,0 +1,661 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "Jsonita 项目文档",
+      "en": "Jsonita Project Documentation"
+    },
+    "description": {
+      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO、Changelist 与源数据。",
+      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, TODO, changelist, and source data."
+    },
+    "language": "zh-CN",
+    "locales": ["zh-CN", "en"],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": ["engineering", "product"],
+    "updatedAt": "2026-06-02",
+    "showMeta": true,
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "index.html"
+    },
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "README",
+          "en": "README"
+        },
+        "href": "README.md",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "changelist.html",
+        "placement": "topbar"
+      }
+    ]
+  },
+  "manifest": {
+    "documentType": "engineering-plan",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "start",
+      "plan",
+      "spec",
+      "cast"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph",
+        "chapter-list"
+      ],
+      "optional": [
+        "callout",
+        "shell-links"
+      ],
+      "omitted": [
+        "diagram",
+        "diff-block",
+        "inline-svg-figure",
+        "media-grid"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "入口说明",
+        "en": "Entrypoint"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "产品",
+                "en": "Product"
+              },
+              "body": {
+                "zh-CN": "Jsonita 是一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。",
+                "en": "Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a global shortcut."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "文档约定",
+                "en": "Documentation Contract"
+              },
+              "body": {
+                "zh-CN": "本项目文档严格依赖 CAST：产品范围、实现计划、技术规格、TODO、Changelist 与文档入口必须同步维护。",
+                "en": "This project strictly relies on CAST: product scope, implementation plans, technical specs, TODOs, changelists, and documentation entrypoints must stay synchronized."
+              }
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": {
+            "zh-CN": "双语规则",
+            "en": "Bilingual Rule"
+          },
+          "body": {
+            "zh-CN": "这个首页由 site/index.cast.json 渲染而来，同一个 HTML 同时包含中文和英文内容，并在右上角提供语言切换。",
+            "en": "This homepage is rendered from site/index.cast.json. The same HTML file contains both Simplified Chinese and English content, with a language switcher in the top-right corner."
+          }
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": {
+        "zh-CN": "入口与源数据",
+        "en": "Entry Points And Sources"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "从这里进入项目说明、待办、变更记录和 CAST 源数据。机器可读字段保持单值，面向人的标题与说明提供中英双语。",
+            "en": "Start here for project overview, TODOs, changelog, and CAST source data. Machine-readable fields stay single-valued while human-facing titles and descriptions are bilingual."
+          }
+        },
+        {
+          "type": "chapter-list",
+          "items": [
+            {
+              "id": "readme",
+              "number": "md",
+              "title": {
+                "zh-CN": "README",
+                "en": "README"
+              },
+              "description": {
+                "zh-CN": "项目介绍、安装方式、使用流程与 CAST 文档约定。",
+                "en": "Project introduction, installation, usage flow, and CAST documentation contract."
+              },
+              "href": "README.md"
+            },
+            {
+              "id": "todo-json",
+              "number": "json",
+              "title": {
+                "zh-CN": "site/todo.json",
+                "en": "site/todo.json"
+              },
+              "description": {
+                "zh-CN": "项目级未决问题与延期工作源数据。",
+                "en": "Source data for project-level open questions and deferred work."
+              },
+              "href": "site/todo.json"
+            },
+            {
+              "id": "changelist-json",
+              "number": "json",
+              "title": {
+                "zh-CN": "site/changelist.json",
+                "en": "site/changelist.json"
+              },
+              "description": {
+                "zh-CN": "产品、计划、规格和重要实现变化的结构化记录。",
+                "en": "Structured record of product, plan, spec, and important implementation changes."
+              },
+              "href": "site/changelist.json"
+            },
+            {
+              "id": "todo-html",
+              "number": "html",
+              "title": {
+                "zh-CN": "TODO 页面",
+                "en": "TODO Page"
+              },
+              "description": {
+                "zh-CN": "人类可读的项目级 TODO 入口。",
+                "en": "Human-readable entrypoint for project-level TODOs."
+              },
+              "href": "todo.html"
+            },
+            {
+              "id": "changelist-html",
+              "number": "html",
+              "title": {
+                "zh-CN": "Changelist 页面",
+                "en": "Changelist Page"
+              },
+              "description": {
+                "zh-CN": "人类可读的变更记录入口。",
+                "en": "Human-readable changelist entrypoint."
+              },
+              "href": "changelist.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": {
+        "zh-CN": "产品计划",
+        "en": "Product Plan"
+      },
+      "blocks": [
+        {
+          "type": "chapter-list",
+          "items": [
+            {
+              "id": "plan-dir",
+              "number": "dir",
+              "title": {
+                "zh-CN": "plan/ 产品设计目录",
+                "en": "plan/ Product Plan Directory"
+              },
+              "description": {
+                "zh-CN": "cast-a-start 要求的产品计划目录入口。",
+                "en": "Product plan directory required by cast-a-start."
+              },
+              "href": "plan/"
+            },
+            {
+              "id": "overview-plan",
+              "number": "00",
+              "title": {
+                "zh-CN": "项目概览",
+                "en": "Project Overview"
+              },
+              "description": {
+                "zh-CN": "产品定位、约束与文档权威边界。",
+                "en": "Product positioning, constraints, and documentation authority boundaries."
+              },
+              "href": "plan/00_overview.html"
+            },
+            {
+              "id": "features",
+              "number": "01",
+              "title": {
+                "zh-CN": "功能清单",
+                "en": "Feature List"
+              },
+              "description": {
+                "zh-CN": "v1.0 范围、非目标与后续路线。",
+                "en": "v1.0 scope, non-goals, and later roadmap."
+              },
+              "href": "plan/01_features.html"
+            },
+            {
+              "id": "interaction",
+              "number": "02",
+              "title": {
+                "zh-CN": "交互草图",
+                "en": "Interaction Model"
+              },
+              "description": {
+                "zh-CN": "浮窗、设置、历史、状态栏与快捷键交互。",
+                "en": "Floating window, settings, history, status bar, and shortcut interactions."
+              },
+              "href": "plan/02_interaction.html"
+            },
+            {
+              "id": "tech-stack",
+              "number": "03",
+              "title": {
+                "zh-CN": "技术选型",
+                "en": "Technology Stack"
+              },
+              "description": {
+                "zh-CN": "Tauri、React、SQLite、本地 secrets.json 等选型。",
+                "en": "Choices such as Tauri, React, SQLite, and local secrets.json."
+              },
+              "href": "plan/03_tech_stack.html"
+            },
+            {
+              "id": "nfr",
+              "number": "04",
+              "title": {
+                "zh-CN": "非功能性需求",
+                "en": "Non-Functional Requirements"
+              },
+              "description": {
+                "zh-CN": "性能、隐私、安全、可用性与发布约束。",
+                "en": "Performance, privacy, security, usability, and release constraints."
+              },
+              "href": "plan/04_nfr.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "spec",
+      "title": {
+        "zh-CN": "技术规格",
+        "en": "Technical Spec"
+      },
+      "blocks": [
+        {
+          "type": "chapter-list",
+          "items": [
+            {
+              "id": "spec-dir",
+              "number": "dir",
+              "title": {
+                "zh-CN": "spec/ 技术设计目录",
+                "en": "spec/ Technical Spec Directory"
+              },
+              "description": {
+                "zh-CN": "cast-a-start 要求的技术规格目录入口。",
+                "en": "Technical specification directory required by cast-a-start."
+              },
+              "href": "spec/"
+            },
+            {
+              "id": "architecture",
+              "number": "00",
+              "title": {
+                "zh-CN": "系统架构",
+                "en": "System Architecture"
+              },
+              "description": {
+                "zh-CN": "进程模型、模块边界、数据流与关键不变量。",
+                "en": "Process model, module boundaries, data flow, and invariants."
+              },
+              "href": "spec/00_architecture.html"
+            },
+            {
+              "id": "mockups",
+              "number": "01",
+              "title": {
+                "zh-CN": "原型图与交互细节",
+                "en": "Mockups And Interaction Details"
+              },
+              "description": {
+                "zh-CN": "视觉权威、浮窗布局与关键交互细节。",
+                "en": "Visual authority, floating-window layout, and key interaction details."
+              },
+              "href": "spec/01_mockups.html"
+            },
+            {
+              "id": "ipc",
+              "number": "02",
+              "title": {
+                "zh-CN": "IPC 合约",
+                "en": "IPC Contract"
+              },
+              "description": {
+                "zh-CN": "前端与 Rust 主进程之间的命令、事件与错误边界。",
+                "en": "Commands, events, and error boundaries between frontend and Rust host."
+              },
+              "href": "spec/02_ipc.html"
+            },
+            {
+              "id": "design-tokens",
+              "number": "03",
+              "title": {
+                "zh-CN": "设计令牌",
+                "en": "Design Tokens"
+              },
+              "description": {
+                "zh-CN": "颜色、字号、间距、动效与主题规则。",
+                "en": "Color, type, spacing, motion, and theme rules."
+              },
+              "href": "spec/03_design_tokens.html"
+            },
+            {
+              "id": "components",
+              "number": "04",
+              "title": {
+                "zh-CN": "组件库映射",
+                "en": "Component Mapping"
+              },
+              "description": {
+                "zh-CN": "UI 组件、状态和交互复用边界。",
+                "en": "UI components, states, and interaction reuse boundaries."
+              },
+              "href": "spec/04_components.html"
+            },
+            {
+              "id": "icons-theme",
+              "number": "05",
+              "title": {
+                "zh-CN": "图标资源与主题",
+                "en": "Icons And Theme"
+              },
+              "description": {
+                "zh-CN": "图标资产、菜单栏视觉与主题适配。",
+                "en": "Icon assets, menu-bar visuals, and theme adaptation."
+              },
+              "href": "spec/05_icons_theme.html"
+            },
+            {
+              "id": "window",
+              "number": "06",
+              "title": {
+                "zh-CN": "窗口 runtime",
+                "en": "Window Runtime"
+              },
+              "description": {
+                "zh-CN": "浮窗生命周期、NSPanel、vibrancy 与尺寸策略。",
+                "en": "Floating-window lifecycle, NSPanel, vibrancy, and sizing policy."
+              },
+              "href": "spec/06_window.html"
+            },
+            {
+              "id": "menubar",
+              "number": "07",
+              "title": {
+                "zh-CN": "菜单栏与快捷键",
+                "en": "Menu Bar And Shortcuts"
+              },
+              "description": {
+                "zh-CN": "菜单栏、全局快捷键、权限与冲突处理。",
+                "en": "Menu bar, global shortcuts, permissions, and conflict handling."
+              },
+              "href": "spec/07_menubar.html"
+            },
+            {
+              "id": "editor",
+              "number": "08",
+              "title": {
+                "zh-CN": "编辑器与树 UI",
+                "en": "Editor And Tree UI"
+              },
+              "description": {
+                "zh-CN": "CodeMirror 编辑器、树视图和 JSON 展示。",
+                "en": "CodeMirror editor, tree view, and JSON presentation."
+              },
+              "href": "spec/08_editor.html"
+            },
+            {
+              "id": "json-engine",
+              "number": "09",
+              "title": {
+                "zh-CN": "JSON 引擎",
+                "en": "JSON Engine"
+              },
+              "description": {
+                "zh-CN": "格式化、压缩、互转、嵌套解开和错误定位。",
+                "en": "Formatting, minifying, conversion, nested unwrap, and error location."
+              },
+              "href": "spec/09_json_engine.html"
+            },
+            {
+              "id": "storage",
+              "number": "10",
+              "title": {
+                "zh-CN": "存储与会话",
+                "en": "Storage And Session"
+              },
+              "description": {
+                "zh-CN": "SQLite、settings、window 状态和本地 secrets.json。",
+                "en": "SQLite, settings, window state, and local secrets.json."
+              },
+              "href": "spec/10_storage.html"
+            },
+            {
+              "id": "ai-client",
+              "number": "11",
+              "title": {
+                "zh-CN": "AI 客户端",
+                "en": "AI Client"
+              },
+              "description": {
+                "zh-CN": "DeepSeek 修复流程、隐私边界与失败处理。",
+                "en": "DeepSeek repair flow, privacy boundary, and failure handling."
+              },
+              "href": "spec/11_ai_client.html"
+            },
+            {
+              "id": "packaging",
+              "number": "12",
+              "title": {
+                "zh-CN": "打包、签名、验收",
+                "en": "Packaging, Signing, And Acceptance"
+              },
+              "description": {
+                "zh-CN": "DMG、APP、Windows installer、GitHub Release 与后续 Homebrew。",
+                "en": "DMG, APP, Windows installer, GitHub Release, and later Homebrew."
+              },
+              "href": "spec/12_packaging.html"
+            },
+            {
+              "id": "schemas",
+              "number": "13",
+              "title": {
+                "zh-CN": "数据模型参考",
+                "en": "Schema Reference"
+              },
+              "description": {
+                "zh-CN": "核心数据模型、设置、IPC 和持久化结构。",
+                "en": "Core data models, settings, IPC, and persistence structures."
+              },
+              "href": "spec/13_schemas.html"
+            },
+            {
+              "id": "i18n-a11y",
+              "number": "14",
+              "title": {
+                "zh-CN": "国际化与无障碍",
+                "en": "Internationalization And Accessibility"
+              },
+              "description": {
+                "zh-CN": "语言、键盘、屏幕阅读器与辅助体验约束。",
+                "en": "Language, keyboard, screen reader, and accessibility constraints."
+              },
+              "href": "spec/14_i18n_a11y.html"
+            },
+            {
+              "id": "logging",
+              "number": "15",
+              "title": {
+                "zh-CN": "日志与可观测性",
+                "en": "Logging And Observability"
+              },
+              "description": {
+                "zh-CN": "日志边界、脱敏策略和排查入口。",
+                "en": "Logging boundary, redaction policy, and diagnostic entrypoints."
+              },
+              "href": "spec/15_logging.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cast",
+      "title": {
+        "zh-CN": "CAST 维护约定",
+        "en": "CAST Maintenance Contract"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": [
+              {
+                "text": "后续维护者需要先关注 CAST：需求变化先同步结构化源、README、首页、plan、spec、TODO 与 Changelist，再继续实现。CAST 流程参考 "
+              },
+              {
+                "text": "CAST-docs/cast-a-start",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "https://github.com/CAST-docs/cast-a-start"
+                  }
+                ]
+              },
+              {
+                "text": "；双语 HTML 渲染参考 "
+              },
+              {
+                "text": "CAST-docs/cast-a-doc",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "https://github.com/CAST-docs/cast-a-doc"
+                  }
+                ]
+              },
+              {
+                "text": "。"
+              }
+            ],
+            "en": [
+              {
+                "text": "Future maintainers should start with CAST: requirement changes must update structured sources, README, homepage, plan, spec, TODO, and changelist before implementation continues. See "
+              },
+              {
+                "text": "CAST-docs/cast-a-start",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "https://github.com/CAST-docs/cast-a-start"
+                  }
+                ]
+              },
+              {
+                "text": " for the workflow and "
+              },
+              {
+                "text": "CAST-docs/cast-a-doc",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "https://github.com/CAST-docs/cast-a-doc"
+                  }
+                ]
+              },
+              {
+                "text": " for bilingual HTML rendering."
+              }
+            ]
+          }
+        },
+        {
+          "type": "chapter-list",
+          "items": [
+            {
+              "id": "cast-profile",
+              "number": "profile",
+              "title": {
+                "zh-CN": ".cast-docs/project.json",
+                "en": ".cast-docs/project.json"
+              },
+              "description": {
+                "zh-CN": "Jsonita 的 CAST project profile、品牌资产与输出约定。",
+                "en": "Jsonita's CAST project profile, brand assets, and output conventions."
+              },
+              "href": ".cast-docs/project.json"
+            },
+            {
+              "id": "cast-i18n",
+              "number": "i18n",
+              "title": {
+                "zh-CN": ".cast-docs/i18n.json",
+                "en": ".cast-docs/i18n.json"
+              },
+              "description": {
+                "zh-CN": "仓库级中英双语策略。",
+                "en": "Repository-level Simplified Chinese and English language policy."
+              },
+              "href": ".cast-docs/i18n.json"
+            },
+            {
+              "id": "cast-source",
+              "number": "json",
+              "title": {
+                "zh-CN": "site/index.cast.json",
+                "en": "site/index.cast.json"
+              },
+              "description": {
+                "zh-CN": "本首页的结构化 CAST 源。",
+                "en": "The structured CAST source for this homepage."
+              },
+              "href": "site/index.cast.json"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
