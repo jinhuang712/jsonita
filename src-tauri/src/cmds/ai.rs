@@ -46,7 +46,11 @@ pub async fn ai_test_connection(
         });
     }
 
-    let model = if model_id.is_empty() { "deepseek-chat" } else { &model_id };
+    let model = if model_id.is_empty() {
+        "deepseek-chat"
+    } else {
+        &model_id
+    };
 
     let body = serde_json::json!({
         "model": model,
@@ -58,7 +62,10 @@ pub async fn ai_test_connection(
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
-        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+        .map_err(|e| JsonitaError::Http {
+            status: 0,
+            body: e.to_string(),
+        })?;
 
     let started = Instant::now();
     let resp = client
@@ -78,7 +85,11 @@ pub async fn ai_test_connection(
                 .and_then(|v| v.as_str())
                 .unwrap_or(model)
                 .to_string();
-            Ok(TestConnectionResp { ok: true, latency_ms, model_echoed: echoed })
+            Ok(TestConnectionResp {
+                ok: true,
+                latency_ms,
+                model_echoed: echoed,
+            })
         }
         Ok(r) => {
             let status = r.status().as_u16();
@@ -118,10 +129,7 @@ pub struct TestConnectionResp {
 /// 前端查 key 是否已存（不返回 value）── settings AI 分组初次渲染调。
 #[tauri::command]
 pub fn ai_has_api_key() -> bool {
-    secrets::get(DEEPSEEK_ACCOUNT)
-        .ok()
-        .flatten()
-        .is_some()
+    secrets::get(DEEPSEEK_ACCOUNT).ok().flatten().is_some()
 }
 
 /// AI Fix 主命令 ── M2-N3 真实化。

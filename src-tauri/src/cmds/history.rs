@@ -35,11 +35,7 @@ pub async fn history_search(
 }
 
 #[tauri::command]
-pub async fn history_pin(
-    id: i64,
-    pinned: bool,
-    db: State<'_, Db>,
-) -> Result<(), JsonitaError> {
+pub async fn history_pin(id: i64, pinned: bool, db: State<'_, Db>) -> Result<(), JsonitaError> {
     let db = db.inner().clone();
     tauri::async_runtime::spawn_blocking(move || h::set_pinned(&db, id, pinned))
         .await
@@ -47,11 +43,7 @@ pub async fn history_pin(
 }
 
 #[tauri::command]
-pub async fn history_star(
-    id: i64,
-    starred: bool,
-    db: State<'_, Db>,
-) -> Result<(), JsonitaError> {
+pub async fn history_star(id: i64, starred: bool, db: State<'_, Db>) -> Result<(), JsonitaError> {
     let db = db.inner().clone();
     tauri::async_runtime::spawn_blocking(move || h::set_starred(&db, id, starred))
         .await

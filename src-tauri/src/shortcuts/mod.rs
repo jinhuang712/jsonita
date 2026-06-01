@@ -52,9 +52,7 @@ pub fn parse_accelerator(s: &str) -> Result<Shortcut, String> {
             "alt" | "option" => mods |= Modifiers::ALT,
             "shift" => mods |= Modifiers::SHIFT,
             other => {
-                code = Some(
-                    parse_code(other).ok_or_else(|| format!("unknown key: {}", other))?,
-                );
+                code = Some(parse_code(other).ok_or_else(|| format!("unknown key: {}", other))?);
             }
         }
     }
@@ -167,10 +165,7 @@ pub enum ShortcutRegisterResp {
 /// 设置面板 ShortcutInput 调 → 验证 + 写 SettingsStore + 重新注册。
 /// spec/07 § 2.3 / spec/02 § 6.1.7
 #[tauri::command]
-pub async fn shortcut_register(
-    app: AppHandle,
-    req: ShortcutRegisterReq,
-) -> ShortcutRegisterResp {
+pub async fn shortcut_register(app: AppHandle, req: ShortcutRegisterReq) -> ShortcutRegisterResp {
     if !req.force_override && is_reserved(&req.accelerator) {
         return ShortcutRegisterResp::Reserved;
     }

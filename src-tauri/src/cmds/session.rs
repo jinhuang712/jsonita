@@ -21,9 +21,7 @@ pub async fn session_save_last(
 }
 
 #[tauri::command]
-pub async fn session_load_last(
-    db: State<'_, Db>,
-) -> Result<Option<LastSession>, JsonitaError> {
+pub async fn session_load_last(db: State<'_, Db>) -> Result<Option<LastSession>, JsonitaError> {
     let db = db.inner().clone();
     tauri::async_runtime::spawn_blocking(move || s::load(&db))
         .await

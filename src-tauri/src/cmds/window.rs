@@ -60,9 +60,14 @@ pub async fn window_resize_for_content(
         metrics.max_line_chars
     };
     let chrome_w = if s.single_pane_mode { 180 } else { 220 };
-    let needed_w = visible_cols.saturating_mul(char_px).saturating_add(chrome_w);
+    let needed_w = visible_cols
+        .saturating_mul(char_px)
+        .saturating_add(chrome_w);
     let line_px = (font_size * 1.55).ceil() as u32;
-    let needed_h = metrics.line_count.saturating_mul(line_px).saturating_add(120);
+    let needed_h = metrics
+        .line_count
+        .saturating_mul(line_px)
+        .saturating_add(120);
 
     let screen_w = app
         .primary_monitor()
@@ -120,8 +125,6 @@ pub async fn window_resize_for_content(
 }
 
 #[tauri::command]
-pub async fn window_reset_size(
-    window_store: State<'_, WindowStore>,
-) -> Result<(), JsonitaError> {
+pub async fn window_reset_size(window_store: State<'_, WindowStore>) -> Result<(), JsonitaError> {
     window_store.reset()
 }

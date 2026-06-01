@@ -8,11 +8,7 @@ use crate::error::JsonitaError;
 pub fn map(e: serde_json::Error) -> JsonitaError {
     let raw = e.to_string();
     // 剥离 " at line X column Y" 后缀（serde-internal）
-    let msg = raw
-        .split(" at line ")
-        .next()
-        .unwrap_or(&raw)
-        .to_string();
+    let msg = raw.split(" at line ").next().unwrap_or(&raw).to_string();
     JsonitaError::Parse {
         line: e.line() as u32,
         col: e.column() as u32,

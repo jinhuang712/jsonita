@@ -61,7 +61,9 @@ pub fn open_github() -> Result<(), JsonitaError> {
 
     #[cfg(all(unix, not(target_os = "macos")))]
     {
-        let _ = std::process::Command::new("xdg-open").arg(GITHUB_URL).spawn();
+        let _ = std::process::Command::new("xdg-open")
+            .arg(GITHUB_URL)
+            .spawn();
     }
 
     Ok(())

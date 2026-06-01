@@ -30,12 +30,14 @@ fn load() -> SecretsMap {
 }
 
 fn save(map: &SecretsMap) -> Result<(), JsonitaError> {
-    let Some(p) = path() else { return Ok(()); };
+    let Some(p) = path() else {
+        return Ok(());
+    };
     if let Some(parent) = p.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    let json = serde_json::to_string_pretty(map)
-        .map_err(|e| JsonitaError::Secrets(e.to_string()))?;
+    let json =
+        serde_json::to_string_pretty(map).map_err(|e| JsonitaError::Secrets(e.to_string()))?;
     std::fs::write(&p, json).map_err(|e| JsonitaError::Secrets(e.to_string()))?;
     #[cfg(unix)]
     {

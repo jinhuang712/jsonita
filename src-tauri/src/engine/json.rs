@@ -4,8 +4,8 @@
 //! preserve_order feature 必开（保留用户输入 key 顺序）。
 
 use serde::Serialize;
-use serde_json::Value;
 use serde_json::ser::PrettyFormatter;
+use serde_json::Value;
 
 use crate::error::JsonitaError;
 use crate::types::{FormatOpts, IndentMode};
@@ -24,8 +24,7 @@ pub fn format(text: &str, opts: FormatOpts) -> Result<String, JsonitaError> {
     value
         .serialize(&mut ser)
         .map_err(|e| JsonitaError::Io(e.to_string()))?;
-    let mut out =
-        String::from_utf8(writer).map_err(|e| JsonitaError::Io(e.to_string()))?;
+    let mut out = String::from_utf8(writer).map_err(|e| JsonitaError::Io(e.to_string()))?;
     if opts.trailing_newline {
         out.push('\n');
     }

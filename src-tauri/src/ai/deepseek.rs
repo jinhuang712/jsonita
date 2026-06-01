@@ -110,8 +110,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
     let started = std::time::Instant::now();
 
     // max_tokens 估算（spec/11 § 5.2 输出 ≈ 输入；字符÷3≈tokens；×2 余量）
-    let max_tokens = ((req.text.chars().count() as f32 / 3.0) * 2.0)
-        .clamp(512.0, 8192.0) as u32;
+    let max_tokens = ((req.text.chars().count() as f32 / 3.0) * 2.0).clamp(512.0, 8192.0) as u32;
 
     let body = ChatRequest {
         model: &settings.ai_model_id,
@@ -186,11 +185,10 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         .map(|c| c.message.content.clone())
         .unwrap_or_default();
 
-    let extracted = validate::extract_json(&content).ok_or_else(|| {
-        JsonitaError::AiInvalidJson {
+    let extracted =
+        validate::extract_json(&content).ok_or_else(|| JsonitaError::AiInvalidJson {
             raw: content.clone(),
-        }
-    })?;
+        })?;
 
     // 二次验证：必须是合法 JSON
     serde_json::from_str::<serde_json::Value>(&extracted)
