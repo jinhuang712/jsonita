@@ -2,6 +2,7 @@
 
 > 本文件只列**未规划入 spec** 的疑似工作。
 > 实施期 session-level 步骤进 `TaskCreate`。
+> 结构化源数据见 [`site/todo.json`](site/todo.json)，静态页面见 [`todo.html`](todo.html)。
 
 ## 未分到对应 Phase 的疑似工作
 
@@ -11,3 +12,7 @@
 ## 🎨 玻璃视觉重设计 + 单窗交互 + 动画
 
 阶段 1 / 2 / 3 已按 `design/HANDOFF.md` 落地并同步到 `spec/` / `plan/` / `CHANGELIST.md`。后续如继续打磨玻璃质感，另开明确需求再新增 backlog。
+
+## CAST 文档源数据
+
+- [ ] 为 `site/todo.json` / `site/changelist.json` 增加自动渲染脚本，减少 `todo.html` / `changelist.html` 手工同步成本。

@@ -488,7 +488,7 @@
 
     <h2 id="4"><span class="h2-num">4</span>设置 Modal</h2>
 
-    <p>当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。</p>
+    <p>当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。详版交互已从 <code>design/jsonita-settings-detail.html</code> 迁入本节和 <a href="04_components.html">04 § 4.6-4.8</a>。</p>
 
     <div class="mock-row">
       <div>
@@ -550,6 +550,22 @@
         </div>
       </div>
     </div>
+
+    <h3><span class="h3-num">4.1</span>6 分组与真实字段</h3>
+
+    <table>
+      <thead><tr><th>分组</th><th>显示字段 / 控件</th><th>不显示但存在的相关字段</th></tr></thead>
+      <tbody>
+        <tr><td>General</td><td>语言 select、主题 select、开机自启动 / 失焦自动隐藏 / 智能缩放 / 单窗模式 / 自动粘贴剪贴板 checkbox</td><td><code>showInMenubar</code> tray 当前始终创建；<code>restoreWindow</code> / <code>initialWidth</code> 为保留字段</td></tr>
+        <tr><td>Shortcuts</td><td>呼出浮窗、恢复上次会话、切换单窗 / 双栏 3 个可录入快捷键；下方展示 9 个内置快捷键</td><td>系统保留组合默认阻塞，Override 为 ShortcutInput 内部确认流程</td></tr>
+        <tr><td>AI</td><td>启用 AI Fix checkbox；DeepSeek API key password 输入；Test / Save / Remove；保存状态行内反馈</td><td><code>aiModelId</code> 当前默认 <code>deepseek-chat</code>，不单独暴露编辑控件</td></tr>
+        <tr><td>History</td><td>历史上限 select：10 / 50 / 100 / 200</td><td>Clear 行为在 History Modal 内，不放 Settings</td></tr>
+        <tr><td>JSON Transform</td><td>自动解嵌套 checkbox、Unwrap 超时 number、编辑器软换行 checkbox</td><td><code>maxDepth</code> 仍为引擎选项，默认无层数限制，不放 Settings</td></tr>
+        <tr><td>About</td><td>Jsonita、版本、MIT、作者、GitHub、数据与日志路径</td><td>检查更新不内置，v1 由 GitHub Release 人工分发</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>控件规范</b>：boolean 项统一用小号圆角方形 checkbox（选中 = primary 背景 + 白色 check），不用 iOS switch；下拉 / 数字输入保持紧凑，所有分组 light / dark 都只用系统蓝做交互强调。设置左 nav 只切换 panel，不触发保存；保存由每个控件变更即时完成。</p>
 
     <h2 id="5"><span class="h2-num">5</span>历史 Modal</h2>
 

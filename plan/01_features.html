@@ -255,17 +255,18 @@
 
     <h2><span class="h2-num">F7</span>设置面板</h2>
 
+    <p><b>结构</b>：设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。左侧 nav 切换分组，右侧显示当前分组；所有设置改动即时生效并落盘，底部 Done 只关闭 Modal，Reset all 恢复默认值。交互来源已从 <code>design/jsonita-settings-detail.html</code> 迁入本章与 <a href="../spec/04_components.html">spec/04</a>，设计稿不再作为规格权威。</p>
+
     <h3><span class="h3-num">F7.1</span>General</h3>
     <ul>
-      <li>☑ <b>开机自启动</b> — 字段与开关已保留；当前未接系统 Login Items</li>
-      <li>☑ <b>在菜单栏显示图标</b> — 字段保留；当前 tray 始终创建</li>
-      <li>☑ <b>呼出时自动粘贴剪贴板</b>（若内容像 JSON）— 字段保留；当前未自动读取剪贴板</li>
+      <li><b>语言</b>：English / 简体中文；写入 <code>settings.locale</code>，影响 React 文案与 <code>document.documentElement.lang</code></li>
+      <li><b>主题</b>：System / Light / Dark；System 模式由原生层解析并跟随 OS 主题</li>
+      <li>☑ <b>开机自启动</b> — 字段与 UI 已有；当前未接系统 Login Items</li>
       <li>☑ <b>失焦自动隐藏浮窗</b></li>
-      <li>☐ <b>单窗模式</b> — 取消右侧 output 面板；按 <kbd>⌘Enter</kbd> 执行当前功能并 in-place 写回输入区（详见 <a href="#f9">F9</a>）</li>
-      <li><b>主题</b>：跟随系统 / 亮 / 暗</li>
-      <li><b>恢复上次会话窗口期</b>：字段保留；当前版本不做自动恢复，使用 <kbd>⌘⇧L</kbd> 手动找回</li>
-      <li><b>浮窗默认位置</b>：屏幕中央偏上（v1 固定，v2 可记忆）</li>
       <li>☑ <b>智能缩放</b> — 内容 / 行数 / 字号变化后按需调整窗口宽高（在 min-max 区间内，<b>不</b>占满屏；见 <a href="#f10">F10</a>）</li>
+      <li>☐ <b>单窗模式</b> — 取消右侧 output 面板；按 <kbd>⌘Enter</kbd> 执行当前功能并 in-place 写回输入区（详见 <a href="#f9">F9</a>）</li>
+      <li>☑ <b>呼出时自动粘贴剪贴板</b>（若内容像 JSON）— 字段与 UI 已有；当前未自动读取剪贴板</li>
+      <li><b>不展示项</b>：<code>showInMenubar</code> / <code>restoreWindow</code> / <code>initialWidth</code> 是 schema 保留或内部字段，当前不在 General UI 暴露，避免设置面板长成控制台</li>
     </ul>
 
     <h3><span class="h3-num">F7.2</span>Shortcuts</h3>
@@ -273,13 +274,16 @@
       <li><b>全局呼出快捷键</b>：默认 <kbd>⌘⇧J</kbd>，可改</li>
       <li><b>找回上次会话快捷键</b>：默认 <kbd>⌘⇧L</kbd>，可改</li>
       <li><b>切换单窗 / 双栏快捷键</b>：默认 <kbd>⌘\</kbd>，可改（窗口内；阶段 1 已实现，详见 <a href="#f9">F9</a>）</li>
+      <li><b>内置快捷键只读展示</b>：Tab / ⇧Tab、Esc、Esc Esc、⌘↵、⌘Y、⌘,、⌘K、⌘+ / ⌘- / ⌘0 都在 Shortcuts 分组展示，避免用户只能从临时提示里猜</li>
+      <li><b>保留组合拦截</b>：⌘Q / ⌘W / ⌘⇥ 等系统组合默认阻塞；如需强制绑定必须走 Override 确认</li>
     </ul>
 
     <h3><span class="h3-num">F7.3</span>AI</h3>
     <ul>
       <li>☑ <b>启用 AI Auto Fix</b>（总开关；关闭后所有 AI 入口完全隐藏）</li>
-      <li><b>DeepSeek API key</b>：masking 输入 + 「测试连接」按钮</li>
-      <li><b>模型 ID</b>：默认 <code>deepseek-chat</code>，可改（spec 阶段确认）</li>
+      <li><b>DeepSeek API key</b>：password 输入；已有 key 时 placeholder 显示已保存，可输入新 key 覆盖</li>
+      <li><b>测试 / 保存 / 移除</b>：Test 用输入框当前 key + model 调 <code>ai_test_connection</code>，不先写入 <code>secrets.json</code>；Save 才写入；Remove 删除已保存 key</li>
+      <li><b>模型 ID</b>：默认 <code>deepseek-chat</code>；当前 UI 展示模型信息但不暴露独立编辑控件</li>
     </ul>
 
     <h3><span class="h3-num">F7.4</span>History</h3>
@@ -293,11 +297,13 @@
     <ul>
       <li>☑ <b>自动解开嵌套 stringified JSON</b>（F3.3 行为，默认开启）</li>
       <li><b>解析超时阈值</b>：默认 200 ms（无层数限制，仅靠超时防失控；可调）</li>
+      <li>☑ <b>编辑器软换行</b>：默认开启，与 F1 编辑器 Soft-wrap 同一设置项</li>
     </ul>
 
     <h3><span class="h3-num">F7.6</span>About</h3>
     <ul>
-      <li>版本号 / 检查更新（v1 手动打开 GitHub）/ 开源协议 / 致谢</li>
+      <li>展示产品名、版本号、License、作者、数据目录、日志目录</li>
+      <li>GitHub 按钮调用 <code>open_github</code>，在系统浏览器打开仓库；v1 不内置检查更新</li>
     </ul>
 
     <h2 id="f8"><span class="h2-num">F8</span>会话保留与恢复</h2>

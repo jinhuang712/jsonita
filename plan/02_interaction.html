@@ -197,6 +197,24 @@
       </tbody>
     </table>
 
+    <h2><span class="h2-num">6</span>设置面板交互</h2>
+
+    <p>打开入口：右上角设置图标、菜单栏 Settings…、或 <kbd>⌘,</kbd>。Modal 打开时读取 <code>settings_get_all</code>，并订阅 <code>settings:changed</code>；左侧 6 个 nav 项切换右侧 panel，不重建整个 Modal。</p>
+
+    <table>
+      <thead><tr><th>分组</th><th>核心交互</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr><td>General</td><td>语言 / 主题 select；开机、失焦、智能缩放、单窗、自动粘贴用方形 checkbox</td><td>每次变化立即 <code>settings_set</code>；主题变化同步原生玻璃解析</td></tr>
+        <tr><td>Shortcuts</td><td>点可自定义快捷键 → 录入组合 → 检查冲突；内置快捷键只读</td><td>成功写入设置并重新注册；冲突 / 系统保留组合不写入</td></tr>
+        <tr><td>AI</td><td>启用开关；API key 输入；Test / Save / Remove</td><td>Test 不污染已存 key；Save 写 <code>secrets.json</code>；Remove 幂等删除</td></tr>
+        <tr><td>History</td><td>历史上限 select：10 / 50 / 100 / 200</td><td>后续写入 history 时按 pinned / starred / 时间策略裁剪</td></tr>
+        <tr><td>JSON Transform</td><td>自动解嵌套、unwrap timeout number、soft-wrap checkbox</td><td>影响 Format / Tree / 编辑器渲染与智能缩放计算</td></tr>
+        <tr><td>About</td><td>GitHub 按钮、版本 / License / 作者 / 数据路径只读展示</td><td>GitHub 走系统浏览器；路径用于用户排查与卸载</td></tr>
+      </tbody>
+    </table>
+
+    <p>底部按钮：Done 只关闭 Modal；Reset all 调 <code>settings_reset</code> 并广播 <code>settings:changed</code>。设置项没有“Apply”步骤，避免用户误以为更改处于未保存状态。</p>
+
     <nav class="pagination" id="pagination"></nav>
 
   </article>

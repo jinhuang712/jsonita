@@ -198,6 +198,20 @@ interface ToastOpts {
 
     <p><b>规则</b>：所有改动<b>即时生效</b>（不需要 Done 按钮提交，每个 Switch / Select 变化立刻 <code>settings_set</code>）。Done 仅关闭 Modal。Reset 弹二次确认 Dialog。</p>
 
+    <p><b>当前实现尺寸</b>：真实组件使用 W 600、左 nav 140、max-height 70vh；如果未来回到设计详版的 W 720 / nav 180，必须同步 <a href="01_mockups.html#4">01 § 4</a> 和本节。当前以真实实现为准。</p>
+
+    <table>
+      <thead><tr><th>分组</th><th>组件</th><th>状态 / 副作用</th></tr></thead>
+      <tbody>
+        <tr><td>General</td><td><code>select(locale)</code> · <code>select(theme)</code> · <code>SettingsCheckbox</code> × 5</td><td>patch <code>locale/theme/launchAtLogin/hideOnBlur/smartWidth/singlePaneMode/autoPasteClipboard</code></td></tr>
+        <tr><td>Shortcuts</td><td><code>ShortcutInput</code> × 3 + read-only <code>KbdGroup</code></td><td>可改 global toggle / restore-last 与窗口内 split toggle；内置 keymap 不可编辑</td></tr>
+        <tr><td>AI</td><td><code>SettingsCheckbox(aiEnabled)</code> + <code>ApiKeyInput</code></td><td>开关控制所有 AI 入口；key 通过 secrets store，不进入 settings</td></tr>
+        <tr><td>History</td><td><code>select(historyLimit)</code></td><td>影响 SQLite history 裁剪策略</td></tr>
+        <tr><td>JSON Transform</td><td><code>SettingsCheckbox(autoUnwrap)</code> · number input · <code>SettingsCheckbox(editorSoftWrap)</code></td><td>影响 JSON 引擎、CodeMirror 软换行、智能缩放指标</td></tr>
+        <tr><td>About</td><td>只读 metadata + GitHub button + path chips</td><td><code>open_github</code> 在系统浏览器打开仓库</td></tr>
+      </tbody>
+    </table>
+
     <p><b>Boolean 控件</b>：当前实现使用自定义 <code>SettingsCheckbox</code> 包裹原生 <code>input[type=checkbox]</code>。视觉为小号圆角方块 + 低饱和 primary checked 态，避免系统默认蓝色 checkbox 与深色浮窗割裂；原生 input 透明覆盖，保留点击、键盘和屏阅器语义。</p>
 
     <p><b>About 分组</b>：使用轻量信息面板展示产品名、版本、License、作者与数据目录；右上角提供 GitHub 外链按钮，调用 <code>open_github</code> command 在系统浏览器中打开仓库。</p>
