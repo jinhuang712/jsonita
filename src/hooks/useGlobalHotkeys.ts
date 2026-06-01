@@ -7,10 +7,10 @@
 import { useEffect, useRef } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { paneToOpType, runPaneApply } from '../editor/transforms';
-import { history as historyApi, session, win } from '../ipc/commands';
+import { history as historyApi, session, settings as settingsApi, win } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { on } from '../ipc/events';
-import { hasPrimaryModifier, primaryHotkeyPrefix } from '../keyboard/accelerators';
+import { eventMatchesAccelerator, hasPrimaryModifier, primaryHotkeyPrefix } from '../keyboard/accelerators';
 import { acceptAiFix } from '../panes/aiFixActions';
 import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
@@ -77,6 +77,8 @@ export function useGlobalHotkeys() {
   const retryAi = useAiStore((s) => s.retry);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
+  const shortcutSplitToggle = useSettingsStore((s) => s.settings.shortcutSplitToggle);
+  const setSettings = useSettingsStore((s) => s.setSettings);
 
   const restoreLast = async () => {
     try {
@@ -130,6 +132,29 @@ export function useGlobalHotkeys() {
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [historyModalOpen, setHistoryModalOpen, settingsModalOpen]);
+
+  // 可自定义窗口内快捷键：切换单窗 / 双栏。默认 CmdOrCtrl+\。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (historyModalOpen || settingsModalOpen) return;
+      if (!eventMatchesAccelerator(event, shortcutSplitToggle)) return;
+
+      consume(event);
+      settingsApi
+        .set({ singlePaneMode: !singlePaneMode })
+        .then(setSettings)
+        .catch(() => {});
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [
+    historyModalOpen,
+    setSettings,
+    settingsModalOpen,
+    shortcutSplitToggle,
+    singlePaneMode,
+  ]);
 
   // ⌘, 打开 Settings。跟 macOS app menu 保持一致，编辑器聚焦时也可用。
   useEffect(() => {

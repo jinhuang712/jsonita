@@ -24,6 +24,7 @@ export interface Settings {
   smartWidth: boolean;
   shortcutToggle: string;
   shortcutRestoreLast: string;
+  shortcutSplitToggle: string;
   aiEnabled: boolean;
   aiModelId: string;
   historyLimit: number;
@@ -45,6 +46,7 @@ const DEFAULT_SETTINGS: Settings = {
   smartWidth: true,
   shortcutToggle: 'CmdOrCtrl+Shift+J',
   shortcutRestoreLast: 'CmdOrCtrl+Shift+L',
+  shortcutSplitToggle: 'CmdOrCtrl+\\',
   aiEnabled: false,
   aiModelId: 'deepseek-chat',
   historyLimit: 100,

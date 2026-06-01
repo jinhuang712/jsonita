@@ -124,26 +124,27 @@ kbd {
   transform: translateY(1px);
 }
 
-.jsonita-history-button {
+.jsonita-statusbar-action {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-width: 58px;
+  min-width: 0;
   padding: 0;
   border: none;
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.jsonita-history-button:hover,
-.jsonita-history-button:focus-visible {
+.jsonita-statusbar-action:hover,
+.jsonita-statusbar-action:focus-visible {
   color: var(--text);
   outline: none;
 }
 
-.jsonita-history-shortcut {
+.jsonita-statusbar-shortcut {
   display: inline-flex;
   align-items: center;
   max-width: 0;
@@ -154,23 +155,23 @@ kbd {
   transform: translateX(4px);
   white-space: nowrap;
   transition:
-    max-width var(--dur-hint-fade, 420ms) var(--ease-out),
-    padding var(--dur-hint-fade, 420ms) var(--ease-out),
-    border-width var(--dur-hint-fade, 420ms) var(--ease-out),
-    opacity var(--dur-hint-fade, 420ms) var(--ease-out),
-    transform var(--dur-hint-fade, 420ms) var(--ease-out),
-    margin-right var(--dur-hint-fade, 420ms) var(--ease-out);
+    max-width var(--dur-base) var(--ease-native),
+    padding var(--dur-base) var(--ease-native),
+    border-width var(--dur-base) var(--ease-native),
+    opacity var(--dur-base) var(--ease-native),
+    transform var(--dur-base) var(--ease-native),
+    margin-right var(--dur-base) var(--ease-native);
 }
 
-.jsonita-history-button-hint-visible .jsonita-history-shortcut {
-  max-width: 38px;
+.jsonita-statusbar-action-hint-visible .jsonita-statusbar-shortcut {
+  max-width: 44px;
   padding: 0 4px;
   border-width: 1px;
   opacity: 1;
   transform: translateX(0);
 }
 
-.jsonita-history-shortcut {
+.jsonita-statusbar-shortcut {
   border-color: var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--bg);

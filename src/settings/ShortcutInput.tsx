@@ -16,12 +16,13 @@ import { formatAccelerator } from '../keyboard/accelerators';
  */
 
 interface Props {
-  action: ShortcutAction;
+  action?: ShortcutAction;
+  ariaLabel?: string;
   value: string;
   onChange: (next: string) => void;
 }
 
-export function ShortcutInput({ action, value, onChange }: Props) {
+export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
   const { t } = useTranslation('settings');
   const [recording, setRecording] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err' | 'reserved'; text: string; acc?: string } | null>(null);
@@ -56,6 +57,16 @@ export function ShortcutInput({ action, value, onChange }: Props) {
 
   const tryRegister = async (acc: string, forceOverride: boolean) => {
     try {
+      if (!action) {
+        onChange(acc);
+        setMsg({
+          kind: 'ok',
+          text: t('shortcuts.bound', { accelerator: formatAccelerator(acc) }),
+          acc,
+        });
+        return;
+      }
+
       const r: ShortcutRegisterResp = await shortcuts.register(action, acc, forceOverride);
       const displayAcc = formatAccelerator(acc);
       switch (r.kind) {
@@ -121,7 +132,7 @@ export function ShortcutInput({ action, value, onChange }: Props) {
           outline: 'none',
         }}
         role="button"
-        aria-label={`Shortcut for ${action}`}
+        aria-label={ariaLabel ?? `Shortcut for ${action}`}
       >
         {recording
           ? t('shortcuts.recordingPlaceholder')

@@ -40,6 +40,7 @@
     "builtInTitle": "内置快捷键",
     "toggle": "呼出浮窗",
     "restoreLast": "恢复上次会话",
+    "splitToggle": "切换单窗 / 双栏",
     "hint": "点可自定义快捷键后按目标组合键。系统保留组合（{{reserved}} 等）默认阻塞；如需强制绑定走 [Override]。",
     "builtIn": {
       "switchTabs": "切换功能 Tab",

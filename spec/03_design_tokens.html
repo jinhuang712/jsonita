@@ -289,9 +289,10 @@
         <tr><td><code>--dur-base</code></td><td>150 ms</td><td>浮窗淡入</td></tr>
         <tr><td><code>--dur-slow</code></td><td>200 ms</td><td>浮窗淡出 / Modal 出场</td></tr>
         <tr><td><code>--dur-toast</code></td><td>5000 ms</td><td>保留 token；当前未接入 Toast</td></tr>
-        <tr><td rowspan="3">缓动</td><td><code>--ease-standard</code></td><td><code>cubic-bezier(0.4, 0.0, 0.2, 1)</code></td><td>Material 风（默认）</td></tr>
+        <tr><td rowspan="4">缓动</td><td><code>--ease-standard</code></td><td><code>cubic-bezier(0.4, 0.0, 0.2, 1)</code></td><td>Material 风（默认）</td></tr>
         <tr><td><code>--ease-out</code></td><td><code>cubic-bezier(0.0, 0.0, 0.2, 1)</code></td><td>入场</td></tr>
         <tr><td><code>--ease-in</code></td><td><code>cubic-bezier(0.4, 0.0, 1, 1)</code></td><td>出场</td></tr>
+        <tr><td><code>--ease-native</code></td><td><code>cubic-bezier(0.32, 0.72, 0, 1)</code></td><td>玻璃方向主力缓动；阶段 1 已用于状态栏快捷键浮现，后续呼出 / 缩放 / modal / tab 在阶段 2 接入。可选 <code>--ease-spring</code> 走 CSS <code>linear()</code></td></tr>
       </tbody>
     </table>
 
@@ -313,6 +314,13 @@
         <tr><td><code>fade-out</code></td><td>保留动画</td><td>opacity 1→0</td><td><code>--dur-slow</code></td></tr>
       </tbody>
     </table>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">INFO</span>
+      <div class="callout-body">
+        <p><b>玻璃方向动画调整（设计定稿，待实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：上表为现行保留设计。玻璃重做后主力缓动改 <code>--ease-native</code>，呼出 scale 起点压到 <code>0.96</code>、<code>transform-origin</code> 靠近光标锚点，出场比入场更快（~140 ms）。新增：Tab active 药丸滑动（left / width，<code>--dur-base</code> / <code>--ease-native</code>）+ 内容 cross-fade ≤ 120 ms；AI Fix tab 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；单窗切换 grid 合并 + 窗口顺势缩窄（~240 ms）；主题切换全局色交叉淡（~180 ms，仅手动切触发，防 FOUC）。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity。</b></p>
+      </div>
+    </div>
 
     <h2><span class="h2-num">10</span>Z-index scale</h2>
 

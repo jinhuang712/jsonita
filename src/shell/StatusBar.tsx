@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { settings as settingsApi } from '../ipc/commands';
 import { formatAccelerator } from '../keyboard/accelerators';
-import { on } from '../ipc/events';
 import { useEditorStore } from '../store/editor';
+import { useSettingsStore } from '../store/settings';
 import { useUiStore } from '../store/ui';
-import { HINT_HOLD_MS } from './hintTiming';
 
 /**
  * 底部状态栏 — 4 态文案（valid / error / empty / large）+ 右侧 History 入口。
@@ -17,35 +17,18 @@ export function StatusBar() {
   const status = useEditorStore((s) => s.status);
   const bytes = useEditorStore((s) => s.bytes);
   const lines = useEditorStore((s) => s.lines);
+  const settings = useSettingsStore((s) => s.settings);
+  const setSettings = useSettingsStore((s) => s.setSettings);
   const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
-  const [historyHintVisible, setHistoryHintVisible] = useState(true);
-  const historyHintTimerRef = useRef<number | null>(null);
+  const [splitHintVisible, setSplitHintVisible] = useState(false);
+  const [historyHintVisible, setHistoryHintVisible] = useState(false);
 
-  useEffect(() => {
-    const revealThenHide = () => {
-      if (historyHintTimerRef.current !== null) {
-        window.clearTimeout(historyHintTimerRef.current);
-      }
-      setHistoryHintVisible(true);
-      historyHintTimerRef.current = window.setTimeout(() => {
-        setHistoryHintVisible(false);
-        historyHintTimerRef.current = null;
-      }, HINT_HOLD_MS);
-    };
-
-    let unlisten: (() => void) | undefined;
-    revealThenHide();
-    on('window:shown', revealThenHide).then((fn) => {
-      unlisten = fn;
-    });
-
-    return () => {
-      unlisten?.();
-      if (historyHintTimerRef.current !== null) {
-        window.clearTimeout(historyHintTimerRef.current);
-      }
-    };
-  }, []);
+  const toggleSinglePaneMode = () => {
+    settingsApi
+      .set({ singlePaneMode: !settings.singlePaneMode })
+      .then(setSettings)
+      .catch(() => {});
+  };
 
   let left: React.ReactNode;
   switch (status) {
@@ -92,18 +75,43 @@ export function StatusBar() {
       }}
     >
       {left}
-      <div style={{ display: 'flex', gap: 8, color: 'var(--text-muted)' }}>
+      <div style={{ display: 'flex', gap: 10, color: 'var(--text-muted)' }}>
         <button
+          type="button"
+          onClick={toggleSinglePaneMode}
+          onMouseEnter={() => setSplitHintVisible(true)}
+          onMouseLeave={() => setSplitHintVisible(false)}
+          onFocus={() => setSplitHintVisible(true)}
+          onBlur={() => setSplitHintVisible(false)}
+          className={splitHintVisible ? 'jsonita-statusbar-action jsonita-statusbar-action-hint-visible' : 'jsonita-statusbar-action'}
+          aria-label={
+            settings.singlePaneMode
+              ? t('actions.switchToSplitPanel')
+              : t('actions.switchToSinglePanel')
+          }
+          title={formatAccelerator(settings.shortcutSplitToggle)}
+        >
+          <span className="jsonita-statusbar-shortcut">
+            {formatAccelerator(settings.shortcutSplitToggle)}
+          </span>
+          <span>
+            {settings.singlePaneMode
+              ? t('actions.switchToSplitPanel')
+              : t('actions.switchToSinglePanel')}
+          </span>
+        </button>
+        <button
+          type="button"
           onClick={() => setHistoryModalOpen(true)}
           onMouseEnter={() => setHistoryHintVisible(true)}
           onMouseLeave={() => setHistoryHintVisible(false)}
           onFocus={() => setHistoryHintVisible(true)}
           onBlur={() => setHistoryHintVisible(false)}
-          className={historyHintVisible ? 'jsonita-history-button jsonita-history-button-hint-visible' : 'jsonita-history-button'}
+          className={historyHintVisible ? 'jsonita-statusbar-action jsonita-statusbar-action-hint-visible' : 'jsonita-statusbar-action'}
           aria-label={t('actions.openHistory')}
           title={formatAccelerator('CmdOrCtrl+Y')}
         >
-          <span className="jsonita-history-shortcut">{formatAccelerator('CmdOrCtrl+Y')}</span>
+          <span className="jsonita-statusbar-shortcut">{formatAccelerator('CmdOrCtrl+Y')}</span>
           <span>{t('actions.history')}</span>
         </button>
       </div>

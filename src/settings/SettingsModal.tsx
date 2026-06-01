@@ -261,6 +261,14 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
           onChange={(v) => patch({ shortcutRestoreLast: v })}
         />
       </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>{t('shortcuts.splitToggle')}</span>
+        <ShortcutInput
+          ariaLabel={t('shortcuts.splitToggle')}
+          value={settings.shortcutSplitToggle}
+          onChange={(v) => patch({ shortcutSplitToggle: v })}
+        />
+      </div>
       <div style={shortcutDividerStyle} />
       <SectionLabel>{t('shortcuts.builtInTitle')}</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
