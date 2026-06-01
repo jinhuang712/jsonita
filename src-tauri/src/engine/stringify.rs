@@ -84,12 +84,10 @@ fn unescape(s: &str) -> Result<String, JsonitaError> {
             Some('f') => out.push('\u{000C}'),
             Some('u') => {
                 let hex: String = chars.by_ref().take(4).collect();
-                let code = u32::from_str_radix(&hex, 16).map_err(|_| {
-                    JsonitaError::Parse {
-                        line: 0,
-                        col: 0,
-                        msg: format!("invalid \\u{}", hex),
-                    }
+                let code = u32::from_str_radix(&hex, 16).map_err(|_| JsonitaError::Parse {
+                    line: 0,
+                    col: 0,
+                    msg: format!("invalid \\u{}", hex),
                 })?;
                 if let Some(ch) = char::from_u32(code) {
                     out.push(ch);

@@ -16,9 +16,7 @@ use tauri::{
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     // macOS template @2x PNG 编译期 PNG → RGBA decode 嵌入（Tauri 2 include_image! 宏处理）
-    let icon = tauri::include_image!(
-        "../assets/icons/menubar/jsonita-menubar-template-22@2x.png"
-    );
+    let icon = tauri::include_image!("../assets/icons/menubar/jsonita-menubar-template-22@2x.png");
 
     let menu = build_menu(app)?;
 

@@ -74,16 +74,17 @@ pub fn init() -> Option<WorkerGuard> {
 
 #[cfg(target_os = "macos")]
 fn resolve_log_dir() -> Option<PathBuf> {
-    Some(dirs::home_dir()?.join("Library").join("Logs").join("Jsonita"))
+    Some(
+        dirs::home_dir()?
+            .join("Library")
+            .join("Logs")
+            .join("Jsonita"),
+    )
 }
 
 #[cfg(not(target_os = "macos"))]
 fn resolve_log_dir() -> Option<PathBuf> {
-    Some(
-        dirs::data_local_dir()?
-            .join("Jsonita")
-            .join("logs"),
-    )
+    Some(dirs::data_local_dir()?.join("Jsonita").join("logs"))
 }
 
 fn purge_old(dir: &Path, retain_days: u64) {

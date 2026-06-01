@@ -35,7 +35,10 @@ impl SettingsStore {
     }
 
     pub fn auto_unwrap(&self) -> bool {
-        self.inner.read().expect("settings lock poisoned").auto_unwrap
+        self.inner
+            .read()
+            .expect("settings lock poisoned")
+            .auto_unwrap
     }
 
     pub fn unwrap_timeout_ms(&self) -> u64 {
@@ -46,24 +49,30 @@ impl SettingsStore {
     }
 
     /// Shallow merge patch：传入部分 JSON object → 覆盖当前 Settings；持久化 + 返回新值。
-    pub fn patch(&self, patch: serde_json::Map<String, serde_json::Value>) -> Result<Settings, JsonitaError> {
+    pub fn patch(
+        &self,
+        patch: serde_json::Map<String, serde_json::Value>,
+    ) -> Result<Settings, JsonitaError> {
         let mut current = self.inner.write().expect("settings lock poisoned");
-        let mut as_value = serde_json::to_value(&*current)
-            .map_err(|e| JsonitaError::Io(e.to_string()))?;
+        let mut as_value =
+            serde_json::to_value(&*current).map_err(|e| JsonitaError::Io(e.to_string()))?;
         let obj = as_value
             .as_object_mut()
             .ok_or_else(|| JsonitaError::Io("settings is not object".into()))?;
         for (k, v) in patch {
             obj.insert(k, v);
         }
-        let updated: Settings = serde_json::from_value(as_value)
-            .map_err(|e| JsonitaError::Io(e.to_string()))?;
+        let updated: Settings =
+            serde_json::from_value(as_value).map_err(|e| JsonitaError::Io(e.to_string()))?;
         *current = updated.clone();
         if let Some(path) = &self.path {
             if let Some(dir) = path.parent() {
                 let _ = std::fs::create_dir_all(dir);
             }
-            std::fs::write(path, serde_json::to_string_pretty(&updated).unwrap_or_default())?;
+            std::fs::write(
+                path,
+                serde_json::to_string_pretty(&updated).unwrap_or_default(),
+            )?;
         }
         Ok(updated)
     }
@@ -76,7 +85,10 @@ impl SettingsStore {
             *current = updated.clone();
         }
         if let Some(path) = &self.path {
-            std::fs::write(path, serde_json::to_string_pretty(&updated).unwrap_or_default())?;
+            std::fs::write(
+                path,
+                serde_json::to_string_pretty(&updated).unwrap_or_default(),
+            )?;
         }
         Ok(updated)
     }

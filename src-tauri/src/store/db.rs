@@ -44,11 +44,11 @@ impl Db {
     }
 
     fn migrate(pool: &Pool<SqliteConnectionManager>) -> Result<(), JsonitaError> {
-        let mut conn = pool.get().map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
-        conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS schema_version (v INTEGER NOT NULL)",
-        )
-        .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+        let mut conn = pool
+            .get()
+            .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+        conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (v INTEGER NOT NULL)")
+            .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
 
         let current: u32 = conn
             .query_row("SELECT COALESCE(MAX(v), 0) FROM schema_version", [], |r| {
@@ -72,7 +72,8 @@ impl Db {
             }
         }
 
-        tx.commit().map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
+        tx.commit()
+            .map_err(|e| JsonitaError::Sqlite(e.to_string()))?;
         Ok(())
     }
 }
