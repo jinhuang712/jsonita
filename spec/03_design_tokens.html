@@ -116,10 +116,10 @@
         <tr><td><code>--primary-edge</code></td><td><code>rgba(10,108,224,.28)</code></td><td><code>rgba(127,179,255,.34)</code></td><td>hover 边框</td></tr>
         <tr><td><code>--accent</code></td><td><code>#A4621A</code></td><td><code>#FFC58A</code></td><td>AI Fix / Diff Accept / inline code；琥珀强调</td></tr>
         <tr><td><code>--accent-soft</code></td><td><code>rgba(181,101,29,.13)</code></td><td><code>rgba(255,182,107,.16)</code></td><td></td></tr>
-        <tr><td><code>--glass-bg</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.52)</code></td><td>浮窗唯一主叠色；避免叠加后遮住原生 vibrancy</td></tr>
+        <tr><td><code>--glass-bg</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.55)</code></td><td>浮窗唯一主叠色；避免叠加后遮住原生 vibrancy</td></tr>
         <tr><td><code>--glass-blur</code></td><td><code>blur(42px) saturate(180%)</code></td><td><code>blur(42px) saturate(175%)</code></td><td>文档 mockup 模拟；真机由原生 vibrancy 负责</td></tr>
-        <tr><td><code>--chrome-bg</code></td><td><code>rgba(255,255,255,.16)</code></td><td><code>rgba(255,255,255,.035)</code></td><td>TabBar / StatusBar 的轻量玻璃 band；不可回退成整条实心暗底</td></tr>
-        <tr><td><code>--chrome-bg-strong</code></td><td><code>rgba(255,255,255,.32)</code></td><td><code>rgba(255,255,255,.08)</code></td><td>hover / kbd / 浮层中的局部 glass chip</td></tr>
+        <tr><td><code>--chrome-bg</code></td><td><code>transparent</code></td><td><code>transparent</code></td><td>TabBar / StatusBar 不再铺整条 band，只靠主窗 tint + 发丝线分层</td></tr>
+        <tr><td><code>--chrome-bg-strong</code></td><td><code>rgba(255,255,255,.2)</code></td><td><code>rgba(255,255,255,.1)</code></td><td>hover / kbd / 局部 glass chip</td></tr>
         <tr><td><code>--tab-active-bg / --tab-active-border</code></td><td><code>rgba(10,108,224,.12)</code> / <code>rgba(10,108,224,.24)</code></td><td><code>rgba(255,255,255,.14)</code> / <code>rgba(255,255,255,.2)</code></td><td>active tab pill；dark 下按 design mockup 用白色玻璃 pill + 系统蓝文字</td></tr>
         <tr><td><code>--bg</code></td><td><code>rgba(255,255,255,0)</code></td><td><code>rgba(26,28,36,0)</code></td><td>Tauri 透明窗口底</td></tr>
         <tr><td><code>--bg-card</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.55)</code></td><td>浮窗 / Modal / 卡片叠层</td></tr>
@@ -158,9 +158,9 @@
         <tr><td><code>--json-bool</code></td><td><code>#7A4FC0</code></td><td><code>#C9B0FF</code></td><td>紫色 bool，区分 number</td></tr>
         <tr><td><code>--json-null</code></td><td><code>rgba(20,22,30,.36)</code></td><td><code>rgba(255,255,255,.36)</code></td><td>同 text-faint</td></tr>
         <tr><td><code>--json-punc</code></td><td><code>rgba(20,22,30,.4)</code></td><td><code>rgba(255,255,255,.42)</code></td><td>标点（淡化）</td></tr>
-        <tr><td><code>--editor-bg</code></td><td><code>rgba(255,255,255,.03)</code></td><td><code>transparent</code></td><td>编辑器近透明，避免覆盖主窗原生玻璃</td></tr>
-        <tr><td><code>--editor-gutter</code></td><td><code>rgba(255,255,255,.12)</code></td><td><code>rgba(0,0,0,.045)</code></td><td>行号槽的轻微分层</td></tr>
-        <tr><td><code>--editor-line-active</code></td><td><code>rgba(10,108,224,.055)</code></td><td><code>rgba(10,132,255,.045)</code></td><td>当前行高亮；只作定位，不能形成整条蓝带</td></tr>
+        <tr><td><code>--editor-bg</code></td><td><code>transparent</code></td><td><code>transparent</code></td><td>编辑器透明，避免覆盖主窗原生玻璃</td></tr>
+        <tr><td><code>--editor-gutter</code></td><td><code>transparent</code></td><td><code>transparent</code></td><td>行号槽不再形成整块暗带</td></tr>
+        <tr><td><code>--editor-line-active</code></td><td><code>rgba(10,108,224,.028)</code></td><td><code>rgba(10,132,255,.028)</code></td><td>当前行高亮；只作定位，不能形成整条蓝带</td></tr>
         <tr><td><code>--editor-selection</code></td><td><code>rgba(10,108,224,.22)</code></td><td><code>rgba(10,132,255,.28)</code></td><td>选区</td></tr>
         <tr><td><code>--editor-cursor</code></td><td><code>#0A6CE0</code></td><td><code>#7FB3FF</code></td><td>光标</td></tr>
         <tr><td><code>--editor-error-underline</code></td><td><code>#C0392B</code></td><td><code>#F2A0A0</code></td><td>parse error 下划线</td></tr>
@@ -233,7 +233,7 @@
       </tbody>
     </table>
 
-    <p><b>浮窗缩放域</b>：<code>--fs-editor</code> 是 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 的源值；浮窗根节点用它派生 <code>--fs-tree</code>、<code>--fs-xs</code>、<code>--fs-sm</code>。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、ShortcutHint、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（<code>--fs-xs</code> ≤ 12.5px，<code>--fs-sm</code> ≤ 14px），避免 chrome 喧宾夺主。Settings Modal / History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。</p>
+    <p><b>浮窗缩放域</b>：<code>--fs-editor</code> 是 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 的源值；浮窗根节点用它派生 <code>--fs-tree</code>、<code>--fs-xs</code>、<code>--fs-sm</code>。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（<code>--fs-xs</code> ≤ 12.5px，<code>--fs-sm</code> ≤ 14px），避免 chrome 喧宾夺主。Settings Modal / History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。</p>
 
     <h3><span class="h3-num">6.3</span>字重 + 行高</h3>
 

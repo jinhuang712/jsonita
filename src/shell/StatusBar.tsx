@@ -71,7 +71,7 @@ export function StatusBar() {
         fontSize: 'var(--fs-xs)',
         fontFamily: 'var(--font-mono)',
         borderTop: '1px solid var(--border)',
-        background: 'var(--chrome-bg)',
+        background: 'transparent',
       }}
     >
       {left}
