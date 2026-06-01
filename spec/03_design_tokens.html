@@ -292,7 +292,7 @@
         <tr><td rowspan="4">缓动</td><td><code>--ease-standard</code></td><td><code>cubic-bezier(0.4, 0.0, 0.2, 1)</code></td><td>Material 风（默认）</td></tr>
         <tr><td><code>--ease-out</code></td><td><code>cubic-bezier(0.0, 0.0, 0.2, 1)</code></td><td>入场</td></tr>
         <tr><td><code>--ease-in</code></td><td><code>cubic-bezier(0.4, 0.0, 1, 1)</code></td><td>出场</td></tr>
-        <tr><td><code>--ease-native</code></td><td><code>cubic-bezier(0.32, 0.72, 0, 1)</code></td><td>玻璃方向主力缓动；阶段 1 已用于状态栏快捷键浮现，后续呼出 / 缩放 / modal / tab 在阶段 2 接入。可选 <code>--ease-spring</code> 走 CSS <code>linear()</code></td></tr>
+        <tr><td><code>--ease-native</code></td><td><code>cubic-bezier(0.32, 0.72, 0, 1)</code></td><td>玻璃方向主力缓动；阶段 2 已用于状态栏快捷键、浮窗呼出、Tab active pill、AI Fix 入场、主题手动切换。可选 <code>--ease-spring</code> 走 CSS <code>linear()</code></td></tr>
       </tbody>
     </table>
 
@@ -308,8 +308,11 @@
     <table>
       <thead><tr><th>动画</th><th>触发</th><th>变换</th><th>时长 / 缓动</th></tr></thead>
       <tbody>
-        <tr><td><code>window-fade-in</code></td><td>浮窗 show</td><td>opacity 0→1 + translateY -4px→0 + scale 0.98→1</td><td><code>--dur-base</code> / <code>--ease-out</code></td></tr>
-        <tr><td><code>window-fade-out</code></td><td>浮窗 hide</td><td>opacity 1→0 + translateY 0→-2px + scale 1→0.99</td><td><code>--dur-slow</code> / <code>--ease-in</code></td></tr>
+        <tr><td><code>jsonita-window-summon</code></td><td>浮窗 show</td><td>opacity 0→1 + translateY -6px→0 + scale .96→1</td><td><code>--dur-base</code> / <code>--ease-native</code></td></tr>
+        <tr><td><code>jsonita-window-dismiss</code></td><td>浮窗 hide</td><td>opacity 1→0 + translateY 0→-4px + scale 1→.99</td><td>140 ms / <code>--ease-in</code></td></tr>
+        <tr><td><code>jsonita-pane-in</code></td><td>Tab / 单双栏内容切换</td><td>内容 cross-fade</td><td><code>--dur-fast</code> / <code>--ease-native</code></td></tr>
+        <tr><td><code>jsonita-ai-fix-enter</code> + glow</td><td>AI Fix 入口出现</td><td>translateX 10px→0 + opacity + 一次性琥珀微光</td><td><code>--dur-base</code> / <code>--ease-native</code>；glow 不循环</td></tr>
+        <tr><td><code>jsonita-theme-transition</code></td><td>手动切换主题</td><td>bg / color / border / shadow 交叉淡</td><td>~180 ms / <code>--ease-native</code>；初次加载与 system 自动变化不触发</td></tr>
         <tr><td><code>toast-in</code></td><td>保留动画</td><td>opacity 0→1 + translateY 8px→0</td><td><code>--dur-base</code> / <code>--ease-out</code></td></tr>
         <tr><td><code>fade-out</code></td><td>保留动画</td><td>opacity 1→0</td><td><code>--dur-slow</code></td></tr>
       </tbody>
@@ -318,7 +321,7 @@
     <div class="callout callout-info">
       <span class="callout-icon">INFO</span>
       <div class="callout-body">
-        <p><b>玻璃方向动画调整（设计定稿，待实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：上表为现行保留设计。玻璃重做后主力缓动改 <code>--ease-native</code>，呼出 scale 起点压到 <code>0.96</code>、<code>transform-origin</code> 靠近光标锚点，出场比入场更快（~140 ms）。新增：Tab active 药丸滑动（left / width，<code>--dur-base</code> / <code>--ease-native</code>）+ 内容 cross-fade ≤ 120 ms；AI Fix tab 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；单窗切换 grid 合并 + 窗口顺势缩窄（~240 ms）；主题切换全局色交叉淡（~180 ms，仅手动切触发，防 FOUC）。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity。</b></p>
+        <p><b>玻璃方向动画（阶段 2 已实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：主力缓动为 <code>--ease-native</code>。浮窗呼出 scale 起点为 <code>0.96</code>、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + <code>--ease-native</code>，内容 cross-fade ≤ 120 ms；AI Fix 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。</b></p>
       </div>
     </div>
 

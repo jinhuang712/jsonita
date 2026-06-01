@@ -98,7 +98,7 @@ export function ShortcutHint() {
         lineHeight: 1.25,
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(4px)',
-        transition: `opacity ${HINT_FADE_MS}ms ease, transform ${HINT_FADE_MS}ms ease`,
+        transition: `opacity ${HINT_FADE_MS}ms var(--ease-native), transform ${HINT_FADE_MS}ms var(--ease-native)`,
         pointerEvents: 'none',
       }}
     >

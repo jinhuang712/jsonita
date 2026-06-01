@@ -29,6 +29,15 @@ select,
   box-sizing: border-box;
 }
 
+.jsonita-theme-transition,
+.jsonita-theme-transition * {
+  transition:
+    background-color 180ms var(--ease-native),
+    border-color 180ms var(--ease-native),
+    color 180ms var(--ease-native),
+    box-shadow 180ms var(--ease-native) !important;
+}
+
 kbd {
   display: inline-block;
   padding: 0 4px;
@@ -50,9 +59,9 @@ kbd {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-edge) 55%, transparent);
   pointer-events: none;
   transition:
-    transform 180ms var(--ease-out),
-    width 180ms var(--ease-out),
-    opacity var(--dur-base) var(--ease-out);
+    transform 180ms var(--ease-native),
+    width 180ms var(--ease-native),
+    opacity var(--dur-fast) var(--ease-native);
 }
 
 .jsonita-tab-button {
@@ -72,6 +81,104 @@ kbd {
   transition:
     color var(--dur-base) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-floating-window {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: 50% 0;
+  will-change: opacity, transform;
+}
+
+.jsonita-floating-window-shown {
+  animation: jsonita-window-summon var(--dur-base) var(--ease-native) both;
+}
+
+.jsonita-floating-window-hiding {
+  animation: jsonita-window-dismiss 140ms var(--ease-in) both;
+}
+
+.jsonita-pane-transition {
+  animation: jsonita-pane-in var(--dur-fast) var(--ease-native) both;
+}
+
+.jsonita-ai-fix-entry,
+.jsonita-ai-fix-pane {
+  animation:
+    jsonita-ai-fix-enter var(--dur-base) var(--ease-native) both,
+    jsonita-ai-fix-glow 520ms var(--ease-native) 70ms 1 both;
+}
+
+@keyframes jsonita-window-summon {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes jsonita-window-dismiss {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+}
+
+@keyframes jsonita-pane-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes jsonita-ai-fix-enter {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes jsonita-ai-fix-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(183, 121, 45, 0);
+  }
+  38% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(183, 121, 45, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jsonita-floating-window-shown,
+  .jsonita-floating-window-hiding {
+    animation-name: jsonita-window-opacity-only;
+  }
+}
+
+@keyframes jsonita-window-opacity-only {
+  from {
+    opacity: 0;
+    transform: none;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .jsonita-tab-button:hover {

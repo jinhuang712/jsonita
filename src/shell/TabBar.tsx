@@ -142,6 +142,7 @@ export function TabBar() {
         <button
           aria-disabled="true"
           tabIndex={-1}
+          className="jsonita-ai-fix-entry"
           onClick={() => undefined}
           title={t('tab.aiFixDisabledTooltip')}
           style={{

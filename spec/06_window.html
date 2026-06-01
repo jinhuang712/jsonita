@@ -64,7 +64,7 @@
 
     <h3><span class="h3-num">2.5</span>动效全部 CSS / 前端实现</h3>
 
-    <p>当前 Rust 端只管 <code>show()</code> / <code>hide()</code>，前端尚未接入 show/hide 过渡类；03 章里的窗口淡入淡出 token 是保留设计。</p>
+    <p>阶段 2 已接入 show/hide 过渡：Rust show 后 emit <code>window:shown</code>，hide 前 emit <code>window:will-hide</code> 并延迟约 140 ms；React 根容器切换 <code>.jsonita-floating-window-shown</code> / <code>.jsonita-floating-window-hiding</code>，只动 opacity / transform。</p>
 
     <p class="section-divider"><b>二 · 工作机制</b></p>
 
@@ -348,18 +348,18 @@ stateDiagram-v2
 
     <h3><span class="h3-num">8.1</span>动效（reserved / future）</h3>
 
-    <p>当前实现没有窗口 show/hide CSS 动画；Rust 直接 <code>show()</code> / <code>hide()</code>。下表是保留设计，后续接入时需同步 <code>src/styles</code>。</p>
+    <p>阶段 2 已接入窗口 show/hide CSS 动画。Rust 端不再立即 hide：先广播 <code>window:will-hide</code>，等待 140 ms 后再调用平台 <code>hide()</code>。</p>
 
     <table>
       <thead><tr><th>阶段</th><th>React 类名</th><th>动画</th><th>时长 / 缓动</th></tr></thead>
       <tbody>
-        <tr><td>挂载</td><td><code>.floating-window-enter</code></td><td><code>window-fade-in</code></td><td><code>--dur-base</code>（150ms）/ <code>--ease-out</code></td></tr>
-        <tr><td>关闭前</td><td><code>.floating-window-exit</code></td><td><code>window-fade-out</code></td><td><code>--dur-slow</code>（200ms）/ <code>--ease-in</code></td></tr>
+        <tr><td>显示后</td><td><code>.jsonita-floating-window-shown</code></td><td><code>jsonita-window-summon</code></td><td><code>--dur-base</code>（150ms）/ <code>--ease-native</code></td></tr>
+        <tr><td>关闭前</td><td><code>.jsonita-floating-window-hiding</code></td><td><code>jsonita-window-dismiss</code></td><td>140ms / <code>--ease-in</code></td></tr>
         <tr><td>reduced-motion</td><td>—</td><td>animation-duration: 1ms</td><td>—</td></tr>
       </tbody>
     </table>
 
-    <p><b>未来淡出同步</b>：若后续接入动效，可用 React 加 <code>.floating-window-exit</code> → <code>await sleep(200)</code> → <code>invoke window_hide</code>。当前不做这层延迟。</p>
+    <p><b>淡出同步</b>：所有 hide 路径（快捷键、托盘、失焦、close request）统一走 Rust <code>animated_hide</code>，避免前端路径和系统路径动画不一致。</p>
 
     <p class="section-divider"><b>三 · 契约</b></p>
 

@@ -22,7 +22,7 @@ pub async fn window_show(app: tauri::AppHandle) -> Result<(), JsonitaError> {
 #[tauri::command]
 pub async fn window_hide(app: tauri::AppHandle) -> Result<(), JsonitaError> {
     if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
-        win.hide()?;
+        window::animated_hide(win);
     }
     Ok(())
 }
