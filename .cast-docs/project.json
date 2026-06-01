@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "name": "Jsonita",
+  "defaultLocale": "zh-CN",
+  "defaultDocumentType": "engineering-plan",
+  "defaultScenario": "cross-team-alignment",
+  "owner": "Jin Huang",
+  "audience": ["engineering", "product"],
+  "output": {
+    "defaultDir": "docs/cast-docs",
+    "localDir": ".cast-docs/out",
+    "filenamePattern": "{date}-{slug}.html"
+  },
+  "styleProfile": {
+    "theme": "cast-default",
+    "density": "compact",
+    "surface": "bordered",
+    "accent": "blue"
+  }
+}

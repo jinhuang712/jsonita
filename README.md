@@ -87,6 +87,12 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块 ... |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史（按 Phase 顺序） |
 
+## CAST 文档约定
+
+本项目文档严格依赖 CAST 进行书写与维护。后来者在修改产品范围、实现计划、技术规格、TODO、Changelist 或文档入口时，需要先检查 CAST 文档骨架，并同步更新 `README.md`、`index.html`、`plan/`、`spec/`、`site/todo.json`、`site/changelist.json`、`todo.html`、`changelist.html`。
+
+CAST 入口仓库：[`CAST-docs/cast-a-start`](https://github.com/CAST-docs/cast-a-start)。如后续需要重新生成或升级 HTML 文档，请同时关注 [`CAST-docs/cast-a-doc`](https://github.com/CAST-docs/cast-a-doc)。
+
 ## 当前进度（agent 实施）
 
 | Phase | 节点 | 状态 |
