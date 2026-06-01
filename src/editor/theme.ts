@@ -95,10 +95,12 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     boxShadow: 'none',
   },
   '.cm-tooltip-lint': {
-    backgroundColor: 'var(--bg-card)',
+    backgroundColor: 'color-mix(in srgb, var(--glass-bg) 92%, transparent)',
     color: 'var(--text)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--radius-md)',
+    backdropFilter: 'var(--glass-blur)',
+    WebkitBackdropFilter: 'var(--glass-blur)',
     fontSize: 'var(--fs-sm)',
   },
 };

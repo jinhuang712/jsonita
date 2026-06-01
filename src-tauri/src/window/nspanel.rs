@@ -9,8 +9,8 @@
 #![cfg(target_os = "macos")]
 #![allow(deprecated)] // cocoa 0.26 整体 deprecated 但 Tauri 2.11 仍依赖
 
-use cocoa::appkit::{NSWindow, NSWindowCollectionBehavior, NSWindowStyleMask};
-use cocoa::base::id;
+use cocoa::appkit::{NSColor, NSWindow, NSWindowCollectionBehavior, NSWindowStyleMask};
+use cocoa::base::{id, nil, NO};
 use objc::{msg_send, sel, sel_impl};
 use tauri::WebviewWindow;
 
@@ -41,6 +41,13 @@ pub fn promote(win: &WebviewWindow) -> tauri::Result<()> {
 
         // floating level：常驻置顶（macOS 上 NSPanel 进一步加强 alwaysOnTop）
         let _: () = msg_send![ns_window, setLevel: NS_FLOATING_LEVEL];
+
+        // Keep the native vibrancy visible below the webview. Tauri's
+        // transparent window flag normally handles this, but we re-apply it
+        // after changing the NSWindow style mask so AppKit cannot restore an
+        // opaque title/background surface.
+        ns_window.setOpaque_(NO);
+        ns_window.setBackgroundColor_(NSColor::clearColor(nil));
     }
 
     Ok(())

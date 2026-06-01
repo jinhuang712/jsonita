@@ -120,6 +120,7 @@ pub fn promote_to_nspanel(win: &amp;tauri::WebviewWindow) -&gt; Result&lt;(), Js
     <h3><span class="h3-num">3.4</span>原生玻璃 vibrancy（阶段 3 已实现）</h3>
 
     <p>窗口配置保持 <code>transparent: true</code>；启动时在 NSPanel-like promote 后调用 Tauri <code>WebviewWindow::set_effects</code>，使用 <code>EffectsBuilder::effect(Effect::Popover).state(EffectState::Active).radius(16)</code>。这条路径由 Tauri 内部映射到 macOS <code>NSVisualEffectView</code>，避免手写 subview 管理；React/CSS 只负责半透明叠色、边框和阴影。</p>
+    <p><b>透明兜底</b>：promote 改写 <code>styleMask</code> 后，macOS 端还会显式调用 <code>setOpaque(false)</code> 与 <code>setBackgroundColor(NSColor.clearColor)</code>，确保 NSWindow/titlebar 不恢复不透明底色；前端 chrome / editor 叠层必须使用 <a href="03_design_tokens.html">03</a> 中的轻量 <code>--chrome-bg</code>、<code>--editor-bg</code>，不能再用整块 <code>--bg-card</code> 覆盖 vibrancy。</p>
 
     <h2><span class="h2-num">4</span>多屏定位</h2>
 

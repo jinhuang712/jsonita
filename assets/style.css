@@ -30,15 +30,19 @@
   --glass-blur: blur(42px) saturate(180%);
   --glass-border: rgba(0, 0, 0, 0.07);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --chrome-bg: rgba(255, 255, 255, 0.16);
+  --chrome-bg-strong: rgba(255, 255, 255, 0.32);
+  --tab-active-bg: rgba(10, 108, 224, 0.12);
+  --tab-active-border: rgba(10, 108, 224, 0.24);
   --json-key: #0B66C2;
   --json-string: #2E7D4F;
   --json-number: #B5651D;
   --json-bool: #7A4FC0;
   --json-null: rgba(20, 22, 30, 0.36);
   --json-punc: rgba(20, 22, 30, 0.4);
-  --editor-bg: rgba(255, 255, 255, 0.4);
-  --editor-gutter: rgba(255, 255, 255, 0.26);
-  --editor-line-active: rgba(10, 108, 224, 0.07);
+  --editor-bg: rgba(255, 255, 255, 0.03);
+  --editor-gutter: rgba(255, 255, 255, 0.12);
+  --editor-line-active: rgba(10, 108, 224, 0.055);
   --editor-selection: rgba(10, 108, 224, 0.22);
   --editor-cursor: #0A6CE0;
   --editor-error-underline: #C0392B;
@@ -672,7 +676,7 @@ td code { font-size: 12px; }
   display: flex;
   align-items: center;
   padding: 9px 14px;
-  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  background: var(--chrome-bg);
   border-bottom: 1px solid var(--border);
   gap: 8px;
   position: relative;
@@ -701,25 +705,25 @@ td code { font-size: 12px; }
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
-  background: color-mix(in srgb, var(--bg-card) 74%, transparent);
+  padding: 9px 10px;
+  background: var(--chrome-bg);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
 .mockup-tab {
-  padding: 4px 10px;
+  padding: 5px 9px;
   font-size: 11.5px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--bg-card) 58%, transparent);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--text-muted);
   font-family: var(--font-sans);
   white-space: nowrap;
 }
 .mockup-tab.active {
-  background: var(--primary-soft);
-  color: var(--primary);
-  border-color: var(--primary-edge);
+  background: var(--tab-active-bg);
+  color: color-mix(in srgb, var(--primary) 78%, var(--text));
+  border-color: var(--tab-active-border);
 }
 .mockup-tab.ai {
   background: var(--accent-soft);
@@ -727,12 +731,12 @@ td code { font-size: 12px; }
   border-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .mockup-settings-btn {
-  width: 34px;
-  height: 30px;
-  border: 1px solid var(--primary-edge);
-  border-radius: var(--radius-sm);
-  background: var(--primary-soft);
-  color: var(--primary);
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
   font-size: 15px;
   font-weight: 650;
   line-height: 1;
@@ -773,7 +777,7 @@ td code { font-size: 12px; }
   display: flex;
   justify-content: space-between;
   padding: 7px 14px;
-  background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+  background: var(--chrome-bg);
   border-top: 1px solid var(--border);
   font-size: 11px;
   color: var(--text-muted);
@@ -837,17 +841,21 @@ td code { font-size: 12px; }
   --warn-bg: rgba(255, 182, 107, 0.16);
   --danger: #F2A0A0;
   --danger-bg: rgba(242, 160, 160, 0.14);
-  --glass-bg: rgba(26, 28, 36, 0.55);
+  --glass-bg: rgba(26, 28, 36, 0.5);
   --glass-blur: blur(42px) saturate(175%);
   --glass-border: rgba(255, 255, 255, 0.16);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --chrome-bg: rgba(255, 255, 255, 0.035);
+  --chrome-bg-strong: rgba(255, 255, 255, 0.08);
+  --tab-active-bg: rgba(255, 255, 255, 0.14);
+  --tab-active-border: rgba(255, 255, 255, 0.2);
   --json-key: #82C0FF;
   --json-string: #84E08F;
   --json-number: #FFB66B;
   --json-bool: #C9B0FF;
   --json-null: rgba(255, 255, 255, 0.36);
   --json-punc: rgba(255, 255, 255, 0.42);
-  --editor-bg: rgba(26, 28, 36, 0.42);
+  --editor-bg: rgba(255, 255, 255, 0.012);
   --op-format: #7FB3FF;
   --op-format-bg: rgba(10, 132, 255, 0.2);
   --op-tree: #5FE3C8;
@@ -860,23 +868,23 @@ td code { font-size: 12px; }
   color: var(--text);
 }
 .mockup-window.dark .mockup-titlebar {
-  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  background: var(--chrome-bg);
   border-bottom-color: var(--border);
 }
 .mockup-window.dark .mockup-title { color: var(--text); }
 .mockup-window.dark .mockup-tabs {
-  background: color-mix(in srgb, var(--bg-card) 74%, transparent);
+  background: var(--chrome-bg);
   border-bottom-color: var(--border);
 }
 .mockup-window.dark .mockup-tab {
-  background: color-mix(in srgb, var(--bg-card) 58%, transparent);
-  border-color: var(--border);
+  background: transparent;
+  border-color: transparent;
   color: var(--text-muted);
 }
 .mockup-window.dark .mockup-tab.active {
-  background: var(--primary-soft);
+  background: var(--tab-active-bg);
   color: #7FB3FF;
-  border-color: var(--primary-edge);
+  border-color: var(--tab-active-border);
 }
 .mockup-window.dark .mockup-tab.ai {
   background: var(--accent-soft);
@@ -899,7 +907,7 @@ td code { font-size: 12px; }
   background: transparent;
 }
 .mockup-window.dark .mockup-statusbar {
-  background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+  background: var(--chrome-bg);
   border-top-color: var(--border);
   color: var(--text-muted);
 }
