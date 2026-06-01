@@ -10,6 +10,7 @@
 
 - 主浮窗按 `design/jsonita-glass-mockups.html` 重新校准层级：主窗保留单层 `--glass-bg` tint，TabBar / StatusBar 改用轻量 `--chrome-bg`，不再整条覆盖 `--bg-card`。
 - CodeMirror 编辑区和 gutter 降为近透明叠层，当前行高亮同步减弱，避免 dark 模式看起来像旧 flat 深色编辑器。
+- Tauri 建窗配置增加 `backgroundColor: [0,0,0,0]`，启动时再调用 `WebviewWindow::set_background_color(Color(0,0,0,0))`，补齐 WKWebView `drawsBackground=false` / under-page clear 的透明链路。
 - active tab / 设置齿轮回到玻璃 mockup 的轻量 pill / ghost icon 表达；快捷提示浮层改成 glass popover，不再像实心 HUD。
 - macOS NSPanel promote 后显式设置 `setOpaque(false)` + `NSColor.clearColor`，确保 styleMask 变更后不会恢复不透明 NSWindow/titlebar 背景。
 - 同步 `assets/style.css`、`spec/01`、`spec/03`、`spec/06`，避免视觉权威和真实 app 再次分叉。

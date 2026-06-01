@@ -841,7 +841,7 @@ td code { font-size: 12px; }
   --warn-bg: rgba(255, 182, 107, 0.16);
   --danger: #F2A0A0;
   --danger-bg: rgba(242, 160, 160, 0.14);
-  --glass-bg: rgba(26, 28, 36, 0.5);
+  --glass-bg: rgba(26, 28, 36, 0.52);
   --glass-blur: blur(42px) saturate(175%);
   --glass-border: rgba(255, 255, 255, 0.16);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22);
@@ -855,7 +855,9 @@ td code { font-size: 12px; }
   --json-bool: #C9B0FF;
   --json-null: rgba(255, 255, 255, 0.36);
   --json-punc: rgba(255, 255, 255, 0.42);
-  --editor-bg: rgba(255, 255, 255, 0.012);
+  --editor-bg: transparent;
+  --editor-gutter: rgba(0, 0, 0, 0.045);
+  --editor-line-active: rgba(10, 132, 255, 0.045);
   --op-format: #7FB3FF;
   --op-format-bg: rgba(10, 132, 255, 0.2);
   --op-tree: #5FE3C8;
