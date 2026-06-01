@@ -227,18 +227,18 @@ function formatRelativeTime(createdAt: number): string {
 function opMeta(opType: OpType): { label: string; color: string; bg: string } {
   switch (opType) {
     case 'ai-fix':
-      return { label: 'AI FIX', color: 'var(--accent)', bg: 'var(--accent-soft)' };
+      return { label: 'AI FIX', color: 'var(--op-ai-fix)', bg: 'var(--op-ai-fix-bg)' };
     case 'minify':
-      return { label: 'MINIFY', color: 'var(--primary)', bg: 'var(--primary-soft)' };
+      return { label: 'MINIFY', color: 'var(--op-format)', bg: 'var(--op-format-bg)' };
     case 'json-to-str':
-      return { label: 'TO STR', color: 'var(--ok)', bg: 'var(--ok-bg)' };
+      return { label: 'TO STR', color: 'var(--op-convert)', bg: 'var(--op-convert-bg)' };
     case 'str-to-json':
-      return { label: 'TO JSON', color: 'var(--ok)', bg: 'var(--ok-bg)' };
+      return { label: 'TO JSON', color: 'var(--op-convert)', bg: 'var(--op-convert-bg)' };
     case 'tree':
-      return { label: 'TREE', color: 'var(--info)', bg: 'var(--info-bg)' };
+      return { label: 'TREE', color: 'var(--op-tree)', bg: 'var(--op-tree-bg)' };
     case 'format':
     default:
-      return { label: 'FORMAT', color: 'var(--primary)', bg: 'var(--primary-soft)' };
+      return { label: 'FORMAT', color: 'var(--op-format)', bg: 'var(--op-format-bg)' };
   }
 }
 

@@ -1,18 +1,22 @@
 //! Window runtime — NSPanel-like 浮窗管理。
 //!
 //! Spec ref: `spec/06_window.html` § 2-5 生命周期 / § 9 多屏定位
-//! 当前范围：promote 主窗口为 NSPanel + 失焦 hide + close intercept + 多屏定位；
-//! 智能缩放在 cmds::window 中实现；窗口 show/hide CSS 动效仍为保留设计。
+//! 当前范围：promote 主窗口为 NSPanel + 原生 vibrancy + 失焦 hide + close intercept
+//! + 多屏定位；智能缩放在 cmds::window 中实现。
 
+mod locate;
 #[cfg(target_os = "macos")]
 mod nspanel;
-mod locate;
 
-use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri::Emitter;
+use tauri::{
+    window::{Effect, EffectState, EffectsBuilder},
+    AppHandle, Manager, WebviewWindow,
+};
 
 pub const MAIN_LABEL: &str = "main";
 const HIDE_ANIMATION_MS: u64 = 140;
+const VIBRANCY_RADIUS: f64 = 16.0;
 
 fn emit_window_shown(app: &AppHandle) {
     let _ = tauri::Emitter::emit(app, "window:shown", ());
@@ -34,9 +38,22 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
 
     #[cfg(target_os = "macos")]
     nspanel::promote(&win)?;
+    #[cfg(target_os = "macos")]
+    apply_vibrancy(&win)?;
 
     install_window_events(&win);
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn apply_vibrancy(win: &WebviewWindow) -> tauri::Result<()> {
+    win.set_effects(
+        EffectsBuilder::new()
+            .effect(Effect::Popover)
+            .state(EffectState::Active)
+            .radius(VIBRANCY_RADIUS)
+            .build(),
+    )
 }
 
 /// 由 tray:toggle event / 全局快捷键（M0-N4）调用。

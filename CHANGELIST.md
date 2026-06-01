@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### feat · 玻璃重设计阶段 3：原生 vibrancy + 玻璃视觉权威
+
+- macOS 浮窗在 NSPanel-like promote 后接入 Tauri window effects：<code>Effect::Popover</code> + <code>EffectState::Active</code> + 16px radius，走原生 <code>NSVisualEffectView</code> vibrancy；<code>tauri.conf.json</code> 透明窗口继续作为基础。
+- `src/styles/tokens.css` 切到 handoff 玻璃调色：系统蓝 primary、valid 绿、AI Fix 琥珀、玻璃叠色 / blur / border / highlight、light + dark 双主题。
+- `assets/style.css` 同步 app token，修复文档样式与真实 app 的 `--primary` / `--accent` / `--info` 不一致；`spec/01` mockup 改为玻璃视觉权威。
+- History op-chip 拆为四色 token：format/minify 蓝、tree 青、→str/→json 绿、ai-fix 琥珀；`HistoryModal` 改用独立 `--op-*` token。
+- AI Fix Accept 按钮改用琥珀强调；设置按钮和 Tree hover copy 改为描边 SVG 图标，Tree copy 状态使用 copy / copied 文案。
+- Settings mockup 去掉旧 reserved 行；`TODO.md` 清空玻璃阶段 backlog，并同步 `spec/01`、`spec/03`、`spec/06`、`plan/01` 的阶段 3 状态。
+
 ### feat · 玻璃重设计阶段 2：macOS 手感动效
 
 - 浮窗 show/hide 接入 summon / dismiss：Rust 在 hide 前发 `window:will-hide` 并延迟 140ms，React 根容器用 `opacity + scale + translateY` 做 150ms 入场 / 140ms 出场。

@@ -39,7 +39,8 @@
         <tr><td>定位到光标屏中央偏上</td><td>02 § 1</td><td>§ 4 多屏定位</td></tr>
         <tr><td>失焦自动隐藏（可关）</td><td>02 § 1</td><td>§ 6 失焦监听</td></tr>
         <tr><td>关闭浮窗保留 last_session</td><td>plan/01 F8</td><td>§ 5 关闭事件路由；合法内容由实时 transform 持久化</td></tr>
-        <tr><td>150 ms 淡入 / 200 ms 淡出</td><td>02 § 3</td><td>§ 8 动效（CSS only）</td></tr>
+        <tr><td>150 ms 淡入 / 140 ms 淡出</td><td>02 § 3</td><td>§ 8 动效（CSS only）</td></tr>
+        <tr><td>原生玻璃 / vibrancy</td><td><a href="../design/HANDOFF.md">design/HANDOFF</a> 阶段 3</td><td>§ 3.4 Tauri window effects + 透明窗口</td></tr>
         <tr><td>记忆大小（不记忆位置）</td><td>02 § 1</td><td>§ 7 智能缩放 / 持久化</td></tr>
       </tbody>
     </table>
@@ -115,6 +116,10 @@ pub fn promote_to_nspanel(win: &amp;tauri::WebviewWindow) -&gt; Result&lt;(), Js
     <h3><span class="h3-num">3.3</span>Windows 端的对应行为</h3>
 
     <p>Windows 10/11 不需要类似 NSPanel：<code>"alwaysOnTop": true</code> + <code>"focus": false</code> 已能做到始终置顶；显示用 <code>ShowWindow(hwnd, SW_SHOWNOACTIVATE)</code> 不抢焦点；无需 unsafe。v2 跨平台时只需在 macOS 上额外调本节代码。</p>
+
+    <h3><span class="h3-num">3.4</span>原生玻璃 vibrancy（阶段 3 已实现）</h3>
+
+    <p>窗口配置保持 <code>transparent: true</code>；启动时在 NSPanel-like promote 后调用 Tauri <code>WebviewWindow::set_effects</code>，使用 <code>EffectsBuilder::effect(Effect::Popover).state(EffectState::Active).radius(16)</code>。这条路径由 Tauri 内部映射到 macOS <code>NSVisualEffectView</code>，避免手写 subview 管理；React/CSS 只负责半透明叠色、边框和阴影。</p>
 
     <h2><span class="h2-num">4</span>多屏定位</h2>
 
@@ -334,7 +339,7 @@ graph TD
     <div class="mermaid">
 stateDiagram-v2
     [*] --> Setup: 应用启动
-    Setup --> Hidden: 创建窗口 (visible:false)<br/>+ NSPanel-like<br/>+ 注册事件
+    Setup --> Hidden: 创建窗口 (visible:false)<br/>+ NSPanel-like + vibrancy<br/>+ 注册事件
     Hidden --> Locating: shortcut / tray toggle 触发
     Locating --> Showing: locate_window<br/>(光标屏 + 中央偏上)
     Hidden --> Showing: window_show() command<br/>(不重新定位)
@@ -375,8 +380,8 @@ stateDiagram-v2
         <tr><td>minWidth / minHeight</td><td>720 / 480</td><td>最小尺寸，避免拖太小</td></tr>
         <tr><td>resizable</td><td>true</td><td>允许用户拖边 resize；无装饰窗口通过自定义 handles 触发</td></tr>
         <tr><td>decorations</td><td>false</td><td>无系统标题栏 → TabBar 拖动 + 自定义 resize handles</td></tr>
-        <tr><td>transparent</td><td>true</td><td>圆角 + 大阴影需要</td></tr>
-        <tr><td>shadow</td><td>true</td><td>系统阴影（dark 模式下额外加亮边，03 § 8）</td></tr>
+        <tr><td>transparent</td><td>true</td><td>原生 vibrancy + 玻璃浮窗叠色需要；详见 § 3.4</td></tr>
+        <tr><td>shadow</td><td>true</td><td>系统阴影 + CSS 玻璃阴影共同分层</td></tr>
         <tr><td>alwaysOnTop</td><td>true</td><td>常驻置顶（macOS 上 NSPanel 进一步加强）</td></tr>
         <tr><td>visible</td><td><b>false</b></td><td>启动不显示，预建好等待呼出</td></tr>
         <tr><td>focus</td><td>false</td><td>创建时不抢焦点</td></tr>
@@ -398,6 +403,7 @@ stateDiagram-v2
         <tr><td><code>window_resize_for_content(metrics)</code></td><td>command</td><td>智能缩放（§ 7）；metrics: ContentMetrics</td></tr>
         <tr><td><code>window_reset_size</code></td><td>command</td><td>清掉 window.json 记忆</td></tr>
         <tr><td><code>window:shown</code></td><td>event</td><td>窗口 show / focus 后；用于刷新右下角快捷键短提示</td></tr>
+        <tr><td><code>window:will-hide</code></td><td>event</td><td>窗口 hide 前；用于播放 140ms dismiss 动效</td></tr>
         <tr><td><code>window:resized</code></td><td>event</td><td>智能缩放后；source = auto</td></tr>
       </tbody>
     </table>

@@ -5,6 +5,7 @@ import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
+import { GearIcon } from '../components/icons';
 
 /**
  * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
@@ -160,7 +161,7 @@ export function TabBar() {
               'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)',
           }}
         >
-          ✨ {t('tab.aiFix')}
+          {t('tab.aiFix')}
         </button>
       )}
       <button
@@ -170,7 +171,7 @@ export function TabBar() {
         aria-label={tShell('actions.openSettings')}
         title={`${tShell('actions.openSettings')} (${formatAccelerator('CmdOrCtrl+,')})`}
       >
-        ⚙
+        <GearIcon width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
       </button>
     </div>
   );

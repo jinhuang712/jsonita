@@ -76,9 +76,10 @@ export function FloatingWindow() {
       }
       style={{
         height: '100%',
-        background: 'var(--bg-card)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: 'var(--glass-bg)',
+        backdropFilter: 'var(--glass-blur)',
+        WebkitBackdropFilter: 'var(--glass-blur)',
+        border: '1px solid var(--glass-border)',
         borderRadius: 'var(--radius-xl)',
         boxShadow: 'var(--shadow-lg)',
         overflow: 'hidden',

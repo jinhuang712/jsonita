@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CheckIcon, CopyIcon } from '../components/icons';
 import { nodeCopyText, pathToString } from './jsonpath';
 
 /**
@@ -117,7 +118,7 @@ function TreeNode({
   const expanded = expandedKeys.has(key);
   const isCopyVisible = activeCopyKey === key;
   const isSelected = selectedKey === key;
-  const copyLabel = copiedKey === key ? 'copied' : 'copy';
+  const isCopied = copiedKey === key;
 
   const activateCopy = () => {
     setActiveCopyKey(key);
@@ -211,7 +212,12 @@ function TreeNode({
             onCopyNode();
           }}
         >
-          {copyLabel}
+          {isCopied ? (
+            <CheckIcon width={12} height={12} strokeWidth={2.2} aria-hidden="true" />
+          ) : (
+            <CopyIcon width={12} height={12} strokeWidth={1.8} aria-hidden="true" />
+          )}
+          <span className="tree-copy-label">{isCopied ? 'copied' : 'copy'}</span>
         </button>
       </div>
 
