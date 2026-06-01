@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon-mark-transparent-2048.png" alt="Jsonita logo" width="96" height="96">
+</p>
+
 # Jsonita
 
 **Tiny menu-bar JSON toolkit for macOS — paste, format, fix, copy. ⌘⇧J.**

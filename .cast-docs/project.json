@@ -11,6 +11,13 @@
     "localDir": ".cast-docs/out",
     "filenamePattern": "{date}-{slug}.html"
   },
+  "brand": {
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": "Jsonita",
+      "href": "index.html"
+    }
+  },
   "styleProfile": {
     "theme": "cast-default",
     "density": "compact",

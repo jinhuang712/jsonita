@@ -1143,6 +1143,29 @@ body.is-index .index-wrap {
   margin: 0 auto;
   padding: 80px 48px 100px;
 }
+.index-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  text-decoration: none;
+  margin-bottom: 32px;
+}
+.index-brand:hover {
+  color: var(--primary);
+  text-decoration: none;
+}
+.index-brand-logo {
+  width: 34px;
+  height: 34px;
+  display: block;
+  border-radius: var(--radius-lg);
+}
+.index-brand-name {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
 .index-hero {
   margin-bottom: 48px;
   padding-bottom: 28px;
