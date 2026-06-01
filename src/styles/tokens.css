@@ -135,7 +135,7 @@
   --primary-edge: rgba(127, 179, 255, 0.34);
   --accent: #FFC58A;
   --accent-soft: rgba(255, 182, 107, 0.16);
-  --glass-bg: rgba(26, 28, 36, 0.5);
+  --glass-bg: rgba(26, 28, 36, 0.52);
   --glass-blur: blur(42px) saturate(175%);
   --glass-border: rgba(255, 255, 255, 0.16);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22);
@@ -159,9 +159,9 @@
   --json-bool: #C9B0FF;
   --json-null: rgba(255, 255, 255, 0.36);
   --json-punc: rgba(255, 255, 255, 0.42);
-  --editor-bg: rgba(255, 255, 255, 0.012);
-  --editor-gutter: rgba(0, 0, 0, 0.08);
-  --editor-line-active: rgba(10, 132, 255, 0.06);
+  --editor-bg: transparent;
+  --editor-gutter: rgba(0, 0, 0, 0.045);
+  --editor-line-active: rgba(10, 132, 255, 0.045);
   --editor-selection: rgba(10, 132, 255, 0.28);
   --editor-cursor: #7FB3FF;
   --editor-error-underline: #F2A0A0;

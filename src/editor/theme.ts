@@ -17,6 +17,9 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     height: '100%',
     userSelect: 'text',
   },
+  '.cm-scroller, .cm-content, .cm-line': {
+    backgroundColor: 'transparent',
+  },
   '.cm-content': {
     caretColor: 'var(--editor-cursor)',
     padding: 'var(--sp-3) 0',

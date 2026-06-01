@@ -10,6 +10,7 @@ mod nspanel;
 
 use tauri::Emitter;
 use tauri::{
+    webview::Color,
     window::{Effect, EffectState, EffectsBuilder},
     AppHandle, Manager, WebviewWindow,
 };
@@ -39,10 +40,17 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     #[cfg(target_os = "macos")]
     nspanel::promote(&win)?;
     #[cfg(target_os = "macos")]
+    apply_transparent_background(&win)?;
+    #[cfg(target_os = "macos")]
     apply_vibrancy(&win)?;
 
     install_window_events(&win);
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn apply_transparent_background(win: &WebviewWindow) -> tauri::Result<()> {
+    win.set_background_color(Some(Color(0, 0, 0, 0)))
 }
 
 #[cfg(target_os = "macos")]
