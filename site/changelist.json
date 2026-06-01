@@ -5,6 +5,31 @@
   "purpose": "Structured source for important product, plan, spec, and documentation changes.",
   "entries": [
     {
+      "id": "2026-06-02-bilingual-cast-index",
+      "date": "2026-06-02",
+      "type": "docs",
+      "title": "用 cast-a-doc 重新生成双语文档首页",
+      "why": "根 index.html 作为 CAST 文档入口，不能只是中文手写导航页；需要同一个 HTML 内包含中文与英文内容，并提供语言切换器。",
+      "changed": [
+        "新增 site/index.cast.json 作为首页结构化源。",
+        "使用 cast-a-doc renderer 重新生成 index.html，内置中英双语内容与语言切换。",
+        "新增 .cast-docs/i18n.json，声明 Jsonita 文档的 zh-CN/en 双语策略。",
+        "保留 .cast-docs/project.json 的品牌配置与 Jsonita logo 入口。"
+      ],
+      "affectedFiles": [
+        ".cast-docs/i18n.json",
+        ".cast-docs/project.json",
+        ".cast-docs/assets/jsonita-logo.png",
+        "site/index.cast.json",
+        "site/changelist.json",
+        "index.html"
+      ],
+      "followUp": [
+        "后续计划和规格文档如继续迁移，应优先使用 cast-a-doc 的结构化 JSON 源生成双语 HTML。",
+        "TODO 与 Changelist 页面后续也应从结构化源自动渲染，避免手写页面漂移。"
+      ]
+    },
+    {
       "id": "2026-06-02-cast-writing-contract",
       "date": "2026-06-02",
       "type": "docs",
