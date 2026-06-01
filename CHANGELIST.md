@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### docs · design 核心决策迁入 plan/spec
+
+按 `$cast-a-start` 的 Existing Repository Rewrite Mode 做 full alignment：保留 `design/*.html` 为历史探索材料，把已经稳定的核心产品 / 交互 / 技术决策迁入现有 `plan/` 与 `spec/` 权威文档。
+
+- `plan/00` 新增文档权威边界：实现任务以 `plan/` + `spec/` + `site/*.json` 为准，`design/*.html` 只做探索追溯。
+- `jsonita-settings-detail.html` 的设置交互拆入 `plan/01`、`plan/02`、`spec/01`、`spec/04`、`spec/13`；以当前 `SettingsModal.tsx` 的 6 分组真实实现为准。
+- `jsonita-motion-demo.html`、`jsonita-glass-mockups.html`、`jsonita-singlepane-statusbar-demo.html` 的动效、视觉和状态栏结论回填到设计 token 与 mockup 规格。
+- `README.md` 的项目文档表格补齐 `TODO.md` / `todo.html`、`site/*.json` 与 `.cast-docs/project.json` 入口。
+
 ### fix · 玻璃视觉纠偏：减薄叠层，露出原生 vibrancy
 
 - 主浮窗按 `design/jsonita-glass-mockups.html` 重新校准层级：主窗保留单层 `--glass-bg` tint，TabBar / StatusBar 改用轻量 `--chrome-bg`，不再整条覆盖 `--bg-card`。

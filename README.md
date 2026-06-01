@@ -89,7 +89,10 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | [`index.html`](index.html) | 📍 文档导航入口（用浏览器打开） |
 | [`plan/`](plan/) | 5 篇产品设计：产品边界 / 功能 / 交互 / 技术栈 / NFR |
 | [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块 ... |
+| [`TODO.md`](TODO.md) / [`todo.html`](todo.html) | 待办清单；HTML 由结构化源数据渲染 |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史（按 Phase 顺序） |
+| [`site/todo.json`](site/todo.json) / [`site/changelist.json`](site/changelist.json) | CAST 文档源数据，供后续自动渲染与校验 |
+| [`.cast-docs/project.json`](.cast-docs/project.json) | CAST project profile 与文档生成约定 |
 
 ## CAST 文档约定
 

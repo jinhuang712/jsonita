@@ -193,6 +193,7 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
         <tr><td>hideOnBlur</td><td>bool</td><td>true</td><td>F7.1</td></tr>
         <tr><td>singlePaneMode</td><td>bool</td><td>false</td><td>F7.1</td></tr>
         <tr><td>theme</td><td>ThemeMode</td><td>System</td><td>F7.1</td></tr>
+        <tr><td>locale</td><td>Locale</td><td>EnUs</td><td>F7.1 (English / 简体中文)</td></tr>
         <tr><td>restoreWindow</td><td>RestoreWindow</td><td>Min5</td><td>F7.1（保留字段；当前不驱动自动恢复）</td></tr>
         <tr><td>initialWidth</td><td>InitialWidth</td><td>W920</td><td>保留字段；当前窗口默认 860 px，Settings UI 未渲染</td></tr>
         <tr><td>smartWidth</td><td>bool</td><td>true</td><td>F7.1（plan F10）</td></tr>
@@ -212,6 +213,10 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
         <tr><td>editorSoftWrap</td><td>bool</td><td>true</td><td>F1 编辑器</td></tr>
       </tbody>
     </table>
+
+    <p><b>Settings UI 暴露边界</b>：当前 6 分组设置面板只展示 <code>locale</code>、<code>theme</code>、<code>launchAtLogin</code>、<code>hideOnBlur</code>、<code>smartWidth</code>、<code>singlePaneMode</code>、<code>autoPasteClipboard</code>、3 个 shortcut、<code>aiEnabled</code>、<code>historyLimit</code>、<code>autoUnwrap</code>、<code>unwrapTimeoutMs</code>、<code>editorSoftWrap</code> 与 About 只读信息。<code>showInMenubar</code>、<code>restoreWindow</code>、<code>initialWidth</code>、<code>aiModelId</code> 是 schema / 运行时保留或内部字段，当前不作为可编辑设置暴露。</p>
+
+    <p><b>Locale enum</b>：Rust 端使用 <code>Locale::EnUs</code> / <code>Locale::ZhCn</code>，序列化为 <code>"en-US"</code> / <code>"zh-CN"</code>；TS 镜像为 <code>'en-US' | 'zh-CN'</code>。文档中所有用户可见语言选项必须和这里保持一致。</p>
 
     <h3><span class="h3-num">3.4</span>AI Fix</h3>
 
