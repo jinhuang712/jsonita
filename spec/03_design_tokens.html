@@ -47,7 +47,7 @@
         <h3 class="constraints-title">避免 · Avoid</h3>
         <ul>
           <li><b>大色块 / 渐变背景</b> ── 浮窗保持极轻</li>
-          <li><b>多种品牌色</b> ── 蓝是唯一 primary，橙是唯一 accent</li>
+          <li><b>多种品牌色</b> ── 系统蓝是唯一交互强调色；AI Fix 的琥珀只用于修复路径</li>
           <li><b>圆角 ≥ 16px 的"App"感</b> ── 文档卡片最多 10px</li>
           <li><b>动效 &gt; 200ms</b> ── 工具应即时响应</li>
         </ul>
@@ -90,17 +90,19 @@
     <table>
       <thead><tr><th>组</th><th>token</th><th>用途</th></tr></thead>
       <tbody>
-        <tr><td rowspan="2">品牌</td><td><code>--primary</code></td><td>主操作 / 链接 / 选中 / focus ring</td></tr>
-        <tr><td><code>--accent</code></td><td>inline code / AI Fix / 强调短文本</td></tr>
+        <tr><td rowspan="2">品牌</td><td><code>--primary</code></td><td>主操作 / 链接 / 选中 / focus ring（系统蓝）</td></tr>
+        <tr><td><code>--accent</code></td><td>AI Fix / Diff Accept / inline code（琥珀）</td></tr>
 
-        <tr><td rowspan="3">中性</td><td><code>--bg / --bg-card / --bg-code / --bg-overlay</code></td><td>页面 / 卡片 / 代码块 / Modal 遮罩</td></tr>
+        <tr><td rowspan="4">中性</td><td><code>--bg / --bg-card / --bg-code / --bg-overlay</code></td><td>页面 / 卡片 / 代码块 / Modal 遮罩</td></tr>
+        <tr><td><code>--glass-bg / --glass-blur / --glass-border / --glass-highlight</code></td><td>浮窗原生玻璃叠色 / 文档 mockup 的 CSS 玻璃预览</td></tr>
         <tr><td><code>--text / --text-muted / --text-faint</code></td><td>正文 / 弱化 / 几乎隐形（占位 / 元信息）</td></tr>
         <tr><td><code>--border / --border-strong</code></td><td>普通分隔 / 强调分隔</td></tr>
 
         <tr><td rowspan="4">状态</td><td><code>--ok / --ok-bg</code></td><td>valid JSON / 测试通过（绿系）</td></tr>
         <tr><td><code>--warn / --warn-bg</code></td><td>大文件警告 / 超时（低饱和暖色）</td></tr>
         <tr><td><code>--danger / --danger-bg</code></td><td>parse 失败 / API 错误（红系）</td></tr>
-        <tr><td><code>--info / --info-bg</code></td><td>callout-info（同 primary，靠浅背景降噪）</td></tr>
+        <tr><td><code>--info / --info-bg</code></td><td>信息提示 / Tree 类青色弱强调</td></tr>
+        <tr><td>操作类型</td><td><code>--op-format / --op-tree / --op-convert / --op-ai-fix</code></td><td>History op-chip 四色区分</td></tr>
       </tbody>
     </table>
 
@@ -109,20 +111,22 @@
     <table>
       <thead><tr><th>token</th><th>light</th><th>dark</th><th>设计意图</th></tr></thead>
       <tbody>
-        <tr><td><code>--primary</code></td><td><code>#057AF3</code></td><td><code>#7FA8CF</code></td><td>主操作 / 选中；dark 低饱和灰蓝</td></tr>
-        <tr><td><code>--primary-soft</code></td><td><code>#F1F6FC</code></td><td><code>rgba(127,168,207,0.14)</code></td><td>hover 背景；dark 用透明叠加避免大色块</td></tr>
-        <tr><td><code>--primary-edge</code></td><td><code>#CAD8E8</code></td><td><code>rgba(127,168,207,0.28)</code></td><td>hover 边框</td></tr>
-        <tr><td><code>--accent</code></td><td><code>#B7792D</code></td><td><code>#C79A63</code></td><td>AI Fix / inline code / 强调短文本；低饱和暖色</td></tr>
-        <tr><td><code>--accent-soft</code></td><td><code>#F6EFE6</code></td><td><code>rgba(199,154,99,0.12)</code></td><td></td></tr>
-        <tr><td><code>--bg</code></td><td><code>#F7F8FA</code></td><td><code>#161A20</code></td><td>不用纯黑 → 留呼吸感</td></tr>
-        <tr><td><code>--bg-card</code></td><td><code>#FFFFFF</code></td><td><code>#1F2329</code></td><td>浮窗 / Modal / 卡片</td></tr>
-        <tr><td><code>--bg-code</code></td><td><code>#F4F5F7</code></td><td><code>#252B35</code></td><td>code / pre 块（dark 上比 bg 更深）</td></tr>
+        <tr><td><code>--primary</code></td><td><code>#0A6CE0</code></td><td><code>#0A84FF</code></td><td>系统蓝；active tab / 主按钮 / 选中</td></tr>
+        <tr><td><code>--primary-soft</code></td><td><code>rgba(10,108,224,.12)</code></td><td><code>rgba(10,132,255,.2)</code></td><td>hover / active 背景</td></tr>
+        <tr><td><code>--primary-edge</code></td><td><code>rgba(10,108,224,.28)</code></td><td><code>rgba(127,179,255,.34)</code></td><td>hover 边框</td></tr>
+        <tr><td><code>--accent</code></td><td><code>#A4621A</code></td><td><code>#FFC58A</code></td><td>AI Fix / Diff Accept / inline code；琥珀强调</td></tr>
+        <tr><td><code>--accent-soft</code></td><td><code>rgba(181,101,29,.13)</code></td><td><code>rgba(255,182,107,.16)</code></td><td></td></tr>
+        <tr><td><code>--glass-bg</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.55)</code></td><td>浮窗玻璃叠色</td></tr>
+        <tr><td><code>--glass-blur</code></td><td><code>blur(42px) saturate(180%)</code></td><td><code>blur(42px) saturate(175%)</code></td><td>文档 mockup 模拟；真机由原生 vibrancy 负责</td></tr>
+        <tr><td><code>--bg</code></td><td><code>rgba(255,255,255,0)</code></td><td><code>rgba(26,28,36,0)</code></td><td>Tauri 透明窗口底</td></tr>
+        <tr><td><code>--bg-card</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.55)</code></td><td>浮窗 / Modal / 卡片叠层</td></tr>
+        <tr><td><code>--bg-code</code></td><td><code>rgba(255,255,255,.46)</code></td><td><code>rgba(26,28,36,.42)</code></td><td>code / pre 块</td></tr>
         <tr><td><code>--bg-overlay</code></td><td><code>rgba(0,0,0,0.32)</code></td><td><code>rgba(0,0,0,0.56)</code></td><td>Modal 遮罩；dark 更浓避免反白</td></tr>
-        <tr><td><code>--text</code></td><td><code>#1F2329</code></td><td><code>#E5E6EB</code></td><td>正文</td></tr>
-        <tr><td><code>--text-muted</code></td><td><code>#646A73</code></td><td><code>#9BA3AF</code></td><td>弱化（meta / placeholder）</td></tr>
-        <tr><td><code>--text-faint</code></td><td><code>#8F959E</code></td><td><code>#646A73</code></td><td>几乎隐形（占位 hint）</td></tr>
-        <tr><td><code>--border</code></td><td><code>#E5E6EB</code></td><td><code>#343A46</code></td><td>普通分隔线</td></tr>
-        <tr><td><code>--border-strong</code></td><td><code>#D8DCE3</code></td><td><code>#454C5A</code></td><td>强调分隔（如表头）</td></tr>
+        <tr><td><code>--text</code></td><td><code>#1D1F26</code></td><td><code>#EEF0F4</code></td><td>正文</td></tr>
+        <tr><td><code>--text-muted</code></td><td><code>rgba(20,22,30,.5)</code></td><td><code>rgba(255,255,255,.55)</code></td><td>弱化（meta / placeholder）</td></tr>
+        <tr><td><code>--text-faint</code></td><td><code>rgba(20,22,30,.34)</code></td><td><code>rgba(255,255,255,.36)</code></td><td>几乎隐形（占位 hint）</td></tr>
+        <tr><td><code>--border</code></td><td><code>rgba(0,0,0,.07)</code></td><td><code>rgba(255,255,255,.1)</code></td><td>普通分隔线</td></tr>
+        <tr><td><code>--border-strong</code></td><td><code>rgba(0,0,0,.13)</code></td><td><code>rgba(255,255,255,.16)</code></td><td>强调分隔（如表头）</td></tr>
       </tbody>
     </table>
 
@@ -131,10 +135,10 @@
     <table>
       <thead><tr><th>token</th><th>light</th><th>dark</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td><code>--ok</code> / <code>--ok-bg</code></td><td><code>#3F8F75</code> / <code>#F0F7F4</code></td><td><code>#7FB89D</code> / <code>rgba(127,184,157,0.12)</code></td><td>状态文字 / valid badge</td></tr>
-        <tr><td><code>--warn</code> / <code>--warn-bg</code></td><td><code>#A06A2C</code> / <code>#F8F3EA</code></td><td><code>#C3A36A</code> / <code>rgba(195,163,106,0.12)</code></td><td>大文件 / 超时</td></tr>
-        <tr><td><code>--danger</code> / <code>--danger-bg</code></td><td><code>#B94747</code> / <code>#F8EFEF</code></td><td><code>#D08484</code> / <code>rgba(208,132,132,0.12)</code></td><td>parse 错 / HTTP 错</td></tr>
-        <tr><td><code>--info</code> / <code>--info-bg</code></td><td><code>#527FAF</code> / <code>#F0F5FA</code></td><td><code>#8EAED0</code> / <code>rgba(142,174,208,0.12)</code></td><td>callout / info toast</td></tr>
+        <tr><td><code>--ok</code> / <code>--ok-bg</code></td><td><code>#1F9E5A</code> / <code>rgba(31,158,90,.12)</code></td><td><code>#5BE3A0</code> / <code>rgba(91,227,160,.18)</code></td><td>状态文字 / valid badge</td></tr>
+        <tr><td><code>--warn</code> / <code>--warn-bg</code></td><td><code>#A4621A</code> / <code>rgba(181,101,29,.13)</code></td><td><code>#FFB66B</code> / <code>rgba(255,182,107,.16)</code></td><td>大文件 / 超时</td></tr>
+        <tr><td><code>--danger</code> / <code>--danger-bg</code></td><td><code>#C0392B</code> / <code>rgba(192,57,43,.1)</code></td><td><code>#F2A0A0</code> / <code>rgba(242,160,160,.14)</code></td><td>parse 错 / HTTP 错</td></tr>
+        <tr><td><code>--info</code> / <code>--info-bg</code></td><td><code>#0D7E72</code> / <code>rgba(13,148,136,.12)</code></td><td><code>#5FE3C8</code> / <code>rgba(45,212,191,.2)</code></td><td>callout / Tree 类信息</td></tr>
       </tbody>
     </table>
 
@@ -145,20 +149,32 @@
     <table>
       <thead><tr><th>token</th><th>light</th><th>dark</th><th>用途</th></tr></thead>
       <tbody>
-        <tr><td><code>--json-key</code></td><td><code>#356FA3</code></td><td><code>#86B3DC</code></td><td>低饱和蓝；key 视觉锚</td></tr>
-        <tr><td><code>--json-string</code></td><td><code>#3F8F75</code></td><td><code>#7FB89D</code></td><td>灰绿，避免深色模式荧光感</td></tr>
-        <tr><td><code>--json-number</code></td><td><code>#527FAF</code></td><td><code>#9BB8D6</code></td><td>灰蓝</td></tr>
-        <tr><td><code>--json-bool</code></td><td><code>#7665B8</code></td><td><code>#A69AD0</code></td><td>灰紫，区分 true / false 与 number</td></tr>
-        <tr><td><code>--json-null</code></td><td><code>#8F959E</code></td><td><code>#646A73</code></td><td>同 text-faint</td></tr>
-        <tr><td><code>--json-punc</code></td><td><code>#646A73</code></td><td><code>#9BA3AF</code></td><td>标点（淡化）</td></tr>
-        <tr><td><code>--editor-bg</code></td><td><code>#FFFFFF</code></td><td><code>#1F2329</code></td><td>编辑器底</td></tr>
-        <tr><td><code>--editor-gutter</code></td><td><code>#F7F8FA</code></td><td><code>#252B35</code></td><td>行号槽</td></tr>
-        <tr><td><code>--editor-line-active</code></td><td><code>#F2F5F8</code></td><td><code>rgba(127,168,207,0.08)</code></td><td>当前行高亮</td></tr>
-        <tr><td><code>--editor-selection</code></td><td><code>#CAD8E880</code></td><td><code>rgba(127,168,207,0.24)</code></td><td>选区</td></tr>
-        <tr><td><code>--editor-cursor</code></td><td><code>#4B7EA8</code></td><td><code>#8EAED0</code></td><td>光标</td></tr>
-        <tr><td><code>--editor-error-underline</code></td><td><code>#B94747</code></td><td><code>#D08484</code></td><td>parse error 下划线</td></tr>
-        <tr><td><code>--editor-bracket-match</code></td><td><code>#D5DFEA</code></td><td><code>rgba(127,168,207,0.24)</code></td><td>括号匹配</td></tr>
-        <tr><td><code>--editor-indent-guide</code></td><td><code>#E5E6EB</code></td><td><code>#343A46</code></td><td>缩进引导线</td></tr>
+        <tr><td><code>--json-key</code></td><td><code>#0B66C2</code></td><td><code>#82C0FF</code></td><td>系统蓝附近；key 视觉锚</td></tr>
+        <tr><td><code>--json-string</code></td><td><code>#2E7D4F</code></td><td><code>#84E08F</code></td><td>绿系字符串</td></tr>
+        <tr><td><code>--json-number</code></td><td><code>#B5651D</code></td><td><code>#FFB66B</code></td><td>暖色数字</td></tr>
+        <tr><td><code>--json-bool</code></td><td><code>#7A4FC0</code></td><td><code>#C9B0FF</code></td><td>紫色 bool，区分 number</td></tr>
+        <tr><td><code>--json-null</code></td><td><code>rgba(20,22,30,.36)</code></td><td><code>rgba(255,255,255,.36)</code></td><td>同 text-faint</td></tr>
+        <tr><td><code>--json-punc</code></td><td><code>rgba(20,22,30,.4)</code></td><td><code>rgba(255,255,255,.42)</code></td><td>标点（淡化）</td></tr>
+        <tr><td><code>--editor-bg</code></td><td><code>rgba(255,255,255,.4)</code></td><td><code>rgba(26,28,36,.42)</code></td><td>编辑器玻璃叠层</td></tr>
+        <tr><td><code>--editor-gutter</code></td><td><code>rgba(255,255,255,.26)</code></td><td><code>rgba(20,22,28,.36)</code></td><td>行号槽</td></tr>
+        <tr><td><code>--editor-line-active</code></td><td><code>rgba(10,108,224,.07)</code></td><td><code>rgba(10,132,255,.12)</code></td><td>当前行高亮</td></tr>
+        <tr><td><code>--editor-selection</code></td><td><code>rgba(10,108,224,.22)</code></td><td><code>rgba(10,132,255,.28)</code></td><td>选区</td></tr>
+        <tr><td><code>--editor-cursor</code></td><td><code>#0A6CE0</code></td><td><code>#7FB3FF</code></td><td>光标</td></tr>
+        <tr><td><code>--editor-error-underline</code></td><td><code>#C0392B</code></td><td><code>#F2A0A0</code></td><td>parse error 下划线</td></tr>
+        <tr><td><code>--editor-bracket-match</code></td><td><code>rgba(10,108,224,.16)</code></td><td><code>rgba(127,179,255,.22)</code></td><td>括号匹配</td></tr>
+        <tr><td><code>--editor-indent-guide</code></td><td><code>rgba(0,0,0,.07)</code></td><td><code>rgba(255,255,255,.1)</code></td><td>缩进引导线</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">4.5</span>History op-chip 四色</h3>
+
+    <table>
+      <thead><tr><th>token</th><th>light</th><th>dark</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>--op-format / --op-format-bg</code></td><td><code>#0A6CE0</code> / <code>rgba(10,108,224,.12)</code></td><td><code>#7FB3FF</code> / <code>rgba(10,132,255,.2)</code></td><td>format / minify</td></tr>
+        <tr><td><code>--op-tree / --op-tree-bg</code></td><td><code>#0D7E72</code> / <code>rgba(13,148,136,.12)</code></td><td><code>#5FE3C8</code> / <code>rgba(45,212,191,.2)</code></td><td>tree</td></tr>
+        <tr><td><code>--op-convert / --op-convert-bg</code></td><td><code>#1F8A50</code> / <code>rgba(31,158,90,.12)</code></td><td><code>#5BE3A0</code> / <code>rgba(91,227,160,.2)</code></td><td>→str / →json</td></tr>
+        <tr><td><code>--op-ai-fix / --op-ai-fix-bg</code></td><td><code>#A4621A</code> / <code>rgba(181,101,29,.13)</code></td><td><code>#FFC58A</code> / <code>rgba(255,182,107,.2)</code></td><td>AI Fix</td></tr>
       </tbody>
     </table>
 
@@ -488,7 +504,7 @@ export default {
         <div class="example-label">light · valid</div>
         <div style="padding: 9px 14px; background: #FBFCFE; border: 1px solid #E5E6EB; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between;">
           <span><span style="color: #237B4B; font-weight: 600;">● Valid JSON</span> <span style="color: #646A73;">· 5 lines · 76 bytes</span></span>
-          <span style="color: #646A73;">History (12) · ⚙ Settings</span>
+          <span style="color: var(--text-muted);">History (12) · Settings</span>
         </div>
       </div>
       <div class="example-arrow">/</div>
@@ -496,7 +512,7 @@ export default {
         <div class="example-label">dark · valid</div>
         <div style="padding: 9px 14px; background: #252B35; border: 1px solid #343A46; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between;">
           <span><span style="color: #67C288; font-weight: 600;">● Valid JSON</span> <span style="color: #9BA3AF;">· 5 lines · 76 bytes</span></span>
-          <span style="color: #9BA3AF;">History (12) · ⚙ Settings</span>
+          <span style="color: var(--text-muted);">History (12) · Settings</span>
         </div>
       </div>
     </div>
@@ -524,26 +540,26 @@ export default {
     <div class="example-grid">
       <div class="example-col">
         <div class="example-label">light tree</div>
-        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: #FFFFFF; border: 1px solid #E5E6EB; border-radius: 6px; line-height: 1.7;">
-<div>▾ <span style="color:#245BDB;">root</span><span style="color:#8F959E;font-size:10.5px;margin-left:4px;">{3}</span></div>
+        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: var(--editor-bg); border: 1px solid var(--border); border-radius: 6px; line-height: 1.7;">
+<div>▾ <span style="color:var(--json-key);">root</span><span style="color:var(--text-faint);font-size:10.5px;margin-left:4px;">{3}</span></div>
 <div style="padding-left:18px;">
-<div><span style="color:#245BDB;">name</span>: <span style="color:#15803D;">"alice"</span></div>
-<div><span style="color:#245BDB;">age</span>: <span style="color:#245BDB;">30</span></div>
-<div><span style="color:#245BDB;">active</span>: <span style="color:#6F4FD8;">true</span></div>
-<div><span style="color:#245BDB;">extra</span>: <span style="color:#8F959E;">null</span></div>
+<div><span style="color:var(--json-key);">name</span>: <span style="color:var(--json-string);">"alice"</span></div>
+<div><span style="color:var(--json-key);">age</span>: <span style="color:var(--json-number);">30</span></div>
+<div><span style="color:var(--json-key);">active</span>: <span style="color:var(--json-bool);">true</span></div>
+<div><span style="color:var(--json-key);">extra</span>: <span style="color:var(--json-null);">null</span></div>
 </div>
         </div>
       </div>
       <div class="example-arrow">/</div>
       <div class="example-col">
         <div class="example-label">dark tree</div>
-        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: #1F2329; border: 1px solid #343A46; border-radius: 6px; line-height: 1.7; color: #E5E6EB;">
-<div>▾ <span style="color:#8AADFF;">root</span><span style="color:#646A73;font-size:10.5px;margin-left:4px;">{3}</span></div>
+        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: var(--editor-bg); border: 1px solid var(--border); border-radius: 6px; line-height: 1.7; color: var(--text);">
+<div>▾ <span style="color:var(--json-key);">root</span><span style="color:var(--text-faint);font-size:10.5px;margin-left:4px;">{3}</span></div>
 <div style="padding-left:18px;">
-<div><span style="color:#8AADFF;">name</span>: <span style="color:#67C288;">"alice"</span></div>
-<div><span style="color:#8AADFF;">age</span>: <span style="color:#A9C1FF;">30</span></div>
-<div><span style="color:#8AADFF;">active</span>: <span style="color:#B7A4FF;">true</span></div>
-<div><span style="color:#8AADFF;">extra</span>: <span style="color:#646A73;">null</span></div>
+<div><span style="color:var(--json-key);">name</span>: <span style="color:var(--json-string);">"alice"</span></div>
+<div><span style="color:var(--json-key);">age</span>: <span style="color:var(--json-number);">30</span></div>
+<div><span style="color:var(--json-key);">active</span>: <span style="color:var(--json-bool);">true</span></div>
+<div><span style="color:var(--json-key);">extra</span>: <span style="color:var(--json-null);">null</span></div>
 </div>
         </div>
       </div>

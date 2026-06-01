@@ -104,12 +104,12 @@
 
     <p><b>Hover 复制节点</b>（v1）：</p>
     <ul>
-      <li>鼠标悬停任意 node → 右侧浮出 <code>📋</code> 小图标（仅 hover 出现）；点击复制并 toast 反馈</li>
+      <li>鼠标悬停任意 node → 右侧浮出描边 copy 图标 + <code>copy</code> 文案（仅 hover 出现）；点击复制后短暂显示 <code>copied</code> + 勾选图标</li>
       <li><b>唯一 action</b>：父子节点 hover / focus 叠加时只显示当前节点的 copy 按钮；切换节点或离开 Tree 后立即清除 copied 反馈，避免按钮残留</li>
       <li><b>leaf 节点</b>（string / number / bool / null）→ 复制该 <b>raw value</b>，带原始引号或字面量：<code>"alice"</code> / <code>30</code> / <code>true</code> / <code>null</code></li>
       <li><b>object / array 节点</b>（含 root）→ 递归复制完整子树为 pretty-printed JSON（2 空格缩进），即"以该 node 为新 root 的合法 JSON"</li>
-      <li><b>与点 key 复制 path 不冲突</b>：点 key 仍复制 path；hover 出现的 📋 与 key 点击行为分开</li>
-      <li><b>键盘可达</b>：聚焦在某个 node 行时按 <kbd>⌘C</kbd> 等同于点 📋</li>
+      <li><b>与点 key 复制 path 不冲突</b>：点 key 仍复制 path；hover 出现的 copy action 与 key 点击行为分开</li>
+      <li><b>键盘可达</b>：聚焦在某个 node 行时按 <kbd>⌘C</kbd> 等同于点 copy action</li>
       <li><b><kbd>⌘A</kbd> 语义</b>：只在编辑器 / 表单内使用系统文本全选；Tree view 内 <kbd>⌘A</kbd> 选择整棵树，随后 <kbd>⌘C</kbd> 复制 root subtree；页面 Tab / 状态栏等 chrome 永远不会被 DOM 选中</li>
     </ul>
 
@@ -220,6 +220,7 @@
 
     <h2><span class="h2-num">F5</span>历史记录</h2>
     <p>本地 SQLite，最近 100 条 FIFO 滚动；可搜索、置顶、收藏。History 按钮或 <kbd>⌘Y</kbd> 打开本地历史面板；点击条目载入编辑器。路径 <code>~/Library/Application Support/Jsonita/history.db</code>。</p>
+    <p><b>视觉</b>：历史 op-chip 已按玻璃方向拆成四色语义：Format / Minify = 蓝，Tree = 青，→Str / →JSON = 绿，AI Fix = 琥珀；与 <a href="../spec/01_mockups.html">spec/01</a> 和 <a href="../spec/03_design_tokens.html">spec/03</a> 的 token 一致。</p>
 
     <table>
       <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
@@ -264,9 +265,7 @@
       <li><b>主题</b>：跟随系统 / 亮 / 暗</li>
       <li><b>恢复上次会话窗口期</b>：字段保留；当前版本不做自动恢复，使用 <kbd>⌘⇧L</kbd> 手动找回</li>
       <li><b>浮窗默认位置</b>：屏幕中央偏上（v1 固定，v2 可记忆）</li>
-      <li><b>初始宽度</b>：字段保留为 720 / 860 / 920 / 1080 px（默认 920）；当前窗口配置与 <code>window.json</code> 默认是 860 px（见 <a href="#f10">F10</a>）</li>
       <li>☑ <b>智能缩放</b> — 内容 / 行数 / 字号变化后按需调整窗口宽高（在 min-max 区间内，<b>不</b>占满屏；见 <a href="#f10">F10</a>）</li>
-      <li><b>重置浮窗尺寸</b> 按钮 — 清掉记忆的尺寸，回到默认</li>
     </ul>
 
     <h3><span class="h3-num">F7.2</span>Shortcuts</h3>
@@ -384,7 +383,7 @@
     <ul>
       <li>用户从未拖边缩放 → 每次内容 / 字号变化都重新评估理想宽高（层 2 主导）</li>
       <li>用户一旦拖边缩放 → 用户尺寸"粘住"，<b>不再</b>因内容变化自动变（层 3 锁定）</li>
-      <li>重置：设置 General「重置浮窗尺寸」按钮，清掉 <code>window.json</code> → 回到层 1+2 行为</li>
+      <li>重置：当前无 Settings 入口；内部 <code>window_reset_size</code> command 仍可清掉 <code>window.json</code> → 回到层 1+2 行为</li>
     </ul>
 
     <p><b>非常用场景</b>：</p>

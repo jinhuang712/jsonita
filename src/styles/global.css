@@ -404,12 +404,15 @@ kbd {
   position: absolute;
   top: 50%;
   right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   opacity: 0;
   transform: translateY(-50%);
-  padding: 0 2px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
   color: var(--text-muted);
   font-size: var(--fs-xs);
   line-height: 1;
@@ -424,15 +427,24 @@ kbd {
 }
 
 .tree-copy-icon-copied {
-  color: var(--primary);
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 32%, transparent);
+  background: var(--ok-bg);
 }
 
 .tree-copy-icon:hover,
 .tree-copy-icon:focus {
   color: var(--primary);
+  border-color: var(--primary-edge);
+  background: var(--primary-soft);
   outline: none;
 }
 
 .tree-copy-icon:active {
   color: var(--text);
+}
+
+.tree-copy-label {
+  font-size: calc(var(--fs-xs) - 1px);
+  line-height: 1.1;
 }

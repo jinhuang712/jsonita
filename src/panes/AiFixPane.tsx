@@ -86,7 +86,7 @@ export function AiFixPane() {
           fontSize: 'var(--fs-sm)',
         }}
       >
-        ✨ AI Fix in progress…
+        AI Fix in progress…
       </div>
     );
   }
@@ -95,7 +95,7 @@ export function AiFixPane() {
     return (
       <div className={paneClassName} style={{ padding: 16 }}>
         <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', marginBottom: 8 }}>
-          ✕ {aiError ?? 'AI Fix failed'}
+          Error · {aiError ?? 'AI Fix failed'}
         </div>
         <button type="button" onClick={reject} style={btnGhost}>
           Close
@@ -147,7 +147,7 @@ const btnGhost: React.CSSProperties = {
 
 const btnPrimary: React.CSSProperties = {
   padding: '4px 12px',
-  background: 'var(--primary)',
+  background: 'var(--accent)',
   color: 'white',
   border: 'none',
   borderRadius: 'var(--radius-sm)',
