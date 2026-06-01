@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### docs · AGENTS.md 纳入仓库
+
+用户确认 `CLAUDE.md` 与 `AGENTS.md` 都需要放进 git；`.gitignore` 不再忽略 `AGENTS.md`，该项目级协作约束文件正式纳入仓库跟踪。
+
 ### feat · 玻璃重设计阶段 1：单窗切换快捷键 + 状态栏控件
 
 - `CLAUDE.md` 正式纳入仓库跟踪，`.gitignore` 不再忽略该项目级协作规则；同时按用户确认更新为“每次 commit 后按范围跑验证 / build”。
