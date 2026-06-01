@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-02",
+  "project": "Jsonita",
+  "purpose": "Structured source for important product, plan, spec, and documentation changes.",
+  "entries": [
+    {
+      "id": "2026-06-02-cast-writing-contract",
+      "date": "2026-06-02",
+      "type": "docs",
+      "title": "README 与文档首页声明 CAST 写作约定",
+      "why": "当前文档骨架已满足 cast-a-start 的 README、index、plan/spec、site JSON 与 TODO/Changelist HTML 要求；需要把 CAST 作为后来者可见的维护约束写入入口文档。",
+      "changed": [
+        "README 新增 CAST 文档约定，说明本项目文档严格依赖 CAST 书写与维护。",
+        "index.html 新增 CAST 入口，链接 cast-a-start、cast-a-doc 与 .cast-docs/project.json。",
+        "index.html 补充 plan/ 与 spec/ 目录级链接，显式满足 cast-a-start 文档入口要求。"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "index.html",
+        "site/changelist.json",
+        "changelist.html"
+      ],
+      "followUp": [
+        "后续需求、规格或实现变更继续同步 README、index、site JSON、plan 与 spec。",
+        "如接入 cast-a-doc，优先基于 .cast-docs/project.json 保持 styleProfile 稳定。"
+      ]
+    },
+    {
+      "id": "2026-06-02-design-to-plan-spec-cast-alignment",
+      "date": "2026-06-02",
+      "type": "docs",
+      "title": "设计稿核心决策迁入 plan/spec，并补齐 CAST 文档源数据层",
+      "why": "design/*.html 已完成视觉探索使命，但实现和后续 agent 应以 plan/spec 为权威；同时按 cast-a-start 要求补齐 site/todo.json、site/changelist.json、todo.html、changelist.html 与 .cast-docs/project.json。",
+      "changed": [
+        "将 jsonita-settings-detail.html 的 6 分组设置交互拆入 plan/01、plan/02、spec/01、spec/04、spec/13。",
+        "将玻璃视觉、AI Fix 琥珀强调、History op-chip 四色、Toast reserved、状态栏与动效规则追认到 spec/01、spec/03、spec/04。",
+        "新增 site/todo.json 与 site/changelist.json 作为项目级未决项与变更记录源数据。",
+        "新增 todo.html 与 changelist.html，并让 index.html 链接到 README、TODO/CHANGELIST 源文件和 site JSON/HTML 入口。",
+        "新增 .cast-docs/project.json 作为可审查的 CAST 文档 profile。"
+      ],
+      "affectedFiles": [
+        ".cast-docs/project.json",
+        "site/todo.json",
+        "site/changelist.json",
+        "todo.html",
+        "changelist.html",
+        "index.html",
+        "TODO.md",
+        "CHANGELIST.md",
+        "plan/00_overview.html",
+        "plan/01_features.html",
+        "plan/02_interaction.html",
+        "spec/01_mockups.html",
+        "spec/03_design_tokens.html",
+        "spec/04_components.html",
+        "spec/13_schemas.html"
+      ],
+      "followUp": [
+        "如后续继续修改 site JSON，增加渲染脚本或接入 cast-a-doc，避免手工同步 HTML。",
+        "design/*.html 保留为历史探索材料，不再作为实现规格权威。"
+      ]
+    }
+  ]
+}

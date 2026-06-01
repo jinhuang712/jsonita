@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-02",
+  "project": "Jsonita",
+  "purpose": "Project-level uncertainty and deferred work source for CAST documentation.",
+  "items": [
+    {
+      "id": "TODO-STORAGE-RECOVERY",
+      "status": "open",
+      "category": "reliability",
+      "title": "崩溃恢复 / 数据完整性 spec 增补",
+      "description": "补齐 SQLite 损坏、settings.json 损坏、window.json 损坏时的检测、恢复、用户提示与日志策略。",
+      "owner": "engineering",
+      "targetDocs": ["spec/10_storage.html", "spec/15_logging.html"],
+      "source": "TODO.md"
+    },
+    {
+      "id": "TODO-COMPLIANCE-AUDIT",
+      "status": "deferred",
+      "category": "release",
+      "title": "安全合规审计清单 spec 增补",
+      "description": "面向 macOS App Store、企业部署或更大范围分发时，补充权限、隐私、签名、公证和数据保留材料清单。v1 小范围内测不阻塞。",
+      "owner": "release",
+      "targetDocs": ["spec/12_packaging.html", "plan/04_nfr.html"],
+      "source": "TODO.md"
+    },
+    {
+      "id": "TODO-MACOS-VIBRANCY-VERIFY",
+      "status": "open",
+      "category": "verification",
+      "title": "macOS 原生 vibrancy 跟随主题验收",
+      "description": "在真实 macOS 环境运行 cargo build / tauri dev，确认 light/dark 切换时 NSVisualEffectView 材质和 appearance 同步，dark 不再发灰；必要时比较 HudWindow 与 UnderWindowBackground。",
+      "owner": "engineering",
+      "targetDocs": ["spec/03_design_tokens.html", "spec/06_window.html"],
+      "source": "TODO.md"
+    },
+    {
+      "id": "TODO-CAST-GENERATOR",
+      "status": "deferred",
+      "category": "documentation",
+      "title": "为 site/*.json 增加自动渲染脚本",
+      "description": "当前 site/todo.json 与 site/changelist.json 已作为可审查源数据，todo.html 与 changelist.html 为静态同步产物。后续可接 cast-a-doc 或仓库本地脚本减少手工同步。",
+      "owner": "documentation",
+      "targetDocs": ["site/todo.json", "site/changelist.json", "todo.html", "changelist.html"],
+      "source": "cast-a-start full alignment"
+    }
+  ]
+}
