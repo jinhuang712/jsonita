@@ -24,6 +24,8 @@
 
     <p>其他章节（04 组件库 / 06 窗口 / 07 菜单栏 / 08 编辑器）若需引用界面外观，均链到此章对应 § 节。<b>不允许</b>在别处重复画 UI。</p>
 
+    <p class="callout callout-warn">视觉方向重设计中：已选定<b>原生玻璃（macOS vibrancy）</b>为目标方向，全部屏玻璃 light / dark 参考件见 <a href="../design/HANDOFF.md">design/HANDOFF.md</a> + <code>design/*.html</code>。<b>本章 mockup 仍是现行 flat 视觉的权威</b>；玻璃实现（TODO 阶段 3，需原生 vibrancy）落地后再重绘替换本章 —— 在此之前「现行看本章、目标看 design/」。下方 § 2 状态栏交互、AI Fix 琥珀强调、History op-chip 四色等决策已按新方向更新。</p>
+
     <h2><span class="h2-num">1</span>主浮窗 ── 6 种状态</h2>
 
     <h3 id="1.1"><span class="h3-num">1.1</span>Format Tab · valid JSON（默认呼出后）</h3>
@@ -438,6 +440,8 @@
         </tr>
       </tbody>
     </table>
+
+    <p><b>状态栏右侧交互（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：右侧两个控件<b>对称</b> —— <code>Switch to [Single / Split] Panel</code>（切换单窗 / 双栏，纯文字无图标）与 <code>History</code>。两者平时只显文字，hover / 键盘聚焦才<b>滑出</b>各自快捷键（<kbd>⌘\</kbd> / <kbd>⌘Y</kbd>；max-width + opacity + translateX，~150 ms <code>--ease-native</code>）。点 <code>Switch…</code> 或按 <kbd>⌘\</kbd> 切单窗，开「智能缩放」时窗口顺势缩窄；单窗下左侧不再显示 "single-pane"（与右侧控件文字重复）。</p>
 
     <h2><span class="h2-num">3</span>菜单栏 tray + 下拉菜单</h2>
 

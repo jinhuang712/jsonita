@@ -122,10 +122,11 @@ fn handle_menu_event(app: &amp;AppHandle, event: tauri::menu::MenuEvent) {
       <tbody>
         <tr><td>toggle_window</td><td><kbd>CmdOrCtrl+Shift+J</kbd></td><td>是（全局）</td></tr>
         <tr><td>restore_last</td><td><kbd>CmdOrCtrl+Shift+L</kbd></td><td>是（全局）</td></tr>
+        <tr><td>split_toggle（单窗 / 双栏）</td><td><kbd>CmdOrCtrl+\</kbd></td><td>是（窗口内；阶段 1 已实现）</td></tr>
       </tbody>
     </table>
 
-    <p>其他 in-app 快捷键（<kbd>Tab</kbd> / <kbd>⇧Tab</kbd> / <kbd>⌘K</kbd> / <kbd>⌘⇧L</kbd> / <kbd>Esc</kbd> / <kbd>⌘W</kbd>）由 React 端处理，不走 global-shortcut（不抢系统）。</p>
+    <p>其他 in-app 快捷键（<kbd>Tab</kbd> / <kbd>⇧Tab</kbd> / <kbd>⌘K</kbd> / <kbd>⌘⇧L</kbd> / <kbd>Esc</kbd> / <kbd>⌘W</kbd>）由 React 端处理，不走 global-shortcut（不抢系统）。<code>split_toggle</code>（<kbd>⌘\</kbd> 切换单窗 / 双栏，阶段 1 已实现）也属窗口内快捷键，但可在设置「快捷键 → 可自定义」改键，与 <code>toggle_window</code> / <code>restore_last</code> 并列；其状态栏控件与 <kbd>⌘Y</kbd> History 一样，平时只显文字、hover / 键盘聚焦才浮现键位（见 <a href="01_mockups.html#2">01 § 2</a>）。</p>
 
     <h3><span class="h3-num">2.2</span>注册</h3>
 

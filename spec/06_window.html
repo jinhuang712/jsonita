@@ -305,6 +305,8 @@ graph TD
       </tbody>
     </table>
 
+    <p><b>单窗切换联动（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：<code>singlePaneMode</code> 由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 切换；切到单窗时，若「智能缩放」开启则顺势按单栏内容重新缩窄窗口（复用第 2 层内容驱动缩放，并使用更窄的单窗宽度约束），切回双栏再展宽。</p>
+
     <h3><span class="h3-num">7.3</span>持久化字段（<a href="13_schemas.html">13 § 5.2 window.json</a>）</h3>
 
     <table>

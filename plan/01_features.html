@@ -273,6 +273,7 @@
     <ul>
       <li><b>全局呼出快捷键</b>：默认 <kbd>⌘⇧J</kbd>，可改</li>
       <li><b>找回上次会话快捷键</b>：默认 <kbd>⌘⇧L</kbd>，可改</li>
+      <li><b>切换单窗 / 双栏快捷键</b>：默认 <kbd>⌘\</kbd>，可改（窗口内；阶段 1 已实现，详见 <a href="#f9">F9</a>）</li>
     </ul>
 
     <h3><span class="h3-num">F7.3</span>AI</h3>
@@ -328,7 +329,7 @@
 
     <ul>
       <li><b>适用场景</b>：屏幕小、希望只保留输入区域</li>
-      <li><b>开关</b>：F7.1 General「☐ 单窗模式」（默认<b>关</b>）</li>
+      <li><b>开关</b>：F7.1 General「☐ 单窗模式」（默认<b>关</b>）；另可由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 即时切换（阶段 1 已实现）。切到单窗时开「智能缩放」会顺势缩窄窗口；该状态栏控件与 History 一样平时只显文字、hover / 键盘聚焦才浮现键位（详见 <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</li>
       <li><b>执行</b>：非 Tree 功能右下角固定提示 <kbd>⌘↵</kbd> Run {pane}；运行中 / 成功 / 失败在同一位置短暂反馈</li>
       <li><b>Tree</b>：切到 Tree 后主区域始终是 Tree 面板；合法 JSON 显示 <code>TreeView</code>，空白 / 非法 JSON 显示明确状态，不再静默退回编辑器</li>
       <li><b>回滚</b>：因为结果写回同一个 CodeMirror 文档，<kbd>⌘Z</kbd> 可以撤销本次应用</li>

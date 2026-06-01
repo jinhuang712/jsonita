@@ -1,4 +1,8 @@
 type ModifierEvent = Pick<KeyboardEvent, 'ctrlKey' | 'metaKey'>;
+type AcceleratorEvent = Pick<
+  KeyboardEvent,
+  'altKey' | 'ctrlKey' | 'key' | 'metaKey' | 'shiftKey'
+>;
 
 export function isMacPlatform(): boolean {
   if (typeof navigator === 'undefined') return true;
@@ -12,6 +16,62 @@ export function primaryHotkeyPrefix(): 'meta' | 'ctrl' {
 export function hasPrimaryModifier(event: ModifierEvent): boolean {
   if (isMacPlatform()) return event.metaKey && !event.ctrlKey;
   return event.ctrlKey && !event.metaKey;
+}
+
+export function eventMatchesAccelerator(
+  event: AcceleratorEvent,
+  accelerator: string,
+): boolean {
+  const parts = accelerator
+    .split('+')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return false;
+
+  let wantsMeta = false;
+  let wantsCtrl = false;
+  let wantsAlt = false;
+  let wantsShift = false;
+  let wantsPrimary = false;
+  let keyPart = '';
+
+  for (const part of parts) {
+    switch (part.toLowerCase()) {
+      case 'cmdorctrl':
+        wantsPrimary = true;
+        break;
+      case 'cmd':
+      case 'command':
+      case 'meta':
+        wantsMeta = true;
+        break;
+      case 'ctrl':
+      case 'control':
+        wantsCtrl = true;
+        break;
+      case 'alt':
+      case 'option':
+        wantsAlt = true;
+        break;
+      case 'shift':
+        wantsShift = true;
+        break;
+      default:
+        keyPart = part;
+    }
+  }
+
+  const primaryOk = wantsPrimary ? hasPrimaryModifier(event) : true;
+  const metaOk = wantsPrimary ? true : event.metaKey === wantsMeta;
+  const ctrlOk = wantsPrimary ? true : event.ctrlKey === wantsCtrl;
+  return (
+    primaryOk &&
+    metaOk &&
+    ctrlOk &&
+    event.altKey === wantsAlt &&
+    event.shiftKey === wantsShift &&
+    normalizeKey(event.key) === normalizeKey(keyPart)
+  );
 }
 
 export function formatAccelerator(accelerator: string): string {
@@ -83,5 +143,34 @@ function formatAcceleratorPart(part: string, mac: boolean): string {
       return 'Esc';
     default:
       return part.length === 1 ? part.toUpperCase() : part;
+  }
+}
+
+function normalizeKey(key: string): string {
+  const lower = key.toLowerCase();
+  switch (lower) {
+    case 'escape':
+    case 'esc':
+      return 'escape';
+    case 'return':
+    case 'enter':
+      return 'enter';
+    case ' ':
+    case 'space':
+      return 'space';
+    case 'plus':
+      return '+';
+    case 'minus':
+      return '-';
+    case 'comma':
+      return ',';
+    case 'period':
+      return '.';
+    case 'slash':
+      return '/';
+    case 'backslash':
+      return '\\';
+    default:
+      return lower.length === 1 ? lower : lower;
   }
 }

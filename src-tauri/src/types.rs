@@ -68,6 +68,10 @@ pub enum ShortcutAction {
     RestoreLast,
 }
 
+fn default_shortcut_split_toggle() -> String {
+    "CmdOrCtrl+\\".to_string()
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum InitialWidth {
@@ -213,6 +217,8 @@ pub struct Settings {
     pub smart_width: bool,
     pub shortcut_toggle: String,
     pub shortcut_restore_last: String,
+    #[serde(default = "default_shortcut_split_toggle")]
+    pub shortcut_split_toggle: String,
     pub ai_enabled: bool,
     pub ai_model_id: String,
     pub history_limit: u32,
@@ -236,6 +242,7 @@ impl Default for Settings {
             smart_width: true,
             shortcut_toggle: "CmdOrCtrl+Shift+J".to_string(),
             shortcut_restore_last: "CmdOrCtrl+Shift+L".to_string(),
+            shortcut_split_toggle: "CmdOrCtrl+\\".to_string(),
             ai_enabled: false,
             ai_model_id: "deepseek-chat".to_string(),
             history_limit: 100,

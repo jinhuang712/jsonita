@@ -59,7 +59,8 @@ pub async fn window_resize_for_content(
     } else {
         metrics.max_line_chars
     };
-    let needed_w = visible_cols.saturating_mul(char_px).saturating_add(220);
+    let chrome_w = if s.single_pane_mode { 180 } else { 220 };
+    let needed_w = visible_cols.saturating_mul(char_px).saturating_add(chrome_w);
     let line_px = (font_size * 1.55).ceil() as u32;
     let needed_h = metrics.line_count.saturating_mul(line_px).saturating_add(120);
 
@@ -75,9 +76,12 @@ pub async fn window_resize_for_content(
         .flatten()
         .map(|m| m.size().height)
         .unwrap_or(1080);
-    let max_w = std::cmp::min(1400, (screen_w as f64 * 0.7) as u32);
+    let max_w_cap = if s.single_pane_mode { 900 } else { 1400 };
+    let max_w_ratio = if s.single_pane_mode { 0.52 } else { 0.7 };
+    let min_w = if s.single_pane_mode { 440 } else { 720 };
+    let max_w = std::cmp::min(max_w_cap, (screen_w as f64 * max_w_ratio) as u32);
     let max_h = std::cmp::min(900, (screen_h as f64 * 0.72) as u32);
-    let ideal_w = needed_w.clamp(720, max_w);
+    let ideal_w = needed_w.clamp(min_w, max_w);
     let ideal_h = needed_h.clamp(480, max_h);
 
     let new_w = ideal_w;

@@ -6,6 +6,32 @@
 
 ## [Unreleased]
 
+### feat · 玻璃重设计阶段 1：单窗切换快捷键 + 状态栏控件
+
+- `CLAUDE.md` 正式纳入仓库跟踪，`.gitignore` 不再忽略该项目级协作规则；同时按用户确认更新为“每次 commit 后按范围跑验证 / build”。
+- Settings 新增 `shortcutSplitToggle`，默认 `CmdOrCtrl+\`；Rust `Settings` 增加旧 `settings.json` 兼容默认值，避免老配置缺字段导致整份设置回退。
+- Settings → Shortcuts 加「切换单窗 / 双栏」可自定义项；该快捷键为窗口内捕获，不注册为系统 global shortcut。
+- 浮窗内支持按当前设置的 `⌘\` 切换 `singlePaneMode`，状态栏 `Switch to [Single/Split] Panel` 控件与 `History` 均改为平时只显示文字、hover / 键盘聚焦才滑出快捷键。
+- `smartWidth` 在单窗切换时重新触发内容驱动缩放；Rust 端按 `singlePaneMode` 使用更窄的宽度约束，切到单窗可顺势缩窄。
+- `src/styles/tokens.css` 增加 `--ease-native`，状态栏快捷键浮现使用 150ms native 曲线；后续 summon / tab / theme 动画仍留在阶段 2。
+- 同步 `TODO.md`、`spec/01`、`spec/03`、`spec/06`、`spec/07`、`spec/13`、`plan/01` 的阶段 1 实现状态。
+
+### docs · 提交后构建验证规则对齐
+
+用户确认每次 commit 之后跑 build / 验证是合理流程，更新 `CLAUDE.md`：不再禁止代理运行 `cargo build` / `tauri dev` 等验证命令；改为每次逻辑节点提交后按改动范围跑必要验证，依赖安装命令仍需谨慎处理。
+
+### design · 玻璃视觉重设计方向定稿 + 单窗交互 + 动画规范（仅设计 / 文档，未改 `src/` 实现）
+
+经多轮设计探索 + 用户逐屏确认，选定**原生玻璃（macOS vibrancy）**为视觉方向，并新增单窗模式快捷键交互与一套偏 macOS 手感的动画。本次只落设计与文档，代码实现按 `design/HANDOFF.md` §7 的阶段在后续 session 做。
+
+- 新增 `design/` 目录：6 个玻璃 mockup / 动画 demo（`*.html`，浏览器直接打开）+ `design/HANDOFF.md`（交接说明，含全部材质 / 调色 / 动画曲线 / 单窗交互数值 + 实现阶段，供新 session 自洽看懂）。
+- `TODO.md` 加「玻璃视觉重设计」backlog：阶段 1 单窗快捷键 + 状态栏 / 阶段 2 动画 / 阶段 3 玻璃重绘 + 原生 vibrancy。
+- 视觉决策：系统蓝唯一强调 + 绿 valid + op-chip 四色（蓝 / 青 / 绿 / 琥珀）；AI Fix 标签与 Diff Accept = 琥珀强调（出错→修复的视觉重量）；图标全 SVG（去 emoji `📋` `⚙`）；设置面板去 reserved 行。
+- 新交互：单窗模式由 `⌘\`（`CmdOrCtrl+\`，默认内置但可自定义）触发；状态栏 `Switch to [Single/Split] Panel` 控件与 History 均「平时只文字、hover / 键盘聚焦才浮现快捷键」；切单窗顺势 smart-resize 缩窄窗口；去掉左侧状态栏 "single-pane" 冗余。
+- 动画：新增 `--ease-native: cubic-bezier(0.32,0.72,0,1)`；规划浮窗 summon / dismiss、Tab 药丸滑动、AI Fix 琥珀入场、主题交叉淡；硬约束「不动 `backdrop-filter`」「守 `prefers-reduced-motion`」。
+- 评审遗留（实现时一并修）：`assets/style.css` 的 `:root` 调色板与 `src/styles/tokens.css` 不一致（`--primary` `#245BDB` vs `#057AF3`、`--accent` 灰 vs 暖橙、`--info`==`--primary`），需统一到一份 token。
+- spec 同步本次决策：`spec/01`（状态栏交互 + 玻璃方向 callout）、`spec/03 §9`（`--ease-native` + 动画清单 + 禁动 blur）、`spec/06`（单窗 `⌘\` 触发 + 顺势缩窄）、`spec/07`（快捷键）、`spec/13`（`shortcutSplitToggle` 字段）。
+
 ### chore · 切到 1.0.0-beta.1 内测版本
 
 这不是正式 1.0 发布，而是 `.dmg` + GitHub Releases 小范围内测用的 v1 候选版本。

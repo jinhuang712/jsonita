@@ -5,7 +5,7 @@
  * M1-N9：内容 / 字号变化后自动缩放；手动尺寸仅作为下次呼出的记忆值。
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { win } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
@@ -14,10 +14,14 @@ import { useUiStore } from '../store/ui';
 export function useSmartWidth() {
   const content = useEditorStore((s) => s.content);
   const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
+  const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const editorFontSize = useUiStore((s) => s.editorFontSize);
+  const prevSinglePaneModeRef = useRef(singlePaneMode);
 
   useEffect(() => {
-    if (content.length === 0) return;
+    const singlePaneModeChanged = prevSinglePaneModeRef.current !== singlePaneMode;
+    prevSinglePaneModeRef.current = singlePaneMode;
+    if (content.length === 0 && !singlePaneModeChanged) return;
     // debounce 300ms 避免过 IPC 噪音
     const timer = window.setTimeout(() => {
       const lines = content.split('\n');
@@ -34,5 +38,5 @@ export function useSmartWidth() {
         .catch(() => {});
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [content, editorFontSize, editorSoftWrap]);
+  }, [content, editorFontSize, editorSoftWrap, singlePaneMode]);
 }
