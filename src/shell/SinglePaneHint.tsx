@@ -60,7 +60,9 @@ export function SinglePaneHint() {
         borderRadius: 'var(--radius-md)',
         background: isAiFixPrimary
           ? 'var(--accent)'
-          : 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
+          : 'color-mix(in srgb, var(--glass-bg) 76%, transparent)',
+        backdropFilter: isAiFixPrimary ? undefined : 'var(--glass-blur)',
+        WebkitBackdropFilter: isAiFixPrimary ? undefined : 'var(--glass-blur)',
         boxShadow: isAiFixPrimary
           ? '0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent), var(--shadow-sm)'
           : 'var(--shadow-sm)',
@@ -77,7 +79,7 @@ export function SinglePaneHint() {
           padding: '1px 5px',
           borderRadius: 'var(--radius-sm)',
           border: isAiFixPrimary ? '1px solid rgba(255,255,255,0.58)' : '1px solid var(--border-strong)',
-          background: isAiFixPrimary ? 'rgba(255,255,255,0.16)' : 'var(--bg)',
+          background: isAiFixPrimary ? 'rgba(255,255,255,0.16)' : 'var(--chrome-bg-strong)',
           color: isAiFixPrimary ? '#FFFFFF' : 'var(--text)',
           fontFamily: 'inherit',
           fontSize: 'inherit',

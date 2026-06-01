@@ -89,9 +89,9 @@ export function TabBar() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 2,
-        padding: '4px 8px',
-        background: 'var(--bg-card)',
+        gap: 4,
+        padding: '9px 10px',
+        background: 'var(--chrome-bg)',
         borderBottom: '1px solid var(--border)',
         cursor: 'grab',
         position: 'relative',
@@ -102,12 +102,7 @@ export function TabBar() {
         role="tablist"
         aria-label="Pane tabs"
         ref={tabListRef}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          position: 'relative',
-        }}
+        style={{ display: 'flex', alignItems: 'center', gap: 4, position: 'relative' }}
       >
         {activeRect && (
           <span
@@ -131,7 +126,11 @@ export function TabBar() {
               aria-selected={isActive}
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActive(tab.id)}
-              className={isActive ? 'jsonita-tab-button jsonita-tab-button-active' : 'jsonita-tab-button'}
+              className={
+                isActive
+                  ? 'jsonita-tab-button jsonita-tab-button-active'
+                  : 'jsonita-tab-button'
+              }
             >
               {t(`tab.${tab.key}` as 'tab.format')}
             </button>

@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · 玻璃视觉纠偏：减薄叠层，露出原生 vibrancy
+
+- 主浮窗按 `design/jsonita-glass-mockups.html` 重新校准层级：主窗保留单层 `--glass-bg` tint，TabBar / StatusBar 改用轻量 `--chrome-bg`，不再整条覆盖 `--bg-card`。
+- CodeMirror 编辑区和 gutter 降为近透明叠层，当前行高亮同步减弱，避免 dark 模式看起来像旧 flat 深色编辑器。
+- active tab / 设置齿轮回到玻璃 mockup 的轻量 pill / ghost icon 表达；快捷提示浮层改成 glass popover，不再像实心 HUD。
+- macOS NSPanel promote 后显式设置 `setOpaque(false)` + `NSColor.clearColor`，确保 styleMask 变更后不会恢复不透明 NSWindow/titlebar 背景。
+- 同步 `assets/style.css`、`spec/01`、`spec/03`、`spec/06`，避免视觉权威和真实 app 再次分叉。
+
 ### feat · 玻璃重设计阶段 3：原生 vibrancy + 玻璃视觉权威
 
 - macOS 浮窗在 NSPanel-like promote 后接入 Tauri window effects：<code>Effect::Popover</code> + <code>EffectState::Active</code> + 16px radius，走原生 <code>NSVisualEffectView</code> vibrancy；<code>tauri.conf.json</code> 透明窗口继续作为基础。

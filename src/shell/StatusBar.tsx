@@ -71,11 +71,11 @@ export function StatusBar() {
         fontSize: 'var(--fs-xs)',
         fontFamily: 'var(--font-mono)',
         borderTop: '1px solid var(--border)',
-        background: 'var(--bg-card)',
+        background: 'var(--chrome-bg)',
       }}
     >
       {left}
-      <div style={{ display: 'flex', gap: 10, color: 'var(--text-muted)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
         <button
           type="button"
           onClick={toggleSinglePaneMode}
@@ -100,6 +100,10 @@ export function StatusBar() {
               : t('actions.switchToSinglePanel')}
           </span>
         </button>
+        <span
+          aria-hidden="true"
+          style={{ width: 1, height: 13, background: 'var(--border-strong)', opacity: 0.8 }}
+        />
         <button
           type="button"
           onClick={() => setHistoryModalOpen(true)}
