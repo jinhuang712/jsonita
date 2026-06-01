@@ -61,7 +61,6 @@ pnpm-debug.log*
 *.key
 
 # ===== AI assistant local artifacts =====
-AGENTS.md
 .claude/
 .codex/
 .cursor/
