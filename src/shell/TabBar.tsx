@@ -91,7 +91,7 @@ export function TabBar() {
         alignItems: 'center',
         gap: 4,
         padding: '9px 10px',
-        background: 'var(--chrome-bg)',
+        background: 'transparent',
         borderBottom: '1px solid var(--border)',
         cursor: 'grab',
         position: 'relative',

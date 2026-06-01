@@ -25,8 +25,8 @@
   --glass-blur: blur(42px) saturate(180%);
   --glass-border: rgba(0, 0, 0, 0.07);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --chrome-bg: rgba(255, 255, 255, 0.16);
-  --chrome-bg-strong: rgba(255, 255, 255, 0.32);
+  --chrome-bg: transparent;
+  --chrome-bg-strong: rgba(255, 255, 255, 0.2);
   --tab-active-bg: rgba(10, 108, 224, 0.12);
   --tab-active-border: rgba(10, 108, 224, 0.24);
 
@@ -47,9 +47,9 @@
   --json-bool: #7A4FC0;
   --json-null: rgba(20, 22, 30, 0.36);
   --json-punc: rgba(20, 22, 30, 0.4);
-  --editor-bg: rgba(255, 255, 255, 0.03);
-  --editor-gutter: rgba(255, 255, 255, 0.12);
-  --editor-line-active: rgba(10, 108, 224, 0.055);
+  --editor-bg: transparent;
+  --editor-gutter: transparent;
+  --editor-line-active: rgba(10, 108, 224, 0.028);
   --editor-selection: rgba(10, 108, 224, 0.22);
   --editor-cursor: #0A6CE0;
   --editor-error-underline: #C0392B;
@@ -135,12 +135,12 @@
   --primary-edge: rgba(127, 179, 255, 0.34);
   --accent: #FFC58A;
   --accent-soft: rgba(255, 182, 107, 0.16);
-  --glass-bg: rgba(26, 28, 36, 0.52);
+  --glass-bg: rgba(26, 28, 36, 0.55);
   --glass-blur: blur(42px) saturate(175%);
   --glass-border: rgba(255, 255, 255, 0.16);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  --chrome-bg: rgba(255, 255, 255, 0.035);
-  --chrome-bg-strong: rgba(255, 255, 255, 0.08);
+  --chrome-bg: transparent;
+  --chrome-bg-strong: rgba(255, 255, 255, 0.1);
   --tab-active-bg: rgba(255, 255, 255, 0.14);
   --tab-active-border: rgba(255, 255, 255, 0.2);
 
@@ -160,8 +160,8 @@
   --json-null: rgba(255, 255, 255, 0.36);
   --json-punc: rgba(255, 255, 255, 0.42);
   --editor-bg: transparent;
-  --editor-gutter: rgba(0, 0, 0, 0.045);
-  --editor-line-active: rgba(10, 132, 255, 0.045);
+  --editor-gutter: transparent;
+  --editor-line-active: rgba(10, 132, 255, 0.028);
   --editor-selection: rgba(10, 132, 255, 0.28);
   --editor-cursor: #7FB3FF;
   --editor-error-underline: #F2A0A0;

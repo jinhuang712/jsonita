@@ -10,7 +10,6 @@ import { useUiStore } from '../store/ui';
 import { useEffectiveTheme } from '../theme/useEffectiveTheme';
 import { TreeView } from '../tree/TreeView';
 import { StatusBar } from './StatusBar';
-import { ShortcutHint } from './ShortcutHint';
 import { SinglePaneHint } from './SinglePaneHint';
 import { TabBar } from './TabBar';
 import { WindowResizeHandles } from './WindowResizeHandles';
@@ -141,7 +140,6 @@ export function FloatingWindow() {
           </div>
         )}
       </div>
-      <ShortcutHint />
       <SinglePaneHint />
       <StatusBar />
       <WindowResizeHandles />
