@@ -6,11 +6,13 @@
  * 应用到 `document.documentElement.dataset.theme` → CSS [data-theme="dark"] 覆盖触发整套 token 切换。
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSettingsStore } from '../store/settings';
 
 export function useEffectiveTheme(): 'light' | 'dark' {
   const theme = useSettingsStore((s) => s.settings.theme);
+  const prevThemeRef = useRef(theme);
+  const themeMotionTimerRef = useRef<number | null>(null);
   const [effective, setEffective] = useState<'light' | 'dark'>(() => {
     // 初始化从 DOM 读（FOUC inline script 已设）
     const cur = document.documentElement.dataset.theme;
@@ -27,10 +29,21 @@ export function useEffectiveTheme(): 'light' | 'dark' {
         : 'light';
     }
 
-    const apply = () => {
+    const apply = (animate: boolean) => {
       const eff = compute();
+      const root = document.documentElement;
+      if (animate && root.dataset.theme !== eff) {
+        root.classList.add('jsonita-theme-transition');
+        if (themeMotionTimerRef.current !== null) {
+          window.clearTimeout(themeMotionTimerRef.current);
+        }
+        themeMotionTimerRef.current = window.setTimeout(() => {
+          root.classList.remove('jsonita-theme-transition');
+          themeMotionTimerRef.current = null;
+        }, 220);
+      }
       setEffective(eff);
-      document.documentElement.dataset.theme = eff;
+      root.dataset.theme = eff;
       try {
         localStorage.setItem('jsonita.theme.effective', eff);
       } catch (_) {
@@ -38,13 +51,26 @@ export function useEffectiveTheme(): 'light' | 'dark' {
       }
     };
 
-    apply();
+    const previousTheme = prevThemeRef.current;
+    const manualThemeChange = previousTheme !== theme && theme !== 'system';
+    prevThemeRef.current = theme;
+
+    apply(manualThemeChange);
 
     if (theme === 'system') {
       const mql = window.matchMedia('(prefers-color-scheme: dark)');
-      mql.addEventListener('change', apply);
-      return () => mql.removeEventListener('change', apply);
+      const applySystem = () => apply(false);
+      mql.addEventListener('change', applySystem);
+      return () => mql.removeEventListener('change', applySystem);
     }
+
+    return () => {
+      if (themeMotionTimerRef.current !== null) {
+        window.clearTimeout(themeMotionTimerRef.current);
+        themeMotionTimerRef.current = null;
+      }
+      document.documentElement.classList.remove('jsonita-theme-transition');
+    };
   }, [theme]);
 
   return effective;

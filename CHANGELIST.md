@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### feat · 玻璃重设计阶段 2：macOS 手感动效
+
+- 浮窗 show/hide 接入 summon / dismiss：Rust 在 hide 前发 `window:will-hide` 并延迟 140ms，React 根容器用 `opacity + scale + translateY` 做 150ms 入场 / 140ms 出场。
+- Tab active pill 改用 `--ease-native` 滑动；主内容区域在 tab / 单双栏切换时做 ≤120ms cross-fade。
+- AI Fix disabled prompt 与 `AiFixPane` 增加从右滑入 + 一次性琥珀微光，不循环。
+- 主题手动切换时给根节点短暂 `jsonita-theme-transition`，只做 bg/color/border/box-shadow 约 180ms 交叉淡；初次加载与 system 自动变化不触发，避免 FOUC。
+- 动效继续尊重 `prefers-reduced-motion`，且没有改动 `backdrop-filter` / blur 半径。
+- 同步 `TODO.md`、`spec/03`、`spec/06` 的阶段 2 实现状态。
+
 ### docs · AGENTS.md 纳入仓库
 
 用户确认 `CLAUDE.md` 与 `AGENTS.md` 都需要放进 git；`.gitignore` 不再忽略 `AGENTS.md`，该项目级协作约束文件正式纳入仓库跟踪。

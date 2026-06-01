@@ -9,11 +9,21 @@ mod nspanel;
 mod locate;
 
 use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::Emitter;
 
 pub const MAIN_LABEL: &str = "main";
+const HIDE_ANIMATION_MS: u64 = 140;
 
 fn emit_window_shown(app: &AppHandle) {
     let _ = tauri::Emitter::emit(app, "window:shown", ());
+}
+
+pub fn animated_hide(win: WebviewWindow) {
+    let _ = win.emit("window:will-hide", ());
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(HIDE_ANIMATION_MS)).await;
+        let _ = win.hide();
+    });
 }
 
 /// 启动时调一次：把主窗口转为 NSPanel + 装事件钩子。
@@ -36,7 +46,7 @@ pub fn toggle(app: &AppHandle) -> tauri::Result<()> {
     };
     let was_visible = win.is_visible()?;
     if was_visible {
-        win.hide()?;
+        animated_hide(win);
         tracing::info!(action = "hide", "window.toggle");
     } else {
         let _ = locate::position_for_cursor(&win);
@@ -68,7 +78,7 @@ fn install_window_events(win: &WebviewWindow) {
     win.on_window_event(move |event| match event {
         tauri::WindowEvent::CloseRequested { api, .. } => {
             api.prevent_close();
-            let _ = w.hide();
+            animated_hide(w.clone());
         }
         tauri::WindowEvent::Focused(false) => {
             if let Some(settings) = w.try_state::<crate::store::SettingsStore>() {
@@ -76,7 +86,7 @@ fn install_window_events(win: &WebviewWindow) {
                     return;
                 }
             }
-            let _ = w.hide();
+            animated_hide(w.clone());
         }
         tauri::WindowEvent::Resized(size) => {
             // M1-N9：用户拖动 → mark userDragged；自身 resize（智能缩放）走 begin/end_self_resize 跳过

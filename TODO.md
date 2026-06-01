@@ -14,11 +14,6 @@
 > 全部数值（玻璃材质 / 调色 / 动画曲线 / 时长 / 单窗交互）都在 `design/HANDOFF.md`，实现时照抄。
 > 实现锁定顺序 **阶段 1 → 2 → 3**；阶段 3 需 build 验证。一切走 CLAUDE.md：多轨同步、commit 不 push。
 
-### 阶段 2 · 动画（macOS 手感）
-- [ ] 接上浮窗 summon / dismiss 过渡（`spec/06 §2.5` 现状未接）：summon opacity + scale .96→1 + translateY，150ms；dismiss 更快 140ms
-- [ ] Tab 切换 active 药丸滑动 + 内容 cross-fade ≤120ms；AI Fix tab 从右滑入 + 一次性琥珀微光（不循环）
-- [ ] 主题切换全局色 ~180ms 交叉淡（仅手动切触发，初次加载不触发，防 FOUC）；守 `prefers-reduced-motion`；**不动 `backdrop-filter`**
-
 ### 阶段 3 · 玻璃重绘（大，需原生 + build 验证）
 - [ ] Tauri `tauri.conf.json` 窗口 `transparent: true` + macOS `NSVisualEffectView` vibrancy（`spec/06`）
 - [ ] `src/styles/tokens.css` 切玻璃调色板（`design/HANDOFF.md` §2/§3）light + `[data-theme="dark"]`

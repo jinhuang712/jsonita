@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Editor } from '../editor/Editor';
 import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
+import { on } from '../ipc/events';
 import { AiFixPane } from '../panes/AiFixPane';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
@@ -30,11 +31,27 @@ export function FloatingWindow() {
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
   const effectiveTheme = useEffectiveTheme();
+  const [motionPhase, setMotionPhase] = useState<'shown' | 'hiding'>('shown');
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
   // 智能缩放：内容 / 字号变化后自动调整窗口（spec/06 § 7）
   useSmartWidth();
+
+  useEffect(() => {
+    let unlistenShown: (() => void) | undefined;
+    let unlistenHide: (() => void) | undefined;
+    on('window:shown', () => setMotionPhase('shown')).then((fn) => {
+      unlistenShown = fn;
+    });
+    on('window:will-hide', () => setMotionPhase('hiding')).then((fn) => {
+      unlistenHide = fn;
+    });
+    return () => {
+      unlistenShown?.();
+      unlistenHide?.();
+    };
+  }, []);
 
   // Tree 是当前输入内容的视图；不依赖 output preview，避免非法状态时静默退回编辑器。
   const treeState = useMemo(() => {
@@ -52,6 +69,11 @@ export function FloatingWindow() {
 
   return (
     <div
+      className={
+        motionPhase === 'hiding'
+          ? 'jsonita-floating-window jsonita-floating-window-hiding'
+          : 'jsonita-floating-window jsonita-floating-window-shown'
+      }
       style={{
         height: '100%',
         background: 'var(--bg-card)',
@@ -71,6 +93,8 @@ export function FloatingWindow() {
     >
       <TabBar />
       <div
+        key={`${singlePaneMode ? 'single' : 'split'}-${activePane}`}
+        className="jsonita-pane-transition"
         style={{
           flex: 1,
           display: 'grid',

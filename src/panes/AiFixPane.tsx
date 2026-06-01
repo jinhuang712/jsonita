@@ -27,6 +27,8 @@ export function AiFixPane() {
   const setContent = useEditorStore((s) => s.setContent);
   const setActivePane = useUiStore((s) => s.setActivePane);
 
+  const paneClassName = 'jsonita-ai-fix-pane';
+
   // 自动触发：tab 切到 ai-fix 且当前 status=idle 时
   useEffect(() => {
     if (status !== 'idle') return;
@@ -76,6 +78,7 @@ export function AiFixPane() {
   if (status === 'requesting') {
     return (
       <div
+        className={paneClassName}
         style={{
           padding: 24,
           textAlign: 'center',
@@ -90,7 +93,7 @@ export function AiFixPane() {
 
   if (status === 'error') {
     return (
-      <div style={{ padding: 16 }}>
+      <div className={paneClassName} style={{ padding: 16 }}>
         <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', marginBottom: 8 }}>
           ✕ {aiError ?? 'AI Fix failed'}
         </div>
@@ -103,7 +106,7 @@ export function AiFixPane() {
 
   if (status === 'awaiting-decision') {
     return (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className={paneClassName} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, minHeight: 0 }}>
           <DiffView before={before} after={after} />
         </div>
