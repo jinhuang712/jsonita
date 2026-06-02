@@ -67,6 +67,14 @@
 
     <p>阶段 2 已接入 show/hide 过渡：Rust show 后 emit <code>window:shown</code>，hide 前 emit <code>window:will-hide</code> 并延迟约 140 ms；React 根容器切换 <code>.jsonita-floating-window-shown</code> / <code>.jsonita-floating-window-hiding</code>，只动 opacity / transform。</p>
 
+    <h3><span class="h3-num">2.6</span>原生玻璃材质跟随主题</h3>
+
+    <p>窗体 / 编辑器全透明，靠原生 <code>NSVisualEffectView</code>（vibrancy）托底，材质 + NSWindow appearance <b>必须跟随 effective theme</b>：<code>window::apply_glass_mode(mode)</code> 解析后 dark 用 <code>HudWindow</code> 暗材质、light 用 <code>Popover</code>。light / dark 钉死对应 appearance（<code>aqua</code> / <code>darkAqua</code>）；<b>system 把 appearance 设 <code>nil</code> 跟随 OS</b>。</p>
+
+    <p><b>system 的 effective 由原生权威解析</b>：经 <code>NSApp.effectiveAppearance</code> 读真实 OS 主题，<b>不靠 webview 的 <code>matchMedia</code></b> ── 因为 NSWindow.appearance 一旦钉死具体值就会污染 WKWebView 的 <code>prefers-color-scheme</code>（曾踩坑：从 light 切到 system 不变 dark），且系统运行时切换主题也无法推送给 webview；设 <code>nil</code> 跟随 OS 两个问题都解。<code>window_set_theme(mode)</code> 把解析后的 <code>"light" | "dark"</code> 回传前端作权威值（<a href="02_ipc.html">02 § 6.1.6</a>）。</p>
+
+    <p>启动先按 <code>system</code>（跟随 OS）应用，前端 <code>useEffectiveTheme</code> 挂载及每次切换调 <code>window_set_theme(mode)</code> 用持久化 <code>settings.theme</code> 校正并取回 effective。否则深色半透卡片叠在偏亮材质上发灰发糊 ── 曾因材质写死 <code>Popover</code> 且只在启动应用而踩坑。</p>
+
     <p class="section-divider"><b>二 · 工作机制</b></p>
 
     <h2><span class="h2-num">3</span>NSPanel-like 实现</h2>
@@ -81,7 +89,9 @@
         <tr><td colspan="3"><b>styleMask</b></td></tr>
         <tr><td><code>.nonactivatingPanel</code></td><td>1 &lt;&lt; 7</td><td><b>关键</b>：让 panel 接收点击但不切换应用焦点</td></tr>
         <tr><td><code>.titled</code></td><td>1 &lt;&lt; 0</td><td>需要 title bar 容器（即使隐藏标题文字）</td></tr>
+        <tr><td><code>.resizable</code></td><td>1 &lt;&lt; 3</td><td><b>必须保留</b>：promote 重写 styleMask 时若丢掉此位，Tauri <code>startResizeDragging</code> 无法拖边 resize</td></tr>
         <tr><td><code>.fullSizeContentView</code></td><td>1 &lt;&lt; 15</td><td>WebView 内容占满整个窗口（含 title bar 区域）</td></tr>
+        <tr><td>标准窗口按钮</td><td>close / miniaturize / zoom</td><td><b>必须隐藏</b>：保留 <code>.titled</code> + <code>.resizable</code> 后 AppKit 会恢复 traffic lights，需要显式 <code>setHidden:YES</code></td></tr>
         <tr><td colspan="3"><b>collectionBehavior</b></td></tr>
         <tr><td><code>.canJoinAllSpaces</code></td><td>1 &lt;&lt; 0</td><td>切 Space 后浮窗仍可见</td></tr>
         <tr><td><code>.stationary</code></td><td>1 &lt;&lt; 4</td><td>Mission Control 视图中不被作为窗口堆叠</td></tr>
@@ -100,11 +110,15 @@
 pub fn promote_to_nspanel(win: &amp;tauri::WebviewWindow) -&gt; Result&lt;(), JsonitaError&gt; {
     let ns_window = win.ns_window()? as id;
     unsafe {
-        // styleMask（含关键的 .nonactivatingPanel = 1 &lt;&lt; 7）
+        // styleMask（含关键的 .nonactivatingPanel = 1 &lt;&lt; 7；同时保留 .resizable）
         let mask = NSWindowStyleMask::NSTitledWindowMask
+            | NSWindowStyleMask::NSResizableWindowMask
             | NSWindowStyleMask::NSFullSizeContentViewWindowMask
             | NSWindowStyleMask::from_bits_unchecked(1 &lt;&lt; 7);
         ns_window.setStyleMask_(mask);
+        ns_window.setTitleVisibility_(NSWindowTitleHidden);
+        ns_window.setTitlebarAppearsTransparent_(YES);
+        hide_standard_window_buttons(ns_window);
         // collectionBehavior（多 Space + Mission Control + fullscreen 协作）
         ns_window.setCollectionBehavior_(JOINS_ALL_SPACES | STATIONARY | FULLSCREEN_AUX);
         // 提升到 floating level
@@ -280,15 +294,15 @@ fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
 
     <h3><span class="h3-num">7.1</span>4 层决策</h3>
 
-    <p>用户输入大 JSON 或调整字体时，自动按内容宽高缩放窗口 ── 但要尊重用户手动尺寸。决策图：</p>
+    <p>用户输入大 JSON 或调整字体时，自动按内容宽高缩放窗口 ── 但窗口尺寸不是逐字符函数，而是进入 / 离开舒适阅读区时才调整。决策图：</p>
 
     <div class="mermaid">
 graph TD
-    Trigger[内容变化<br/>触发 window_resize_for_content] --> L2{smart_width<br/>设置开启?}
+    Trigger[结构宽度 / 行数 / 字号变化<br/>触发 window_resize_for_content] --> L2{smart_width<br/>设置开启?}
     L2 -->|否| NoOp2[no-op<br/>用户关了智能缩放]
-    L2 -->|是| Calc["visible_cols = soft_wrap ? min(max_line_chars, 96) : max_line_chars<br/>ideal_w = clamp(cols × char_px + 220, 720, max_w)<br/>ideal_h = clamp(line_count × line_px + 120, 480, max_h)"]
-    Calc --> Changed{宽高变化<br/>&gt;= 16px?}
-    Changed -->|否| NoOp3[no-op<br/>避免抖动]
+    L2 -->|是| Calc["visible_cols = soft_wrap ? min(max_line_chars, 88) : max_line_chars<br/>auto floor: 860×560<br/>ideal_h = clamp(line_count × line_px + 120, floor_h, max_h)"]
+    Calc --> Changed{超出舒适区?<br/>grow &gt; 72px / shrink &gt; 120px}
+    Changed -->|否| NoOp3[no-op<br/>避免 Tab / 小编辑抖动]
     Changed -->|是| Animate[set_size<br/>source=auto]
 
     classDef cond fill:#F1F3F6,stroke:#3F4A5A
@@ -305,13 +319,13 @@ graph TD
       <thead><tr><th>层</th><th>触发点</th><th>实现位置</th></tr></thead>
       <tbody>
         <tr><td>1 · 首次呼出尺寸</td><td>启动窗口配置 / <code>WindowStore::default()</code></td><td>当前固定 860 × 560；<code>settings.initialWidth</code> 尚未接入</td></tr>
-        <tr><td>2 · 内容驱动动态缩放</td><td>编辑器 onChange / 字体缩放 → 前端调 <code>window_resize_for_content</code></td><td>前端 <code>useSmartWidth</code> + Rust <code>cmds::window</code></td></tr>
-        <tr><td>3 · 手动拖边缩放</td><td>自定义 8 个 resize handle → Tauri <code>startResizeDragging</code> → <code>WindowEvent::Resized</code></td><td><code>WindowResizeHandles</code> + <code>WindowStore</code>（§ 7.4）；只记忆尺寸，不阻止智能缩放开启时继续按内容调整</td></tr>
+        <tr><td>2 · 内容驱动动态缩放</td><td>编辑器结构宽度 / 行数 / 字号变化 → 前端调 <code>window_resize_for_content</code></td><td>前端 <code>useSmartWidth</code> + Rust <code>cmds::window</code>；行首缩进变化不触发窗口 resize</td></tr>
+        <tr><td>3 · 手动拖边缩放</td><td>自定义 8 个 resize handle → Tauri <code>startResizeDragging</code> → <code>WindowEvent::Resized</code></td><td><code>WindowResizeHandles</code> + <code>WindowStore</code>（§ 7.4）；记忆尺寸并暂停智能缩放，Reset Size 后恢复内容驱动模式</td></tr>
         <tr><td>4 · soft-wrap</td><td>软换行开时宽度保守、仍按行数 / 字体计算高度</td><td><code>ContentMetrics.softWrapOn</code> 参与后端计算</td></tr>
       </tbody>
     </table>
 
-    <p><b>单窗切换联动（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：<code>singlePaneMode</code> 由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 切换；切到单窗时，若「智能缩放」开启则顺势按单栏内容重新缩窄窗口（复用第 2 层内容驱动缩放，并使用更窄的单窗宽度约束），切回双栏再展宽。</p>
+    <p><b>单窗切换联动（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：<code>singlePaneMode</code> 由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 切换；切换<b>只切换布局</b>（双栏 grid ↔ 单栏），<b>不随切换自动改窗口尺寸</b> —— 实测「toggle 后延迟跳一次原生窗口」与布局切换不同步、手感 clunky，已移除；窗口尺寸仍由内容 / 字号驱动的智能缩放（§ 7）按当前模式的宽度约束调整。</p>
 
     <h3><span class="h3-num">7.3</span>持久化字段（<a href="13_schemas.html">13 § 5.2 window.json</a>）</h3>
 
@@ -319,13 +333,15 @@ graph TD
       <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
       <tbody>
         <tr><td><code>width / height</code></td><td>u32</td><td>用户拖动 / 智能缩放后的尺寸</td></tr>
-        <tr><td><code>userDragged</code></td><td>bool</td><td>记录用户曾手动拖边，用于恢复上次尺寸；不作为内容动态缩放的硬锁</td></tr>
+        <tr><td><code>userDragged</code></td><td>bool</td><td>记录用户曾手动拖边，用于恢复上次尺寸；作为内容动态缩放的硬锁，Reset Size 清除</td></tr>
       </tbody>
     </table>
 
     <h3><span class="h3-num">7.4</span>用户拖动监听</h3>
 
-    <p>无系统边框时，React 端渲染 <code>WindowResizeHandles</code>（N / S / E / W / 四角）并调用 Tauri <code>startResizeDragging(direction)</code>。监听 <code>WindowEvent::Resized</code> → 写 <code>window.json</code> + 设 <code>userDragged = true</code> 以恢复上次尺寸。<b>智能缩放内部</b> <code>set_size()</code> 时通过操作前后 sentinel 标志区分，避免误标 <code>userDragged</code>；但只要 General「智能缩放」开启，粘贴 / 编辑 / 字体变化仍会重新按内容调整窗口。当前只有智能缩放会 emit <code>window:resized { source: "auto" }</code>。</p>
+    <p><b>读取自愈</b>：启动读取 <code>window.json</code> 时，如果 <code>userDragged=false</code> 且尺寸低于智能缩放舒适区 floor（默认 860 × 560），视为旧版自动缩放写出的坏状态，恢复默认 860 × 560；如果 <code>userDragged=true</code>，仅夹到手动拖拽硬下限 440 × 340。</p>
+
+    <p>无系统边框时，React 端渲染 <code>WindowResizeHandles</code>（N / S / E / W / 四角）并调用 Tauri <code>startResizeDragging(direction)</code>。监听 <code>WindowEvent::Resized</code> → 写 <code>window.json</code> + 设 <code>userDragged = true</code> 以恢复上次尺寸，并让 <code>window_resize_for_content</code> no-op。<b>智能缩放内部</b> <code>set_size()</code> 时通过操作前后 sentinel 标志区分，避免误标 <code>userDragged</code>；当前只有智能缩放会 emit <code>window:resized { source: "auto" }</code>。</p>
 
     <h3><span class="h3-num">7.4.1</span>拖动窗口位置</h3>
 
@@ -354,7 +370,7 @@ stateDiagram-v2
 
     <h3><span class="h3-num">8.1</span>动效（reserved / future）</h3>
 
-    <p>阶段 2 已接入窗口 show/hide CSS 动画。Rust 端不再立即 hide：先广播 <code>window:will-hide</code>，等待 140 ms 后再调用平台 <code>hide()</code>。</p>
+    <p>阶段 2 已接入窗口 show/hide CSS 动画。Rust 端不再立即 hide：先广播 <code>window:will-hide</code>，等待 140 ms 后再调用平台 <code>hide()</code>。动画只允许 opacity + translate，不使用 CSS scale，避免与真实窗口 resize 叠加造成“缩放错觉”。</p>
 
     <table>
       <thead><tr><th>阶段</th><th>React 类名</th><th>动画</th><th>时长 / 缓动</th></tr></thead>
@@ -378,7 +394,7 @@ stateDiagram-v2
       <tbody>
         <tr><td>label</td><td><code>"main"</code></td><td>所有 window_* command 通过 label 路由</td></tr>
         <tr><td>width / height</td><td>860 / 560</td><td>默认尺寸；<code>settings.initialWidth</code> 字段尚未接入窗口创建</td></tr>
-        <tr><td>minWidth / minHeight</td><td>720 / 480</td><td>最小尺寸，避免拖太小</td></tr>
+        <tr><td>minWidth / minHeight</td><td>440 / 340</td><td>手动拖拽的硬下限；智能缩放另有不低于默认窗口的舒适区 floor（860×560），见 § 7.1</td></tr>
         <tr><td>resizable</td><td>true</td><td>允许用户拖边 resize；无装饰窗口通过自定义 handles 触发</td></tr>
         <tr><td>decorations</td><td>false</td><td>无系统标题栏 → TabBar 拖动 + 自定义 resize handles</td></tr>
         <tr><td>transparent</td><td>true</td><td>原生 vibrancy + 玻璃浮窗叠色需要；详见 § 3.4</td></tr>

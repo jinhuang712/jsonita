@@ -248,9 +248,10 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
         <tr><td>· text</td><td>String</td><td></td></tr>
         <tr><td>· looksLikeJson</td><td>bool</td><td>trim 后以 {[" 起结</td></tr>
         <tr><td><b>ContentMetrics</b>（plan F10 智能缩放）</td><td colspan="2"></td></tr>
-        <tr><td>· maxLineChars</td><td>u32</td><td>最长行字符数</td></tr>
+        <tr><td>· maxLineChars</td><td>u32</td><td>最长结构行字符数；前端忽略行首缩进，避免按 <kbd>Tab</kbd> 触发窗口 resize</td></tr>
         <tr><td>· lineCount</td><td>u32</td><td></td></tr>
         <tr><td>· bytes</td><td>u64</td><td></td></tr>
+        <tr><td>· nonWhitespaceChars</td><td>u32</td><td>非空白字符数；极小 JSON 不触发自动缩小</td></tr>
         <tr><td>· softWrapOn</td><td>bool</td><td>true → 宽度保守，仍按高度 / 字号动态缩放</td></tr>
         <tr><td>· fontSize</td><td>f64</td><td>当前编辑器字号，参与宽高估算</td></tr>
         <tr><td><b>WindowResizedPayload</b>（event）</td><td colspan="2"></td></tr>
@@ -359,8 +360,8 @@ pub enum InitialWidth  { W720, W860, W920, W1080 }
     <table>
       <thead><tr><th>key</th><th>类型</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td>width / height</td><td>u32</td><td>用户拖动 / 智能缩放后的尺寸</td></tr>
-        <tr><td>userDragged</td><td>bool</td><td>记录用户曾手动拖边，用于恢复上次尺寸；不作为智能缩放硬锁</td></tr>
+        <tr><td>width / height</td><td>u32</td><td>用户拖动 / 智能缩放后的尺寸；读取时会自愈旧版自动缩放写出的过小尺寸</td></tr>
+        <tr><td>userDragged</td><td>bool</td><td>记录用户曾手动拖边，用于恢复上次尺寸；<code>true</code> 时智能缩放 no-op，<code>false</code> 的过小自动尺寸会恢复默认值</td></tr>
       </tbody>
     </table>
 

@@ -342,7 +342,7 @@
     <div class="callout callout-info">
       <span class="callout-icon">INFO</span>
       <div class="callout-body">
-        <p><b>玻璃方向动画（阶段 2 已实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：主力缓动为 <code>--ease-native</code>。浮窗呼出 scale 起点为 <code>0.96</code>、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + <code>--ease-native</code>，内容 cross-fade ≤ 120 ms；AI Fix 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。</b></p>
+        <p><b>玻璃方向动画（阶段 2 已实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：主力缓动为 <code>--ease-native</code>。浮窗呼出 scale 起点为 <code>0.96</code>、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + <code>--ease-native</code>；切 Tab / 单窗为<b>即时布局切换</b>（不 remount 面板、不淡入 —— remount 会拆掉 CodeMirror、丢输入光标、手感 clunky）；AI Fix 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。</b></p>
       </div>
     </div>
 
@@ -380,82 +380,84 @@
 
     <h2><span class="h2-num">11</span>主题切换流程</h2>
 
-    <p>设置项 <code>settings.theme: 'system' | 'light' | 'dark'</code>（默认 <code>'system'</code>）。流程涉及 4 个数据源 + 2 处订阅，下图展示完整数据流：</p>
+    <p>设置项 <code>settings.theme: 'system' | 'light' | 'dark'</code>（默认 <code>'system'</code>）。<b>effective theme 的权威解析在原生</b>：<code>window_set_theme(mode)</code> IPC 读 <code>NSApp.effectiveAppearance</code> 回传 <code>'light' | 'dark'</code>。webview 的 <code>matchMedia</code> <b>不参与取值</b>，仅在 <code>system</code> 模式下作 OS 主题切换的 re-trigger ── 因为 <code>NSWindow.appearance</code> 被 pin 成具体值后会污染 webview 的 <code>prefers-color-scheme</code>（旧 bug：light→system 不变 dark，见 <a href="06_window.html">06 § 2.6</a>）。下图展示完整数据流：</p>
 
     <div class="mermaid">
 graph TB
     subgraph Sources["数据源"]
-        S1["settings.theme<br/>system / light / dark"]
-        S2[prefers-color-scheme<br/>OS 当前主题]
-        S3[localStorage<br/>jsonita.theme.effective<br/>缓存]
+        S1["settings.theme<br/>system 或 light 或 dark"]
+        S2["原生 NSApp.effectiveAppearance<br/>system 模式时原生权威解析 OS 主题"]
+        S3["localStorage<br/>jsonita.theme.effective<br/>FOUC 缓存"]
     end
 
-    R[resolveTheme]
-    S1 --> R
-    S2 -.如果 setting=system.-> R
+    R["window_set_theme mode IPC"]
+    S1 -->|"传 mode"| R
+    S2 -.->|"system 时原生读"| R
 
-    R --> APPLY[apply: document.documentElement<br/>.dataset.theme = light / dark]
-    APPLY --> DOM["CSS variables 自动切换<br/>(:root / [data-theme=dark])"]
-    APPLY --> CM[editorStore.setTheme<br/>同步 CodeMirror theme extension]
+    R -->|"回传 effective light 或 dark"| APPLY["apply: documentElement<br/>dataset.theme 设 light 或 dark"]
+    APPLY --> DOM["CSS variables 自动切换<br/>root 与 data-theme dark"]
+    APPLY --> CM["editorStore.setTheme<br/>同步 CodeMirror theme extension"]
     APPLY --> S3
 
     subgraph Subscribe["订阅外部变化"]
-        SUB1[matchMedia change<br/>OS 主题切换]
+        SUB1["matchMedia change<br/>system 模式 OS 切换 re-trigger"]
         SUB2["settings:changed event<br/>用户改设置"]
     end
 
-    SUB1 --> APPLY
+    SUB1 -->|"重新调 IPC"| APPLY
     SUB2 --> R
 
     subgraph Boot["首屏 FOUC 避免"]
-        IS[index.html inline script<br/>从 localStorage 读 effective<br/>提前设 data-theme]
+        IS["index.html inline script<br/>从 localStorage 读 effective<br/>提前设 data-theme"]
     end
-    IS -.先于 React 挂载.-> APPLY
+    IS -.->|"先于 React 挂载"| APPLY
 
     classDef src fill:#F4F5F7,stroke:#8F959E
     classDef act fill:#F2F5FF,stroke:#245BDB
     classDef sub fill:#F1F3F6,stroke:#3F4A5A
     class S1,S2,S3 src
     class R,APPLY,DOM,CM act
-    class SUB1,SUB2,SUB3,IS sub
+    class SUB1,SUB2,IS sub
     </div>
 
     <h3><span class="h3-num">11.1</span>核心实现要点</h3>
 
     <ul>
-      <li><b>三态归一</b>：<code>settings.theme = 'system'</code> 时查 <code>matchMedia('(prefers-color-scheme: dark)')</code> 算出 effective theme（light / dark）</li>
+      <li><b>原生权威解析</b>：<code>settings.theme</code> 变化时调 <code>window_set_theme(mode)</code>，原生按 mode 解析 ── <code>system</code> 读 <code>NSApp.effectiveAppearance</code>（真实 OS 主题），回传 effective theme（light / dark）。前端<b>不再</b>用 webview <code>matchMedia</code> 取值（会被 NSWindow.appearance pin 污染）</li>
       <li><b>挂 data-theme</b>：所有 CSS 变量切换由 <code>[data-theme="dark"] { ... }</code> 覆盖触发 ── 无 JS 计算颜色</li>
       <li><b>CodeMirror 单独通知</b>：编辑器有自己的 theme extension（不读 CSS variables），需 <code>editorStore.setTheme()</code> 同步</li>
-      <li><b>双重订阅</b>：matchMedia change（OS 切换）+ settings:changed（用户改设置）</li>
+      <li><b>原生 vibrancy 同步 + 跟随 OS</b>：同一 IPC 让原生 <code>NSVisualEffectView</code> 材质 + NSWindow appearance 跟随主题（否则 dark 发灰）；<code>system</code> 模式把 appearance 设 <code>nil</code> 跟随 OS，使运行时系统主题切换能推送给 webview（见 <a href="06_window.html">06 § 2.6</a>）</li>
+      <li><b>双重订阅</b>：matchMedia change（<code>system</code> 模式下 OS 切换的 re-trigger，触发重新调 IPC）+ settings:changed（用户改设置）</li>
       <li><b>避免 FOUC</b>：index.html <code>&lt;head&gt;</code> 内联一段 script 先于 React bundle 读 localStorage cache 设 <code>data-theme</code></li>
     </ul>
 
-    <h3><span class="h3-num">11.2</span>resolve + apply 核心 ~15 行</h3>
+    <h3><span class="h3-num">11.2</span>resolve + apply 核心 ~18 行</h3>
 
-    <pre><code>// src/theme/ThemeProvider.tsx
-function resolveTheme(setting: ThemeMode): 'light' | 'dark' {
-  if (setting === 'system') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark' : 'light';
+    <pre><code>// src/theme/useEffectiveTheme.ts
+// 权威：原生 win.setTheme(mode) 读 NSApp.effectiveAppearance 回传 light|dark。
+// 非 Tauri（浏览器 dev）退回 matchMedia（此时无 NSWindow.appearance pin，可靠）。
+const resolve = async (): Promise&lt;'light' | 'dark'&gt; =&gt; {
+  try { return await win.setTheme(theme); }          // theme = mode
+  catch {
+    if (theme !== 'system') return theme;
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
-  return setting;
-}
+};
 
 useEffect(() =&gt; {
-  const apply = () =&gt; {
-    const eff = resolveTheme(settings.theme);
+  const apply = async () =&gt; {
+    const eff = await resolve();
     document.documentElement.dataset.theme = eff;
     editorStore.setTheme(eff);
     localStorage.setItem('jsonita.theme.effective', eff);
   };
-  apply();
-
-  if (settings.theme === 'system') {
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+  void apply();
+  if (theme === 'system') {                          // OS 切换 re-trigger
+    const mql = matchMedia('(prefers-color-scheme: dark)');
     mql.addEventListener('change', apply);
     return () =&gt; mql.removeEventListener('change', apply);
   }
-}, [settings.theme]);</code></pre>
+}, [theme]);</code></pre>
 
     <h3><span class="h3-num">11.3</span>FOUC 避免（inline script ~7 行）</h3>
 

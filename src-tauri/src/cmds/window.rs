@@ -6,7 +6,7 @@ use tauri::{Manager, State};
 
 use crate::error::JsonitaError;
 use crate::store::{SettingsStore, WindowStore};
-use crate::types::ContentMetrics;
+use crate::types::{ContentMetrics, ThemeMode};
 use crate::window;
 
 #[tauri::command]
@@ -44,9 +44,8 @@ pub async fn window_resize_for_content(
     let s = settings.get();
     let cur = window_store.get();
 
-    // 用户拖边仍会记忆尺寸；是否继续按内容自动缩放只由 smart_width 控制。
-    // 这样粘贴 / 编辑 / 字体变化不会被历史上的 resize 事件永久锁住。
-    if !s.smart_width {
+    // 用户手动拖边后进入 user-sized 状态：自动缩放暂停，直到 Reset Size 清掉 window.json。
+    if should_skip_auto_resize(s.smart_width, cur.user_dragged) {
         return Ok((cur.width, cur.height));
     }
 
@@ -55,11 +54,11 @@ pub async fn window_resize_for_content(
     let font_size = metrics.font_size.clamp(10.0, 24.0);
     let char_px = (font_size * 0.62).ceil() as u32;
     let visible_cols = if metrics.soft_wrap_on {
-        metrics.max_line_chars.min(96)
+        metrics.max_line_chars.min(88)
     } else {
         metrics.max_line_chars
     };
-    let chrome_w = if s.single_pane_mode { 180 } else { 220 };
+    let chrome_w = if s.single_pane_mode { 220 } else { 300 };
     let needed_w = visible_cols
         .saturating_mul(char_px)
         .saturating_add(chrome_w);
@@ -81,18 +80,23 @@ pub async fn window_resize_for_content(
         .flatten()
         .map(|m| m.size().height)
         .unwrap_or(1080);
-    let max_w_cap = if s.single_pane_mode { 900 } else { 1400 };
-    let max_w_ratio = if s.single_pane_mode { 0.52 } else { 0.7 };
-    let min_w = if s.single_pane_mode { 440 } else { 720 };
+    let max_w_cap = if s.single_pane_mode { 1200 } else { 1400 };
+    let max_w_ratio = if s.single_pane_mode { 0.62 } else { 0.7 };
+    let min_w = 860;
+    let min_h = 560;
     let max_w = std::cmp::min(max_w_cap, (screen_w as f64 * max_w_ratio) as u32);
     let max_h = std::cmp::min(900, (screen_h as f64 * 0.72) as u32);
     let ideal_w = needed_w.clamp(min_w, max_w);
-    let ideal_h = needed_h.clamp(480, max_h);
+    let ideal_h = needed_h.clamp(min_h, max_h);
 
-    let new_w = ideal_w;
-    let new_h = ideal_h;
+    let new_w = settle_auto_size(cur.width, ideal_w, min_w, max_w);
+    let new_h = settle_auto_size(cur.height, ideal_h, min_h, max_h);
 
-    if new_w.abs_diff(cur.width) < 16 && new_h.abs_diff(cur.height) < 16 {
+    if metrics.non_whitespace_chars <= 2 && new_w <= cur.width && new_h <= cur.height {
+        return Ok((cur.width, cur.height));
+    }
+
+    if new_w == cur.width && new_h == cur.height {
         return Ok((cur.width, cur.height));
     }
 
@@ -127,4 +131,91 @@ pub async fn window_resize_for_content(
 #[tauri::command]
 pub async fn window_reset_size(window_store: State<'_, WindowStore>) -> Result<(), JsonitaError> {
     window_store.reset()
+}
+
+fn settle_auto_size(current: u32, ideal: u32, min: u32, max: u32) -> u32 {
+    let ideal = ideal.clamp(min, max);
+    let shrink_threshold = 120;
+    let grow_threshold = 72;
+
+    if current < min {
+        return min;
+    }
+    if current > max {
+        return max;
+    }
+    if ideal > current.saturating_add(grow_threshold) {
+        return ideal;
+    }
+    if current > ideal.saturating_add(shrink_threshold) {
+        return ideal;
+    }
+    current
+}
+
+fn should_skip_auto_resize(smart_width: bool, user_dragged: bool) -> bool {
+    !smart_width || user_dragged
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{settle_auto_size, should_skip_auto_resize};
+
+    #[test]
+    fn user_dragged_size_locks_auto_resize() {
+        assert!(should_skip_auto_resize(true, true));
+        assert!(should_skip_auto_resize(false, false));
+        assert!(!should_skip_auto_resize(true, false));
+    }
+
+    #[test]
+    fn restores_size_below_auto_floor() {
+        assert_eq!(settle_auto_size(520, 860, 860, 1400), 860);
+    }
+
+    #[test]
+    fn ignores_small_growth_inside_comfort_band() {
+        assert_eq!(settle_auto_size(860, 900, 860, 1400), 860);
+    }
+
+    #[test]
+    fn shrinks_only_after_large_gap() {
+        assert_eq!(settle_auto_size(920, 860, 860, 1400), 920);
+        assert_eq!(settle_auto_size(1040, 860, 860, 1400), 860);
+    }
+
+    #[test]
+    fn grows_when_content_exceeds_comfort_band() {
+        assert_eq!(settle_auto_size(860, 960, 860, 1400), 960);
+    }
+}
+
+/// 主题解析 + 原生 vibrancy 材质 / 窗口 appearance 跟随（spec/06 § 2.6 · spec/03 § 11）。
+/// 前端 useEffectiveTheme 在挂载与每次切换时调用，传 mode = "light" | "dark" | "system"。
+/// system 由原生读 `NSApp.effectiveAppearance` 解析（权威，不靠 webview matchMedia），
+/// 返回解析后的 effective = "light" | "dark" 给前端作为唯一权威值。
+#[tauri::command]
+pub async fn window_set_theme(
+    app: tauri::AppHandle,
+    mode: ThemeMode,
+) -> Result<String, JsonitaError> {
+    let Some(win) = app.get_webview_window(window::MAIN_LABEL) else {
+        // 无主窗口（极少）：退回粗解析，system 当 light。
+        return Ok(if matches!(mode, ThemeMode::Dark) {
+            "dark"
+        } else {
+            "light"
+        }
+        .to_string());
+    };
+    let w = win.clone();
+    let (tx, rx) = std::sync::mpsc::channel();
+    // AppKit（setAppearance / effectiveAppearance / set_effects）必须在主线程；本 command 跑在
+    // async worker 线程，直接调会闪退（切主题崩溃的根因）。marshal 回主线程执行并回传解析值。
+    win.run_on_main_thread(move || {
+        let dark = window::apply_glass_mode(&w, mode);
+        let _ = tx.send(dark);
+    })?;
+    let dark = rx.recv().unwrap_or(false);
+    Ok(if dark { "dark" } else { "light" }.to_string())
 }

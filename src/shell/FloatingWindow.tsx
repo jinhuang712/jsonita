@@ -93,7 +93,6 @@ export function FloatingWindow() {
     >
       <TabBar />
       <div
-        key={`${singlePaneMode ? 'single' : 'split'}-${activePane}`}
         className="jsonita-pane-transition"
         style={{
           flex: 1,

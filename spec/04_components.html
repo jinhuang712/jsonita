@@ -111,7 +111,7 @@ interface TabBarProps {
       <li><b>ai variant 视觉</b>：橙色渐变背景 ── 与其他 Tab 视觉上明显区分，提示这是"修复"入口（颜色用 <code>--accent</code> 系列 token）</li>
       <li><b>active 动效</b>：active Tab 背后使用独立胶囊层，点击或 <kbd>Tab</kbd> / <kbd>⇧Tab</kbd> 切换时走 180ms 位移与宽度过渡；文字颜色 / weight 同步过渡，避免键盘切换时只有瞬时跳变</li>
       <li><b>设置入口</b>：右上角固定设置图标按钮，点击区不小于 34 × 30 px，默认态保留弱边框与 soft 背景，<code>aria-label=Open settings</code>，tooltip 显示 <kbd>⌘,</kbd>；点击打开 <code>SettingsModal</code></li>
-      <li><b>字号缩放</b>：Tab button 不允许 hardcode <code>12px</code>；必须使用浮窗根节点派生的 <code>--fs-sm</code> 与 <code>--lh-tight</code>，随 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 轻微变化并封顶，避免放大后变成正文级标题</li>
+      <li><b>字号缩放</b>：Tab button 不允许 hardcode <code>12px</code>；必须使用浮窗根节点派生的 <code>--fs-editor</code> 与 <code>--lh-tight</code>，与 CodeMirror 正文字号保持一致，让用户能从 Format / Minify 等顶部标签直接感知当前放大程度</li>
       <li><b>键盘</b>：当焦点不在 CodeMirror / input / textarea / select / contenteditable 内时，裸 <kbd>Tab</kbd> 正向、<kbd>⇧Tab</kbd> 反向循环切换功能 Tab；焦点在 Tab 按钮本身时，<kbd>Enter</kbd> / <kbd>Space</kbd> 走原生 button 激活。AI Fix 仅在可见且启用时加入循环。<b>不绑</b> <kbd>⌘1-6</kbd>（见 <a href="../plan/02_interaction.html">plan/02 § 1.1</a>）</li>
     </ul>
 

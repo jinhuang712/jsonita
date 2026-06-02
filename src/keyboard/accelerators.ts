@@ -82,7 +82,8 @@ export function formatAccelerator(accelerator: string): string {
     .filter(Boolean)
     .map((part) => formatAcceleratorPart(part, mac));
 
-  return mac ? parts.join('') : parts.join('+');
+  // 显示统一用 " + " 分隔（⌘ + ⇧ + J）；mac 不再紧贴成 ⌘⇧J，Windows 也带空格
+  return parts.join(' + ');
 }
 
 function formatAcceleratorPart(part: string, mac: boolean): string {

@@ -10,6 +10,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::JsonitaError;
 
+const MIN_PERSISTED_WIDTH: u32 = 440;
+const MIN_PERSISTED_HEIGHT: u32 = 340;
+const MIN_AUTO_WIDTH: u32 = 860;
+const MIN_AUTO_HEIGHT: u32 = 560;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowState {
@@ -42,6 +47,7 @@ impl WindowStore {
             .as_ref()
             .and_then(|p| std::fs::read_to_string(p).ok())
             .and_then(|s| serde_json::from_str::<WindowState>(&s).ok())
+            .map(sanitize_loaded_state)
             .unwrap_or_default();
         WindowStore {
             state: Arc::new(RwLock::new(state)),
@@ -99,4 +105,47 @@ impl WindowStore {
 fn default_path() -> Option<PathBuf> {
     let base = dirs::data_dir()?;
     Some(base.join("Jsonita").join("window.json"))
+}
+
+fn sanitize_loaded_state(state: WindowState) -> WindowState {
+    if !state.user_dragged && (state.width < MIN_AUTO_WIDTH || state.height < MIN_AUTO_HEIGHT) {
+        return WindowState::default();
+    }
+
+    WindowState {
+        width: state.width.max(MIN_PERSISTED_WIDTH),
+        height: state.height.max(MIN_PERSISTED_HEIGHT),
+        user_dragged: state.user_dragged,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{sanitize_loaded_state, WindowState};
+
+    #[test]
+    fn resets_old_auto_size_below_comfort_floor() {
+        let state = sanitize_loaded_state(WindowState {
+            width: 380,
+            height: 360,
+            user_dragged: false,
+        });
+
+        assert_eq!(state.width, 860);
+        assert_eq!(state.height, 560);
+        assert!(!state.user_dragged);
+    }
+
+    #[test]
+    fn clamps_user_dragged_state_to_hard_minimum() {
+        let state = sanitize_loaded_state(WindowState {
+            width: 380,
+            height: 320,
+            user_dragged: true,
+        });
+
+        assert_eq!(state.width, 440);
+        assert_eq!(state.height, 340);
+        assert!(state.user_dragged);
+    }
 }

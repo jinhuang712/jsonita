@@ -62,6 +62,9 @@ export const win = {
   resizeForContent: (metrics: ContentMetrics) =>
     invoke<[number, number]>('window_resize_for_content', { metrics }),
   resetSize: () => invoke<void>('window_reset_size'),
+  // 传 mode（含 system）；原生读 OS effectiveAppearance 解析后回传 effective light|dark（权威）。
+  setTheme: (mode: 'light' | 'dark' | 'system') =>
+    invoke<'light' | 'dark'>('window_set_theme', { mode }),
 };
 
 // ──────────── system ────────────

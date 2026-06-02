@@ -59,6 +59,7 @@ export interface ContentMetrics {
   maxLineChars: number;
   lineCount: number;
   bytes: number;
+  nonWhitespaceChars: number;
   softWrapOn: boolean;
   fontSize: number;
 }
