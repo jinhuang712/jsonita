@@ -7,13 +7,21 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   background: transparent;
   color: var(--text);
   font-family: var(--font-sans);
 }
 
+/* 内层滚动不向文档链式传播（修滚动弹出浮窗边界的橡皮筋） */
+.cm-scroller {
+  overscroll-behavior: contain;
+}
+
 #root {
   height: 100%;
+  overflow: hidden;
   user-select: none;
 }
 
@@ -73,7 +81,7 @@ kbd {
   background: transparent;
   color: var(--text-muted);
   font-family: inherit;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-editor);
   font-weight: 400;
   line-height: var(--lh-tight);
   cursor: pointer;
@@ -85,7 +93,7 @@ kbd {
 
 .jsonita-floating-window {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
   transform-origin: 50% 0;
   will-change: opacity, transform;
 }
@@ -112,22 +120,22 @@ kbd {
 @keyframes jsonita-window-summon {
   from {
     opacity: 0;
-    transform: translateY(-6px) scale(0.96);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
 @keyframes jsonita-window-dismiss {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translateY(-4px) scale(0.99);
+    transform: translateY(-4px);
   }
 }
 
@@ -291,6 +299,7 @@ kbd {
 .jsonita-tree-container {
   height: 100%;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: var(--sp-3) var(--sp-4);
   background: var(--editor-bg);
   color: var(--text);

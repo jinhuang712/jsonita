@@ -15,6 +15,55 @@
 - `jsonita-motion-demo.html`、`jsonita-glass-mockups.html`、`jsonita-singlepane-statusbar-demo.html` 的动效、视觉和状态栏结论回填到设计 token 与 mockup 规格。
 - `README.md` 的项目文档表格补齐 `TODO.md` / `todo.html`、`site/*.json` 与 `.cast-docs/project.json` 入口。
 
+### fix · system 主题不跟随 OS（light→system 不变 dark 的根因）
+
+反馈:电脑是 dark,从 light 切到 system 没变 dark。根因:`window::apply_glass` / `set_appearance` 把 NSWindow.appearance 钉成具体值（aqua / darkAqua），WKWebView 的 `prefers-color-scheme` 随之被钉死 → `useEffectiveTheme` 在 system 模式读 `matchMedia` 永远拿旧值；启动也钉死 light,fresh launch + dark OS 同样不跟随。
+
+- 改为**原生权威解析**:IPC `window_set_theme` 入参由 `effective:"light"|"dark"` 改为 `mode`（复用 `crate::types::ThemeMode`,不再新建枚举），返回原生解析后的 `"light"|"dark"`。
+- `window::apply_glass` → `apply_glass_mode(mode)`:system 经 `NSApp.effectiveAppearance`（新 `nspanel::os_is_dark`）读真实 OS 主题;appearance 用新 `nspanel::Appearance{Light,Dark,System}`,**system 设 `nil` 跟随 OS**(同时让运行时系统主题切换能推送给 webview)。
+- `useEffectiveTheme`:`win.setTheme(theme)` 传 mode 并 await 取回 effective 作权威值;`matchMedia` 仅作 system 模式 re-trigger;非 Tauri(dev)退回 matchMedia。
+- 启动 `setup` 由钉死 light 改 `ThemeMode::System` 跟随 OS。
+- 同步 spec/03 § 11、spec/06 § 2.6（spec/02 § 6.1.6 已先行对齐）;前端 `tsc` 通过,cocoa/objc 待 macOS `cargo build` / `tauri dev` 验收（见 TODO）。
+
+### fix · 放宽窗口最小尺寸，让字号 / 内容真正驱动智能缩放
+
+反馈:⌘+/- 不改窗口、缩放"没反应"。根因:窗口硬下限 720×480 太大，小内容永远顶在下限,字号 / 内容变化被吃掉。
+
+- `tauri.conf.json` 窗口 `minWidth/minHeight` 720×480 → 440×340；`cmds/window.rs` 智能缩放 floor 同步放宽（双栏 600 / 单窗有效 440 / 高 360）。
+- `useSmartWidth` 本就同时监听内容 + 字号,放宽下限后两者都能可见地改窗口大小（用户选「2、3 都做」）。
+- 同步 spec/01 § 11.2、spec/06 § 7、spec/12、plan/01 F10、plan/02。
+- 仍是原生 `set_size`（无补间动画）;嫌跳可在 Settings 关 Smart width。
+
+### fix · 去 clunky：切换不 remount / 不跳窗口 + 锁文档 overscroll
+
+截图反馈:单窗 ↔ 双栏来回切、智能缩放都很 clunky；滚动还能弹出浮窗边界。
+
+- `FloatingWindow`:移除双栏容器上的 `key`（含 `singlePaneMode` / `activePane`）—— 之前每次切换 / 切 Tab 都整块 remount、拆掉 CodeMirror（连左侧输入光标都丢）并重放淡入。改为只切布局、保留编辑器实例。
+- `useSmartWidth`:移除 `singlePaneMode` 依赖与 toggle 触发的缩放 —— 切单窗不再延迟跳一次窗口尺寸（与布局切换不同步是主要 clunk 源）；尺寸仅随内容 / 字号智能缩放。
+- `cmds/window.rs`:智能缩放阈值 16→32 px，打字时小幅变化不再频繁跳窗口。
+- `global.css`:`html` / `body` 加 `overflow:hidden` + `overscroll-behavior:none`，`.cm-scroller` / tree 容器 `overscroll-behavior:contain` —— 修「滚动橡皮筋弹出浮窗边界」。
+- 同步 spec/01 § 2、spec/03 § 9、spec/06 § 7、plan/01 F9:单窗切换为即时布局切换，不再「顺势缩窄」。
+
+### fix · 弹窗改用 `--bg-elevated` 悬浮卡片 + 提对比度（对齐 design demo）
+
+截图反馈玻璃实现没 demo 好看。根因之一:Settings / History 弹窗用 `--bg-card`（与主窗同 0.55 玻璃），压在变暗主窗上糊成一片、浮不起来；dark 次要文字也偏淡。
+
+- 新增 `--bg-elevated`（近实心悬浮面：light `rgba(252,252,253,.94)` / dark `rgba(36,39,48,.94)`）+ `--bg-elevated-nav`（设置左栏微分隔）。
+- `SettingsModal` / `HistoryModal` 卡片改用 `--bg-elevated` + `--border-strong` 描边，读作明确悬浮卡片。
+- dark `--text-muted` 0.55→0.64、`--text-faint` 0.36→0.48（light 同步微调），提升 `→ output` / 占位 / 状态栏可读性。
+- 说明（非 bug）:毛玻璃通透感依赖窗口背后有彩色可糊；纯黑/空桌面下 vibrancy 本就偏平，demo 是垫了彩色壁纸才"发光"。
+
+### fix · 原生 vibrancy 材质 / appearance 跟随主题（修 dark 发灰根因）
+
+另一 session 的玻璃实现里，`window::apply_vibrancy` 把材质写死 `Effect::Popover` 且只在启动跑一次；`useEffectiveTheme` 切主题只改 CSS `data-theme`，从不通知原生层 ── 切到 dark 时深色半透卡片叠在偏亮 Popover 材质上发灰发糊。前序「减薄叠层」缓解了不透明感，但没动这个根因。
+
+- `src-tauri/src/window/mod.rs`：`apply_vibrancy` → `apply_glass(dark)`，dark 用 `HudWindow` + `darkAqua` appearance、light 用 `Popover` + `aqua`。
+- `src-tauri/src/window/nspanel.rs`：加 `set_appearance(dark)`（`[NSWindow setAppearance:]` darkAqua / aqua）。
+- `src-tauri/src/cmds/window.rs` + `main.rs`：加 `window_set_theme(effective)` command 并注册；command 跑在 async worker 线程，AppKit 调用经 `win.run_on_main_thread` marshal 到主线程（否则切主题闪退）。
+- `src/theme/useEffectiveTheme.ts` + `src/ipc/commands.ts`：apply 时调 `win.setTheme(effective)`，挂载与每次切换同步原生（非 Tauri 环境忽略）。
+- 前端 `tsc --noEmit` 通过；原生 cocoa/objc 仅 macOS 可编，待 `cargo build` / `tauri dev` 验收；若 dark 仍不够暗，把 `apply_glass` dark 分支 `HudWindow` 换 `UnderWindowBackground`。
+- 同步 spec/02 § 6.1.6、spec/06 § 2.6、spec/03 § 11.1。
+
 ### fix · 玻璃视觉纠偏：减薄叠层，露出原生 vibrancy
 
 - 主浮窗按 `design/jsonita-glass-mockups.html` 重新校准层级：主窗保留单层 `--glass-bg` tint，TabBar / StatusBar 改用轻量 `--chrome-bg`，不再整条覆盖 `--bg-card`。

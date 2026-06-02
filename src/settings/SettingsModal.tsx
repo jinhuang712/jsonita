@@ -83,7 +83,8 @@ export function SettingsModal() {
         style={{
           width: 600,
           maxHeight: '70vh',
-          background: 'var(--bg-card)',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-strong)',
           borderRadius: 'var(--radius-2xl)',
           boxShadow: 'var(--shadow-lg)',
           overflow: 'hidden',
@@ -110,7 +111,7 @@ export function SettingsModal() {
             style={{
               width: 140,
               borderRight: '1px solid var(--border)',
-              background: 'var(--bg-card)',
+              background: 'var(--bg-elevated-nav)',
               padding: 'var(--sp-2) 0',
             }}
           >

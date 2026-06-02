@@ -65,8 +65,8 @@
     </div>
 
     <ul>
-      <li><b>尺寸</b>：首次呼出 860 × 560（克制 ── 不占满屏，初次也不太小）；min 720 × 480；max 由 4 层智能缩放策略决定，最大不超过屏宽 × 70% / 屏高 × 72%，并封顶 1400 × 900 px；可调整、记忆上次大小（详见 <a href="01_features.html#f10">F10 浮窗智能缩放</a>）</li>
-      <li><b>拖动 / 缩放</b>：顶部 TabBar 空白区域可拖动窗口；无边框窗口通过 8 个隐形 resize handles 支持边 / 角拖拽缩放，用户手动缩放后锁定自动缩放</li>
+      <li><b>尺寸</b>：首次呼出 860 × 560（克制 ── 不占满屏，初次也不太小）；手动拖拽硬下限 440 × 340；智能缩放的舒适区 floor 不低于默认 860 × 560，只负责给大内容 / 大字号更多空间，不因小 JSON 自动缩窄；最大不超过屏宽 × 70% / 屏高 × 72%，并封顶 1400 × 900 px；可调整、记忆上次大小（详见 <a href="01_features.html#f10">F10 浮窗智能缩放</a>）</li>
+      <li><b>拖动 / 缩放</b>：顶部 TabBar 空白区域可拖动窗口；无边框窗口通过 8 个隐形 resize handles 支持边 / 角拖拽缩放；用户手动缩放会记忆尺寸并暂停自动缩放，直到用户执行 Reset Size 后回到内容驱动模式</li>
       <li><b>位置 / 多屏</b>：呼出在<b>当前光标所在屏幕</b>的中央偏上 1/3 处，不遮挡顶部菜单栏；v1 不记忆位置</li>
       <li><b>层级 / 切应用</b>：始终置顶（NSPanel-like），不抢焦点、不被覆盖；<kbd>⌘Tab</kbd> 切应用时浮窗不消失</li>
       <li><b>失焦行为</b>：默认自动隐藏，可在 General 设置关闭（必须可关，见 <code>00_overview</code> C 硬约束）</li>
@@ -75,9 +75,11 @@
     <h3><span class="h3-num">1.1</span>Tab 切换</h3>
     <p>顶部功能 Tab：Format / Minify / Tree / →Str / →JSON；AI Fix 仅在 parse error 且 AI 可用时出现在最右，右上角固定设置按钮。切换靠鼠标点击，或在非编辑态按 <kbd>Tab</kbd> 正向 / <kbd>⇧Tab</kbd> 反向循环；焦点在 CodeMirror / 表单输入内时不拦截 Tab。active 状态 = 冷色焦点态，并通过 180ms 胶囊位移 / 宽度过渡强化键盘切换手感。</p>
 
+    <p>CodeMirror 内按 <kbd>Tab</kbd> 只执行缩进，不触发窗口尺寸重算；智能缩放只响应结构行宽、行数、字号等有意义变化，避免单次缩进造成窗口跳变。</p>
+
     <p>单窗模式下切换 Tab 只改变待执行功能，不自动改写编辑器；右下角提示当前可按 <kbd>⌘Enter</kbd> 执行 active Tab 并把结果写回输入区。</p>
 
-    <p>编辑器字体可用 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> 调整（每次 2px），<kbd>⌘0</kbd> 回到默认字号；字体变化会参与动态窗口缩放。缩放完整作用于 CodeMirror 正文和 Tree；顶部功能 Tab、状态栏快捷键 badge、单窗 Run hint 等浮窗 chrome 的紧凑文字只轻微跟随并封顶。</p>
+    <p>编辑器字体可用 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> 调整（每次 2px），<kbd>⌘0</kbd> 回到默认字号；字体变化会参与动态窗口缩放。缩放完整作用于 CodeMirror 正文、Tree 和顶部功能 Tab（Format / Minify 等），让 Tab 标签成为当前字号的即时参照；状态栏快捷键 badge、单窗 Run hint 等紧凑 chrome 文字只轻微跟随并封顶。</p>
 
     <p><b>不绑定 <kbd>⌘1</kbd>-<kbd>⌘6</kbd></b> —— 避免污染系统级常用快捷键 + CodeMirror 编辑器内 <kbd>⌘+数字</kbd> 冲突。</p>
 

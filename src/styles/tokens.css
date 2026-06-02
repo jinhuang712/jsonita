@@ -11,9 +11,11 @@
   --bg-card: rgba(255, 255, 255, 0.62);
   --bg-code: rgba(255, 255, 255, 0.46);
   --bg-overlay: rgba(0, 0, 0, 0.32);
+  --bg-elevated: rgba(252, 252, 253, 0.94);
+  --bg-elevated-nav: rgba(0, 0, 0, 0.025);
   --text: #1D1F26;
-  --text-muted: rgba(20, 22, 30, 0.5);
-  --text-faint: rgba(20, 22, 30, 0.34);
+  --text-muted: rgba(20, 22, 30, 0.56);
+  --text-faint: rgba(20, 22, 30, 0.42);
   --border: rgba(0, 0, 0, 0.07);
   --border-strong: rgba(0, 0, 0, 0.13);
   --primary: #0A6CE0;
@@ -125,9 +127,11 @@
   --bg-card: rgba(26, 28, 36, 0.55);
   --bg-code: rgba(26, 28, 36, 0.42);
   --bg-overlay: rgba(0, 0, 0, 0.56);
+  --bg-elevated: rgba(36, 39, 48, 0.94);
+  --bg-elevated-nav: rgba(255, 255, 255, 0.03);
   --text: #EEF0F4;
-  --text-muted: rgba(255, 255, 255, 0.55);
-  --text-faint: rgba(255, 255, 255, 0.36);
+  --text-muted: rgba(255, 255, 255, 0.64);
+  --text-faint: rgba(255, 255, 255, 0.48);
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
   --primary: #0A84FF;

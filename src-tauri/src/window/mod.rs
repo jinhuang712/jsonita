@@ -15,6 +15,9 @@ use tauri::{
     AppHandle, Manager, WebviewWindow,
 };
 
+// 主题模式单一权威：crate::types::ThemeMode（serde kebab-case，spec/13 § 数据模型）。
+use crate::types::ThemeMode;
+
 pub const MAIN_LABEL: &str = "main";
 const HIDE_ANIMATION_MS: u64 = 140;
 const VIBRANCY_RADIUS: f64 = 16.0;
@@ -41,8 +44,9 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     nspanel::promote(&win)?;
     #[cfg(target_os = "macos")]
     apply_transparent_background(&win)?;
-    #[cfg(target_os = "macos")]
-    apply_vibrancy(&win)?;
+    // 玻璃材质 + 窗口 appearance 跟随主题；启动先按 system（跟随 OS）应用，前端 useEffectiveTheme
+    // 挂载后立即调 window_set_theme 用持久化 settings.theme 校正（窗口启动时隐藏，无闪烁）。
+    let _ = apply_glass_mode(&win, ThemeMode::System);
 
     install_window_events(&win);
     Ok(())
@@ -53,15 +57,52 @@ fn apply_transparent_background(win: &WebviewWindow) -> tauri::Result<()> {
     win.set_background_color(Some(Color(0, 0, 0, 0)))
 }
 
-#[cfg(target_os = "macos")]
-fn apply_vibrancy(win: &WebviewWindow) -> tauri::Result<()> {
-    win.set_effects(
-        EffectsBuilder::new()
-            .effect(Effect::Popover)
-            .state(EffectState::Active)
-            .radius(VIBRANCY_RADIUS)
-            .build(),
-    )
+/// 玻璃 vibrancy + NSWindow appearance 跟随主题，返回解析后的 `dark`。
+///
+/// - light / dark：钉死对应 appearance（aqua / darkAqua）+ 对应材质。
+/// - system：先经 `nspanel::os_is_dark()` 读 OS 真实外观解析 dark（权威，不靠 webview matchMedia），
+///   再把 appearance 设为 nil 跟随 OS（让运行时系统主题切换能推送给 webview）；材质按解析后的 dark 选。
+///
+/// dark 用 HudWindow（稳定的暗模糊），light 用 Popover ── 保证半透卡片下原生模糊与 CSS 主题一致。
+/// 返回值由 `window_set_theme` 回传前端，作为 effective theme 权威值。
+/// 必须在主线程调用（AppKit：setAppearance / effectiveAppearance / set_effects）。
+pub fn apply_glass_mode(win: &WebviewWindow, mode: ThemeMode) -> bool {
+    // 先解析 dark（system 经 OS effectiveAppearance）；作为函数唯一 tail 表达式回传，
+    // 下面的 cfg 块只做副作用（避免 cfg 块落在 tail 位置导致 macOS build 返回 ()）。
+    let dark = match mode {
+        ThemeMode::Light => false,
+        ThemeMode::Dark => true,
+        #[cfg(target_os = "macos")]
+        ThemeMode::System => nspanel::os_is_dark(),
+        #[cfg(not(target_os = "macos"))]
+        ThemeMode::System => false,
+    };
+    #[cfg(target_os = "macos")]
+    {
+        let appearance = match mode {
+            ThemeMode::Light => nspanel::Appearance::Light,
+            ThemeMode::Dark => nspanel::Appearance::Dark,
+            ThemeMode::System => nspanel::Appearance::System,
+        };
+        let _ = nspanel::set_appearance(win, appearance);
+        let effect = if dark {
+            Effect::HudWindow
+        } else {
+            Effect::Popover
+        };
+        let _ = win.set_effects(
+            EffectsBuilder::new()
+                .effect(effect)
+                .state(EffectState::Active)
+                .radius(VIBRANCY_RADIUS)
+                .build(),
+        );
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = win;
+    }
+    dark
 }
 
 /// 由 tray:toggle event / 全局快捷键（M0-N4）调用。

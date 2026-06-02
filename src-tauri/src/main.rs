@@ -55,6 +55,7 @@ fn main() {
             cmds::window::window_toggle,
             cmds::window::window_resize_for_content,
             cmds::window::window_reset_size,
+            cmds::window::window_set_theme,
             // M1-N1 stubs: system
             cmds::system::clipboard_read,
             cmds::system::open_log_dir,

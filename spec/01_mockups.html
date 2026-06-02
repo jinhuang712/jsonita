@@ -441,7 +441,7 @@
       </tbody>
     </table>
 
-    <p><b>状态栏右侧交互（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：右侧两个控件<b>对称</b> —— <code>Switch to [Single / Split] Panel</code>（切换单窗 / 双栏，纯文字无图标）与 <code>History</code>。两者平时只显文字，hover / 键盘聚焦才<b>滑出</b>各自快捷键（<kbd>⌘\</kbd> / <kbd>⌘Y</kbd>；max-width + opacity + translateX，~150 ms <code>--ease-native</code>）。点 <code>Switch…</code> 或按 <kbd>⌘\</kbd> 切单窗，开「智能缩放」时窗口顺势缩窄；单窗下左侧不再显示 "single-pane"（与右侧控件文字重复）。</p>
+    <p><b>状态栏右侧交互（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：右侧两个控件<b>对称</b> —— <code>Switch to [Single / Split] Panel</code>（切换单窗 / 双栏，纯文字无图标）与 <code>History</code>。两者平时只显文字，hover / 键盘聚焦才<b>滑出</b>各自快捷键（<kbd>⌘\</kbd> / <kbd>⌘Y</kbd>；max-width + opacity + translateX，~150 ms <code>--ease-native</code>）。点 <code>Switch…</code> 或按 <kbd>⌘\</kbd> <b>即时切换布局</b>（不改窗口尺寸，避免 toggle 抖动）；单窗下左侧不再显示 "single-pane"（与右侧控件文字重复）。</p>
 
     <h2><span class="h2-num">3</span>菜单栏 tray + 下拉菜单</h2>
 
@@ -856,8 +856,8 @@
     <table>
       <thead><tr><th>输入</th><th>计算</th><th>ideal size</th><th>行为</th></tr></thead>
       <tbody>
-        <tr><td>短 JSON</td><td>cols / lines 都小</td><td>720 × 480 起</td><td>保持克制尺寸</td></tr>
-        <tr><td>160 ch 长行</td><td>cols × char_px + padding</td><td>约 1210 × 480</td><td>自动加宽</td></tr>
+        <tr><td>短 JSON</td><td>cols / lines 都小</td><td>约 600 × 360 起</td><td>保持克制尺寸</td></tr>
+        <tr><td>160 ch 长行</td><td>cols × char_px + padding</td><td>约 1210 × 360</td><td>自动加宽</td></tr>
         <tr><td>多行 JSON</td><td>line_count × line_px + padding</td><td>宽度克制，高度增加</td><td>自动增高</td></tr>
         <tr><td><kbd>⌘+</kbd> 放大字体</td><td>fontSize 参与 char_px / line_px</td><td>宽高重新估算</td><td>避免文字挤压</td></tr>
       </tbody>

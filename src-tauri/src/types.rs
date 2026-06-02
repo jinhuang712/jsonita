@@ -178,7 +178,7 @@ pub struct ClipboardSniff {
 }
 
 /// spec/13 § 3.5 ContentMetrics ── line_count + bytes 字段为 TS mirror 保留
-/// （前端计算后传过来；后端 4 层逻辑仅消费 max_line_chars + soft_wrap_on）。
+/// （前端计算后传过来；后端 4 层逻辑消费结构宽度、行数和字号）。
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -186,6 +186,7 @@ pub struct ContentMetrics {
     pub max_line_chars: u32,
     pub line_count: u32,
     pub bytes: u64,
+    pub non_whitespace_chars: u32,
     pub soft_wrap_on: bool,
     pub font_size: f64,
 }
