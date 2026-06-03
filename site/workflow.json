@@ -1,0 +1,373 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "CAST Workflow",
+      "en": "CAST Workflow"
+    },
+    "description": {
+      "zh-CN": "Jsonita 的 CAST profile、文档生成规则、检查命令和维护入口。",
+      "en": "Jsonita CAST profile, documentation generation rules, check commands, and maintenance entrypoints."
+    },
+    "schemaVersion": "1.0",
+    "language": "zh-CN",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "changelist.html",
+        "placement": "topbar"
+      }
+    ],
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "index.html"
+    }
+  },
+  "manifest": {
+    "documentType": "engineering-plan",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "source-of-truth",
+      "commands",
+      "change-protocol",
+      "validation",
+      "references"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "源",
+                "en": "Source"
+              },
+              "body": {
+                "zh-CN": "每个公开 CAST 页面以 JSON 为源，HTML 为生成物。",
+                "en": "Every published CAST page uses JSON as source and HTML as generated output."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "渲染",
+                "en": "Rendering"
+              },
+              "body": {
+                "zh-CN": "渲染只走 cast-a-doc/scripts/render_html.py --validate。",
+                "en": "Rendering only uses cast-a-doc/scripts/render_html.py --validate."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "计划",
+                "en": "Planning"
+              },
+              "body": {
+                "zh-CN": "cast-a-start 负责文档集结构、首页、TODO、CHANGELIST 和 gate。",
+                "en": "cast-a-start owns document-set structure, homepage, TODO, CHANGELIST, and gates."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本页是给读者和后续 agent 的公开 workflow 页面；底层维护规则仍以 .cast-docs/WORKFLOW.md 为准。",
+            "en": "This page is the public workflow page for readers and future agents; the underlying maintenance rules still live in .cast-docs/WORKFLOW.md."
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-of-truth",
+      "title": {
+        "zh-CN": "Source Of Truth",
+        "en": "Source Of Truth"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "对象",
+              "en": "Object"
+            },
+            {
+              "zh-CN": "路径",
+              "en": "Path"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Project profile",
+                "en": "Project profile"
+              },
+              {
+                "zh-CN": ".cast-docs/project.json",
+                "en": ".cast-docs/project.json"
+              }
+            ],
+            [
+              {
+                "zh-CN": "Language profile",
+                "en": "Language profile"
+              },
+              {
+                "zh-CN": ".cast-docs/i18n.json",
+                "en": ".cast-docs/i18n.json"
+              }
+            ],
+            [
+              {
+                "zh-CN": "Agent workflow",
+                "en": "Agent workflow"
+              },
+              {
+                "zh-CN": ".cast-docs/WORKFLOW.md",
+                "en": ".cast-docs/WORKFLOW.md"
+              }
+            ],
+            [
+              {
+                "zh-CN": "Homepage source",
+                "en": "Homepage source"
+              },
+              {
+                "zh-CN": "site/index.cast.json",
+                "en": "site/index.cast.json"
+              }
+            ],
+            [
+              {
+                "zh-CN": "TODO / Changelist",
+                "en": "TODO / Changelist"
+              },
+              {
+                "zh-CN": "site/todo.json / site/changelist.json",
+                "en": "site/todo.json / site/changelist.json"
+              }
+            ],
+            [
+              {
+                "zh-CN": "Plan / Spec",
+                "en": "Plan / Spec"
+              },
+              {
+                "zh-CN": "plan/*.json / spec/*.json",
+                "en": "plan/*.json / spec/*.json"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "commands",
+      "title": {
+        "zh-CN": "Commands",
+        "en": "Commands"
+      },
+      "blocks": [
+        {
+          "type": "code",
+          "language": "bash",
+          "code": "pnpm docs:render\npnpm docs:check\npnpm exec node scripts/verify_doc_links.mjs\npnpm tsc --noEmit"
+        },
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "docs:render 会遍历 site、plan、spec 的 CAST JSON 源，并逐页调用 cast-a-doc 的 render_html.py。docs:check 会验证 profile、freshness、双语结构和发布面。",
+            "en": "docs:render traverses CAST JSON sources under site, plan, and spec, and calls cast-a-doc render_html.py page by page. docs:check validates profile, freshness, bilingual structure, and published surface."
+          }
+        }
+      ]
+    },
+    {
+      "id": "change-protocol",
+      "title": {
+        "zh-CN": "Change Protocol",
+        "en": "Change Protocol"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "产品范围变化：更新 plan、相关 spec、TODO/CHANGELIST，并重新渲染。",
+              "en": "Product scope change: update plan, related spec, TODO/CHANGELIST, and rerender."
+            },
+            {
+              "zh-CN": "实现行为变化：同步检查 spec/ 与 plan/ 对应章节。",
+              "en": "Implementation behavior change: check corresponding spec/ and plan/ sections."
+            },
+            {
+              "zh-CN": "发布或 workflow 变化：更新 README、首页、workflow、TODO/CHANGELIST。",
+              "en": "Release or workflow change: update README, homepage, workflow, TODO/CHANGELIST."
+            },
+            {
+              "zh-CN": "不确定时给选项并询问；不要猜测会影响范围或技术方向的决定。",
+              "en": "When uncertain, offer options and ask; do not guess decisions that affect scope or technical direction."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "validation",
+      "title": {
+        "zh-CN": "Validation",
+        "en": "Validation"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "每个 plan/spec HTML 都有同名 JSON 源。",
+              "en": "Every plan/spec HTML has a same-name JSON source."
+            },
+            {
+              "zh-CN": "每个 plan/spec HTML 都有 zh-CN/en 双语切换结构。",
+              "en": "Every plan/spec HTML has zh-CN/en bilingual switch structure."
+            },
+            {
+              "zh-CN": "首页不链接裸目录；reader path 优先链接 HTML 和 README。",
+              "en": "Homepage does not link bare directories; reader paths prefer HTML and README."
+            },
+            {
+              "zh-CN": "TODO 只保留开放项，已完成迁移进入 CHANGELIST。",
+              "en": "TODO keeps only open items; completed migration moves into CHANGELIST."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "references",
+      "title": {
+        "zh-CN": "References",
+        "en": "References"
+      },
+      "blocks": [
+        {
+          "type": "source-refs",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "cast-a-doc skill",
+                "en": "cast-a-doc skill"
+              },
+              "url": "https://github.com/CAST-docs/cast-a-doc",
+              "text": {
+                "zh-CN": "JSON validation and HTML rendering workflow.",
+                "en": "JSON validation and HTML rendering workflow."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "cast-a-start skill",
+                "en": "cast-a-start skill"
+              },
+              "url": "https://github.com/CAST-docs/cast-a-start",
+              "text": {
+                "zh-CN": "Project planning, homepage, TODO, CHANGELIST, and gates.",
+                "en": "Project planning, homepage, TODO, CHANGELIST, and gates."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": ".cast-docs/WORKFLOW.md",
+                "en": ".cast-docs/WORKFLOW.md"
+              },
+              "url": "./.cast-docs/WORKFLOW.md",
+              "text": {
+                "zh-CN": "Repository-local executable documentation workflow.",
+                "en": "Repository-local executable documentation workflow."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

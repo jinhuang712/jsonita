@@ -1,286 +1,730 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jsonita Spec · 15 日志 & 可观测性</title>
-<link rel="stylesheet" href="../assets/style.css">
-</head>
-<body data-section="spec" data-chapter="15">
-
-<aside class="sidebar" id="sidebar"></aside>
-<header class="topbar" id="topbar"></header>
-
-<main class="doc-main">
-  <article class="doc-article">
-
-    <div class="doc-header">
-      <span class="doc-tag">SPEC · 章节 15</span>
-      <h1 class="doc-title">日志 & 可观测性</h1>
-      <p class="doc-subtitle">本地滚动日志 + 不上报 + 不记 JSON 内容 ── 先讲设计原则与隐私边界，再讲合流机制与契约。</p>
-    </div>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">REF</span>
-      <div class="callout-body">
-        <p>本章对齐 <a href="../plan/04_nfr.html">plan/04 NFR § 6</a>（本地滚动日志，不上报，不记 JSON 内容）+ <a href="../plan/04_nfr.html">§ 2 隐私</a>（API key 只在 <code>secrets.json</code>，不进 settings / 日志 / event payload）+ <a href="../plan/01_features.html">plan/01 F7</a>（设置面板"打开日志目录"按钮）。错误类型见 <a href="13_schemas.html">13 § 1</a>；与 IPC 错误矩阵（<a href="02_ipc.html">02 § 8</a>）、AI 错误透传（<a href="11_ai_client.html">11 § 7</a>）、migration 失败（<a href="10_storage.html">10 § 4.4</a>）对接。</p>
-      </div>
-    </div>
-
-    <p class="section-divider"><b>一 · 设计</b></p>
-
-    <h2><span class="h2-num">1</span>设计目标与边界</h2>
-
-    <p>日志服务<b>开发者排障</b>与<b>用户反馈</b>两个场景，但<b>绝不</b>服务"产品分析" ── 五条硬约束：</p>
-
-    <table>
-      <thead><tr><th>原则</th><th>含义</th><th>实现影响</th></tr></thead>
-      <tbody>
-        <tr><td><b>不上报</b></td><td>无任何 telemetry endpoint；日志只写本地文件</td><td>Cargo.toml 不引 sentry / opentelemetry / posthog 等</td></tr>
-        <tr><td><b>不记敏感</b></td><td>API key / JSON 内容 / 用户家目录路径 ── 永远不入日志</td><td>tracing field 黑名单 + Debug 实现自定义脱敏</td></tr>
-        <tr><td><b>双进程合流</b></td><td>当前只有 Rust 写本地文件；WebView 端只写 console</td><td><code>log_write</code> IPC 合流为保留设计</td></tr>
-        <tr><td><b>用户可审计</b></td><td>路径公开（<code>~/Library/Logs/Jsonita/</code>）；用户可直接打开、复制、附 issue</td><td><code>open_log_dir</code> 已实现；导出 zip 为保留设计</td></tr>
-        <tr><td><b>资源可控</b></td><td>按天滚动 + 保留 7 天；单文件 5 MB 分片为保留设计</td><td>tracing-appender daily rolling + 启动时清理 7 天前文件</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">2</span>关键设计决策</h2>
-
-    <h3><span class="h3-num">2.1</span>Rust 日志框架选型</h3>
-
-    <table>
-      <thead><tr><th>方案</th><th>结构化</th><th>滚动</th><th>体积</th><th>结论</th></tr></thead>
-      <tbody>
-        <tr><td><b>tracing + tracing-appender</b>（选）</td><td>原生 structured fields</td><td>tracing-appender 内置 daily / hourly rotation</td><td>~80 KB</td><td>Tauri 生态默认；async 友好；fields 易脱敏</td></tr>
-        <tr><td>log + env_logger</td><td>纯文本 fmt</td><td>需自接 file_rotate crate</td><td>~30 KB</td><td>缺 structured；脱敏要 fmt args 拦截</td></tr>
-        <tr><td>slog</td><td>结构化但 API 啰嗦</td><td>需 slog-async + slog-term 组装</td><td>~50 KB</td><td>v1 团队规模没必要</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">2.2</span>双进程合流</h3>
-
-    <p><b>Rust 是唯一文件写者</b>。当前 WebView 端 <code>src/services/logger.ts</code> 只写 <code>console.*</code>；通过新 IPC <code>log_write(level, target, msg, fields)</code> 合流到 Rust 是保留设计。未来接入后：</p>
-
-    <ul>
-      <li>同一文件，同一格式 ── 排障时不用看两个地方</li>
-      <li>WebView 端不持有文件句柄（沙箱 + I-5 不变量）</li>
-      <li>WebView 写日志频率天然受限于 IPC 节流（debounce / batch）</li>
-    </ul>
-
-    <h3><span class="h3-num">2.3</span>级别策略</h3>
-
-    <table>
-      <thead><tr><th>级别</th><th>v1 默认</th><th>含义</th><th>示例</th></tr></thead>
-      <tbody>
-        <tr><td><code>ERROR</code></td><td>开</td><td>需要用户 / 开发者关注的问题</td><td>SQLite 写失败 / secrets.json 写错 / AI HTTP 5xx</td></tr>
-        <tr><td><code>WARN</code></td><td>开</td><td>降级但可继续</td><td>UnwrapTimeout / RateLimit / FTS5 索引失败但主表 ok</td></tr>
-        <tr><td><code>INFO</code></td><td>开（关键事件）</td><td>关键状态变更</td><td>启动 / 退出 / migration 应用 / AI 调用开始结束（不含 prompt）</td></tr>
-        <tr><td><code>DEBUG</code></td><td><b>关</b>（默认）</td><td>开发期排障</td><td>每次 IPC 调用 / 每次状态机迁移</td></tr>
-        <tr><td><code>TRACE</code></td><td><b>关</b>（永不开）</td><td>逐函数级</td><td>—</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>开启 DEBUG 的方式</b>：环境变量 <code>RUST_LOG=jsonita=debug</code>（开发者使用）或<b>用户反馈 issue 时</b>设置面板 About → "开启 DEBUG 日志 10 分钟" 按钮（v1.1 加，v1 不暴露）。</p>
-
-    <h3><span class="h3-num">2.4</span>隐私脱敏 ── 字段黑白名单</h3>
-
-    <p>这是日志章节<b>最关键</b>的设计点。所有<b>新代码</b>调 tracing 前必须自查：fields 中是否含敏感数据？</p>
-
-    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-15-logging-diagram-1">
-<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" viewBox="0 0 987.9375 1640.046875" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#333;color:#333;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#333333;stroke-width:1px;}#my-svg .flowchart-link{stroke:#333333;fill:none;}#my-svg .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#my-svg .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#my-svg .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .bad&gt;*{fill:rgb(255, 241, 240)!important;stroke:rgb(201, 42, 42)!important;}#my-svg .bad span{fill:rgb(255, 241, 240)!important;stroke:rgb(201, 42, 42)!important;}#my-svg .san&gt;*{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .san span{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .ok&gt;*{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}#my-svg .ok span{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}#my-svg .cond&gt;*{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .cond span{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M239.238,62L239.238,66.167C239.238,70.333,239.238,78.667,239.238,86.333C239.238,94,239.238,101,239.238,104.5L239.238,108" id="my-svg-L_F_Q1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_Q1_0" data-points="W3sieCI6MjM5LjIzODI4MTI1LCJ5Ijo2Mn0seyJ4IjoyMzkuMjM4MjgxMjUsInkiOjg3fSx7IngiOjIzOS4yMzgyODEyNSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M188.35,267.549L174.105,282.197C159.861,296.845,131.372,326.141,117.127,363.094C102.883,400.047,102.883,444.656,102.883,466.961L102.883,489.266" id="my-svg-L_Q1_N1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q1_N1_0" data-points="W3sieCI6MTg4LjM0OTgwMzI3MjM3MTkzLCJ5IjoyNjcuNTQ5MDIyMDIyMzcxOTZ9LHsieCI6MTAyLjg4MjgxMjUsInkiOjM1NS40Mzc1fSx7IngiOjEwMi44ODI4MTI1LCJ5Ijo0OTMuMjY1NjI1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M290.127,267.549L304.371,282.197C318.616,296.845,347.105,326.141,361.349,346.289C375.594,366.438,375.594,377.438,375.594,382.938L375.594,388.438" id="my-svg-L_Q1_Q2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q1_Q2_0" data-points="W3sieCI6MjkwLjEyNjc1OTIyNzYyODA0LCJ5IjoyNjcuNTQ5MDIyMDIyMzcxOTZ9LHsieCI6Mzc1LjU5Mzc1LCJ5IjozNTUuNDM3NX0seyJ4IjozNzUuNTkzNzUsInkiOjM5Mi40Mzc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M318.506,591.006L305.852,606.688C293.197,622.369,267.888,653.731,255.233,684.247C242.578,714.763,242.578,744.432,242.578,759.267L242.578,774.102" id="my-svg-L_Q2_R2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q2_R2_0" data-points="W3sieCI6MzE4LjUwNjMwNzU0MjQ5MjksInkiOjU5MS4wMDYzMDc1NDI0OTI5fSx7IngiOjI0Mi41NzgxMjUsInkiOjY4NS4wOTM3NX0seyJ4IjoyNDIuNTc4MTI1LCJ5Ijo3NzguMTAxNTYyNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M432.681,591.006L445.336,606.688C457.991,622.369,483.3,653.731,495.955,674.913C508.609,696.094,508.609,707.094,508.609,712.594L508.609,718.094" id="my-svg-L_Q2_Q3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q2_Q3_0" data-points="W3sieCI6NDMyLjY4MTE5MjQ1NzUwNzEsInkiOjU5MS4wMDYzMDc1NDI0OTI5fSx7IngiOjUwOC42MDkzNzUsInkiOjY4NS4wOTM3NX0seyJ4Ijo1MDguNjA5Mzc1LCJ5Ijo3MjIuMDkzNzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M464.258,867.758L452.387,881.316C440.516,894.875,416.773,921.992,404.902,949.629C393.031,977.266,393.031,1005.422,393.031,1019.5L393.031,1033.578" id="my-svg-L_Q3_R3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q3_R3_0" data-points="W3sieCI6NDY0LjI1NzgwNTg0MzkzMDQ0LCJ5Ijo4NjcuNzU3ODA1ODQzOTMwNH0seyJ4IjozOTMuMDMxMjUsInkiOjk0OS4xMDkzNzV9LHsieCI6MzkzLjAzMTI1LCJ5IjoxMDM3LjU3ODEyNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M552.961,867.758L564.832,881.316C576.703,894.875,600.445,921.992,612.316,941.051C624.188,960.109,624.188,971.109,624.188,976.609L624.188,982.109" id="my-svg-L_Q3_Q4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q3_Q4_0" data-points="W3sieCI6NTUyLjk2MDk0NDE1NjA2OTYsInkiOjg2Ny43NTc4MDU4NDM5MzA0fSx7IngiOjYyNC4xODc1LCJ5Ijo5NDkuMTA5Mzc1fSx7IngiOjYyNC4xODc1LCJ5Ijo5ODYuMTA5Mzc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M575.317,1118.177L558.504,1132.488C541.691,1146.8,508.064,1175.424,491.251,1206.652C474.438,1237.88,474.438,1271.714,474.438,1288.63L474.438,1305.547" id="my-svg-L_Q4_R4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q4_R4_0" data-points="W3sieCI6NTc1LjMxNzQ0NTg5MTEwNTksInkiOjExMTguMTc2ODIwODkxMTA1OH0seyJ4Ijo0NzQuNDM3NSwieSI6MTIwNC4wNDY4NzV9LHsieCI6NDc0LjQzNzUsInkiOjEzMDkuNTQ2ODc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M673.058,1118.177L689.871,1132.488C706.684,1146.8,740.311,1175.424,757.124,1195.235C773.938,1215.047,773.938,1226.047,773.938,1231.547L773.938,1237.047" id="my-svg-L_Q4_Q5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q4_Q5_0" data-points="W3sieCI6NjczLjA1NzU1NDEwODg5NDEsInkiOjExMTguMTc2ODIwODkxMTA1OH0seyJ4Ijo3NzMuOTM3NSwieSI6MTIwNC4wNDY4NzV9LHsieCI6NzczLjkzNzUsInkiOjEyNDEuMDQ2ODc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M722.827,1428.936L711.852,1443.621C700.877,1458.306,678.927,1487.677,667.952,1509.862C656.977,1532.047,656.977,1547.047,656.977,1554.547L656.977,1562.047" id="my-svg-L_Q5_R5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q5_R5_0" data-points="W3sieCI6NzIyLjgyNjYwOTUwNDg5OTYsInkiOjE0MjguOTM1OTg0NTA0ODk5Nn0seyJ4Ijo2NTYuOTc2NTYyNSwieSI6MTUxNy4wNDY4NzV9LHsieCI6NjU2Ljk3NjU2MjUsInkiOjE1NjYuMDQ2ODc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M825.048,1428.936L836.023,1443.621C846.998,1458.306,868.948,1487.677,879.923,1507.862C890.898,1528.047,890.898,1539.047,890.898,1544.547L890.898,1550.047" id="my-svg-L_Q5_R6_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q5_R6_0" data-points="W3sieCI6ODI1LjA0ODM5MDQ5NTEwMDQsInkiOjE0MjguOTM1OTg0NTA0ODk5Nn0seyJ4Ijo4OTAuODk4NDM3NSwieSI6MTUxNy4wNDY4NzV9LHsieCI6ODkwLjg5ODQzNzUsInkiOjE1NTQuMDQ2ODc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_F_Q1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(102.8828125, 355.4375)"><g class="label" data-id="L_Q1_N1_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(375.59375, 355.4375)"><g class="label" data-id="L_Q1_Q2_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(242.578125, 685.09375)"><g class="label" data-id="L_Q2_R2_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(508.609375, 685.09375)"><g class="label" data-id="L_Q2_Q3_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(393.03125, 949.109375)"><g class="label" data-id="L_Q3_R3_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(624.1875, 949.109375)"><g class="label" data-id="L_Q3_Q4_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(474.4375, 1204.046875)"><g class="label" data-id="L_Q4_R4_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(773.9375, 1204.046875)"><g class="label" data-id="L_Q4_Q5_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(656.9765625, 1517.046875)"><g class="label" data-id="L_Q5_R5_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(890.8984375, 1517.046875)"><g class="label" data-id="L_Q5_R6_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-F-0" data-look="classic" transform="translate(239.23828125, 35)"><rect class="basic label-container" style="" x="-78.9609375" y="-27" width="157.921875" height="54"/><g class="label" style="" transform="translate(-48.9609375, -12)"><rect/><foreignObject width="97.921875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>准备记录字段</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-Q1-1" data-look="classic" transform="translate(239.23828125, 215.21875)"><polygon points="103.21875,0 206.4375,-103.21875 103.21875,-206.4375 0,-103.21875" class="label-container" transform="translate(-102.71875, 103.21875)" style="fill:#F2F5FF !important;stroke:#245BDB !important"/><g class="label" style="" transform="translate(-52.21875, -36)"><rect/><foreignObject width="104.4375" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>是 API key /<br />access token /<br />password ?</p></span></div></foreignObject></g></g><g class="node default bad" id="my-svg-flowchart-N1-3" data-look="classic" transform="translate(102.8828125, 520.265625)"><rect class="basic label-container" style="fill:#FFF1F0 !important;stroke:#C92A2A !important" x="-94.8828125" y="-27" width="189.765625" height="54"/><g class="label" style="" transform="translate(-64.8828125, -12)"><rect/><foreignObject width="129.765625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>拒绝 · 永不入日志</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-Q2-5" data-look="classic" transform="translate(375.59375, 520.265625)"><polygon points="127.828125,0 255.65625,-127.828125 127.828125,-255.65625 0,-127.828125" class="label-container" transform="translate(-127.328125, 127.828125)" style="fill:#F2F5FF !important;stroke:#245BDB !important"/><g class="label" style="" transform="translate(-88.828125, -24)"><rect/><foreignObject width="177.65625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>是用户 JSON 内容<br />(content / text / body) ?</p></span></div></foreignObject></g></g><g class="node default san" id="my-svg-flowchart-R2-7" data-look="classic" transform="translate(242.578125, 817.1015625)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-121.0234375" y="-39" width="242.046875" height="78"/><g class="label" style="" transform="translate(-91.0234375, -24)"><rect/><foreignObject width="182.046875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>只记 len + sha256 prefix8<br />不记内容</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-Q3-9" data-look="classic" transform="translate(508.609375, 817.1015625)"><polygon points="95.0078125,0 190.015625,-95.0078125 95.0078125,-190.015625 0,-95.0078125" class="label-container" transform="translate(-94.5078125, 95.0078125)" style="fill:#F2F5FF !important;stroke:#245BDB !important"/><g class="label" style="" transform="translate(-56.0078125, -24)"><rect/><foreignObject width="112.015625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>是 fs 路径<br />且含 home dir ?</p></span></div></foreignObject></g></g><g class="node default san" id="my-svg-flowchart-R3-11" data-look="classic" transform="translate(393.03125, 1076.578125)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-90.6875" y="-39" width="181.375" height="78"/><g class="label" style="" transform="translate(-60.6875, -24)"><rect/><foreignObject width="121.375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>替换 $HOME 为 ~<br />避免泄漏用户名</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-Q4-13" data-look="classic" transform="translate(624.1875, 1076.578125)"><polygon points="90.46875,0 180.9375,-90.46875 90.46875,-180.9375 0,-90.46875" class="label-container" transform="translate(-89.96875, 90.46875)" style="fill:#F2F5FF !important;stroke:#245BDB !important"/><g class="label" style="" transform="translate(-51.46875, -24)"><rect/><foreignObject width="102.9375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>是 error msg /<br />stack trace ?</p></span></div></foreignObject></g></g><g class="node default san" id="my-svg-flowchart-R4-15" data-look="classic" transform="translate(474.4375, 1360.546875)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-130" y="-51" width="260" height="102"/><g class="label" style="" transform="translate(-100, -36)"><rect/><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>可记<br />注意 msg 内不含 inline 内容</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-Q5-17" data-look="classic" transform="translate(773.9375, 1360.546875)"><polygon points="119.5,0 239,-119.5 119.5,-239 0,-119.5" class="label-container" transform="translate(-119, 119.5)" style="fill:#F2F5FF !important;stroke:#245BDB !important"/><g class="label" style="" transform="translate(-80.5, -24)"><rect/><foreignObject width="161" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>是 IPC 命令名 /<br />状态名 / 计数 / 耗时 ?</p></span></div></foreignObject></g></g><g class="node default ok" id="my-svg-flowchart-R5-19" data-look="classic" transform="translate(656.9765625, 1593.046875)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-94.8828125" y="-27" width="189.765625" height="54"/><g class="label" style="" transform="translate(-64.8828125, -12)"><rect/><foreignObject width="129.765625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>可记 · 元数据安全</p></span></div></foreignObject></g></g><g class="node default bad" id="my-svg-flowchart-R6-21" data-look="classic" transform="translate(890.8984375, 1593.046875)"><rect class="basic label-container" style="fill:#FFF1F0 !important;stroke:#C92A2A !important" x="-89.0390625" y="-39" width="178.078125" height="78"/><g class="label" style="" transform="translate(-59.0390625, -24)"><rect/><foreignObject width="118.078125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>默认拒绝<br />新字段需 review</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
-</figure>
-
-    <h3><span class="h3-num">2.5</span>滚动与保留</h3>
-
-    <table>
-      <thead><tr><th>策略</th><th>值</th><th>原因</th></tr></thead>
-      <tbody>
-        <tr><td>滚动节奏</td><td>按天（00:00 切新文件）</td><td>命名规则 <code>jsonita.YYYY-MM-DD.log</code> ── 用户附 issue 时容易找当天</td></tr>
-        <tr><td>单文件上限</td><td>保留设计</td><td>当前仅 daily rolling；5 MB 分片尚未实现</td></tr>
-        <tr><td>保留天数</td><td>7 天</td><td>启动时清理 8 天前文件；够用户回溯一周内的问题</td></tr>
-        <tr><td>启动写入</td><td><code>app.start</code>（version / OS / arch）</td><td>当前不写 app_data_dir / tauri version</td></tr>
-      </tbody>
-    </table>
-
-    <p class="section-divider"><b>二 · 工作机制</b></p>
-
-    <h2><span class="h2-num">3</span>日志写入路径</h2>
-
-    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-15-logging-diagram-2">
-<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" viewBox="0 0 2191.1875 512" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#333;color:#333;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#333333;stroke-width:1px;}#my-svg .flowchart-link{stroke:#333333;fill:none;}#my-svg .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#my-svg .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#my-svg .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .rust&gt;*{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .rust span{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .wv&gt;*{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .wv span{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .file&gt;*{fill:rgb(244, 245, 247)!important;stroke:rgb(143, 149, 158)!important;}#my-svg .file span{fill:rgb(244, 245, 247)!important;stroke:rgb(143, 149, 158)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-WV" data-look="classic"><rect style="" x="8" y="303" width="956.734375" height="201"/><g class="cluster-label" transform="translate(425.625, 303)"><foreignObject width="121.484375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>WebView (React)</p></span></div></foreignObject></g></g><g class="cluster" id="my-svg-Rust" data-look="classic"><rect style="" x="699.203125" y="8" width="1193.90625" height="171"/><g class="cluster-label" transform="translate(1263.4609375, 8)"><foreignObject width="65.390625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>Rust host</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M939.734,82L943.901,82C948.068,82,956.401,82,968.458,82C980.516,82,996.297,82,1011.419,83.12C1026.542,84.24,1041.005,86.48,1048.237,87.6L1055.469,88.72" id="my-svg-L_R1_R2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R1_R2_0" data-points="W3sieCI6OTM5LjczNDM3NSwieSI6ODJ9LHsieCI6OTY0LjczNDM3NSwieSI6ODJ9LHsieCI6MTAxMi4wNzgxMjUsInkiOjgyfSx7IngiOjEwNTkuNDIxODc1LCJ5Ijo4OS4zMzE3MjAxOTM1NzY3N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M293,396L297.167,396C301.333,396,309.667,396,317.333,396C325,396,332,396,335.5,396L339,396" id="my-svg-L_W1_W2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W1_W2_0" data-points="W3sieCI6MjkzLCJ5IjozOTZ9LHsieCI6MzE4LCJ5IjozOTZ9LHsieCI6MzQzLCJ5IjozOTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M558.375,412.93L570.111,414.775C581.846,416.62,605.318,420.31,628.789,422.155C652.26,424,675.732,424,691.712,424C707.693,424,716.182,424,720.427,424L724.672,424" id="my-svg-L_W2_W3_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W2_W3_0" data-points="W3sieCI6NTU4LjM3NSwieSI6NDEyLjkyOTk0NjkyMjg0MDd9LHsieCI6NjI4Ljc4OTA2MjUsInkiOjQyNH0seyJ4Ijo2OTkuMjAzMTI1LCJ5Ijo0MjR9LHsieCI6NzI4LjY3MTg3NSwieSI6NDI0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M935.266,424L940.177,424C945.089,424,954.911,424,967.714,375.333C980.516,326.667,996.297,229.333,1011.424,179.24C1026.551,129.147,1041.024,126.295,1048.261,124.869L1055.497,123.442" id="my-svg-L_W3_R2_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W3_R2_0" data-points="W3sieCI6OTM1LjI2NTYyNSwieSI6NDI0fSx7IngiOjk2NC43MzQzNzUsInkiOjQyNH0seyJ4IjoxMDEyLjA3ODEyNSwieSI6MTMyfSx7IngiOjEwNTkuNDIxODc1LCJ5IjoxMjIuNjY4NzE5NzUzNjI5NTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1248.859,91.044L1259.88,89.537C1270.901,88.03,1292.943,85.015,1314.318,83.507C1335.693,82,1356.401,82,1366.755,82L1377.109,82" id="my-svg-L_R2_R3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R2_R3_0" data-points="W3sieCI6MTI0OC44NTkzNzUsInkiOjkxLjA0NDQ5MTkzNzA1MDcxfSx7IngiOjEzMTQuOTg0Mzc1LCJ5Ijo4Mn0seyJ4IjoxMzgxLjEwOTM3NSwieSI6ODJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1573.391,82L1577.557,82C1581.724,82,1590.057,82,1597.724,82C1605.391,82,1612.391,82,1615.891,82L1619.391,82" id="my-svg-L_R3_R4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R3_R4_0" data-points="W3sieCI6MTU3My4zOTA2MjUsInkiOjgyfSx7IngiOjE1OTguMzkwNjI1LCJ5Ijo4Mn0seyJ4IjoxNjIzLjM5MDYyNSwieSI6ODJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1868.109,82L1872.276,82C1876.443,82,1884.776,82,1893.109,82C1901.443,82,1909.776,82,1917.443,82C1925.109,82,1932.109,82,1935.609,82L1939.109,82" id="my-svg-L_R4_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R4_F_0" data-points="W3sieCI6MTg2OC4xMDkzNzUsInkiOjgyfSx7IngiOjE4OTMuMTA5Mzc1LCJ5Ijo4Mn0seyJ4IjoxOTE4LjEwOTM3NSwieSI6ODJ9LHsieCI6MTk0My4xMDkzNzUsInkiOjgyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1248.859,116.956L1259.88,118.463C1270.901,119.97,1292.943,122.985,1324.114,138.774C1355.286,154.562,1395.588,183.125,1415.739,197.406L1435.889,211.687" id="my-svg-L_R2_Term_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R2_Term_0" data-points="W3sieCI6MTI0OC44NTkzNzUsInkiOjExNi45NTU1MDgwNjI5NDkyOX0seyJ4IjoxMzE0Ljk4NDM3NSwieSI6MTI2fSx7IngiOjE0MzkuMTUyODUzMjYwODY5NSwieSI6MjE0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M558.375,379.07L570.111,377.225C581.846,375.38,605.318,371.69,628.789,369.845C652.26,368,675.732,368,704.409,351.794C733.086,335.588,766.969,303.177,783.911,286.971L800.852,270.765" id="my-svg-L_W2_DT_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W2_DT_0" data-points="W3sieCI6NTU4LjM3NSwieSI6Mzc5LjA3MDA1MzA3NzE1OTN9LHsieCI6NjI4Ljc4OTA2MjUsInkiOjM2OH0seyJ4Ijo2OTkuMjAzMTI1LCJ5IjozNjh9LHsieCI6ODAzLjc0Mjk4NzIwNDcyNDQsInkiOjI2OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_R1_R2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_W1_W2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(628.7890625, 424)"><g class="label" data-id="L_W2_W3_0" transform="translate(-30.921875, -12)"><foreignObject width="61.84375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>reserved</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(989.90955, 268.72817)"><g class="label" data-id="L_W3_R2_0" transform="translate(-22.34375, -12)"><foreignObject width="44.6875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>future</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_R2_R3_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_R3_R4_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_R4_F_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(1314.984375, 126)"><g class="label" data-id="L_R2_Term_0" transform="translate(-41.125, -24)"><foreignObject width="82.25" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>console out<br />开发模式</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(628.7890625, 368)"><g class="label" data-id="L_W2_DT_0" transform="translate(-45.4140625, -24)"><foreignObject width="90.828125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>console calls<br />DevTools</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default rust" id="my-svg-flowchart-R1-0" data-look="classic" transform="translate(831.96875, 82)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-107.765625" y="-39" width="215.53125" height="78"/><g class="label" style="" transform="translate(-77.765625, -24)"><rect/><foreignObject width="155.53125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>业务代码<br />tracing::info! / error!</p></span></div></foreignObject></g></g><g class="node default rust" id="my-svg-flowchart-R2-1" data-look="classic" transform="translate(1154.140625, 104)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-94.71875" y="-27" width="189.4375" height="54"/><g class="label" style="" transform="translate(-64.71875, -12)"><rect/><foreignObject width="129.4375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>tracing Subscriber</p></span></div></foreignObject></g></g><g class="node default rust" id="my-svg-flowchart-R3-2" data-look="classic" transform="translate(1477.25, 82)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-96.140625" y="-39" width="192.28125" height="78"/><g class="label" style="" transform="translate(-66.140625, -24)"><rect/><foreignObject width="132.28125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>字段脱敏 layer<br />检查黑名单 / 转换</p></span></div></foreignObject></g></g><g class="node default rust" id="my-svg-flowchart-R4-3" data-look="classic" transform="translate(1745.75, 82)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-122.359375" y="-39" width="244.71875" height="78"/><g class="label" style="" transform="translate(-92.359375, -24)"><rect/><foreignObject width="184.71875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>tracing-appender<br />daily rolling FileAppender</p></span></div></foreignObject></g></g><g class="node default wv" id="my-svg-flowchart-W1-4" data-look="classic" transform="translate(163, 396)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-130" y="-51" width="260" height="102"/><g class="label" style="" transform="translate(-100, -36)"><rect/><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>业务代码<br />logger.error(target, msg, fields)</p></span></div></foreignObject></g></g><g class="node default wv" id="my-svg-flowchart-W2-5" data-look="classic" transform="translate(450.6875, 396)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-107.6875" y="-39" width="215.375" height="78"/><g class="label" style="" transform="translate(-77.6875, -24)"><rect/><foreignObject width="155.375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>薄层 logger.ts<br />console calls + invoke</p></span></div></foreignObject></g></g><g class="node default wv" id="my-svg-flowchart-W3-6" data-look="classic" transform="translate(831.96875, 424)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-103.296875" y="-39" width="206.59375" height="78"/><g class="label" style="" transform="translate(-73.296875, -24)"><rect/><foreignObject width="146.59375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>invoke log_write IPC<br />(reserved)</p></span></div></foreignObject></g></g><g class="node default file" id="my-svg-flowchart-F-7" data-look="classic" transform="translate(2063.1484375, 82)"><rect class="basic label-container" style="fill:#F4F5F7 !important;stroke:#8F959E !important" x="-120.0390625" y="-39" width="240.078125" height="78"/><g class="label" style="" transform="translate(-90.0390625, -24)"><rect/><foreignObject width="180.078125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>(jsonita.YYYY-MM-DD.log<br />~/Library/Logs/Jsonita/)</p></span></div></foreignObject></g></g><g class="node default file" id="my-svg-flowchart-Term-19" data-look="classic" transform="translate(1477.25, 241)"><rect class="basic label-container" style="fill:#F4F5F7 !important;stroke:#8F959E !important" x="-71.4375" y="-27" width="142.875" height="54"/><g class="label" style="" transform="translate(-41.4375, -12)"><rect/><foreignObject width="82.875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>终端 stdout</p></span></div></foreignObject></g></g><g class="node default file" id="my-svg-flowchart-DT-21" data-look="classic" transform="translate(831.96875, 241)"><rect class="basic label-container" style="fill:#F4F5F7 !important;stroke:#8F959E !important" x="-90.9921875" y="-27" width="181.984375" height="54"/><g class="label" style="" transform="translate(-60.9921875, -12)"><rect/><foreignObject width="121.984375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Chrome DevTools</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
-</figure>
-
-    <p><b>注意 R3 脱敏 layer</b>：当前 <code>RedactLayer</code> 已挂入 subscriber chain，但实现仍是占位，不会改写字段。新日志调用仍需在调用点避免传 API key / JSON 原文；字段级自动脱敏是保留设计。</p>
-
-    <h2><span class="h2-num">4</span>关键事件 catalog</h2>
-
-    <p>下表是<b>v1 实施期</b>所有 tracing event 的清单 ── 写新代码时不在表里的事件，先 review 是否需要加入。</p>
-
-    <table>
-      <thead><tr><th>事件名</th><th>级别</th><th>触发</th><th>字段</th></tr></thead>
-      <tbody>
-        <tr><td><code>app.start</code></td><td>INFO</td><td>main() 入口</td><td>version, os, arch</td></tr>
-        <tr><td><code>db.open</code></td><td>INFO</td><td>SQLite open 成功</td><td>path</td></tr>
-        <tr><td><code>db.open.failed</code></td><td>ERROR</td><td>SQLite open 失败</td><td>error, path</td></tr>
-        <tr><td><code>window.toggle</code></td><td>INFO</td><td>tray / shortcut 切换显隐</td><td>action: show | hide</td></tr>
-        <tr><td><code>shortcut.registered</code></td><td>INFO</td><td>启动期快捷键注册成功</td><td>action = toggle-window</td></tr>
-        <tr><td><code>shortcut.register_failed</code></td><td>WARN</td><td>启动期快捷键注册失败</td><td>error</td></tr>
-        <tr><td><code>reserved</code></td><td>—</td><td>AI 调用、IPC 错误、panic hook、settings.changed 等细粒度事件</td><td>当前未统一打点</td></tr>
-      </tbody>
-    </table>
-
-    <p class="section-divider"><b>三 · 契约</b></p>
-
-    <h2><span class="h2-num">5</span>日志记录格式</h2>
-
-    <h3><span class="h3-num">5.1</span>每行是一个 JSON</h3>
-
-    <p><b>JSON Lines</b>（ndjson）格式 ── 一行一个 event，便于 <code>jq</code> / <code>grep</code> / 第三方 viewer 处理。</p>
-
-    <pre><code>// 示例：3 个 events
-{"timestamp":"2026-05-22T14:23:01.103Z","level":"INFO","fields":{"message":"app.start","version":"1.0.0-beta.1","os":"macos","arch":"aarch64"},"target":"jsonita"}
-{"timestamp":"2026-05-22T14:23:01.842Z","level":"INFO","fields":{"message":"db.open","path":"/Users/.../Jsonita/history.db"},"target":"jsonita"}
-{"timestamp":"2026-05-22T14:23:04.117Z","level":"INFO","fields":{"message":"window.toggle","action":"show"},"target":"jsonita::window"}</code></pre>
-
-    <h3><span class="h3-num">5.2</span>必填字段</h3>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><code>timestamp</code></td><td>string</td><td>tracing-subscriber JSON formatter 时间戳</td></tr>
-        <tr><td><code>level</code></td><td><code>'ERROR' | 'WARN' | 'INFO' | 'DEBUG'</code></td><td>大写</td></tr>
-        <tr><td><code>target</code></td><td>string</td><td>模块路径 <code>jsonita::ai</code> / WebView 端用 <code>web::editor</code></td></tr>
-        <tr><td><code>fields.message</code></td><td>string</td><td>事件名，例如 <code>app.start</code></td></tr>
-        <tr><td><code>fields.*</code></td><td>各类型</td><td>结构化字段，每个 event 不同（参 § 4 catalog 列）</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">6</span>文件路径与滚动</h2>
-
-    <table>
-      <thead><tr><th>项</th><th>值</th></tr></thead>
-      <tbody>
-        <tr><td>目录</td><td><code>~/Library/Logs/Jsonita/</code>（macOS）/ <code>%LOCALAPPDATA%\Jsonita\Logs\</code>（Windows）</td></tr>
-        <tr><td>文件名</td><td><code>jsonita.YYYY-MM-DD.log</code>（tracing-appender daily rolling）</td></tr>
-        <tr><td>滚动时机</td><td>00:00 本地时间；单文件 ≥ 5 MB 分片为保留设计</td></tr>
-        <tr><td>保留</td><td>启动时删除 8 天前的旧文件；当前实现按文件修改时间判断，不限制文件名</td></tr>
-        <tr><td>权限</td><td>0600（仅当前用户可读）</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">7</span>隐私白 / 黑名单</h2>
-
-    <h3><span class="h3-num">7.1</span>黑名单（强制脱敏 / 拒绝）</h3>
-
-    <table>
-      <thead><tr><th>字段名匹配</th><th>处理</th></tr></thead>
-      <tbody>
-        <tr><td><code>api_key</code> / <code>access_token</code> / <code>refresh_token</code> / <code>password</code> / <code>secret</code></td><td>调用点禁止传入；自动替换为 <code>"[REDACTED]"</code> 是保留设计</td></tr>
-        <tr><td><code>content</code> / <code>text</code> / <code>body</code> / <code>raw</code> / <code>prompt</code>（指用户输入或 AI 返回）</td><td>调用点只记元数据；自动 <code>len</code> + <code>sha256[:8]</code> 是保留设计</td></tr>
-        <tr><td><code>fixed</code>（AI 修复后 JSON）</td><td>调用点禁止传入</td></tr>
-        <tr><td>路径字段（<code>path</code> / <code>dir</code> / <code>file</code>）</td><td>当前可能直接写入；<code>$HOME</code> → <code>~</code> 自动替换为保留设计</td></tr>
-        <tr><td>HTTP <code>body</code>（DeepSeek 响应）</td><td>当前错误 payload 可能包含 body；日志调用点不应直接记录 body</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">7.2</span>白名单（可直接记）</h3>
-
-    <p>仅元数据安全：</p>
-
-    <ul>
-      <li>枚举值（<code>error_kind</code> / <code>source</code> / <code>op_type</code> 等）</li>
-      <li>计数 / 长度 / 耗时（<code>len</code> / <code>elapsed_ms</code> / <code>retry_after_sec</code> / <code>tokens_in</code>）</li>
-      <li>系统元信息（<code>os</code> / <code>arch</code> / <code>version</code> / <code>tauri_version</code>）</li>
-      <li>状态名 / 命令名（<code>cmd</code> / <code>state</code> / <code>event</code>）</li>
-      <li>哈希前缀（<code>sha256[:8]</code>）</li>
-    </ul>
-
-    <h3><span class="h3-num">7.3</span>RedactLayer（reserved / future）</h3>
-
-    <p>当前 <code>src-tauri/src/logging/redact.rs</code> 的 <code>on_event</code> 是 no-op 占位。以下为未来字段级脱敏方向，不代表当前已实现。</p>
-
-    <pre><code>// src-tauri/src/log/redact.rs ── 自定义 tracing Layer
-const DENY: &amp;[&amp;str] = &amp;["api_key","access_token","password","secret","prompt","raw"];
-const HASH: &amp;[&amp;str] = &amp;["content","text","body","fixed"];
-
-impl&lt;S: Subscriber&gt; Layer&lt;S&gt; for RedactLayer {
-    fn on_event(&amp;self, event: &amp;Event, _: Context&lt;S&gt;) {
-        event.record(&amp;mut |field: &amp;Field, value: &amp;dyn fmt::Debug| {
-            let name = field.name();
-            if DENY.iter().any(|d| name.contains(d)) {
-                self.emit(name, "[REDACTED]");
-            } else if HASH.iter().any(|h| name.contains(h)) {
-                let s = format!("{:?}", value);
-                self.emit(name, &amp;format!("len={} sha256={}",
-                                          s.len(), &amp;sha256(&amp;s)[..8]));
-            } else {
-                self.emit(name, &amp;format!("{:?}", value));
-            }
-        });
-    }
-}</code></pre>
-
-    <h2><span class="h2-num">8</span>WebView 端薄层</h2>
-
-    <pre><code>// src/services/logger.ts ── 前端日志薄层（当前实现）
-type Level = 'error' | 'warn' | 'info' | 'debug';
-
-function emit(level: Level, target: string, event: string, fields?: Record&lt;string, unknown&gt;) {
-  const consoleFn =
-    level === 'debug' ? console.log : level === 'info' ? console.info : console[level];
-  consoleFn(`[${target}] ${event}`, fields ?? {});
-  // reserved: invoke('log_write', { level, target, event, fields })
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="日志路径、事件类别、隐私脱敏、滚动策略、导出和诊断边界。">
+<title>日志与可观测性</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f8f8f7;
+  --surface: #ffffff;
+  --soft: #f2f3f3;
+  --text: #24272b;
+  --muted: #68717b;
+  --faint: #9aa1a8;
+  --border: #dedede;
+  --primary: #315f9f;
+  --primary-soft: #eef3fa;
+  --accent: #52686a;
+  --info: #566f99;
+  --info-soft: #f4f5f7;
+  --warn: #8a6d3b;
+  --warn-soft: #f8f4ea;
+  --danger: #9b4d49;
+  --danger-soft: #faf0ef;
+  --ok: #55745f;
+  --ok-soft: #eef4ef;
+  --code: #f1f2f2;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --font-xs: 11px;
+  --font-sm: 12.5px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 20px;
+  --font-xl: 28px;
+  --font-title: 30px;
+  --line-tight: 1.25;
+  --line-normal: 1.65;
+  --line-loose: 1.75;
+  --line-code: 1.55;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 28px;
+  --space-10: 34px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --surface-shadow: none;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111315;
+    --surface: #17191c;
+    --soft: #202328;
+    --text: #e2e5e8;
+    --muted: #a1a7ad;
+    --faint: #767d84;
+    --border: #30343a;
+    --primary: #9bb7d9;
+    --primary-soft: #182231;
+    --accent: #9ab4b1;
+    --info: #9aaeca;
+    --info-soft: #1b2027;
+    --warn: #c7b27e;
+    --warn-soft: #242117;
+    --danger: #d09a95;
+    --danger-soft: #271b1a;
+    --ok: #9ebaa5;
+    --ok-soft: #1a241d;
+    --code: #202328;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+}
+:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
+pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
+pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
+mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
+del { color: var(--muted); text-decoration: line-through; }
+u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
+[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
+[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
+[data-locale][data-locale-active="false"] { display: none; }
+.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
+.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
+.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
+.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
+.brand-logo:hover { text-decoration: none; }
+.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
+.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
+.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project { flex: 0 0 auto; }
+.topbar-doc { color: var(--muted); font-weight: 500; }
+.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
+.topbar-links { display: flex; gap: 12px; align-items: center; }
+.topbar-links:empty { display: none; }
+.topbar-link { color: var(--muted); font-size: var(--font-sm); }
+.topbar-spacer { flex: 1; }
+.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
+.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
+.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
+.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
+.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
+.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
+.doc-summary { padding: 16px 18px; }
+.doc-summary ul { margin: 0; }
+.set-grid { display: grid; gap: 22px; }
+.set-section { margin: 0; }
+.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
+.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
+.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
+.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
+.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
+.chapter-card a:hover { text-decoration: none; }
+.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
+.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
+.chapter-content { display: grid; gap: 5px; min-width: 0; }
+.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
+.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
+.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
+.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
+.set-pagination-next { text-align: right; }
+.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
+.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
+.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
+.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
+.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
+.section-title { overflow-wrap: anywhere; }
+.section-empty { color: var(--muted); font-style: italic; }
+.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
+.callout p { margin: 6px 0 0; }
+.callout-info { border-left-color: var(--info); background: var(--info-soft); }
+.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
+.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
+table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
+th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.details-block { padding: 0 14px; }
+.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
+.diagram { position: relative; padding: 16px; overflow: auto; }
+.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
+.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+.diagram:hover .diagram-toolbar { opacity: 1; }
+button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
+.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
+.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
+.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
+.code-status-ok { color: var(--ok); }
+.code-status-error { color: var(--danger); }
+.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
+.code-status + .code-copy { margin-left: 0; }
+.code-copy:hover { color: var(--text); }
+.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
+.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
+.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.code-line-content { padding: 0 14px; white-space: pre; }
+.code-token-key { color: var(--primary); }
+.code-token-bool { color: var(--info); }
+.code-token-number { color: var(--warn); }
+.code-token-flag { color: var(--accent); }
+.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+.diff-block > h3 { grid-column: 1 / -1; }
+.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
+.diff-side + .diff-side { margin-left: -1px; }
+.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
+.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
+.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
+.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
+.diff-line-content { padding-right: 14px; white-space: pre; }
+.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
+.line-add { color: var(--ok); }
+.line-remove { color: var(--danger); }
+.line-warning { color: var(--warn); }
+.line-context { color: var(--text); }
+.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.participant-card, .value-card, .action-card { padding: 14px 16px; }
+.action-card { padding: 20px; }
+.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
+.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
+.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
+.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
+.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
+.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
+.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
+.open-question + .open-question { border-top: 1px solid var(--border); }
+.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
+.open-question-text { min-width: 0; }
+.prompt-block { margin-top: 20px; }
+.prompt-block .code-header { padding: 12px 14px; }
+.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
+.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
+.prompt-block .code-line-number { padding-right: 12px; }
+.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.media-frame { margin: 0; overflow: hidden; }
+.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
+.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
+.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
+.column { min-width: 0; }
+.column h3 { margin-top: 0; }
+.column p:first-child { margin-top: 0; }
+.column p:last-child { margin-bottom: 0; }
+.column > .code-shell, .column > table { margin-top: 12px; }
+.toggle-view { padding: 14px; }
+.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
+.toggle-button { border: 0; background: transparent; color: var(--muted); }
+.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.toggle-panel[data-view-active="false"] { display: none; }
+.toggle-panel > :first-child { margin-top: 0; }
+.toggle-panel > :last-child { margin-bottom: 0; }
+.slider-control { padding: 16px; }
+.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.slider-header label { font-weight: 700; }
+.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
+.slider-range { display: block; width: 100%; accent-color: var(--primary); }
+.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
+.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
+.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
+.lightbox.open { display: flex; }
+.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
+.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
+.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
+.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
+.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
+@media (max-width: 760px) {
+  body { display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
+  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
+  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
+  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
+  .doc-header h1 { font-size: var(--font-xl); }
+  .diff-block { grid-template-columns: 1fr; }
+  .set-pagination { grid-template-columns: 1fr; }
+  .set-pagination-next { text-align: left; }
+  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
+  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
+}
+@media print {
+  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
+  .doc { margin-left: 0; max-width: none; padding: 0; }
+}
+</style>
+</head>
+<body>
 
-export const logger = {
-  error: (t: string, e: string, f?: Record&lt;string, unknown&gt;) =&gt; emit('error', t, e, f ?? {}),
-  warn:  (t: string, e: string, f?: Record&lt;string, unknown&gt;) =&gt; emit('warn',  t, e, f ?? {}),
-  info:  (t: string, e: string, f?: Record&lt;string, unknown&gt;) =&gt; emit('info',  t, e, f ?? {}),
-};</code></pre>
+<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
+{
+  "metadata": {
+    "language": "zh-CN",
+    "owner": "Jin Huang",
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    },
+    "title": {
+      "zh-CN": "日志与可观测性",
+      "en": "Logging And Observability"
+    },
+    "description": {
+      "zh-CN": "日志路径、事件类别、隐私脱敏、滚动策略、导出和诊断边界。",
+      "en": "Log paths, event categories, privacy redaction, rolling policy, export, and diagnostic boundaries."
+    },
+    "schemaVersion": "1.0",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ]
+  },
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "event-catalog",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "目的",
+                "en": "Purpose"
+              },
+              "body": {
+                "zh-CN": "日志帮助定位窗口、快捷键、AI、存储、发布问题。",
+                "en": "Logs help diagnose window, shortcut, AI, storage, and release issues."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "隐私",
+                "en": "Privacy"
+              },
+              "body": {
+                "zh-CN": "不记录用户 JSON 正文或 API key。",
+                "en": "Do not record user JSON body or API keys."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "保留",
+                "en": "Retention"
+              },
+              "body": {
+                "zh-CN": "rolling logs 保存在用户日志目录。",
+                "en": "Rolling logs are stored in the user log directory."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "event-catalog",
+      "title": {
+        "zh-CN": "Event Catalog",
+        "en": "Event Catalog"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "类别",
+              "en": "Category"
+            },
+            {
+              "zh-CN": "示例",
+              "en": "Example"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "window",
+                "en": "window"
+              },
+              {
+                "zh-CN": "show/hide/resize/theme。",
+                "en": "show/hide/resize/theme."
+              }
+            ],
+            [
+              {
+                "zh-CN": "json",
+                "en": "json"
+              },
+              {
+                "zh-CN": "operation、duration、size bucket、error kind。",
+                "en": "operation, duration, size bucket, error kind."
+              }
+            ],
+            [
+              {
+                "zh-CN": "ai",
+                "en": "ai"
+              },
+              {
+                "zh-CN": "request started/finished、duration、error kind；无 prompt/key。",
+                "en": "request started/finished, duration, error kind; no prompt/key."
+              }
+            ],
+            [
+              {
+                "zh-CN": "storage",
+                "en": "storage"
+              },
+              {
+                "zh-CN": "migration、read/write failure、corruption signal。",
+                "en": "migration, read/write failure, corruption signal."
+              }
+            ],
+            [
+              {
+                "zh-CN": "release",
+                "en": "release"
+              },
+              {
+                "zh-CN": "version、platform、startup diagnostics。",
+                "en": "version, platform, startup diagnostics."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "任何日志字段不得包含完整 JSON 文档。",
+              "en": "No log field may contain the full JSON document."
+            },
+            {
+              "zh-CN": "API key、Authorization header、secrets path value 必须脱敏。",
+              "en": "API key, Authorization header, and secret path values must be redacted."
+            },
+            {
+              "zh-CN": "导出日志前用户应能理解导出范围。",
+              "en": "Before exporting logs, users should understand the export scope."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "人工检查 AI 和 JSON 操作日志样例。",
+              "en": "Manually inspect AI and JSON operation log samples."
+            },
+            {
+              "zh-CN": "storage 损坏恢复日志契约仍需 P1 补齐。",
+              "en": "Storage corruption recovery logging contract remains P1."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</script>
 
-    <p><b>注意</b>：前端调用 <code>logger.*</code> 时仍要遵守 § 7 黑名单 ── 不能传 <code>content</code> 原文给 fields。约定通过 ESLint 自定义规则 + code review 双保险。</p>
+<article class="doc">
+<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">日志与可观测性</span><span data-locale="en" data-locale-active="false">Logging And Observability</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
+<main>
+<section class="doc-section" id="overview">
+<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
+<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">目的</span><span data-locale="en" data-locale-active="false">Purpose</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">日志帮助定位窗口、快捷键、AI、存储、发布问题。</span><span data-locale="en" data-locale-active="false">Logs help diagnose window, shortcut, AI, storage, and release issues.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">隐私</span><span data-locale="en" data-locale-active="false">Privacy</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">不记录用户 JSON 正文或 API key。</span><span data-locale="en" data-locale-active="false">Do not record user JSON body or API keys.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">保留</span><span data-locale="en" data-locale-active="false">Retention</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">rolling logs 保存在用户日志目录。</span><span data-locale="en" data-locale-active="false">Rolling logs are stored in the user log directory.</span></li></ul></section>
+</section>
 
-    <h2><span class="h2-num">9</span>IPC 命令</h2>
+<section class="doc-section" id="summary">
+<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
+<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
+</section>
 
-    <p>当前只有 <code>open_log_dir</code> 已实现；其余是保留设计。</p>
+<section class="doc-section" id="event-catalog">
+<h2><span data-locale="zh-CN" data-locale-active="true">Event Catalog</span><span data-locale="en" data-locale-active="false">Event Catalog</span></h2>
+<table>
+<tr><th><span data-locale="zh-CN" data-locale-active="true">类别</span><span data-locale="en" data-locale-active="false">Category</span></th><th><span data-locale="zh-CN" data-locale-active="true">示例</span><span data-locale="en" data-locale-active="false">Example</span></th></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">window</span><span data-locale="en" data-locale-active="false">window</span></td><td><span data-locale="zh-CN" data-locale-active="true">show/hide/resize/theme。</span><span data-locale="en" data-locale-active="false">show/hide/resize/theme.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">json</span><span data-locale="en" data-locale-active="false">json</span></td><td><span data-locale="zh-CN" data-locale-active="true">operation、duration、size bucket、error kind。</span><span data-locale="en" data-locale-active="false">operation, duration, size bucket, error kind.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">ai</span><span data-locale="en" data-locale-active="false">ai</span></td><td><span data-locale="zh-CN" data-locale-active="true">request started/finished、duration、error kind；无 prompt/key。</span><span data-locale="en" data-locale-active="false">request started/finished, duration, error kind; no prompt/key.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">storage</span><span data-locale="en" data-locale-active="false">storage</span></td><td><span data-locale="zh-CN" data-locale-active="true">migration、read/write failure、corruption signal。</span><span data-locale="en" data-locale-active="false">migration, read/write failure, corruption signal.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">release</span><span data-locale="en" data-locale-active="false">release</span></td><td><span data-locale="zh-CN" data-locale-active="true">version、platform、startup diagnostics。</span><span data-locale="en" data-locale-active="false">version, platform, startup diagnostics.</span></td></tr>
+</table>
+</section>
 
-    <table>
-      <thead><tr><th>命令</th><th>返回</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><code>log_write(level, target, event, fields)</code></td><td><code>()</code></td><td>reserved；WebView → Rust 日志转发</td></tr>
-        <tr><td><code>log_open_dir()</code></td><td><code>()</code></td><td>Finder 打开日志目录 ── 复用 <a href="02_ipc.html">02 § 6.1.7</a> <code>open_log_dir</code>，无需新命令</td></tr>
-        <tr><td><code>log_export_recent(days)</code></td><td><code>String</code>（zip 路径）</td><td>v1.1+：打包最近 N 日日志为 zip，返回路径供用户附 issue</td></tr>
-      </tbody>
-    </table>
+<section class="doc-section" id="invariants">
+<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
+<ul><li><span data-locale="zh-CN" data-locale-active="true">任何日志字段不得包含完整 JSON 文档。</span><span data-locale="en" data-locale-active="false">No log field may contain the full JSON document.</span></li><li><span data-locale="zh-CN" data-locale-active="true">API key、Authorization header、secrets path value 必须脱敏。</span><span data-locale="en" data-locale-active="false">API key, Authorization header, and secret path values must be redacted.</span></li><li><span data-locale="zh-CN" data-locale-active="true">导出日志前用户应能理解导出范围。</span><span data-locale="en" data-locale-active="false">Before exporting logs, users should understand the export scope.</span></li></ul>
+</section>
 
-    <h2><span class="h2-num">10</span>用户视角：导出 & 反馈</h2>
+<section class="doc-section" id="testing-plan">
+<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
+<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">人工检查 AI 和 JSON 操作日志样例。</span><span data-locale="en" data-locale-active="false">Manually inspect AI and JSON operation log samples.</span></li><li><span data-locale="zh-CN" data-locale-active="true">storage 损坏恢复日志契约仍需 P1 补齐。</span><span data-locale="en" data-locale-active="false">Storage corruption recovery logging contract remains P1.</span></li></ol>
+</section>
 
-    <ul>
-      <li><b>打开日志目录</b>：<code>open_log_dir</code> command 已实现；Settings About 按钮为保留 UI</li>
-      <li><b>"导出最近 N 日"</b>（v1.1）：调 <code>log_export_recent(7)</code>，弹保存对话框，生成 <code>jsonita-logs-YYYY-MM-DD.zip</code></li>
-      <li><b>反馈引导（reserved / future）</b>：未来在 <code>AiInvalidJson</code> raw Modal / SQLite 错误 UI 加 "Report issue" 链接 → 跳 GitHub Issues 模板（预填 OS / version / 引导用户附最近 1 日日志）</li>
-    </ul>
-
-    <h2><span class="h2-num">11</span>与其他章节对接</h2>
-
-    <table>
-      <thead><tr><th>章节</th><th>对接点</th></tr></thead>
-      <tbody>
-        <tr><td>02 IPC § 6.1.7 system</td><td>现有 <code>open_log_dir</code> 沿用；<code>log_write</code> 为保留命令</td></tr>
-        <tr><td>10 storage § 4.4 migration</td><td>migration 失败时返回 <code>JsonitaError::Sqlite</code>；备份路径为保留设计</td></tr>
-        <tr><td>11 ai client § 7</td><td>AI 细粒度日志为保留设计；当前未统一 emit <code>ai.call.*</code></td></tr>
-        <tr><td>06 window § 5</td><td>当前窗口切换记录 <code>window.toggle</code> INFO；<code>window.hidden/window.shown</code> 细分事件为保留设计</td></tr>
-        <tr><td>07 menubar</td><td>当前启动期注册成功 / 失败有日志；shortcut 冲突细粒度事件为保留设计</td></tr>
-        <tr><td>04 components</td><td>未来错误 Toast / Modal 加 "Report issue" 链接（10 章覆盖的用户反馈链路）</td></tr>
-        <tr><td>plan/01 F7</td><td>设置 About 面板加"打开日志目录"按钮（已规划）；v1.1 加"导出最近 7 日"按钮</td></tr>
-      </tbody>
-    </table>
-
-    <nav class="pagination" id="pagination"></nav>
-
-  </article>
+<section class="doc-section" id="open-questions">
+<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
+<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
+</section>
 </main>
+<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
+</article>
 
-<script src="../assets/nav.js"></script>
+<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#event-catalog"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Event Catalog</span><span data-locale="en" data-locale-active="false">Event Catalog</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
+<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">日志与可观测性</span><span data-locale="en" data-locale-active="false">Logging And Observability</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
+
+
+<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
+  const config = window.CAST_DOCS_I18N;
+  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
+  const MEMORY_KEY = 'cast-docs:global-memory';
+  const root = document.documentElement;
+  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
+  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
+  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
+  function readMemory() {
+    try {
+      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+  function writeMemory(memory) {
+    try {
+      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  function rememberDefaultLocale(locale) {
+    if (!config.locales.includes(locale)) return false;
+    const memory = readMemory();
+    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
+    memory.version = 1;
+    memory.preferences = {
+      ...preferences,
+      defaultLocale: locale,
+      defaultLocaleUpdatedAt: new Date().toISOString(),
+    };
+    return writeMemory(memory);
+  }
+  function defaultLocaleFromMemory() {
+    const locale = readMemory().preferences?.defaultLocale;
+    return config.locales.includes(locale) ? locale : null;
+  }
+  function apply(locale) {
+    if (!config.locales.includes(locale)) return;
+    root.lang = locale;
+    root.setAttribute('data-active-locale', locale);
+    config.activeLocale = locale;
+    document.querySelectorAll('[data-locale]').forEach((node) => {
+      const active = node.getAttribute('data-locale') === locale;
+      node.setAttribute('data-locale-active', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-locale-target]').forEach((button) => {
+      const active = button.getAttribute('data-locale-target') === locale;
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
+      const key = node.getAttribute('data-i18n-key');
+      if (key) node.textContent = label(locale, key, node.textContent);
+    });
+  }
+  function maybeSetDefaultLocale(locale) {
+    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
+    const message = label(
+      locale,
+      'chrome.defaultLanguagePrompt',
+      `Set ${displayName(locale)} as the default language for CAST Docs?`
+    ).replace('{language}', displayName(locale));
+    if (window.confirm(message)) {
+      rememberDefaultLocale(locale);
+    }
+  }
+  document.querySelectorAll('[data-locale-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const locale = button.getAttribute('data-locale-target');
+      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
+      apply(locale);
+      maybeSetDefaultLocale(locale);
+    });
+  });
+  apply(defaultLocaleFromMemory() || config.activeLocale);
+})();
+</script>
 </body>
 </html>

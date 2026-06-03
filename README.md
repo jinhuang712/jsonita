@@ -87,21 +87,21 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | 路径 | 内容 |
 |---|---|
 | [`index.html`](index.html) | 📍 文档导航入口（用浏览器打开） |
-| [`plan/`](plan/) | 5 篇产品设计：产品边界 / 功能 / 交互 / 技术栈 / NFR |
-| [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块 ... |
+| [`workflow.html`](workflow.html) | CAST workflow、`.cast-docs` profile 与验证命令 |
+| [`plan/`](plan/) | 5 篇产品设计：产品边界 / 功能 / 交互 / 技术栈 / NFR；均由同名 CAST JSON 渲染为中英双语 HTML |
+| [`spec/`](spec/) | 16 篇技术设计：架构 / mockups / IPC / 设计令牌 / 各模块；均由同名 CAST JSON 渲染为中英双语 HTML |
 | [`TODO.md`](TODO.md) / [`todo.html`](todo.html) | 项目级开放 backlog；HTML 由 `site/todo.json` 渲染 |
 | [`CHANGELIST.md`](CHANGELIST.md) / [`changelist.html`](changelist.html) | 变更历史；HTML 由 `site/changelist.json` 渲染 |
-| [`site/index.cast.json`](site/index.cast.json) / [`site/todo.json`](site/todo.json) / [`site/changelist.json`](site/changelist.json) | CAST JSON 源数据 |
+| [`site/index.cast.json`](site/index.cast.json) / [`site/workflow.json`](site/workflow.json) / [`site/todo.json`](site/todo.json) / [`site/changelist.json`](site/changelist.json) | 首页、workflow、TODO、Changelist 的 CAST JSON 源数据 |
 | [`.cast-docs/project.json`](.cast-docs/project.json) / [`.cast-docs/WORKFLOW.md`](.cast-docs/WORKFLOW.md) | CAST project profile 与 agent workflow |
 
 ## CAST 文档约定
 
-本项目文档严格依赖 CAST 进行书写与维护。后来者在修改产品范围、实现计划、技术规格、TODO、Changelist 或文档入口时，需要先检查 `.cast-docs/WORKFLOW.md`，并同步更新 `README.md`、`index.html`、`plan/`、`spec/`、`site/*.json`、`todo.html`、`changelist.html`。
+本项目文档严格依赖 CAST 进行书写与维护。后来者在修改产品范围、实现计划、技术规格、TODO、Changelist 或文档入口时，需要先检查 `.cast-docs/WORKFLOW.md`，并同步更新 `README.md`、`index.html`、`workflow.html`、`plan/*.json`、`spec/*.json`、`site/*.json`、`todo.html`、`changelist.html`。
 
 ```bash
-pnpm docs:render          # 渲染 index / TODO / CHANGELIST 的 CAST JSON 源
-pnpm docs:render-mermaid  # 将 legacy plan/spec Mermaid 图转成内联 SVG
-pnpm docs:check           # 校验 profile、渲染 freshness、首页 contract 与图表发布面
+pnpm docs:render          # 渲染 site / plan / spec 的 CAST JSON 源
+pnpm docs:check           # 校验 profile、逐页 freshness、双语结构、首页 contract 与图表发布面
 pnpm exec node scripts/verify_doc_links.mjs
 ```
 

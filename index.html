@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO 与 Changelist。">
+<meta name="description" content="Jsonita 的 CAST 文档入口，链接产品计划、技术规格、workflow、TODO 与 Changelist。">
 <title>Jsonita 项目文档</title>
 <style>
 :root {
@@ -314,8 +314,8 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
       "en": "Jsonita Project Documentation"
     },
     "description": {
-      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO 与 Changelist。",
-      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, TODO, and changelist."
+      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、workflow、TODO 与 Changelist。",
+      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, workflow, TODO, and changelist."
     },
     "schemaVersion": "1.0",
     "locales": [
@@ -425,8 +425,8 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
         {
           "type": "paragraph",
           "text": {
-            "zh-CN": "这个首页由 site/index.cast.json 渲染而来；README、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。",
-            "en": "This homepage is rendered from site/index.cast.json. README, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section."
+            "zh-CN": "这个首页由 site/index.cast.json 渲染而来；README、workflow、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。",
+            "en": "This homepage is rendered from site/index.cast.json. README, workflow, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section."
           }
         }
       ]
@@ -552,6 +552,19 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
                 "en": "Project introduction, installation, usage flow, and CAST documentation contract."
               },
               "href": "README.md"
+            },
+            {
+              "id": "workflow",
+              "number": "html",
+              "title": {
+                "zh-CN": "Workflow",
+                "en": "Workflow"
+              },
+              "description": {
+                "zh-CN": "公开 CAST workflow、.cast-docs 维护层、渲染与检查命令。",
+                "en": "Public CAST workflow, .cast-docs maintenance layer, rendering, and check commands."
+              },
+              "href": "workflow.html"
             },
             {
               "id": "todo",
@@ -896,14 +909,14 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
         },
         {
           "type": "callout",
-          "variant": "warning",
+          "variant": "success",
           "title": {
-            "zh-CN": "迁移状态",
-            "en": "Migration Status"
+            "zh-CN": "CAST JSON-first 已完成",
+            "en": "CAST JSON-first Complete"
           },
           "body": {
-            "zh-CN": "plan/spec 当前仍是 legacy HTML 发布页；它们已保持读者可用，但完整 CAST JSON-first 迁移需要逐页进行，见 TODO P1。",
-            "en": "plan/spec are still legacy HTML published pages. They remain reader-usable, but complete CAST JSON-first migration must happen page by page; see TODO P1."
+            "zh-CN": "plan/ 与 spec/ 的每个发布页现在都有同名 CAST JSON 源，并由 cast-a-doc 渲染为中英双语 HTML。",
+            "en": "Every published page under plan/ and spec/ now has a same-name CAST JSON source and is rendered by cast-a-doc into bilingual Chinese/English HTML."
           }
         }
       ]
@@ -1012,6 +1025,63 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
       },
       "blocks": [
         {
+          "type": "chapter-list",
+          "items": [
+            {
+              "id": "workflow-html",
+              "number": "html",
+              "title": {
+                "zh-CN": "Workflow HTML",
+                "en": "Workflow HTML"
+              },
+              "description": {
+                "zh-CN": "公开 workflow 页面。",
+                "en": "Public workflow page."
+              },
+              "href": "workflow.html"
+            },
+            {
+              "id": "cast-workflow",
+              "number": "md",
+              "title": {
+                "zh-CN": ".cast-docs/WORKFLOW.md",
+                "en": ".cast-docs/WORKFLOW.md"
+              },
+              "description": {
+                "zh-CN": "仓库级 CAST agent workflow。",
+                "en": "Repository-level CAST agent workflow."
+              },
+              "href": ".cast-docs/WORKFLOW.md"
+            },
+            {
+              "id": "cast-project",
+              "number": "json",
+              "title": {
+                "zh-CN": ".cast-docs/project.json",
+                "en": ".cast-docs/project.json"
+              },
+              "description": {
+                "zh-CN": "项目 profile、品牌资产与渲染默认值。",
+                "en": "Project profile, brand asset, and rendering defaults."
+              },
+              "href": ".cast-docs/project.json"
+            },
+            {
+              "id": "cast-i18n",
+              "number": "json",
+              "title": {
+                "zh-CN": ".cast-docs/i18n.json",
+                "en": ".cast-docs/i18n.json"
+              },
+              "description": {
+                "zh-CN": "仓库双语 locale 与术语策略。",
+                "en": "Repository bilingual locale and terminology policy."
+              },
+              "href": ".cast-docs/i18n.json"
+            }
+          ]
+        },
+        {
           "type": "table",
           "tableType": "data",
           "headers": [
@@ -1033,6 +1103,13 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
               }
             ],
             [
+              "site/workflow.json",
+              {
+                "zh-CN": "Workflow CAST JSON 源。",
+                "en": "CAST JSON source for workflow."
+              }
+            ],
+            [
               "site/todo.json",
               {
                 "zh-CN": "TODO CAST JSON 源。",
@@ -1047,17 +1124,10 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
               }
             ],
             [
-              ".cast-docs/WORKFLOW.md",
+              "plan/*.json / spec/*.json",
               {
-                "zh-CN": "仓库级 CAST agent workflow。",
-                "en": "Repository-level CAST agent workflow."
-              }
-            ],
-            [
-              ".cast-docs/project.json",
-              {
-                "zh-CN": "项目 profile、品牌资产与渲染默认值。",
-                "en": "Project profile, brand asset, and rendering defaults."
+                "zh-CN": "Plan / Spec CAST JSON 源。",
+                "en": "Plan / Spec CAST JSON sources."
               }
             ]
           ]
@@ -1065,8 +1135,8 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
         {
           "type": "paragraph",
           "text": {
-            "zh-CN": "维护源不作为首页主导航目标；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。",
-            "en": "Maintenance sources are not homepage primary navigation targets. Regular readers should start from the reader-facing HTML / Markdown paths above."
+            "zh-CN": "维护源放在最后；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。",
+            "en": "Maintenance sources are kept last. Regular readers should start from the reader-facing HTML / Markdown paths above."
           }
         }
       ]
@@ -1081,7 +1151,7 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
 <section class="doc-section" id="overview">
 <h2><span data-locale="zh-CN" data-locale-active="true">入口说明</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
 <section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">产品</span><span data-locale="en" data-locale-active="false">Product</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">Jsonita 是一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。</span><span data-locale="en" data-locale-active="false">Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a global shortcut.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">文档约定</span><span data-locale="en" data-locale-active="false">Documentation Contract</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">本项目使用 CAST：产品范围、技术规格、TODO、Changelist 与发布入口必须同步维护。</span><span data-locale="en" data-locale-active="false">This project uses CAST: product scope, technical specs, TODOs, changelists, and published entrypoints must stay synchronized.</span></li></ul></section>
-<p><span data-locale="zh-CN" data-locale-active="true">这个首页由 site/index.cast.json 渲染而来；README、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。</span><span data-locale="en" data-locale-active="false">This homepage is rendered from site/index.cast.json. README, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section.</span></p>
+<p><span data-locale="zh-CN" data-locale-active="true">这个首页由 site/index.cast.json 渲染而来；README、workflow、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。</span><span data-locale="en" data-locale-active="false">This homepage is rendered from site/index.cast.json. README, workflow, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section.</span></p>
 </section>
 
 <section class="doc-section" id="boundaries-installation">
@@ -1097,13 +1167,13 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
 
 <section class="doc-section" id="routing">
 <h2><span data-locale="zh-CN" data-locale-active="true">路由指南</span><span data-locale="en" data-locale-active="false">Routing Guide</span></h2>
-<ul class="chapter-list"><li class="chapter-card"><a href="README.md"><span class="chapter-number">md</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">README</span><span data-locale="en" data-locale-active="false">README</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目介绍、安装方式、使用流程与 CAST 文档约定。</span><span data-locale="en" data-locale-active="false">Project introduction, installation, usage flow, and CAST documentation contract.</span></span></span></a></li><li class="chapter-card"><a href="todo.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目级未决问题、延期决策、风险与 readiness blockers。</span><span data-locale="en" data-locale-active="false">Project-level open questions, deferred decisions, risks, and readiness blockers.</span></span></span></a></li><li class="chapter-card"><a href="changelist.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品、计划、规格、发布与工作流的重要变化记录。</span><span data-locale="en" data-locale-active="false">Important product, plan, spec, release, and workflow changes.</span></span></span></a></li></ul>
+<ul class="chapter-list"><li class="chapter-card"><a href="README.md"><span class="chapter-number">md</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">README</span><span data-locale="en" data-locale-active="false">README</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目介绍、安装方式、使用流程与 CAST 文档约定。</span><span data-locale="en" data-locale-active="false">Project introduction, installation, usage flow, and CAST documentation contract.</span></span></span></a></li><li class="chapter-card"><a href="workflow.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">Workflow</span><span data-locale="en" data-locale-active="false">Workflow</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">公开 CAST workflow、.cast-docs 维护层、渲染与检查命令。</span><span data-locale="en" data-locale-active="false">Public CAST workflow, .cast-docs maintenance layer, rendering, and check commands.</span></span></span></a></li><li class="chapter-card"><a href="todo.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目级未决问题、延期决策、风险与 readiness blockers。</span><span data-locale="en" data-locale-active="false">Project-level open questions, deferred decisions, risks, and readiness blockers.</span></span></span></a></li><li class="chapter-card"><a href="changelist.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品、计划、规格、发布与工作流的重要变化记录。</span><span data-locale="en" data-locale-active="false">Important product, plan, spec, release, and workflow changes.</span></span></span></a></li></ul>
 </section>
 
 <section class="doc-section" id="plan-spec-map">
 <h2><span data-locale="zh-CN" data-locale-active="true">Plan / Spec 地图</span><span data-locale="en" data-locale-active="false">Plan / Spec Map</span></h2>
 <section class="columns"><div class="column"><h3><span data-locale="zh-CN" data-locale-active="true">plan/</span><span data-locale="en" data-locale-active="false">plan/</span></h3><ul class="chapter-list"><li class="chapter-card"><a href="plan/00_overview.html"><span class="chapter-number">00</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">项目概览</span><span data-locale="en" data-locale-active="false">Project Overview</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品定位、约束与文档权威边界。</span><span data-locale="en" data-locale-active="false">Product positioning, constraints, and documentation authority boundaries.</span></span></span></a></li><li class="chapter-card"><a href="plan/01_features.html"><span class="chapter-number">01</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">功能清单</span><span data-locale="en" data-locale-active="false">Feature List</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">v1.0 范围、非目标与后续路线。</span><span data-locale="en" data-locale-active="false">v1.0 scope, non-goals, and later roadmap.</span></span></span></a></li><li class="chapter-card"><a href="plan/02_interaction.html"><span class="chapter-number">02</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">交互草图</span><span data-locale="en" data-locale-active="false">Interaction Model</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">浮窗、设置、历史、状态栏与快捷键交互。</span><span data-locale="en" data-locale-active="false">Floating window, settings, history, status bar, and shortcut interactions.</span></span></span></a></li><li class="chapter-card"><a href="plan/03_tech_stack.html"><span class="chapter-number">03</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">技术选型</span><span data-locale="en" data-locale-active="false">Technology Stack</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">Tauri、React、SQLite、本地 secrets.json 等选型。</span><span data-locale="en" data-locale-active="false">Choices such as Tauri, React, SQLite, and local secrets.json.</span></span></span></a></li><li class="chapter-card"><a href="plan/04_nfr.html"><span class="chapter-number">04</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">非功能性需求</span><span data-locale="en" data-locale-active="false">Non-Functional Requirements</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">性能、隐私、安全、可用性与发布约束。</span><span data-locale="en" data-locale-active="false">Performance, privacy, security, usability, and release constraints.</span></span></span></a></li></ul></div><div class="column"><h3><span data-locale="zh-CN" data-locale-active="true">spec/</span><span data-locale="en" data-locale-active="false">spec/</span></h3><ul class="chapter-list"><li class="chapter-card"><a href="spec/00_architecture.html"><span class="chapter-number">00</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">系统架构</span><span data-locale="en" data-locale-active="false">System Architecture</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">进程模型、模块边界、数据流与关键不变量。</span><span data-locale="en" data-locale-active="false">Process model, module boundaries, data flow, and invariants.</span></span></span></a></li><li class="chapter-card"><a href="spec/01_mockups.html"><span class="chapter-number">01</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">原型图与交互细节</span><span data-locale="en" data-locale-active="false">Mockups And Interaction Details</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">视觉权威、浮窗布局与关键交互细节。</span><span data-locale="en" data-locale-active="false">Visual authority, floating-window layout, and key interaction details.</span></span></span></a></li><li class="chapter-card"><a href="spec/02_ipc.html"><span class="chapter-number">02</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">IPC 合约</span><span data-locale="en" data-locale-active="false">IPC Contract</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">前端与 Rust 主进程之间的命令、事件与错误边界。</span><span data-locale="en" data-locale-active="false">Commands, events, and error boundaries between frontend and Rust host.</span></span></span></a></li><li class="chapter-card"><a href="spec/03_design_tokens.html"><span class="chapter-number">03</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">设计令牌</span><span data-locale="en" data-locale-active="false">Design Tokens</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">颜色、字号、间距、动效与主题规则。</span><span data-locale="en" data-locale-active="false">Color, type, spacing, motion, and theme rules.</span></span></span></a></li><li class="chapter-card"><a href="spec/04_components.html"><span class="chapter-number">04</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">组件库映射</span><span data-locale="en" data-locale-active="false">Component Mapping</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">UI 组件、状态和交互复用边界。</span><span data-locale="en" data-locale-active="false">UI components, states, and interaction reuse boundaries.</span></span></span></a></li><li class="chapter-card"><a href="spec/05_icons_theme.html"><span class="chapter-number">05</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">图标资源与主题</span><span data-locale="en" data-locale-active="false">Icons And Theme</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">图标资产、菜单栏视觉与主题适配。</span><span data-locale="en" data-locale-active="false">Icon assets, menu-bar visuals, and theme adaptation.</span></span></span></a></li><li class="chapter-card"><a href="spec/06_window.html"><span class="chapter-number">06</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">窗口 runtime</span><span data-locale="en" data-locale-active="false">Window Runtime</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">浮窗生命周期、NSPanel、vibrancy 与尺寸策略。</span><span data-locale="en" data-locale-active="false">Floating-window lifecycle, NSPanel, vibrancy, and sizing policy.</span></span></span></a></li><li class="chapter-card"><a href="spec/07_menubar.html"><span class="chapter-number">07</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">菜单栏与快捷键</span><span data-locale="en" data-locale-active="false">Menu Bar And Shortcuts</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">菜单栏、全局快捷键、权限与冲突处理。</span><span data-locale="en" data-locale-active="false">Menu bar, global shortcuts, permissions, and conflict handling.</span></span></span></a></li><li class="chapter-card"><a href="spec/08_editor.html"><span class="chapter-number">08</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">编辑器与树 UI</span><span data-locale="en" data-locale-active="false">Editor And Tree UI</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">CodeMirror 编辑器、树视图和 JSON 展示。</span><span data-locale="en" data-locale-active="false">CodeMirror editor, tree view, and JSON presentation.</span></span></span></a></li><li class="chapter-card"><a href="spec/09_json_engine.html"><span class="chapter-number">09</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">JSON 引擎</span><span data-locale="en" data-locale-active="false">JSON Engine</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">格式化、压缩、互转、嵌套解开和错误定位。</span><span data-locale="en" data-locale-active="false">Formatting, minifying, conversion, nested unwrap, and error location.</span></span></span></a></li><li class="chapter-card"><a href="spec/10_storage.html"><span class="chapter-number">10</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">存储与会话</span><span data-locale="en" data-locale-active="false">Storage And Session</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">SQLite、settings、window 状态和本地 secrets.json。</span><span data-locale="en" data-locale-active="false">SQLite, settings, window state, and local secrets.json.</span></span></span></a></li><li class="chapter-card"><a href="spec/11_ai_client.html"><span class="chapter-number">11</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">AI 客户端</span><span data-locale="en" data-locale-active="false">AI Client</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">DeepSeek 修复流程、隐私边界与失败处理。</span><span data-locale="en" data-locale-active="false">DeepSeek repair flow, privacy boundary, and failure handling.</span></span></span></a></li><li class="chapter-card"><a href="spec/12_packaging.html"><span class="chapter-number">12</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">打包、签名、验收</span><span data-locale="en" data-locale-active="false">Packaging, Signing, And Acceptance</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">DMG、APP、Windows installer、GitHub Release 与后续 Homebrew。</span><span data-locale="en" data-locale-active="false">DMG, APP, Windows installer, GitHub Release, and later Homebrew.</span></span></span></a></li><li class="chapter-card"><a href="spec/13_schemas.html"><span class="chapter-number">13</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">数据模型参考</span><span data-locale="en" data-locale-active="false">Schema Reference</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">核心数据模型、设置、IPC 和持久化结构。</span><span data-locale="en" data-locale-active="false">Core data models, settings, IPC, and persistence structures.</span></span></span></a></li><li class="chapter-card"><a href="spec/14_i18n_a11y.html"><span class="chapter-number">14</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">国际化与无障碍</span><span data-locale="en" data-locale-active="false">Internationalization And Accessibility</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">语言、键盘、屏幕阅读器与辅助体验约束。</span><span data-locale="en" data-locale-active="false">Language, keyboard, screen reader, and accessibility constraints.</span></span></span></a></li><li class="chapter-card"><a href="spec/15_logging.html"><span class="chapter-number">15</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">日志与可观测性</span><span data-locale="en" data-locale-active="false">Logging And Observability</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">日志边界、脱敏策略和排查入口。</span><span data-locale="en" data-locale-active="false">Logging boundary, redaction policy, and diagnostic entrypoints.</span></span></span></a></li></ul></div></section>
-<aside class="callout callout-warning"><strong><span data-locale="zh-CN" data-locale-active="true">迁移状态</span><span data-locale="en" data-locale-active="false">Migration Status</span></strong><p><span data-locale="zh-CN" data-locale-active="true">plan/spec 当前仍是 legacy HTML 发布页；它们已保持读者可用，但完整 CAST JSON-first 迁移需要逐页进行，见 TODO P1。</span><span data-locale="en" data-locale-active="false">plan/spec are still legacy HTML published pages. They remain reader-usable, but complete CAST JSON-first migration must happen page by page; see TODO P1.</span></p></aside>
+<aside class="callout callout-success"><strong><span data-locale="zh-CN" data-locale-active="true">CAST JSON-first 已完成</span><span data-locale="en" data-locale-active="false">CAST JSON-first Complete</span></strong><p><span data-locale="zh-CN" data-locale-active="true">plan/ 与 spec/ 的每个发布页现在都有同名 CAST JSON 源，并由 cast-a-doc 渲染为中英双语 HTML。</span><span data-locale="en" data-locale-active="false">Every published page under plan/ and spec/ now has a same-name CAST JSON source and is rendered by cast-a-doc into bilingual Chinese/English HTML.</span></p></aside>
 </section>
 
 <section class="doc-section" id="todo">
@@ -1118,15 +1188,16 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
 
 <section class="doc-section" id="maintenance">
 <h2><span data-locale="zh-CN" data-locale-active="true">维护说明</span><span data-locale="en" data-locale-active="false">Maintenance Notes</span></h2>
+<ul class="chapter-list"><li class="chapter-card"><a href="workflow.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">Workflow HTML</span><span data-locale="en" data-locale-active="false">Workflow HTML</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">公开 workflow 页面。</span><span data-locale="en" data-locale-active="false">Public workflow page.</span></span></span></a></li><li class="chapter-card"><a href=".cast-docs/WORKFLOW.md"><span class="chapter-number">md</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">.cast-docs/WORKFLOW.md</span><span data-locale="en" data-locale-active="false">.cast-docs/WORKFLOW.md</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">仓库级 CAST agent workflow。</span><span data-locale="en" data-locale-active="false">Repository-level CAST agent workflow.</span></span></span></a></li><li class="chapter-card"><a href=".cast-docs/project.json"><span class="chapter-number">json</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">.cast-docs/project.json</span><span data-locale="en" data-locale-active="false">.cast-docs/project.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目 profile、品牌资产与渲染默认值。</span><span data-locale="en" data-locale-active="false">Project profile, brand asset, and rendering defaults.</span></span></span></a></li><li class="chapter-card"><a href=".cast-docs/i18n.json"><span class="chapter-number">json</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">.cast-docs/i18n.json</span><span data-locale="en" data-locale-active="false">.cast-docs/i18n.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">仓库双语 locale 与术语策略。</span><span data-locale="en" data-locale-active="false">Repository bilingual locale and terminology policy.</span></span></span></a></li></ul>
 <table>
 <tr><th><span data-locale="zh-CN" data-locale-active="true">维护源</span><span data-locale="en" data-locale-active="false">Maintenance source</span></th><th><span data-locale="zh-CN" data-locale-active="true">用途</span><span data-locale="en" data-locale-active="false">Use</span></th></tr>
 <tr><td>site/index.cast.json</td><td><span data-locale="zh-CN" data-locale-active="true">首页 CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for the homepage.</span></td></tr>
+<tr><td>site/workflow.json</td><td><span data-locale="zh-CN" data-locale-active="true">Workflow CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for workflow.</span></td></tr>
 <tr><td>site/todo.json</td><td><span data-locale="zh-CN" data-locale-active="true">TODO CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for TODO.</span></td></tr>
 <tr><td>site/changelist.json</td><td><span data-locale="zh-CN" data-locale-active="true">Changelist CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for changelist.</span></td></tr>
-<tr><td>.cast-docs/WORKFLOW.md</td><td><span data-locale="zh-CN" data-locale-active="true">仓库级 CAST agent workflow。</span><span data-locale="en" data-locale-active="false">Repository-level CAST agent workflow.</span></td></tr>
-<tr><td>.cast-docs/project.json</td><td><span data-locale="zh-CN" data-locale-active="true">项目 profile、品牌资产与渲染默认值。</span><span data-locale="en" data-locale-active="false">Project profile, brand asset, and rendering defaults.</span></td></tr>
+<tr><td>plan/*.json / spec/*.json</td><td><span data-locale="zh-CN" data-locale-active="true">Plan / Spec CAST JSON 源。</span><span data-locale="en" data-locale-active="false">Plan / Spec CAST JSON sources.</span></td></tr>
 </table>
-<p><span data-locale="zh-CN" data-locale-active="true">维护源不作为首页主导航目标；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。</span><span data-locale="en" data-locale-active="false">Maintenance sources are not homepage primary navigation targets. Regular readers should start from the reader-facing HTML / Markdown paths above.</span></p>
+<p><span data-locale="zh-CN" data-locale-active="true">维护源放在最后；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。</span><span data-locale="en" data-locale-active="false">Maintenance sources are kept last. Regular readers should start from the reader-facing HTML / Markdown paths above.</span></p>
 </section>
 </main>
 <footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>

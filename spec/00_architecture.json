@@ -1,0 +1,358 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "系统架构",
+      "en": "System Architecture"
+    },
+    "description": {
+      "zh-CN": "Jsonita 的进程模型、模块边界、数据流、启动顺序和架构不变量。",
+      "en": "Jsonita process model, module boundaries, data flow, startup order, and architecture invariants."
+    },
+    "schemaVersion": "1.0",
+    "language": "zh-CN",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ],
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    }
+  },
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "architecture-overview",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "形态",
+                "en": "Shape"
+              },
+              "body": {
+                "zh-CN": "Tauri 2 Rust 主进程承载窗口、菜单栏、快捷键、存储和 AI 请求；React WebView 承载 UI。",
+                "en": "Tauri 2 Rust host owns windowing, menu bar, shortcuts, storage, and AI requests; React WebView owns UI."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "边界",
+                "en": "Boundary"
+              },
+              "body": {
+                "zh-CN": "JSON engine、storage、AI、window、commands 都在 Rust 边界清晰分层。",
+                "en": "JSON engine, storage, AI, window, and commands are separated in Rust."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "不变量",
+                "en": "Invariant"
+              },
+              "body": {
+                "zh-CN": "用户数据本地保存，错误用 JsonitaError 映射，窗口关闭不退出应用。",
+                "en": "User data stays local, errors map through JsonitaError, and closing the window does not quit the app."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "architecture-overview",
+      "title": {
+        "zh-CN": "Architecture Overview",
+        "en": "Architecture Overview"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "层",
+              "en": "Layer"
+            },
+            {
+              "zh-CN": "职责",
+              "en": "Responsibility"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "React WebView",
+                "en": "React WebView"
+              },
+              {
+                "zh-CN": "编辑器、tab、tree、settings、history、diff、i18n。",
+                "en": "Editor, tabs, tree, settings, history, diff, and i18n."
+              }
+            ],
+            [
+              {
+                "zh-CN": "IPC Commands",
+                "en": "IPC Commands"
+              },
+              {
+                "zh-CN": "类型化调用 Rust command，不直接访问文件或网络。",
+                "en": "Typed calls into Rust commands; no direct file or network access."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Rust Host",
+                "en": "Rust Host"
+              },
+              {
+                "zh-CN": "窗口、快捷键、tray、JSON engine、storage、AI client、logging。",
+                "en": "Windowing, shortcuts, tray, JSON engine, storage, AI client, and logging."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Local Data",
+                "en": "Local Data"
+              },
+              {
+                "zh-CN": "SQLite、settings.json、window.json、secrets.json、rolling logs。",
+                "en": "SQLite, settings.json, window.json, secrets.json, and rolling logs."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "diagram",
+          "kind": "flow",
+          "title": {
+            "zh-CN": "jsonita-architecture",
+            "en": "jsonita-architecture"
+          },
+          "downloadName": "jsonita-architecture",
+          "source": {
+            "format": "structured-flow",
+            "nodes": [
+              {
+                "id": "Input",
+                "label": {
+                  "zh-CN": "Input",
+                  "en": "Input"
+                }
+              },
+              {
+                "id": "JSON Engine",
+                "label": {
+                  "zh-CN": "JSON Engine",
+                  "en": "JSON Engine"
+                }
+              },
+              {
+                "id": "Output Tabs",
+                "label": {
+                  "zh-CN": "Output Tabs",
+                  "en": "Output Tabs"
+                }
+              },
+              {
+                "id": "Session/History",
+                "label": {
+                  "zh-CN": "Session/History",
+                  "en": "Session/History"
+                }
+              }
+            ],
+            "edges": [
+              {
+                "from": "Input",
+                "to": "JSON Engine",
+                "label": {
+                  "zh-CN": "debounce",
+                  "en": "debounce"
+                }
+              },
+              {
+                "from": "JSON Engine",
+                "to": "Output Tabs",
+                "label": {
+                  "zh-CN": "preview",
+                  "en": "preview"
+                }
+              },
+              {
+                "from": "JSON Engine",
+                "to": "Session/History",
+                "label": {
+                  "zh-CN": "valid transform",
+                  "en": "valid transform"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "WebView 不保存 API key。",
+              "en": "WebView does not store API keys."
+            },
+            {
+              "zh-CN": "Rust command 是所有本地文件和网络请求的唯一入口。",
+              "en": "Rust commands are the only entrypoint for local files and network requests."
+            },
+            {
+              "zh-CN": "窗口 show/hide 与 app lifetime 分离。",
+              "en": "Window show/hide is separated from app lifetime."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "cargo check/test 覆盖 Rust 模块。",
+              "en": "cargo check/test covers Rust modules."
+            },
+            {
+              "zh-CN": "pnpm tsc 覆盖 IPC 类型。",
+              "en": "pnpm tsc covers IPC types."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

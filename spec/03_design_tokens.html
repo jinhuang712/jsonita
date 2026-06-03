@@ -1,562 +1,719 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jsonita Spec · 03 设计令牌</title>
-<link rel="stylesheet" href="../assets/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="颜色、字体、间距、圆角、阴影、动效、主题和 token 同步策略。">
+<title>设计令牌</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f8f8f7;
+  --surface: #ffffff;
+  --soft: #f2f3f3;
+  --text: #24272b;
+  --muted: #68717b;
+  --faint: #9aa1a8;
+  --border: #dedede;
+  --primary: #315f9f;
+  --primary-soft: #eef3fa;
+  --accent: #52686a;
+  --info: #566f99;
+  --info-soft: #f4f5f7;
+  --warn: #8a6d3b;
+  --warn-soft: #f8f4ea;
+  --danger: #9b4d49;
+  --danger-soft: #faf0ef;
+  --ok: #55745f;
+  --ok-soft: #eef4ef;
+  --code: #f1f2f2;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --font-xs: 11px;
+  --font-sm: 12.5px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 20px;
+  --font-xl: 28px;
+  --font-title: 30px;
+  --line-tight: 1.25;
+  --line-normal: 1.65;
+  --line-loose: 1.75;
+  --line-code: 1.55;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 28px;
+  --space-10: 34px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --surface-shadow: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111315;
+    --surface: #17191c;
+    --soft: #202328;
+    --text: #e2e5e8;
+    --muted: #a1a7ad;
+    --faint: #767d84;
+    --border: #30343a;
+    --primary: #9bb7d9;
+    --primary-soft: #182231;
+    --accent: #9ab4b1;
+    --info: #9aaeca;
+    --info-soft: #1b2027;
+    --warn: #c7b27e;
+    --warn-soft: #242117;
+    --danger: #d09a95;
+    --danger-soft: #271b1a;
+    --ok: #9ebaa5;
+    --ok-soft: #1a241d;
+    --code: #202328;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+}
+:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
+pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
+pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
+mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
+del { color: var(--muted); text-decoration: line-through; }
+u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
+[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
+[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
+[data-locale][data-locale-active="false"] { display: none; }
+.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
+.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
+.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
+.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
+.brand-logo:hover { text-decoration: none; }
+.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
+.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
+.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project { flex: 0 0 auto; }
+.topbar-doc { color: var(--muted); font-weight: 500; }
+.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
+.topbar-links { display: flex; gap: 12px; align-items: center; }
+.topbar-links:empty { display: none; }
+.topbar-link { color: var(--muted); font-size: var(--font-sm); }
+.topbar-spacer { flex: 1; }
+.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
+.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
+.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
+.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
+.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
+.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
+.doc-summary { padding: 16px 18px; }
+.doc-summary ul { margin: 0; }
+.set-grid { display: grid; gap: 22px; }
+.set-section { margin: 0; }
+.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
+.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
+.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
+.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
+.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
+.chapter-card a:hover { text-decoration: none; }
+.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
+.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
+.chapter-content { display: grid; gap: 5px; min-width: 0; }
+.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
+.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
+.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
+.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
+.set-pagination-next { text-align: right; }
+.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
+.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
+.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
+.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
+.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
+.section-title { overflow-wrap: anywhere; }
+.section-empty { color: var(--muted); font-style: italic; }
+.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
+.callout p { margin: 6px 0 0; }
+.callout-info { border-left-color: var(--info); background: var(--info-soft); }
+.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
+.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
+table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
+th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.details-block { padding: 0 14px; }
+.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
+.diagram { position: relative; padding: 16px; overflow: auto; }
+.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
+.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+.diagram:hover .diagram-toolbar { opacity: 1; }
+button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
+.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
+.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
+.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
+.code-status-ok { color: var(--ok); }
+.code-status-error { color: var(--danger); }
+.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
+.code-status + .code-copy { margin-left: 0; }
+.code-copy:hover { color: var(--text); }
+.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
+.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
+.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.code-line-content { padding: 0 14px; white-space: pre; }
+.code-token-key { color: var(--primary); }
+.code-token-bool { color: var(--info); }
+.code-token-number { color: var(--warn); }
+.code-token-flag { color: var(--accent); }
+.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+.diff-block > h3 { grid-column: 1 / -1; }
+.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
+.diff-side + .diff-side { margin-left: -1px; }
+.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
+.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
+.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
+.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
+.diff-line-content { padding-right: 14px; white-space: pre; }
+.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
+.line-add { color: var(--ok); }
+.line-remove { color: var(--danger); }
+.line-warning { color: var(--warn); }
+.line-context { color: var(--text); }
+.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.participant-card, .value-card, .action-card { padding: 14px 16px; }
+.action-card { padding: 20px; }
+.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
+.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
+.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
+.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
+.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
+.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
+.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
+.open-question + .open-question { border-top: 1px solid var(--border); }
+.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
+.open-question-text { min-width: 0; }
+.prompt-block { margin-top: 20px; }
+.prompt-block .code-header { padding: 12px 14px; }
+.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
+.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
+.prompt-block .code-line-number { padding-right: 12px; }
+.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.media-frame { margin: 0; overflow: hidden; }
+.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
+.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
+.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
+.column { min-width: 0; }
+.column h3 { margin-top: 0; }
+.column p:first-child { margin-top: 0; }
+.column p:last-child { margin-bottom: 0; }
+.column > .code-shell, .column > table { margin-top: 12px; }
+.toggle-view { padding: 14px; }
+.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
+.toggle-button { border: 0; background: transparent; color: var(--muted); }
+.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.toggle-panel[data-view-active="false"] { display: none; }
+.toggle-panel > :first-child { margin-top: 0; }
+.toggle-panel > :last-child { margin-bottom: 0; }
+.slider-control { padding: 16px; }
+.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.slider-header label { font-weight: 700; }
+.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
+.slider-range { display: block; width: 100%; accent-color: var(--primary); }
+.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
+.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
+.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
+.lightbox.open { display: flex; }
+.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
+.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
+.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
+.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
+.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
+@media (max-width: 760px) {
+  body { display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
+  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
+  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
+  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
+  .doc-header h1 { font-size: var(--font-xl); }
+  .diff-block { grid-template-columns: 1fr; }
+  .set-pagination { grid-template-columns: 1fr; }
+  .set-pagination-next { text-align: left; }
+  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
+  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
+}
+@media print {
+  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
+  .doc { margin-left: 0; max-width: none; padding: 0; }
+}
+</style>
 </head>
-<body data-section="spec" data-chapter="03">
-
-<aside class="sidebar" id="sidebar"></aside>
-<header class="topbar" id="topbar"></header>
-
-<main class="doc-main">
-  <article class="doc-article">
-
-    <div class="doc-header">
-      <span class="doc-tag">SPEC · 章节 03</span>
-      <h1 class="doc-title">设计令牌</h1>
-      <p class="doc-subtitle">颜色 / 字体 / 间距 / 圆角 / 阴影 / 动效 ── 先讲设计语言与命名规则，再列 light + dark 取值表。</p>
-    </div>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">INFO</span>
-      <div class="callout-body">
-        <p>本章是<b>视觉契约</b>：所有 UI 颜色 / 字号 / 间距必须经 token，不允许 hardcode 颜色或魔法值。组件如何使用 token 见 <a href="04_components.html">04 组件库</a>；图标资源调色见 <a href="05_icons_theme.html">05</a>。</p>
-      </div>
-    </div>
-
-    <p class="section-divider"><b>一 · 设计</b></p>
-
-    <h2><span class="h2-num">1</span>设计语言锚点</h2>
-
-    <p>Jsonita 的视觉语言锚定在四点上，所有 token 取值都为之服务：</p>
-
-    <div class="constraints-grid">
-      <div class="constraints-col must-have">
-        <h3 class="constraints-title">要表达 · Express</h3>
-        <ul>
-          <li><b>极简克制</b> ── 不装饰，编辑器和数据是主角</li>
-          <li><b>macOS native 气质</b> ── SF Pro · 系统 blur · vibrancy 风</li>
-          <li><b>开发者审美</b> ── mono 字体多用 · 类型颜色清晰</li>
-          <li><b>瞬时清晰</b> ── 状态色不饱和但识别度高（红=错，绿=有效）</li>
-        </ul>
-      </div>
-      <div class="constraints-col must-not">
-        <h3 class="constraints-title">避免 · Avoid</h3>
-        <ul>
-          <li><b>大色块 / 渐变背景</b> ── 浮窗保持极轻</li>
-          <li><b>多种品牌色</b> ── 系统蓝是唯一交互强调色；AI Fix 的琥珀只用于修复路径</li>
-          <li><b>圆角 ≥ 16px 的"App"感</b> ── 文档卡片最多 10px</li>
-          <li><b>动效 &gt; 200ms</b> ── 工具应即时响应</li>
-        </ul>
-      </div>
-    </div>
-
-    <h2><span class="h2-num">2</span>命名规则</h2>
-
-    <p>token 在 CSS variables 中以 <code>--kebab-case</code> 暴露；在 Tailwind 中以同名映射。<b>新加 token 必须遵守</b>：</p>
-
-    <ul>
-      <li><b>语义优先于具体值</b>：用 <code>--danger</code>，不用 <code>--red-500</code> ── 换色不动调用点</li>
-      <li><b>三档命名</b> = <code>base</code> / <code>-soft</code> / <code>-strong</code>（如 <code>--border</code> / <code>--border-strong</code>）</li>
-      <li><b>状态色背景</b>统一加 <code>-bg</code> 后缀（<code>--ok-bg</code> · <code>--danger-bg</code>）</li>
-      <li><b>编辑器专属</b>以 <code>--editor-*</code> 前缀</li>
-      <li><b>JSON 高亮</b>以 <code>--json-*</code> 前缀</li>
-      <li><b>禁止</b>冗长前缀 <code>--color-*</code> / <code>--font-size-*</code> ── 语义本身已分类</li>
-    </ul>
-
-    <h2><span class="h2-num">3</span>token 域总览</h2>
-
-    <table>
-      <thead><tr><th>域</th><th>前缀</th><th>下游章节</th><th>本章节段</th></tr></thead>
-      <tbody>
-        <tr><td>颜色（品牌 / 中性 / 状态 / JSON / Editor）</td><td><code>--primary / --bg / --ok / --json-* / --editor-*</code></td><td>04 组件 · 05 图标 · 08 编辑器</td><td>§ 4</td></tr>
-        <tr><td>字体</td><td><code>--font-* / --fs-* / --fw-* / --lh-*</code></td><td>04 组件 · 08 编辑器</td><td>§ 6</td></tr>
-        <tr><td>间距</td><td><code>--sp-*</code></td><td>04 组件</td><td>§ 7</td></tr>
-        <tr><td>圆角 / 边框 / 阴影</td><td><code>--radius-* / --bw-* / --shadow-*</code></td><td>04 组件 · 06 窗口</td><td>§ 8</td></tr>
-        <tr><td>动效</td><td><code>--dur-* / --ease-*</code></td><td>06 窗口 · 04 组件</td><td>§ 9</td></tr>
-        <tr><td>Z-index</td><td><code>--z-*</code></td><td>04 组件（Modal / Tooltip；Toast 为保留设计）</td><td>§ 10</td></tr>
-      </tbody>
-    </table>
-
-    <p class="section-divider"><b>二 · 取值</b></p>
-
-    <h2><span class="h2-num">4</span>颜色</h2>
-
-    <h3><span class="h3-num">4.1</span>分类</h3>
-
-    <table>
-      <thead><tr><th>组</th><th>token</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td rowspan="2">品牌</td><td><code>--primary</code></td><td>主操作 / 链接 / 选中 / focus ring（系统蓝）</td></tr>
-        <tr><td><code>--accent</code></td><td>AI Fix / Diff Accept / inline code（琥珀）</td></tr>
-
-        <tr><td rowspan="4">中性</td><td><code>--bg / --bg-card / --bg-code / --bg-overlay</code></td><td>页面 / 卡片 / 代码块 / Modal 遮罩</td></tr>
-        <tr><td><code>--glass-bg / --glass-blur / --glass-border / --glass-highlight</code></td><td>浮窗原生玻璃叠色 / 文档 mockup 的 CSS 玻璃预览</td></tr>
-        <tr><td><code>--text / --text-muted / --text-faint</code></td><td>正文 / 弱化 / 几乎隐形（占位 / 元信息）</td></tr>
-        <tr><td><code>--border / --border-strong</code></td><td>普通分隔 / 强调分隔</td></tr>
-
-        <tr><td rowspan="4">状态</td><td><code>--ok / --ok-bg</code></td><td>valid JSON / 测试通过（绿系）</td></tr>
-        <tr><td><code>--warn / --warn-bg</code></td><td>大文件警告 / 超时（低饱和暖色）</td></tr>
-        <tr><td><code>--danger / --danger-bg</code></td><td>parse 失败 / API 错误（红系）</td></tr>
-        <tr><td><code>--info / --info-bg</code></td><td>信息提示 / Tree 类青色弱强调</td></tr>
-        <tr><td>操作类型</td><td><code>--op-format / --op-tree / --op-convert / --op-ai-fix</code></td><td>History op-chip 四色区分</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">4.2</span>品牌 + 中性取值（light / dark 双列）</h3>
-
-    <table>
-      <thead><tr><th>token</th><th>light</th><th>dark</th><th>设计意图</th></tr></thead>
-      <tbody>
-        <tr><td><code>--primary</code></td><td><code>#0A6CE0</code></td><td><code>#0A84FF</code></td><td>系统蓝；active tab / 主按钮 / 选中</td></tr>
-        <tr><td><code>--primary-soft</code></td><td><code>rgba(10,108,224,.12)</code></td><td><code>rgba(10,132,255,.2)</code></td><td>hover / active 背景</td></tr>
-        <tr><td><code>--primary-edge</code></td><td><code>rgba(10,108,224,.28)</code></td><td><code>rgba(127,179,255,.34)</code></td><td>hover 边框</td></tr>
-        <tr><td><code>--accent</code></td><td><code>#A4621A</code></td><td><code>#FFC58A</code></td><td>AI Fix / Diff Accept / inline code；琥珀强调</td></tr>
-        <tr><td><code>--accent-soft</code></td><td><code>rgba(181,101,29,.13)</code></td><td><code>rgba(255,182,107,.16)</code></td><td></td></tr>
-        <tr><td><code>--glass-bg</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.55)</code></td><td>浮窗唯一主叠色；避免叠加后遮住原生 vibrancy</td></tr>
-        <tr><td><code>--glass-blur</code></td><td><code>blur(42px) saturate(180%)</code></td><td><code>blur(42px) saturate(175%)</code></td><td>文档 mockup 模拟；真机由原生 vibrancy 负责</td></tr>
-        <tr><td><code>--chrome-bg</code></td><td><code>transparent</code></td><td><code>transparent</code></td><td>TabBar / StatusBar 不再铺整条 band，只靠主窗 tint + 发丝线分层</td></tr>
-        <tr><td><code>--chrome-bg-strong</code></td><td><code>rgba(255,255,255,.2)</code></td><td><code>rgba(255,255,255,.1)</code></td><td>hover / kbd / 局部 glass chip</td></tr>
-        <tr><td><code>--tab-active-bg / --tab-active-border</code></td><td><code>rgba(10,108,224,.12)</code> / <code>rgba(10,108,224,.24)</code></td><td><code>rgba(255,255,255,.14)</code> / <code>rgba(255,255,255,.2)</code></td><td>active tab pill；dark 下按 design mockup 用白色玻璃 pill + 系统蓝文字</td></tr>
-        <tr><td><code>--bg</code></td><td><code>rgba(255,255,255,0)</code></td><td><code>rgba(26,28,36,0)</code></td><td>Tauri 透明窗口底</td></tr>
-        <tr><td><code>--bg-card</code></td><td><code>rgba(255,255,255,.62)</code></td><td><code>rgba(26,28,36,.55)</code></td><td>浮窗 / Modal / 卡片叠层</td></tr>
-        <tr><td><code>--bg-code</code></td><td><code>rgba(255,255,255,.46)</code></td><td><code>rgba(26,28,36,.42)</code></td><td>code / pre 块</td></tr>
-        <tr><td><code>--bg-overlay</code></td><td><code>rgba(0,0,0,0.32)</code></td><td><code>rgba(0,0,0,0.56)</code></td><td>Modal 遮罩；dark 更浓避免反白</td></tr>
-        <tr><td><code>--text</code></td><td><code>#1D1F26</code></td><td><code>#EEF0F4</code></td><td>正文</td></tr>
-        <tr><td><code>--text-muted</code></td><td><code>rgba(20,22,30,.5)</code></td><td><code>rgba(255,255,255,.55)</code></td><td>弱化（meta / placeholder）</td></tr>
-        <tr><td><code>--text-faint</code></td><td><code>rgba(20,22,30,.34)</code></td><td><code>rgba(255,255,255,.36)</code></td><td>几乎隐形（占位 hint）</td></tr>
-        <tr><td><code>--border</code></td><td><code>rgba(0,0,0,.07)</code></td><td><code>rgba(255,255,255,.1)</code></td><td>普通分隔线</td></tr>
-        <tr><td><code>--border-strong</code></td><td><code>rgba(0,0,0,.13)</code></td><td><code>rgba(255,255,255,.16)</code></td><td>强调分隔（如表头）</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">4.3</span>状态色取值</h3>
-
-    <table>
-      <thead><tr><th>token</th><th>light</th><th>dark</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><code>--ok</code> / <code>--ok-bg</code></td><td><code>#1F9E5A</code> / <code>rgba(31,158,90,.12)</code></td><td><code>#5BE3A0</code> / <code>rgba(91,227,160,.18)</code></td><td>状态文字 / valid badge</td></tr>
-        <tr><td><code>--warn</code> / <code>--warn-bg</code></td><td><code>#A4621A</code> / <code>rgba(181,101,29,.13)</code></td><td><code>#FFB66B</code> / <code>rgba(255,182,107,.16)</code></td><td>大文件 / 超时</td></tr>
-        <tr><td><code>--danger</code> / <code>--danger-bg</code></td><td><code>#C0392B</code> / <code>rgba(192,57,43,.1)</code></td><td><code>#F2A0A0</code> / <code>rgba(242,160,160,.14)</code></td><td>parse 错 / HTTP 错</td></tr>
-        <tr><td><code>--info</code> / <code>--info-bg</code></td><td><code>#0D7E72</code> / <code>rgba(13,148,136,.12)</code></td><td><code>#5FE3C8</code> / <code>rgba(45,212,191,.2)</code></td><td>callout / Tree 类信息</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>关键设计</b>：dark 模式下，状态色背景统一用<b>透明度叠加</b>（14%）而不是实色 ── 避免大片饱和色块在深色背景上视觉刺眼。</p>
-
-    <h3><span class="h3-num">4.4</span>JSON 语法高亮 + 编辑器专属</h3>
-
-    <table>
-      <thead><tr><th>token</th><th>light</th><th>dark</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td><code>--json-key</code></td><td><code>#0B66C2</code></td><td><code>#82C0FF</code></td><td>系统蓝附近；key 视觉锚</td></tr>
-        <tr><td><code>--json-string</code></td><td><code>#2E7D4F</code></td><td><code>#84E08F</code></td><td>绿系字符串</td></tr>
-        <tr><td><code>--json-number</code></td><td><code>#B5651D</code></td><td><code>#FFB66B</code></td><td>暖色数字</td></tr>
-        <tr><td><code>--json-bool</code></td><td><code>#7A4FC0</code></td><td><code>#C9B0FF</code></td><td>紫色 bool，区分 number</td></tr>
-        <tr><td><code>--json-null</code></td><td><code>rgba(20,22,30,.36)</code></td><td><code>rgba(255,255,255,.36)</code></td><td>同 text-faint</td></tr>
-        <tr><td><code>--json-punc</code></td><td><code>rgba(20,22,30,.4)</code></td><td><code>rgba(255,255,255,.42)</code></td><td>标点（淡化）</td></tr>
-        <tr><td><code>--editor-bg</code></td><td><code>transparent</code></td><td><code>transparent</code></td><td>编辑器透明，避免覆盖主窗原生玻璃</td></tr>
-        <tr><td><code>--editor-gutter</code></td><td><code>transparent</code></td><td><code>transparent</code></td><td>行号槽不再形成整块暗带</td></tr>
-        <tr><td><code>--editor-line-active</code></td><td><code>rgba(10,108,224,.028)</code></td><td><code>rgba(10,132,255,.028)</code></td><td>当前行高亮；只作定位，不能形成整条蓝带</td></tr>
-        <tr><td><code>--editor-selection</code></td><td><code>rgba(10,108,224,.22)</code></td><td><code>rgba(10,132,255,.28)</code></td><td>选区</td></tr>
-        <tr><td><code>--editor-cursor</code></td><td><code>#0A6CE0</code></td><td><code>#7FB3FF</code></td><td>光标</td></tr>
-        <tr><td><code>--editor-error-underline</code></td><td><code>#C0392B</code></td><td><code>#F2A0A0</code></td><td>parse error 下划线</td></tr>
-        <tr><td><code>--editor-bracket-match</code></td><td><code>rgba(10,108,224,.16)</code></td><td><code>rgba(127,179,255,.22)</code></td><td>括号匹配</td></tr>
-        <tr><td><code>--editor-indent-guide</code></td><td><code>rgba(0,0,0,.07)</code></td><td><code>rgba(255,255,255,.1)</code></td><td>缩进引导线</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">4.5</span>History op-chip 四色</h3>
-
-    <table>
-      <thead><tr><th>token</th><th>light</th><th>dark</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td><code>--op-format / --op-format-bg</code></td><td><code>#0A6CE0</code> / <code>rgba(10,108,224,.12)</code></td><td><code>#7FB3FF</code> / <code>rgba(10,132,255,.2)</code></td><td>format / minify</td></tr>
-        <tr><td><code>--op-tree / --op-tree-bg</code></td><td><code>#0D7E72</code> / <code>rgba(13,148,136,.12)</code></td><td><code>#5FE3C8</code> / <code>rgba(45,212,191,.2)</code></td><td>tree</td></tr>
-        <tr><td><code>--op-convert / --op-convert-bg</code></td><td><code>#1F8A50</code> / <code>rgba(31,158,90,.12)</code></td><td><code>#5BE3A0</code> / <code>rgba(91,227,160,.2)</code></td><td>→str / →json</td></tr>
-        <tr><td><code>--op-ai-fix / --op-ai-fix-bg</code></td><td><code>#A4621A</code> / <code>rgba(181,101,29,.13)</code></td><td><code>#FFC58A</code> / <code>rgba(255,182,107,.2)</code></td><td>AI Fix</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">5</span>对比度核验（WCAG）</h2>
-
-    <table>
-      <thead><tr><th>组合</th><th>light 比</th><th>dark 比</th><th>WCAG</th></tr></thead>
-      <tbody>
-        <tr><td>text on bg</td><td>14.5 : 1</td><td>11.2 : 1</td><td>AAA</td></tr>
-        <tr><td>text on bg-card</td><td>15.8 : 1</td><td>11.9 : 1</td><td>AAA</td></tr>
-        <tr><td>text-muted on bg</td><td>5.7 : 1</td><td>5.9 : 1</td><td>AA</td></tr>
-        <tr><td>primary on bg-card</td><td>4.8 : 1</td><td>5.2 : 1</td><td>AA</td></tr>
-        <tr><td>danger on bg-card</td><td>5.9 : 1</td><td>5.3 : 1</td><td>AA</td></tr>
-        <tr><td>json-string on editor-bg</td><td>5.4 : 1</td><td>6.1 : 1</td><td>AA</td></tr>
-      </tbody>
-    </table>
-
-    <div class="callout callout-ok">
-      <span class="callout-icon">OK</span>
-      <div class="callout-body">
-        <p>所有正文文本组合 ≥ AA（4.5 : 1）；body text 达 AAA（7 : 1）。无障碍达标。</p>
-      </div>
-    </div>
-
-    <h2><span class="h2-num">6</span>字体</h2>
-
-    <h3><span class="h3-num">6.1</span>字体栈</h3>
-
-    <p><b>不打包字体文件</b>，全用系统字体。原因：SF Pro 是 macOS 系统字体质感最对；打包字体会让 dmg 体积超过 15 MB 红线（<a href="../plan/04_nfr.html">04 NFR § 1</a>）。</p>
-
-    <table>
-      <thead><tr><th>token</th><th>优先级（左 → 右）</th></tr></thead>
-      <tbody>
-        <tr><td><code>--font-sans</code></td><td>-apple-system → BlinkMacSystemFont → "SF Pro Display"（mac）→ "Segoe UI"（Win）→ "PingFang SC"（中文 mac）→ "Microsoft YaHei UI"（中文 Win）→ Helvetica → Arial → sans-serif</td></tr>
-        <tr><td><code>--font-mono</code></td><td>"SF Mono"（mac）→ "JetBrains Mono"（已装）→ "Cascadia Code"（Win Terminal 默认）→ Menlo → Consolas → "Liberation Mono" → monospace</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">6.2</span>字号 scale（4 档 + 编辑器独立）</h3>
-
-    <table>
-      <thead><tr><th>token</th><th>px</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td><code>--fs-xs</code></td><td>11</td><td>tag / breadcrumb / meta</td></tr>
-        <tr><td><code>--fs-sm</code></td><td>12.5</td><td>表格 td / 状态栏；Toast 为保留设计</td></tr>
-        <tr><td><code>--fs-base</code></td><td>13.5</td><td>UI 默认（按钮 / 输入框 / 列表）</td></tr>
-        <tr><td><code>--fs-md</code></td><td>14</td><td>设置面板正文 / Modal body</td></tr>
-        <tr><td><code>--fs-lg</code></td><td>16</td><td>Modal 标题 / Tab 文字</td></tr>
-        <tr><td><code>--fs-xl</code></td><td>20</td><td>设置面板分组标题</td></tr>
-        <tr><td><code>--fs-2xl</code></td><td>26</td><td>预留（v1 未用）</td></tr>
-        <tr><td><code>--fs-editor</code></td><td>13</td><td>CodeMirror 主编辑器（独立调）</td></tr>
-        <tr><td><code>--fs-tree</code></td><td>12</td><td>JSON 树视图</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>浮窗缩放域</b>：<code>--fs-editor</code> 是 <kbd>⌘+</kbd> / <kbd>⌘-</kbd> / <kbd>⌘0</kbd> 的源值；浮窗根节点用它派生 <code>--fs-tree</code>、<code>--fs-xs</code>、<code>--fs-sm</code>。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（<code>--fs-xs</code> ≤ 12.5px，<code>--fs-sm</code> ≤ 14px），避免 chrome 喧宾夺主。Settings Modal / History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。</p>
-
-    <h3><span class="h3-num">6.3</span>字重 + 行高</h3>
-
-    <table>
-      <thead><tr><th>类别</th><th>token</th><th>值</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td rowspan="4">字重</td><td><code>--fw-regular</code></td><td>400</td><td>正文</td></tr>
-        <tr><td><code>--fw-medium</code></td><td>500</td><td>UI 标签 / 按钮</td></tr>
-        <tr><td><code>--fw-semibold</code></td><td>600</td><td>标题 / 强调</td></tr>
-        <tr><td><code>--fw-bold</code></td><td>700</td><td>顶层标题 / 链接 hover</td></tr>
-        <tr><td rowspan="5">行高</td><td><code>--lh-tight</code></td><td>1.25</td><td>标题 / 紧凑 TabBar</td></tr>
-        <tr><td><code>--lh-snug</code></td><td>1.4</td><td>UI / 状态栏</td></tr>
-        <tr><td><code>--lh-normal</code></td><td>1.6</td><td>正文</td></tr>
-        <tr><td><code>--lh-loose</code></td><td>1.75</td><td>Markdown 渲染</td></tr>
-        <tr><td><code>--lh-code</code></td><td>1.55</td><td>编辑器正文 + line number gutter + tree</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">7</span>间距 scale（8 档 / 4 px 节奏）</h2>
-
-    <table>
-      <thead><tr><th>token</th><th>px</th><th>典型场景</th></tr></thead>
-      <tbody>
-        <tr><td><code>--sp-0</code></td><td>0</td><td>—</td></tr>
-        <tr><td><code>--sp-1</code></td><td>4</td><td>图标 + 文本 gap</td></tr>
-        <tr><td><code>--sp-2</code></td><td>8</td><td>按钮内边距 vertical / list item</td></tr>
-        <tr><td><code>--sp-3</code></td><td>12</td><td>按钮 horizontal / 表格 td</td></tr>
-        <tr><td><code>--sp-4</code></td><td>16</td><td>卡片 padding / Modal 内边距 v</td></tr>
-        <tr><td><code>--sp-5</code></td><td>20</td><td>section 之间 / Modal 内边距 h</td></tr>
-        <tr><td><code>--sp-6</code></td><td>24</td><td>h2 上下间距</td></tr>
-        <tr><td><code>--sp-8</code></td><td>32</td><td>doc-article 边距</td></tr>
-        <tr><td><code>--sp-10</code></td><td>40</td><td>大段落分隔</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">8</span>圆角 / 边框 / 阴影</h2>
-
-    <table>
-      <thead><tr><th>类别</th><th>token</th><th>值</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td rowspan="6">圆角</td><td><code>--radius-sm</code></td><td>4 px</td><td>tag / code / kbd</td></tr>
-        <tr><td><code>--radius-md</code></td><td>6 px</td><td>按钮 / 输入框 / toast</td></tr>
-        <tr><td><code>--radius-lg</code></td><td>8 px</td><td>卡片 / callout / 表格容器</td></tr>
-        <tr><td><code>--radius-xl</code></td><td>10 px</td><td>浮窗主容器 / mockup-window</td></tr>
-        <tr><td><code>--radius-2xl</code></td><td>14 px</td><td>Modal</td></tr>
-        <tr><td><code>--radius-full</code></td><td>9999 px</td><td>pill / 头像</td></tr>
-        <tr><td rowspan="3">边框</td><td><code>--bw-1</code></td><td>1 px</td><td>默认</td></tr>
-        <tr><td><code>--bw-2</code></td><td>2 px</td><td>focus ring inner</td></tr>
-        <tr><td><code>--bw-3</code></td><td>3 px</td><td>h2 左竖条</td></tr>
-        <tr><td rowspan="4">阴影 light</td><td><code>--shadow-sm</code></td><td><code>0 1px 2px rgba(31,35,41,0.04)</code></td><td>卡片 / mockup 轻微分层</td></tr>
-        <tr><td><code>--shadow-md</code></td><td><code>0 8px 24px rgba(31,35,41,0.08)</code></td><td>dropdown / select</td></tr>
-        <tr><td><code>--shadow-lg</code></td><td><code>0 16px 40px rgba(31,35,41,0.12)</code></td><td>浮窗 / Modal</td></tr>
-        <tr><td><code>--shadow-focus</code></td><td><code>0 0 0 3px rgba(36,91,219,0.18)</code></td><td>focus ring（primary 18%）</td></tr>
-        <tr><td rowspan="4">阴影 dark</td><td><code>--shadow-sm</code></td><td><code>0 1px 2px rgba(0,0,0,0.28)</code></td><td>低对比阴影</td></tr>
-        <tr><td><code>--shadow-md</code></td><td><code>0 8px 24px rgba(0,0,0,0.32)</code></td><td>低对比阴影</td></tr>
-        <tr><td><code>--shadow-lg</code></td><td><code>0 16px 40px rgba(0,0,0,0.40)</code></td><td>浮层，不额外加亮边</td></tr>
-        <tr><td><code>--shadow-focus</code></td><td><code>0 0 0 3px rgba(138,173,255,0.28)</code></td><td>primary dark 提亮版</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>dark 阴影特殊处理</b>：浮层主要靠边框与背景层级区分，阴影只做弱分层；不额外叠亮边，避免深色界面显得装饰化。</p>
-
-    <h2><span class="h2-num">9</span>动效</h2>
-
-    <p>动效基线来自 <code>design/jsonita-motion-demo.html</code>，已沉淀为下列 token 与动画清单。设计稿中的 Material / spring / instant 只作为评审对照；真实实现默认使用偏 macOS 的 <code>--ease-native</code>，并尊重 reduced motion。</p>
-
-    <h3><span class="h3-num">9.1</span>时长 + 缓动</h3>
-
-    <table>
-      <thead><tr><th>类别</th><th>token</th><th>值</th><th>场景</th></tr></thead>
-      <tbody>
-        <tr><td rowspan="5">时长</td><td><code>--dur-instant</code></td><td>80 ms</td><td>hover 色变化</td></tr>
-        <tr><td><code>--dur-fast</code></td><td>120 ms</td><td>按钮 active</td></tr>
-        <tr><td><code>--dur-base</code></td><td>150 ms</td><td>浮窗淡入</td></tr>
-        <tr><td><code>--dur-slow</code></td><td>200 ms</td><td>浮窗淡出 / Modal 出场</td></tr>
-        <tr><td><code>--dur-toast</code></td><td>5000 ms</td><td>保留 token；当前未接入 Toast</td></tr>
-        <tr><td rowspan="4">缓动</td><td><code>--ease-standard</code></td><td><code>cubic-bezier(0.4, 0.0, 0.2, 1)</code></td><td>Material 风（默认）</td></tr>
-        <tr><td><code>--ease-out</code></td><td><code>cubic-bezier(0.0, 0.0, 0.2, 1)</code></td><td>入场</td></tr>
-        <tr><td><code>--ease-in</code></td><td><code>cubic-bezier(0.4, 0.0, 1, 1)</code></td><td>出场</td></tr>
-        <tr><td><code>--ease-native</code></td><td><code>cubic-bezier(0.32, 0.72, 0, 1)</code></td><td>玻璃方向主力缓动；阶段 2 已用于状态栏快捷键、浮窗呼出、Tab active pill、AI Fix 入场、主题手动切换。可选 <code>--ease-spring</code> 走 CSS <code>linear()</code></td></tr>
-      </tbody>
-    </table>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">INFO</span>
-      <div class="callout-body">
-        <p>遵循 <code>@media (prefers-reduced-motion: reduce)</code>：所有 <code>animation-duration</code> 降为 1 ms（实际禁用）。</p>
-      </div>
-    </div>
-
-    <h3><span class="h3-num">9.2</span>关键动画清单</h3>
-
-    <table>
-      <thead><tr><th>动画</th><th>触发</th><th>变换</th><th>时长 / 缓动</th></tr></thead>
-      <tbody>
-        <tr><td><code>jsonita-window-summon</code></td><td>浮窗 show</td><td>opacity 0→1 + translateY -6px→0 + scale .96→1</td><td><code>--dur-base</code> / <code>--ease-native</code></td></tr>
-        <tr><td><code>jsonita-window-dismiss</code></td><td>浮窗 hide</td><td>opacity 1→0 + translateY 0→-4px + scale 1→.99</td><td>140 ms / <code>--ease-in</code></td></tr>
-        <tr><td><code>jsonita-pane-in</code></td><td>Tab / 单双栏内容切换</td><td>内容 cross-fade</td><td><code>--dur-fast</code> / <code>--ease-native</code></td></tr>
-        <tr><td><code>jsonita-ai-fix-enter</code> + glow</td><td>AI Fix 入口出现</td><td>translateX 10px→0 + opacity + 一次性琥珀微光</td><td><code>--dur-base</code> / <code>--ease-native</code>；glow 不循环</td></tr>
-        <tr><td><code>jsonita-theme-transition</code></td><td>手动切换主题</td><td>bg / color / border / shadow 交叉淡</td><td>~180 ms / <code>--ease-native</code>；初次加载与 system 自动变化不触发</td></tr>
-        <tr><td><code>toast-in</code></td><td>保留动画</td><td>opacity 0→1 + translateY 8px→0</td><td><code>--dur-base</code> / <code>--ease-out</code></td></tr>
-        <tr><td><code>fade-out</code></td><td>保留动画</td><td>opacity 1→0</td><td><code>--dur-slow</code></td></tr>
-      </tbody>
-    </table>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">INFO</span>
-      <div class="callout-body">
-        <p><b>玻璃方向动画（阶段 2 已实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：主力缓动为 <code>--ease-native</code>。浮窗呼出 scale 起点为 <code>0.96</code>、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + <code>--ease-native</code>；切 Tab / 单窗为<b>即时布局切换</b>（不 remount 面板、不淡入 —— remount 会拆掉 CodeMirror、丢输入光标、手感 clunky）；AI Fix 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。</b></p>
-      </div>
-    </div>
-
-    <h3><span class="h3-num">9.3</span>设计稿到 token 的承接</h3>
-
-    <table>
-      <thead><tr><th>设计稿</th><th>沉淀内容</th><th>权威位置</th></tr></thead>
-      <tbody>
-        <tr><td><code>jsonita-design-explorations.html</code></td><td>选定原生玻璃 / vibrancy 方向，淘汰其他风格分支</td><td>本章 § 1、§ 4</td></tr>
-        <tr><td><code>jsonita-glass-hero-light-dark.html</code></td><td>主窗单层玻璃 tint、系统蓝作为唯一主交互色、valid 绿状态</td><td>§ 4.2、§ 4.3</td></tr>
-        <tr><td><code>jsonita-glass-mockups.html</code></td><td>AI Fix 琥珀强调、History op-chip 四色、Toast 4 variant reserved、SVG 描边图标方向</td><td>§ 4.3、§ 4.5、04 § 4.3、05 图标章节</td></tr>
-        <tr><td><code>jsonita-motion-demo.html</code></td><td>150ms summon、140ms dismiss、180ms theme fade、native easing、禁动 blur</td><td>§ 9.1、§ 9.2</td></tr>
-        <tr><td><code>jsonita-singlepane-statusbar-demo.html</code></td><td>状态栏右侧 hover/focus 才滑出快捷键，单双栏切换不改窗口尺寸</td><td>01 § 2、04 § 4.2</td></tr>
-        <tr><td><code>jsonita-settings-detail.html</code></td><td>设置分组、checkbox 视觉、API key 行内反馈、About 路径展示</td><td>01 § 4、04 § 4.6-4.8、13 § 3.3</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">10</span>Z-index scale</h2>
-
-    <table>
-      <thead><tr><th>token</th><th>值</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td><code>--z-base</code></td><td>0</td><td>默认</td></tr>
-        <tr><td><code>--z-elevated</code></td><td>10</td><td>卡片 hover</td></tr>
-        <tr><td><code>--z-sticky</code></td><td>20</td><td>状态栏</td></tr>
-        <tr><td><code>--z-dropdown</code></td><td>30</td><td>select / autocomplete</td></tr>
-        <tr><td><code>--z-modal-bg</code></td><td>40</td><td>Modal 遮罩</td></tr>
-        <tr><td><code>--z-modal</code></td><td>50</td><td>Modal 容器</td></tr>
-        <tr><td><code>--z-toast</code></td><td>60</td><td>保留 token；当前未接入 Toast</td></tr>
-        <tr><td><code>--z-tooltip</code></td><td>70</td><td>Tooltip（最顶）</td></tr>
-      </tbody>
-    </table>
-
-    <p class="section-divider"><b>三 · 主题切换机制</b></p>
-
-    <h2><span class="h2-num">11</span>主题切换流程</h2>
-
-    <p>设置项 <code>settings.theme: 'system' | 'light' | 'dark'</code>（默认 <code>'system'</code>）。<b>effective theme 的权威解析在原生</b>：<code>window_set_theme(mode)</code> IPC 读 <code>NSApp.effectiveAppearance</code> 回传 <code>'light' | 'dark'</code>。webview 的 <code>matchMedia</code> <b>不参与取值</b>，仅在 <code>system</code> 模式下作 OS 主题切换的 re-trigger ── 因为 <code>NSWindow.appearance</code> 被 pin 成具体值后会污染 webview 的 <code>prefers-color-scheme</code>（旧 bug：light→system 不变 dark，见 <a href="06_window.html">06 § 2.6</a>）。下图展示完整数据流：</p>
-
-    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-03-design-tokens-diagram-1">
-<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" viewBox="0 0 1470.8828125 795" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#333;color:#333;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#333333;stroke-width:1px;}#my-svg .flowchart-link{stroke:#333333;fill:none;}#my-svg .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#my-svg .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#my-svg .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .src&gt;*{fill:rgb(244, 245, 247)!important;stroke:rgb(143, 149, 158)!important;}#my-svg .src span{fill:rgb(244, 245, 247)!important;stroke:rgb(143, 149, 158)!important;}#my-svg .act&gt;*{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .act span{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .sub&gt;*{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .sub span{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Boot" data-look="classic"><rect style="" x="1132.8828125" y="258" width="330" height="176"/><g class="cluster-label" transform="translate(1240.859375, 258)"><foreignObject width="114.046875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>首屏 FOUC 避免</p></span></div></foreignObject></g></g><g class="cluster" id="my-svg-Subscribe" data-look="classic"><rect style="" x="633.25" y="8" width="606.265625" height="176"/><g class="cluster-label" transform="translate(887.421875, 8)"><foreignObject width="97.921875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>订阅外部变化</p></span></div></foreignObject></g></g><g class="cluster" id="my-svg-Sources" data-look="classic"><rect style="" x="8" y="8" width="605.25" height="779"/><g class="cluster-label" transform="translate(286.140625, 8)"><foreignObject width="48.96875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>数据源</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M155.563,135L155.563,143.167C155.563,151.333,155.563,167.667,155.563,182C155.563,196.333,155.563,208.667,155.563,221C155.563,233.333,155.563,245.667,237.278,263.353C318.994,281.039,482.425,304.077,564.14,315.596L645.856,327.116" id="my-svg-L_S1_R_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S1_R_0" data-points="W3sieCI6MTU1LjU2MjUsInkiOjEzNX0seyJ4IjoxNTUuNTYyNSwieSI6MTg0fSx7IngiOjE1NS41NjI1LCJ5IjoyMjF9LHsieCI6MTU1LjU2MjUsInkiOjI1OH0seyJ4Ijo2NDkuODE2NDA2MjUsInkiOjMyNy42NzQxMjM0ODQ5MTAxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M448.188,159L448.188,163.167C448.188,167.333,448.188,175.667,448.188,186C448.188,196.333,448.188,208.667,448.188,221C448.188,233.333,448.188,245.667,481.148,260.58C514.108,275.493,580.029,292.985,612.99,301.731L645.95,310.478" id="my-svg-L_S2_R_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S2_R_0" data-points="W3sieCI6NDQ4LjE4NzUsInkiOjE1OX0seyJ4Ijo0NDguMTg3NSwieSI6MTg0fSx7IngiOjQ0OC4xODc1LCJ5IjoyMjF9LHsieCI6NDQ4LjE4NzUsInkiOjI1OH0seyJ4Ijo2NDkuODE2NDA2MjUsInkiOjMxMS41MDM2MTAyNTcxMzUxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M779.816,385L779.816,393.167C779.816,401.333,779.816,417.667,779.816,432C779.816,446.333,779.816,458.667,806.627,472.839C833.439,487.012,887.061,503.024,913.872,511.03L940.683,519.036" id="my-svg-L_R_APPLY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R_APPLY_0" data-points="W3sieCI6Nzc5LjgxNjQwNjI1LCJ5IjozODV9LHsieCI6Nzc5LjgxNjQwNjI1LCJ5Ijo0MzR9LHsieCI6Nzc5LjgxNjQwNjI1LCJ5Ijo0NzF9LHsieCI6OTQ0LjUxNTYyNSwieSI6NTIwLjE4MDc1ODk4MzYwMzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M976.162,610L968.126,614.167C960.091,618.333,944.02,626.667,935.985,636.333C927.949,646,927.949,657,927.949,662.5L927.949,668" id="my-svg-L_APPLY_DOM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_APPLY_DOM_0" data-points="W3sieCI6OTc2LjE2MTg1MjM4NDg2ODQsInkiOjYxMH0seyJ4Ijo5MjcuOTQ5MjE4NzUsInkiOjYzNX0seyJ4Ijo5MjcuOTQ5MjE4NzUsInkiOjY3Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1176.099,610L1184.398,614.167C1192.697,618.333,1209.296,626.667,1217.595,634.333C1225.895,642,1225.895,649,1225.895,652.5L1225.895,656" id="my-svg-L_APPLY_CM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_APPLY_CM_0" data-points="W3sieCI6MTE3Ni4wOTg4Mzg0MDQ2MDUyLCJ5Ijo2MTB9LHsieCI6MTIyNS44OTQ1MzEyNSwieSI6NjM1fSx7IngiOjEyMjUuODk0NTMxMjUsInkiOjY2MH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M944.516,571.934L838.867,582.445C733.219,592.956,521.922,613.978,416.273,627.989C310.625,642,310.625,649,310.625,652.5L310.625,656" id="my-svg-L_APPLY_S3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_APPLY_S3_0" data-points="W3sieCI6OTQ0LjUxNTYyNSwieSI6NTcxLjkzMzc4ODc4Njg0Mzd9LHsieCI6MzEwLjYyNSwieSI6NjM1fSx7IngiOjMxMC42MjUsInkiOjY2MH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1074.516,147L1074.516,153.167C1074.516,159.333,1074.516,171.667,1074.516,184C1074.516,196.333,1074.516,208.667,1074.516,221C1074.516,233.333,1074.516,245.667,1074.516,266.5C1074.516,287.333,1074.516,316.667,1074.516,346C1074.516,375.333,1074.516,404.667,1074.516,425.5C1074.516,446.333,1074.516,458.667,1074.516,470.333C1074.516,482,1074.516,493,1074.516,498.5L1074.516,504" id="my-svg-L_SUB1_APPLY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SUB1_APPLY_0" data-points="W3sieCI6MTA3NC41MTU2MjUsInkiOjE0N30seyJ4IjoxMDc0LjUxNTYyNSwieSI6MTg0fSx7IngiOjEwNzQuNTE1NjI1LCJ5IjoyMjF9LHsieCI6MTA3NC41MTU2MjUsInkiOjI1OH0seyJ4IjoxMDc0LjUxNTYyNSwieSI6MzQ2fSx7IngiOjEwNzQuNTE1NjI1LCJ5Ijo0MzR9LHsieCI6MTA3NC41MTU2MjUsInkiOjQ3MX0seyJ4IjoxMDc0LjUxNTYyNSwieSI6NTA4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M781.383,135L781.383,143.167C781.383,151.333,781.383,167.667,781.383,182C781.383,196.333,781.383,208.667,781.383,221C781.383,233.333,781.383,245.667,781.249,259.333C781.116,273,780.849,288,780.715,295.501L780.582,303.001" id="my-svg-L_SUB2_R_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SUB2_R_0" data-points="W3sieCI6NzgxLjM4MjgxMjUsInkiOjEzNX0seyJ4Ijo3ODEuMzgyODEyNSwieSI6MTg0fSx7IngiOjc4MS4zODI4MTI1LCJ5IjoyMjF9LHsieCI6NzgxLjM4MjgxMjUsInkiOjI1OH0seyJ4Ijo3ODAuNTEwNjA5MDE5ODg2NCwieSI6MzA3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1297.883,409L1297.883,413.167C1297.883,417.333,1297.883,425.667,1297.883,436C1297.883,446.333,1297.883,458.667,1282.85,470.756C1267.818,482.845,1237.753,494.689,1222.721,500.612L1207.689,506.534" id="my-svg-L_IS_APPLY_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IS_APPLY_0" data-points="W3sieCI6MTI5Ny44ODI4MTI1LCJ5Ijo0MDl9LHsieCI6MTI5Ny44ODI4MTI1LCJ5Ijo0MzR9LHsieCI6MTI5Ny44ODI4MTI1LCJ5Ijo0NzF9LHsieCI6MTIwMy45NjcwNjMyMTAyMjczLCJ5Ijo1MDh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(155.5625, 221)"><g class="label" data-id="L_S1_R_0" transform="translate(-30.328125, -12)"><foreignObject width="60.65625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>传 mode</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(448.1875, 221)"><g class="label" data-id="L_S2_R_0" transform="translate(-59.6484375, -12)"><foreignObject width="119.296875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>system 时原生读</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(779.81640625, 471)"><g class="label" data-id="L_R_APPLY_0" transform="translate(-98.4609375, -12)"><foreignObject width="196.921875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>回传 effective light 或 dark</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_APPLY_DOM_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_APPLY_CM_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_APPLY_S3_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(1074.515625, 346)"><g class="label" data-id="L_SUB1_APPLY_0" transform="translate(-38.3671875, -12)"><foreignObject width="76.734375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>重新调 IPC</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_SUB2_R_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(1297.8828125, 471)"><g class="label" data-id="L_IS_APPLY_0" transform="translate(-57.4921875, -12)"><foreignObject width="114.984375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>先于 React 挂载</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default src" id="my-svg-flowchart-S1-0" data-look="classic" transform="translate(155.5625, 96)"><rect class="basic label-container" style="fill:#F4F5F7 !important;stroke:#8F959E !important" x="-112.5625" y="-39" width="225.125" height="78"/><g class="label" style="" transform="translate(-82.5625, -24)"><rect/><foreignObject width="165.125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>settings.theme<br />system 或 light 或 dark</p></span></div></foreignObject></g></g><g class="node default src" id="my-svg-flowchart-S2-1" data-look="classic" transform="translate(448.1875, 96)"><rect class="basic label-container" style="fill:#F4F5F7 !important;stroke:#8F959E !important" x="-130.0625" y="-63" width="260.125" height="126"/><g class="label" style="" transform="translate(-100.0625, -48)"><rect/><foreignObject width="200.125" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>原生 NSApp.effectiveAppearance<br />system 模式时原生权威解析 OS 主题</p></span></div></foreignObject></g></g><g class="node default src" id="my-svg-flowchart-S3-2" data-look="classic" transform="translate(310.625, 711)"><rect class="basic label-container" style="fill:#F4F5F7 !important;stroke:#8F959E !important" x="-115.6171875" y="-51" width="231.234375" height="102"/><g class="label" style="" transform="translate(-85.6171875, -36)"><rect/><foreignObject width="171.234375" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>localStorage<br />jsonita.theme.effective<br />FOUC 缓存</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-R-3" data-look="classic" transform="translate(779.81640625, 346)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-130" y="-39" width="260" height="78"/><g class="label" style="" transform="translate(-100, -24)"><rect/><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>window_set_theme mode IPC</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-APPLY-9" data-look="classic" transform="translate(1074.515625, 559)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-130" y="-51" width="260" height="102"/><g class="label" style="" transform="translate(-100, -36)"><rect/><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>apply: documentElement<br />dataset.theme 设 light 或 dark</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-DOM-11" data-look="classic" transform="translate(927.94921875, 711)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-117.9453125" y="-39" width="235.890625" height="78"/><g class="label" style="" transform="translate(-87.9453125, -24)"><rect/><foreignObject width="175.890625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>CSS variables 自动切换<br />root 与 data-theme dark</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-CM-13" data-look="classic" transform="translate(1225.89453125, 711)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-130" y="-51" width="260" height="102"/><g class="label" style="" transform="translate(-100, -36)"><rect/><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>editorStore.setTheme<br />同步 CodeMirror theme extension</p></span></div></foreignObject></g></g><g class="node default sub" id="my-svg-flowchart-SUB1-16" data-look="classic" transform="translate(1074.515625, 96)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-130" y="-51" width="260" height="102"/><g class="label" style="" transform="translate(-100, -36)"><rect/><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>matchMedia change<br />system 模式 OS 切换 re-trigger</p></span></div></foreignObject></g></g><g class="node default sub" id="my-svg-flowchart-SUB2-17" data-look="classic" transform="translate(781.3828125, 96)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-113.1328125" y="-39" width="226.265625" height="78"/><g class="label" style="" transform="translate(-83.1328125, -24)"><rect/><foreignObject width="166.265625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>settings:changed event<br />用户改设置</p></span></div></foreignObject></g></g><g class="node default sub" id="my-svg-flowchart-IS-22" data-look="classic" transform="translate(1297.8828125, 346)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-130" y="-63" width="260" height="126"/><g class="label" style="" transform="translate(-100, -48)"><rect/><foreignObject width="200" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>index.html inline script<br />从 localStorage 读 effective<br />提前设 data-theme</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
-</figure>
-
-    <h3><span class="h3-num">11.1</span>核心实现要点</h3>
-
-    <ul>
-      <li><b>原生权威解析</b>：<code>settings.theme</code> 变化时调 <code>window_set_theme(mode)</code>，原生按 mode 解析 ── <code>system</code> 读 <code>NSApp.effectiveAppearance</code>（真实 OS 主题），回传 effective theme（light / dark）。前端<b>不再</b>用 webview <code>matchMedia</code> 取值（会被 NSWindow.appearance pin 污染）</li>
-      <li><b>挂 data-theme</b>：所有 CSS 变量切换由 <code>[data-theme="dark"] { ... }</code> 覆盖触发 ── 无 JS 计算颜色</li>
-      <li><b>CodeMirror 单独通知</b>：编辑器有自己的 theme extension（不读 CSS variables），需 <code>editorStore.setTheme()</code> 同步</li>
-      <li><b>原生 vibrancy 同步 + 跟随 OS</b>：同一 IPC 让原生 <code>NSVisualEffectView</code> 材质 + NSWindow appearance 跟随主题（否则 dark 发灰）；<code>system</code> 模式把 appearance 设 <code>nil</code> 跟随 OS，使运行时系统主题切换能推送给 webview（见 <a href="06_window.html">06 § 2.6</a>）</li>
-      <li><b>双重订阅</b>：matchMedia change（<code>system</code> 模式下 OS 切换的 re-trigger，触发重新调 IPC）+ settings:changed（用户改设置）</li>
-      <li><b>避免 FOUC</b>：index.html <code>&lt;head&gt;</code> 内联一段 script 先于 React bundle 读 localStorage cache 设 <code>data-theme</code></li>
-    </ul>
-
-    <h3><span class="h3-num">11.2</span>resolve + apply 核心 ~18 行</h3>
-
-    <pre><code>// src/theme/useEffectiveTheme.ts
-// 权威：原生 win.setTheme(mode) 读 NSApp.effectiveAppearance 回传 light|dark。
-// 非 Tauri（浏览器 dev）退回 matchMedia（此时无 NSWindow.appearance pin，可靠）。
-const resolve = async (): Promise&lt;'light' | 'dark'&gt; =&gt; {
-  try { return await win.setTheme(theme); }          // theme = mode
-  catch {
-    if (theme !== 'system') return theme;
-    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-};
-
-useEffect(() =&gt; {
-  const apply = async () =&gt; {
-    const eff = await resolve();
-    document.documentElement.dataset.theme = eff;
-    editorStore.setTheme(eff);
-    localStorage.setItem('jsonita.theme.effective', eff);
-  };
-  void apply();
-  if (theme === 'system') {                          // OS 切换 re-trigger
-    const mql = matchMedia('(prefers-color-scheme: dark)');
-    mql.addEventListener('change', apply);
-    return () =&gt; mql.removeEventListener('change', apply);
-  }
-}, [theme]);</code></pre>
-
-    <h3><span class="h3-num">11.3</span>FOUC 避免（inline script ~7 行）</h3>
-
-    <pre><code>&lt;!-- index.html &lt;head&gt;，先于主 bundle --&gt;
-&lt;script&gt;
-(function() {
-  try {
-    var t = localStorage.getItem('jsonita.theme.effective') || 'light';
-    document.documentElement.dataset.theme = t;
-  } catch (e) {}
-})();
-&lt;/script&gt;</code></pre>
-
-    <p class="section-divider"><b>四 · Tailwind 集成</b></p>
-
-    <h2><span class="h2-num">12</span>Tailwind 映射规则</h2>
-
-    <p>用 Tailwind 是为了"快写 utility"，但<b>颜色 / 间距 / 字号</b>都引用 CSS variables，<b>不</b>用 Tailwind 默认色板。</p>
-
-    <table>
-      <thead><tr><th>Tailwind theme key</th><th>映射到</th><th>用法示例</th></tr></thead>
-      <tbody>
-        <tr><td><code>colors.primary / .bg / .text / .ok / ...</code></td><td>对应 <code>--*</code> CSS variables</td><td><code>bg-primary text-text-muted</code></td></tr>
-        <tr><td><code>fontFamily.sans / .mono</code></td><td><code>var(--font-sans / --font-mono)</code></td><td><code>font-mono</code></td></tr>
-        <tr><td><code>fontSize.xs / sm / base / md / lg / xl</code></td><td>映射到 <code>--fs-*</code> + 对应 <code>--lh-*</code></td><td><code>text-sm</code></td></tr>
-        <tr><td><code>spacing.1 / 2 / ... / 10</code></td><td>显式 px 表（4/8/12/16/20/24/32/40），<b>不</b>用 Tailwind 默认 rem</td><td><code>p-3 gap-2</code></td></tr>
-        <tr><td><code>borderRadius.sm / md / lg / xl / 2xl</code></td><td><code>var(--radius-*)</code></td><td><code>rounded-md</code></td></tr>
-        <tr><td><code>boxShadow.sm / md / lg / focus</code></td><td><code>var(--shadow-*)</code></td><td><code>shadow-lg</code></td></tr>
-        <tr><td><code>transitionDuration / TimingFunction</code></td><td><code>var(--dur-* / --ease-*)</code></td><td><code>duration-base ease-out</code></td></tr>
-        <tr><td><code>darkMode</code></td><td><code>['selector', '[data-theme="dark"]']</code></td><td><code>dark:bg-bg-card</code></td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">12.1</span>config 骨架（~20 行核心）</h3>
-
-    <pre><code>// tailwind.config.ts ── 关键 extend；完整文件含全部 12 个 token 域
-export default {
-  darkMode: ['selector', '[data-theme="dark"]'],
-  content: ['./src/**/*.{ts,tsx,html}', './index.html'],
-  theme: {
-    extend: {
-      colors: {
-        primary: 'var(--primary)', accent: 'var(--accent)',
-        bg: 'var(--bg)', 'bg-card': 'var(--bg-card)',
-        text: 'var(--text)', 'text-muted': 'var(--text-muted)',
-        border: 'var(--border)',
-        ok: 'var(--ok)', warn: 'var(--warn)',
-        danger: 'var(--danger)', info: 'var(--info)',
+<body>
+
+<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
+{
+  "metadata": {
+    "language": "zh-CN",
+    "owner": "Jin Huang",
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
       },
-      fontFamily: { sans: 'var(--font-sans)', mono: 'var(--font-mono)' },
-      borderRadius: { md: 'var(--radius-md)', lg: 'var(--radius-lg)', xl: 'var(--radius-xl)' },
-      boxShadow: { lg: 'var(--shadow-lg)', focus: 'var(--shadow-focus)' },
+      "href": "../index.html"
     },
+    "title": {
+      "zh-CN": "设计令牌",
+      "en": "Design Tokens"
+    },
+    "description": {
+      "zh-CN": "颜色、字体、间距、圆角、阴影、动效、主题和 token 同步策略。",
+      "en": "Color, typography, spacing, radius, shadow, motion, theme, and token synchronization strategy."
+    },
+    "schemaVersion": "1.0",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ]
   },
-} satisfies Config;</code></pre>
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "token-domains",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "源",
+                "en": "Source"
+              },
+              "body": {
+                "zh-CN": "src/styles/tokens.css 是应用 token 源；CAST 文档只描述契约。",
+                "en": "src/styles/tokens.css is the app token source; CAST docs describe the contract."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "主题",
+                "en": "Theme"
+              },
+              "body": {
+                "zh-CN": "light、dark、system 由前端设置和原生 appearance 同步。",
+                "en": "light, dark, and system are synchronized by frontend settings and native appearance."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "动效",
+                "en": "Motion"
+              },
+              "body": {
+                "zh-CN": "使用 --ease-native；不动画 blur 或导致窗口跳动。",
+                "en": "Use --ease-native; do not animate blur or cause window jumps."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "token-domains",
+      "title": {
+        "zh-CN": "Token Domains",
+        "en": "Token Domains"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "域",
+              "en": "Domain"
+            },
+            {
+              "zh-CN": "用途",
+              "en": "Purpose"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Color",
+                "en": "Color"
+              },
+              {
+                "zh-CN": "primary、valid、warning、danger、surface、text、border。",
+                "en": "primary, valid, warning, danger, surface, text, border."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Type",
+                "en": "Type"
+              },
+              {
+                "zh-CN": "编辑器字号可调，chrome 字号紧凑稳定。",
+                "en": "Editor font size is adjustable; chrome type is compact and stable."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Spacing",
+                "en": "Spacing"
+              },
+              {
+                "zh-CN": "浮窗和表单使用紧凑节奏，避免卡片套卡片。",
+                "en": "Floating window and forms use compact rhythm and avoid nested cards."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Motion",
+                "en": "Motion"
+              },
+              {
+                "zh-CN": "summon/dismiss、tab pill、theme transition 都短时可中断。",
+                "en": "summon/dismiss, tab pill, and theme transition are short and interruptible."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "不要把设计 demo 的临时颜色带回实现。",
+              "en": "Do not bring temporary design-demo colors back into implementation."
+            },
+            {
+              "zh-CN": "dark 次级文本必须保持可读，不靠降低透明度制造氛围。",
+              "en": "Dark secondary text must stay readable and not rely on opacity for atmosphere."
+            },
+            {
+              "zh-CN": "CAST HTML 不自定义应用 CSS；它只用 cast-a-doc profile。",
+              "en": "CAST HTML does not customize app CSS; it only uses the cast-a-doc profile."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "视觉变更后检查真实 app 和 spec/01 是否仍一致。",
+              "en": "After visual changes, check real app and spec/01 remain aligned."
+            },
+            {
+              "zh-CN": "docs:check 禁止 raw Mermaid/CDN 回归。",
+              "en": "docs:check forbids raw Mermaid/CDN regressions."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</script>
 
-    <p class="section-divider"><b>五 · 预览</b></p>
+<article class="doc">
+<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">设计令牌</span><span data-locale="en" data-locale-active="false">Design Tokens</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
+<main>
+<section class="doc-section" id="overview">
+<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
+<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">源</span><span data-locale="en" data-locale-active="false">Source</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">src/styles/tokens.css 是应用 token 源；CAST 文档只描述契约。</span><span data-locale="en" data-locale-active="false">src/styles/tokens.css is the app token source; CAST docs describe the contract.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">主题</span><span data-locale="en" data-locale-active="false">Theme</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">light、dark、system 由前端设置和原生 appearance 同步。</span><span data-locale="en" data-locale-active="false">light, dark, and system are synchronized by frontend settings and native appearance.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">动效</span><span data-locale="en" data-locale-active="false">Motion</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">使用 --ease-native；不动画 blur 或导致窗口跳动。</span><span data-locale="en" data-locale-active="false">Use --ease-native; do not animate blur or cause window jumps.</span></li></ul></section>
+</section>
 
-    <h2><span class="h2-num">13</span>同一组件 light vs dark</h2>
+<section class="doc-section" id="summary">
+<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
+<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
+</section>
 
-    <h3><span class="h3-num">13.1</span>状态栏（合法 / 错误）</h3>
+<section class="doc-section" id="token-domains">
+<h2><span data-locale="zh-CN" data-locale-active="true">Token Domains</span><span data-locale="en" data-locale-active="false">Token Domains</span></h2>
+<table>
+<tr><th><span data-locale="zh-CN" data-locale-active="true">域</span><span data-locale="en" data-locale-active="false">Domain</span></th><th><span data-locale="zh-CN" data-locale-active="true">用途</span><span data-locale="en" data-locale-active="false">Purpose</span></th></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Color</span><span data-locale="en" data-locale-active="false">Color</span></td><td><span data-locale="zh-CN" data-locale-active="true">primary、valid、warning、danger、surface、text、border。</span><span data-locale="en" data-locale-active="false">primary, valid, warning, danger, surface, text, border.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Type</span><span data-locale="en" data-locale-active="false">Type</span></td><td><span data-locale="zh-CN" data-locale-active="true">编辑器字号可调，chrome 字号紧凑稳定。</span><span data-locale="en" data-locale-active="false">Editor font size is adjustable; chrome type is compact and stable.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Spacing</span><span data-locale="en" data-locale-active="false">Spacing</span></td><td><span data-locale="zh-CN" data-locale-active="true">浮窗和表单使用紧凑节奏，避免卡片套卡片。</span><span data-locale="en" data-locale-active="false">Floating window and forms use compact rhythm and avoid nested cards.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Motion</span><span data-locale="en" data-locale-active="false">Motion</span></td><td><span data-locale="zh-CN" data-locale-active="true">summon/dismiss、tab pill、theme transition 都短时可中断。</span><span data-locale="en" data-locale-active="false">summon/dismiss, tab pill, and theme transition are short and interruptible.</span></td></tr>
+</table>
+</section>
 
-    <div class="example-grid">
-      <div class="example-col">
-        <div class="example-label">light · valid</div>
-        <div style="padding: 9px 14px; background: #FBFCFE; border: 1px solid #E5E6EB; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between;">
-          <span><span style="color: #237B4B; font-weight: 600;">● Valid JSON</span> <span style="color: #646A73;">· 5 lines · 76 bytes</span></span>
-          <span style="color: var(--text-muted);">History (12) · Settings</span>
-        </div>
-      </div>
-      <div class="example-arrow">/</div>
-      <div class="example-col">
-        <div class="example-label">dark · valid</div>
-        <div style="padding: 9px 14px; background: #252B35; border: 1px solid #343A46; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between;">
-          <span><span style="color: #67C288; font-weight: 600;">● Valid JSON</span> <span style="color: #9BA3AF;">· 5 lines · 76 bytes</span></span>
-          <span style="color: var(--text-muted);">History (12) · Settings</span>
-        </div>
-      </div>
-    </div>
+<section class="doc-section" id="invariants">
+<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
+<ul><li><span data-locale="zh-CN" data-locale-active="true">不要把设计 demo 的临时颜色带回实现。</span><span data-locale="en" data-locale-active="false">Do not bring temporary design-demo colors back into implementation.</span></li><li><span data-locale="zh-CN" data-locale-active="true">dark 次级文本必须保持可读，不靠降低透明度制造氛围。</span><span data-locale="en" data-locale-active="false">Dark secondary text must stay readable and not rely on opacity for atmosphere.</span></li><li><span data-locale="zh-CN" data-locale-active="true">CAST HTML 不自定义应用 CSS；它只用 cast-a-doc profile。</span><span data-locale="en" data-locale-active="false">CAST HTML does not customize app CSS; it only uses the cast-a-doc profile.</span></li></ul>
+</section>
 
-    <h3><span class="h3-num">13.2</span>错误状态</h3>
+<section class="doc-section" id="testing-plan">
+<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
+<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">视觉变更后检查真实 app 和 spec/01 是否仍一致。</span><span data-locale="en" data-locale-active="false">After visual changes, check real app and spec/01 remain aligned.</span></li><li><span data-locale="zh-CN" data-locale-active="true">docs:check 禁止 raw Mermaid/CDN 回归。</span><span data-locale="en" data-locale-active="false">docs:check forbids raw Mermaid/CDN regressions.</span></li></ol>
+</section>
 
-    <div class="example-grid">
-      <div class="example-col">
-        <div class="example-label">light · parse error</div>
-        <div style="padding: 9px 14px; background: #FBFCFE; border: 1px solid #E5E6EB; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono);">
-          <span style="color: #C92A2A; font-weight: 600;">● Invalid JSON</span>
-        </div>
-      </div>
-      <div class="example-arrow">/</div>
-      <div class="example-col">
-        <div class="example-label">dark · parse error</div>
-        <div style="padding: 9px 14px; background: #252B35; border: 1px solid #343A46; border-radius: 6px; font-size: 11.5px; font-family: var(--font-mono);">
-          <span style="color: #F27A7A; font-weight: 600;">● Invalid JSON</span>
-        </div>
-      </div>
-    </div>
-
-    <h3><span class="h3-num">13.3</span>JSON 树 ── 类型颜色</h3>
-
-    <div class="example-grid">
-      <div class="example-col">
-        <div class="example-label">light tree</div>
-        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: var(--editor-bg); border: 1px solid var(--border); border-radius: 6px; line-height: 1.7;">
-<div>▾ <span style="color:var(--json-key);">root</span><span style="color:var(--text-faint);font-size:10.5px;margin-left:4px;">{3}</span></div>
-<div style="padding-left:18px;">
-<div><span style="color:var(--json-key);">name</span>: <span style="color:var(--json-string);">"alice"</span></div>
-<div><span style="color:var(--json-key);">age</span>: <span style="color:var(--json-number);">30</span></div>
-<div><span style="color:var(--json-key);">active</span>: <span style="color:var(--json-bool);">true</span></div>
-<div><span style="color:var(--json-key);">extra</span>: <span style="color:var(--json-null);">null</span></div>
-</div>
-        </div>
-      </div>
-      <div class="example-arrow">/</div>
-      <div class="example-col">
-        <div class="example-label">dark tree</div>
-        <div style="font-family: var(--font-mono); font-size: 12px; padding: 12px; background: var(--editor-bg); border: 1px solid var(--border); border-radius: 6px; line-height: 1.7; color: var(--text);">
-<div>▾ <span style="color:var(--json-key);">root</span><span style="color:var(--text-faint);font-size:10.5px;margin-left:4px;">{3}</span></div>
-<div style="padding-left:18px;">
-<div><span style="color:var(--json-key);">name</span>: <span style="color:var(--json-string);">"alice"</span></div>
-<div><span style="color:var(--json-key);">age</span>: <span style="color:var(--json-number);">30</span></div>
-<div><span style="color:var(--json-key);">active</span>: <span style="color:var(--json-bool);">true</span></div>
-<div><span style="color:var(--json-key);">extra</span>: <span style="color:var(--json-null);">null</span></div>
-</div>
-        </div>
-      </div>
-    </div>
-
-    <nav class="pagination" id="pagination"></nav>
-
-  </article>
+<section class="doc-section" id="open-questions">
+<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
+<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
+</section>
 </main>
+<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
+</article>
 
-<script src="../assets/nav.js"></script>
+<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#token-domains"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Token Domains</span><span data-locale="en" data-locale-active="false">Token Domains</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
+<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">设计令牌</span><span data-locale="en" data-locale-active="false">Design Tokens</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
+
+
+<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
+  const config = window.CAST_DOCS_I18N;
+  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
+  const MEMORY_KEY = 'cast-docs:global-memory';
+  const root = document.documentElement;
+  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
+  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
+  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
+  function readMemory() {
+    try {
+      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+  function writeMemory(memory) {
+    try {
+      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  function rememberDefaultLocale(locale) {
+    if (!config.locales.includes(locale)) return false;
+    const memory = readMemory();
+    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
+    memory.version = 1;
+    memory.preferences = {
+      ...preferences,
+      defaultLocale: locale,
+      defaultLocaleUpdatedAt: new Date().toISOString(),
+    };
+    return writeMemory(memory);
+  }
+  function defaultLocaleFromMemory() {
+    const locale = readMemory().preferences?.defaultLocale;
+    return config.locales.includes(locale) ? locale : null;
+  }
+  function apply(locale) {
+    if (!config.locales.includes(locale)) return;
+    root.lang = locale;
+    root.setAttribute('data-active-locale', locale);
+    config.activeLocale = locale;
+    document.querySelectorAll('[data-locale]').forEach((node) => {
+      const active = node.getAttribute('data-locale') === locale;
+      node.setAttribute('data-locale-active', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-locale-target]').forEach((button) => {
+      const active = button.getAttribute('data-locale-target') === locale;
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
+      const key = node.getAttribute('data-i18n-key');
+      if (key) node.textContent = label(locale, key, node.textContent);
+    });
+  }
+  function maybeSetDefaultLocale(locale) {
+    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
+    const message = label(
+      locale,
+      'chrome.defaultLanguagePrompt',
+      `Set ${displayName(locale)} as the default language for CAST Docs?`
+    ).replace('{language}', displayName(locale));
+    if (window.confirm(message)) {
+      rememberDefaultLocale(locale);
+    }
+  }
+  document.querySelectorAll('[data-locale-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const locale = button.getAttribute('data-locale-target');
+      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
+      apply(locale);
+      maybeSetDefaultLocale(locale);
+    });
+  });
+  apply(defaultLocaleFromMemory() || config.activeLocale);
+})();
+</script>
 </body>
 </html>

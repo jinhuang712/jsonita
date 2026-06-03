@@ -15,7 +15,6 @@
     "release:all": "bash scripts/release-all.sh",
     "docs:render": "node scripts/render_cast_docs.mjs",
     "docs:check": "node scripts/check_cast_docs.mjs",
-    "docs:render-mermaid": "node scripts/render_mermaid_inline.mjs",
     "tauri": "tauri",
     "tsc": "tsc --noEmit"
   },

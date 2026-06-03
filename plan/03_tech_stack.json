@@ -1,0 +1,504 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "技术选型",
+      "en": "Technology Stack"
+    },
+    "description": {
+      "zh-CN": "Jsonita 的主要技术选择、取舍、依赖和后续发布边界。",
+      "en": "Jsonita's main technology choices, tradeoffs, dependencies, and later release boundaries."
+    },
+    "schemaVersion": "1.0",
+    "language": "zh-CN",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ],
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    }
+  },
+  "manifest": {
+    "documentType": "engineering-plan",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "options-considered",
+      "decision",
+      "tradeoffs",
+      "dependencies",
+      "risks",
+      "acceptance-criteria",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "壳层",
+                "en": "Shell"
+              },
+              "body": {
+                "zh-CN": "Tauri 2 + Rust 主进程 + React WebView。",
+                "en": "Tauri 2 plus Rust host plus React WebView."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "编辑器",
+                "en": "Editor"
+              },
+              "body": {
+                "zh-CN": "CodeMirror 处理 JSON 编辑、lint 和视图状态。",
+                "en": "CodeMirror handles JSON editing, lint, and view state."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "数据",
+                "en": "Data"
+              },
+              "body": {
+                "zh-CN": "SQLite FTS5 + settings.json + window.json + secrets.json。",
+                "en": "SQLite FTS5 plus settings.json, window.json, and secrets.json."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "选型原则是小、快、本地可控。任何引入云端、重运行时或复杂安装链的方案都必须证明能明显改善 v1 核心工作流。",
+            "en": "The selection principle is small, fast, and locally controllable. Any cloud, heavy runtime, or complex installation chain must prove a clear improvement to the v1 core workflow."
+          }
+        }
+      ]
+    },
+    {
+      "id": "options-considered",
+      "title": {
+        "zh-CN": "Options Considered",
+        "en": "Options Considered"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "层",
+              "en": "Layer"
+            },
+            {
+              "zh-CN": "选择",
+              "en": "Choice"
+            },
+            {
+              "zh-CN": "未选方案",
+              "en": "Rejected Options"
+            },
+            {
+              "zh-CN": "理由",
+              "en": "Reason"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "桌面壳",
+                "en": "Desktop shell"
+              },
+              {
+                "zh-CN": "Tauri 2",
+                "en": "Tauri 2"
+              },
+              {
+                "zh-CN": "Electron",
+                "en": "Electron"
+              },
+              {
+                "zh-CN": "更小安装体积和更低内存。",
+                "en": "Smaller install size and lower memory."
+              }
+            ],
+            [
+              {
+                "zh-CN": "前端",
+                "en": "Frontend"
+              },
+              {
+                "zh-CN": "React 18",
+                "en": "React 18"
+              },
+              {
+                "zh-CN": "Vue / Svelte",
+                "en": "Vue / Svelte"
+              },
+              {
+                "zh-CN": "当前实现稳定，组件状态复杂度适中。",
+                "en": "Current implementation is stable and component state complexity is moderate."
+              }
+            ],
+            [
+              {
+                "zh-CN": "编辑器",
+                "en": "Editor"
+              },
+              {
+                "zh-CN": "CodeMirror",
+                "en": "CodeMirror"
+              },
+              {
+                "zh-CN": "textarea",
+                "en": "textarea"
+              },
+              {
+                "zh-CN": "JSON lint、行列、滚动和 view state 更可靠。",
+                "en": "JSON lint, line/column, scroll, and view state are more reliable."
+              }
+            ],
+            [
+              {
+                "zh-CN": "历史",
+                "en": "History"
+              },
+              {
+                "zh-CN": "SQLite FTS5",
+                "en": "SQLite FTS5"
+              },
+              {
+                "zh-CN": "IndexedDB",
+                "en": "IndexedDB"
+              },
+              {
+                "zh-CN": "Rust 主进程拥有本地数据和索引边界。",
+                "en": "Rust host owns the local data and index boundary."
+              }
+            ],
+            [
+              {
+                "zh-CN": "AI",
+                "en": "AI"
+              },
+              {
+                "zh-CN": "DeepSeek-compatible API",
+                "en": "DeepSeek-compatible API"
+              },
+              {
+                "zh-CN": "内置云服务",
+                "en": "Built-in cloud service"
+              },
+              {
+                "zh-CN": "用户自带 key，减少账号和平台责任。",
+                "en": "User-provided key reduces account and platform responsibility."
+              }
+            ],
+            [
+              {
+                "zh-CN": "凭据",
+                "en": "Secrets"
+              },
+              {
+                "zh-CN": "secrets.json + 权限",
+                "en": "secrets.json plus permissions"
+              },
+              {
+                "zh-CN": "Keychain",
+                "en": "Keychain"
+              },
+              {
+                "zh-CN": "当前产品决策明确排除 Keychain 路径。",
+                "en": "Current product decision explicitly excludes the Keychain path."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "decision",
+      "title": {
+        "zh-CN": "Decision",
+        "en": "Decision"
+      },
+      "blocks": [
+        {
+          "type": "callout",
+          "variant": "success",
+          "title": {
+            "zh-CN": "当前决策",
+            "en": "Current Decision"
+          },
+          "body": {
+            "zh-CN": "继续使用 Tauri 2、React、CodeMirror、SQLite FTS5 和本地 secrets.json；发布先落 DMG/GitHub Release，再补 Homebrew Cask。",
+            "en": "Continue with Tauri 2, React, CodeMirror, SQLite FTS5, and local secrets.json; ship DMG/GitHub Release first, then add Homebrew Cask."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tradeoffs",
+      "title": {
+        "zh-CN": "Tradeoffs",
+        "en": "Tradeoffs"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "取舍",
+              "en": "Tradeoff"
+            },
+            {
+              "zh-CN": "收益",
+              "en": "Benefit"
+            },
+            {
+              "zh-CN": "代价",
+              "en": "Cost"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Tauri",
+                "en": "Tauri"
+              },
+              {
+                "zh-CN": "小体积、本地能力强。",
+                "en": "Small footprint and strong local capability."
+              },
+              {
+                "zh-CN": "原生窗口细节需要 macOS 验证。",
+                "en": "Native window details require macOS verification."
+              }
+            ],
+            [
+              {
+                "zh-CN": "SQLite",
+                "en": "SQLite"
+              },
+              {
+                "zh-CN": "历史和 FTS 查询可靠。",
+                "en": "Reliable history and FTS query."
+              },
+              {
+                "zh-CN": "需要迁移和损坏恢复策略。",
+                "en": "Needs migration and corruption recovery strategy."
+              }
+            ],
+            [
+              {
+                "zh-CN": "secrets.json",
+                "en": "secrets.json"
+              },
+              {
+                "zh-CN": "行为可解释、可删除、可迁移。",
+                "en": "Explainable, deletable, and migratable behavior."
+              },
+              {
+                "zh-CN": "不是系统级硬件隔离凭据。",
+                "en": "Not a system-level hardware-isolated secret."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dependencies",
+      "title": {
+        "zh-CN": "依赖",
+        "en": "Dependencies"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "Rust 1.77+、Node 20+、pnpm 9+、Xcode CLT。",
+              "en": "Rust 1.77+, Node 20+, pnpm 9+, and Xcode CLT."
+            },
+            {
+              "zh-CN": "Tauri capabilities 覆盖 window、global shortcut、fs、clipboard、dialog。",
+              "en": "Tauri capabilities cover window, global shortcut, fs, clipboard, and dialog."
+            },
+            {
+              "zh-CN": "GitHub Release 资产、稳定 URL 和 sha256 是 Homebrew Cask 的前置。",
+              "en": "GitHub Release assets, stable URLs, and sha256 are prerequisites for Homebrew Cask."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "risks",
+      "title": {
+        "zh-CN": "风险",
+        "en": "Risks"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "risk",
+          "headers": [
+            {
+              "zh-CN": "风险",
+              "en": "Risk"
+            },
+            {
+              "zh-CN": "影响",
+              "en": "Impact"
+            },
+            {
+              "zh-CN": "处理",
+              "en": "Handling"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Homebrew 被误认为当前已就绪。",
+                "en": "Homebrew could be mistaken as already ready."
+              },
+              {
+                "zh-CN": "可能影响交付或用户信任。",
+                "en": "May affect delivery or user trust."
+              },
+              {
+                "zh-CN": "文档明确拆分：本地打包脚本已存在，Release workflow/tagged asset/sha256 仍未完成。",
+                "en": "Docs explicitly split this: local packaging scripts exist, while release workflow/tagged asset/sha256 remain unfinished."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "acceptance-criteria",
+      "title": {
+        "zh-CN": "验收标准",
+        "en": "Acceptance Criteria"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "新技术选择必须在 spec 中声明接口、失败模式和验证方式。",
+              "en": "New technology choices must declare interfaces, failure modes, and validation in spec."
+            },
+            {
+              "zh-CN": "凭据相关改动不得重新引入 Keychain。",
+              "en": "Secret-related changes must not reintroduce Keychain."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "是否要在 v1.1+ 增加 updater，取决于签名、公证和发布节奏。",
+              "en": "Whether to add an updater in v1.1+ depends on signing, notarization, and release cadence."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

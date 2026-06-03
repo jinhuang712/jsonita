@@ -37,10 +37,8 @@ thin entry files.
   blocked instead of inventing unchecked HTML.
 - Do not hand-edit generated HTML as the primary source when a JSON source
   exists.
-- Existing `plan/*.html` and `spec/*.html` are legacy reader-facing documents
-  until migrated to CAST JSON one page at a time. Preserve their concrete
-  product promises, mockups, tables, examples, and release constraints during
-  migration.
+- `plan/*.html` and `spec/*.html` are generated artifacts. Each published page
+  must have a same-name CAST JSON source under `plan/` or `spec/`.
 
 ## cast-a-start Planning Layer
 
@@ -82,8 +80,9 @@ thin entry files.
 - `spec/00_architecture.html` through `spec/15_logging.html` own architecture,
   interfaces, invariants, storage, release mechanics, UI authority, and
   verification.
-- `spec/01_mockups.html` remains the visual source of truth for Jsonita UI until
-  migrated into a CAST JSON source.
+- `spec/01_mockups.json` / `spec/01_mockups.html` remain the visual interaction
+  contract for Jsonita UI; keep them aligned with `design/HANDOFF.md` and
+  `src/styles/tokens.css`.
 - `TODO.md` and `CHANGELIST.md` are human-readable mirrors for existing project
   workflow. Keep them aligned with `site/todo.json` and
   `site/changelist.json` when updating TODO or changelist history.
@@ -107,6 +106,9 @@ For any product, release, architecture, storage, UI, or workflow change:
 - Documentation-only repairs should at least run:
   - `pnpm exec node scripts/verify_doc_links.mjs`
   - `pnpm exec node scripts/check_cast_docs.mjs`
+- `pnpm docs:check` must confirm render freshness for `site/*.json`,
+  `plan/*.json`, and `spec/*.json`, plus bilingual locale switchers on every
+  plan/spec HTML page.
 - Implementation or Tauri configuration changes should additionally run the
   relevant subset of `pnpm build`, `pnpm tsc --noEmit`, `cargo check`,
   `cargo test`, `cargo build`, or `pnpm tauri dev`.

@@ -1,0 +1,290 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "窗口 Runtime",
+      "en": "Window Runtime"
+    },
+    "description": {
+      "zh-CN": "浮窗生命周期、NSPanel-like 行为、vibrancy、尺寸、位置和主题同步。",
+      "en": "Floating-window lifecycle, NSPanel-like behavior, vibrancy, size, position, and theme synchronization."
+    },
+    "schemaVersion": "1.0",
+    "language": "zh-CN",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ],
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    }
+  },
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "runtime-contract",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "生命周期",
+                "en": "Lifecycle"
+              },
+              "body": {
+                "zh-CN": "启动后常驻菜单栏；show/hide 控制浮窗，不退出应用。",
+                "en": "The app stays in the menu bar after launch; show/hide controls the floating window without quitting."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "原生",
+                "en": "Native"
+              },
+              "body": {
+                "zh-CN": "macOS 使用 NSPanel-like promote、透明窗口和 vibrancy。",
+                "en": "macOS uses NSPanel-like promotion, transparent window, and vibrancy."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "尺寸",
+                "en": "Sizing"
+              },
+              "body": {
+                "zh-CN": "smart width 受内容、设置、手动拖拽和最小/最大限制约束。",
+                "en": "Smart width is constrained by content, settings, manual drag, and min/max limits."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "runtime-contract",
+      "title": {
+        "zh-CN": "Runtime Contract",
+        "en": "Runtime Contract"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "主题",
+              "en": "Topic"
+            },
+            {
+              "zh-CN": "约定",
+              "en": "Contract"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Show",
+                "en": "Show"
+              },
+              {
+                "zh-CN": "Cmd+Shift+J 或 tray action 触发 show/focus。",
+                "en": "Cmd+Shift+J or tray action triggers show/focus."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Hide",
+                "en": "Hide"
+              },
+              {
+                "zh-CN": "Esc、Cmd+W、blur hide 发出 will-hide 并延迟隐藏。",
+                "en": "Esc, Cmd+W, and blur hide emit will-hide and delay hiding."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Theme",
+                "en": "Theme"
+              },
+              {
+                "zh-CN": "system 模式原生 appearance 设 nil 跟随 OS。",
+                "en": "System mode sets native appearance to nil to follow OS."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Resize",
+                "en": "Resize"
+              },
+              {
+                "zh-CN": "内容驱动扩宽；小幅变化有阈值避免跳动。",
+                "en": "Content-driven widening; small changes have a threshold to avoid jumps."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "窗口关闭不是 app quit。",
+              "en": "Closing the window is not app quit."
+            },
+            {
+              "zh-CN": "AppKit 调用必须在主线程。",
+              "en": "AppKit calls must run on the main thread."
+            },
+            {
+              "zh-CN": "smart width 不因 single/split 切换额外跳窗。",
+              "en": "Smart width does not jump additionally because of single/split switching."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "真实 macOS 下验证 Cmd+Shift+J、Esc、blur hide。",
+              "en": "Verify Cmd+Shift+J, Esc, and blur hide on real macOS."
+            },
+            {
+              "zh-CN": "cargo build/tauri dev 验证 window effects。",
+              "en": "cargo build/tauri dev validates window effects."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
