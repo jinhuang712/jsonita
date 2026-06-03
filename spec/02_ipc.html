@@ -1,807 +1,404 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="前端与 Rust 主进程之间的 command、event、payload、错误模型和性能边界。">
-<title>IPC 合约</title>
-<style>
-:root {
-  color-scheme: light dark;
-  --bg: #f8f8f7;
-  --surface: #ffffff;
-  --soft: #f2f3f3;
-  --text: #24272b;
-  --muted: #68717b;
-  --faint: #9aa1a8;
-  --border: #dedede;
-  --primary: #315f9f;
-  --primary-soft: #eef3fa;
-  --accent: #52686a;
-  --info: #566f99;
-  --info-soft: #f4f5f7;
-  --warn: #8a6d3b;
-  --warn-soft: #f8f4ea;
-  --danger: #9b4d49;
-  --danger-soft: #faf0ef;
-  --ok: #55745f;
-  --ok-soft: #eef4ef;
-  --code: #f1f2f2;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --font-xs: 11px;
-  --font-sm: 12.5px;
-  --font-base: 14px;
-  --font-md: 16px;
-  --font-lg: 20px;
-  --font-xl: 28px;
-  --font-title: 30px;
-  --line-tight: 1.25;
-  --line-normal: 1.65;
-  --line-loose: 1.75;
-  --line-code: 1.55;
-  --weight-regular: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 28px;
-  --space-10: 34px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 10px;
-  --radius-pill: 999px;
-  --motion-fast: 120ms;
-  --motion-base: 160ms;
-  --motion-slow: 220ms;
-  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
-  --surface-shadow: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111315;
-    --surface: #17191c;
-    --soft: #202328;
-    --text: #e2e5e8;
-    --muted: #a1a7ad;
-    --faint: #767d84;
-    --border: #30343a;
-    --primary: #9bb7d9;
-    --primary-soft: #182231;
-    --accent: #9ab4b1;
-    --info: #9aaeca;
-    --info-soft: #1b2027;
-    --warn: #c7b27e;
-    --warn-soft: #242117;
-    --danger: #d09a95;
-    --danger-soft: #271b1a;
-    --ok: #9ebaa5;
-    --ok-soft: #1a241d;
-    --code: #202328;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
-  }
-}
-:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
-a { color: var(--primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
-code, pre { font-family: var(--mono); }
-code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
-pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
-pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
-mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
-del { color: var(--muted); text-decoration: line-through; }
-u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
-[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
-[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
-[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
-[data-locale][data-locale-active="false"] { display: none; }
-.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
-.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.toc ol { list-style: none; margin: 0; padding: 0; }
-.toc li { margin: 0; }
-.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
-.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
-.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
-.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
-.brand-logo:hover { text-decoration: none; }
-.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
-.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
-.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project { flex: 0 0 auto; }
-.topbar-doc { color: var(--muted); font-weight: 500; }
-.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
-.topbar-links { display: flex; gap: 12px; align-items: center; }
-.topbar-links:empty { display: none; }
-.topbar-link { color: var(--muted); font-size: var(--font-sm); }
-.topbar-spacer { flex: 1; }
-.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
-.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
-.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
-.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
-.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
-.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
-.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
-.doc-summary { padding: 16px 18px; }
-.doc-summary ul { margin: 0; }
-.set-grid { display: grid; gap: 22px; }
-.set-section { margin: 0; }
-.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
-.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
-.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
-.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
-.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
-.chapter-card a:hover { text-decoration: none; }
-.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
-.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
-.chapter-content { display: grid; gap: 5px; min-width: 0; }
-.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
-.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
-.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
-.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
-.set-pagination-next { text-align: right; }
-.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
-.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
-.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
-.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
-.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
-.section-title { overflow-wrap: anywhere; }
-.section-empty { color: var(--muted); font-style: italic; }
-.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
-.callout p { margin: 6px 0 0; }
-.callout-info { border-left-color: var(--info); background: var(--info-soft); }
-.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
-.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
-.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
-table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
-th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
-tr:last-child td { border-bottom: 0; }
-.details-block { padding: 0 14px; }
-.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
-.diagram { position: relative; padding: 16px; overflow: auto; }
-.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
-.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
-.diagram:hover .diagram-toolbar { opacity: 1; }
-button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
-.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
-.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
-.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
-.code-status-ok { color: var(--ok); }
-.code-status-error { color: var(--danger); }
-.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
-.code-status + .code-copy { margin-left: 0; }
-.code-copy:hover { color: var(--text); }
-.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
-.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
-.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.code-line-content { padding: 0 14px; white-space: pre; }
-.code-token-key { color: var(--primary); }
-.code-token-bool { color: var(--info); }
-.code-token-number { color: var(--warn); }
-.code-token-flag { color: var(--accent); }
-.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
-.diff-block > h3 { grid-column: 1 / -1; }
-.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
-.diff-side + .diff-side { margin-left: -1px; }
-.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
-.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
-.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
-.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
-.diff-line-content { padding-right: 14px; white-space: pre; }
-.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
-.line-add { color: var(--ok); }
-.line-remove { color: var(--danger); }
-.line-warning { color: var(--warn); }
-.line-context { color: var(--text); }
-.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.participant-card, .value-card, .action-card { padding: 14px 16px; }
-.action-card { padding: 20px; }
-.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
-.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
-.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
-.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
-.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
-.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
-.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
-.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
-.open-question + .open-question { border-top: 1px solid var(--border); }
-.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
-.open-question-text { min-width: 0; }
-.prompt-block { margin-top: 20px; }
-.prompt-block .code-header { padding: 12px 14px; }
-.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
-.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
-.prompt-block .code-line-number { padding-right: 12px; }
-.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
-.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.media-frame { margin: 0; overflow: hidden; }
-.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
-.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
-.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
-.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
-.column { min-width: 0; }
-.column h3 { margin-top: 0; }
-.column p:first-child { margin-top: 0; }
-.column p:last-child { margin-bottom: 0; }
-.column > .code-shell, .column > table { margin-top: 12px; }
-.toggle-view { padding: 14px; }
-.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
-.toggle-button { border: 0; background: transparent; color: var(--muted); }
-.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.toggle-panel[data-view-active="false"] { display: none; }
-.toggle-panel > :first-child { margin-top: 0; }
-.toggle-panel > :last-child { margin-bottom: 0; }
-.slider-control { padding: 16px; }
-.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.slider-header label { font-weight: 700; }
-.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
-.slider-range { display: block; width: 100%; accent-color: var(--primary); }
-.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
-.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
-.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
-.lightbox.open { display: flex; }
-.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
-.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
-.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
-.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
-.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
-@media (max-width: 760px) {
-  body { display: flex; flex-direction: column; }
-  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
-  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
-  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
-  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
-  .doc-header h1 { font-size: var(--font-xl); }
-  .diff-block { grid-template-columns: 1fr; }
-  .set-pagination { grid-template-columns: 1fr; }
-  .set-pagination-next { text-align: left; }
-  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
-  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
-}
-@media print {
-  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
-  .doc { margin-left: 0; max-width: none; padding: 0; }
-}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 02 IPC 合约</title>
+<link rel="stylesheet" href="../assets/style.css">
 </head>
-<body>
+<body data-section="spec" data-chapter="02">
 
-<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
-{
-  "metadata": {
-    "language": "zh-CN",
-    "owner": "Jin Huang",
-    "logo": {
-      "src": ".cast-docs/assets/jsonita-logo.png",
-      "alt": {
-        "zh-CN": "Jsonita 标志",
-        "en": "Jsonita logo"
-      },
-      "href": "../index.html"
-    },
-    "title": {
-      "zh-CN": "IPC 合约",
-      "en": "IPC Contract"
-    },
-    "description": {
-      "zh-CN": "前端与 Rust 主进程之间的 command、event、payload、错误模型和性能边界。",
-      "en": "Commands, events, payloads, error model, and performance boundaries between frontend and Rust host."
-    },
-    "schemaVersion": "1.0",
-    "locales": [
-      "zh-CN",
-      "en"
-    ],
-    "status": "review",
-    "audience": [
-      "engineering",
-      "product"
-    ],
-    "updatedAt": "2026-06-03",
-    "showMeta": true,
-    "shellLinks": [
-      {
-        "label": {
-          "zh-CN": "首页",
-          "en": "Home"
-        },
-        "href": "../index.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "TODO",
-          "en": "TODO"
-        },
-        "href": "../todo.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "Changelist",
-          "en": "Changelist"
-        },
-        "href": "../changelist.html",
-        "placement": "topbar"
-      }
-    ]
-  },
-  "manifest": {
-    "documentType": "engineering-spec",
-    "scenario": "none",
-    "sections": [
-      "overview",
-      "summary",
-      "command-groups",
-      "error-model",
-      "invariants",
-      "testing-plan",
-      "open-questions"
-    ],
-    "components": {
-      "required": [
-        "summary-block",
-        "metadata-block",
-        "toc",
-        "section",
-        "paragraph"
-      ],
-      "optional": [
-        "table",
-        "callout",
-        "values-grid",
-        "acceptance-criteria",
-        "open-questions",
-        "source-refs",
-        "diagram",
-        "code-block"
-      ],
-      "omitted": [
-        "media-grid",
-        "diff-block",
-        "toggle-view",
-        "slider-control"
-      ]
-    }
-  },
-  "sections": [
-    {
-      "id": "overview",
-      "title": {
-        "zh-CN": "概览",
-        "en": "Overview"
-      },
-      "blocks": [
-        {
-          "type": "summary",
-          "items": [
-            {
-              "label": {
-                "zh-CN": "原则",
-                "en": "Principle"
-              },
-              "body": {
-                "zh-CN": "前端只通过 typed IPC 调 Rust；Rust 返回可序列化 payload。",
-                "en": "Frontend calls Rust only through typed IPC; Rust returns serializable payloads."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "错误",
-                "en": "Errors"
-              },
-              "body": {
-                "zh-CN": "所有业务错误统一映射到 JsonitaError / TS discriminated union。",
-                "en": "All business errors map into JsonitaError and a TypeScript discriminated union."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "事件",
-                "en": "Events"
-              },
-              "body": {
-                "zh-CN": "窗口、主题、历史和设置变化可通过事件通知，但不得携带敏感正文。",
-                "en": "Window, theme, history, and settings changes may emit events but must not carry sensitive body content."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "summary",
-      "title": {
-        "zh-CN": "摘要",
-        "en": "Summary"
-      },
-      "blocks": [
-        {
-          "type": "paragraph",
-          "text": {
-            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
-            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
-          }
-        }
-      ]
-    },
-    {
-      "id": "command-groups",
-      "title": {
-        "zh-CN": "Command Groups",
-        "en": "Command Groups"
-      },
-      "blocks": [
-        {
-          "type": "table",
-          "tableType": "data",
-          "headers": [
-            {
-              "zh-CN": "组",
-              "en": "Group"
-            },
-            {
-              "zh-CN": "命令",
-              "en": "Commands"
-            }
-          ],
-          "rows": [
-            [
-              {
-                "zh-CN": "JSON",
-                "en": "JSON"
-              },
-              {
-                "zh-CN": "format/minify/tree/to_string/to_json/unwrap。",
-                "en": "format/minify/tree/to_string/to_json/unwrap."
-              }
-            ],
-            [
-              {
-                "zh-CN": "AI",
-                "en": "AI"
-              },
-              {
-                "zh-CN": "ai_fix、ai_test_connection、secret read/write/delete。",
-                "en": "ai_fix, ai_test_connection, secret read/write/delete."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Storage",
-                "en": "Storage"
-              },
-              {
-                "zh-CN": "settings、history、session、window state。",
-                "en": "settings, history, session, window state."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Window",
-                "en": "Window"
-              },
-              {
-                "zh-CN": "show/hide/resize/theme/permission。",
-                "en": "show/hide/resize/theme/permission."
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "id": "error-model",
-      "title": {
-        "zh-CN": "Error Model",
-        "en": "Error Model"
-      },
-      "blocks": [
-        {
-          "type": "table",
-          "tableType": "data",
-          "headers": [
-            {
-              "zh-CN": "错误",
-              "en": "Error"
-            },
-            {
-              "zh-CN": "含义",
-              "en": "Meaning"
-            }
-          ],
-          "rows": [
-            [
-              {
-                "zh-CN": "Json",
-                "en": "Json"
-              },
-              {
-                "zh-CN": "JSON parse / transform 错误，带 line/column。",
-                "en": "JSON parse/transform error with line/column."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Storage",
-                "en": "Storage"
-              },
-              {
-                "zh-CN": "SQLite/settings/window 文件读写或迁移错误。",
-                "en": "SQLite/settings/window file read/write or migration error."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Secrets",
-                "en": "Secrets"
-              },
-              {
-                "zh-CN": "secrets.json 读取、写入、权限或缺 key。",
-                "en": "secrets.json read, write, permission, or missing key."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Ai",
-                "en": "Ai"
-              },
-              {
-                "zh-CN": "网络、模型返回、extract_json 或 timeout。",
-                "en": "Network, model response, extract_json, or timeout."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Window",
-                "en": "Window"
-              },
-              {
-                "zh-CN": "窗口或快捷键注册失败。",
-                "en": "Window or shortcut registration failure."
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "id": "invariants",
-      "title": {
-        "zh-CN": "不变量",
-        "en": "Invariants"
-      },
-      "blocks": [
-        {
-          "type": "list",
-          "items": [
-            {
-              "zh-CN": "IPC payload 不包含 API key。",
-              "en": "IPC payloads do not include API keys."
-            },
-            {
-              "zh-CN": "错误文本可以给用户看，但日志记录要脱敏。",
-              "en": "Error text may be shown to users, but logs must redact sensitive data."
-            },
-            {
-              "zh-CN": "前端 fallback 只能用于 dev/non-Tauri 环境。",
-              "en": "Frontend fallback is only for dev/non-Tauri environments."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "testing-plan",
-      "title": {
-        "zh-CN": "测试计划",
-        "en": "Testing Plan"
-      },
-      "blocks": [
-        {
-          "type": "acceptance-criteria",
-          "items": [
-            {
-              "zh-CN": "TS command wrappers 使用 discriminated union。",
-              "en": "TS command wrappers use discriminated unions."
-            },
-            {
-              "zh-CN": "Rust command 返回 serde 可序列化结构。",
-              "en": "Rust commands return serde-serializable structures."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "open-questions",
-      "title": {
-        "zh-CN": "开放问题",
-        "en": "Open Questions"
-      },
-      "blocks": [
-        {
-          "type": "open-questions",
-          "questions": [
-            {
-              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
-              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
-            }
-          ]
-        }
-      ]
-    }
-  ]
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 02</span>
+      <h1 class="doc-title">IPC 合约</h1>
+      <p class="doc-subtitle">Rust ↔ React 通信契约 ── 先讲设计意图与工作机制，再列签名速查。所有 payload 数据模型见 <a href="13_schemas.html">13 数据模型参考</a>。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
+      <div class="callout-body">
+        <p>本章描述<b>调用契约</b>与<b>工作机制</b>；<b>所有 struct / enum / payload 字段定义</b>统一在 <a href="13_schemas.html">13 § 1-3</a>，本章只链 § N，不重复定义。</p>
+      </div>
+    </div>
+
+    <p class="section-divider"><b>一 · 设计</b></p>
+
+    <h2><span class="h2-num">1</span>设计目标与边界</h2>
+
+    <p>IPC 在 Jsonita 里同时承担三个角色：<b>权限边界</b>（控制 React 能做什么）、<b>类型契约</b>（Rust 与 TS 双向类型一致）、<b>性能护栏</b>（CPU 与 IO 在 Rust 端集中调度）。</p>
+
+    <ul>
+      <li><b>唯一通道</b>：React 不允许绕过 Rust 访问 SQLite / secrets / 系统快捷键 / Finder ── 不仅是约定，Tauri 默认关掉了 WebView 对应能力</li>
+      <li><b>类型契约</b>：Rust 端 enum/struct 通过 serde 序列化为 JSON 跨进程；TS 端镜像同名 interface，编译期捕捉签名漂移（v1 手工镜像，体量上来再换 ts-rs）</li>
+      <li><b>关注的事</b>：状态修改（SQLite / secrets / 设置）/ 系统调用（快捷键 / 剪贴板 / Finder）/ 外网请求（DeepSeek）/ 窗口管理</li>
+      <li><b>不关注的事</b>：纯 UI 渲染（mermaid 图、CodeMirror 内部操作）、DOM/CSS、前端路由 ── WebView 内部处理，不消耗 IPC 信道</li>
+    </ul>
+
+    <p><b>为何不用 HTTP / WebSocket</b>：Tauri 内置 <code>invoke</code> 走 IPC pipe（同进程消息队列），单次序列化 + 直接进程内传递。HTTP 需要本地端口（macOS 防火墙弹窗 / 端口冲突）+ 两次序列化（请求 JSON / 响应 JSON）+ 鉴权层 ── 单进程桌面应用没必要付这些税。</p>
+
+    <h2><span class="h2-num">2</span>命令分组与职责</h2>
+
+    <p>所有 IPC 命令按<b>资源归属</b>切分为 7 组，每组对应一个 Rust 模块（<code>src-tauri/src/cmds/{json,history,session,settings,ai,window,system}.rs</code>）。这种切分的好处是<b>"谁能写谁不能写" grep 一下模块就清楚</b>，避免出现"utils.rs 里写跨领域操作"的灰色地带。</p>
+
+    <table>
+      <thead><tr><th>分组</th><th>关注领域</th><th>状态归属</th><th>典型副作用</th></tr></thead>
+      <tbody>
+        <tr><td><b>json_ops</b></td><td>纯计算（format / minify / unwrap / stringify）</td><td><b>无状态</b></td><td>无</td></tr>
+        <tr><td><b>history</b></td><td>SQLite <code>history</code> 表 + FTS5 索引</td><td>SQLite</td><td>命令返回最新行；当前不 emit history 事件</td></tr>
+        <tr><td><b>session</b></td><td>SQLite <code>last_session</code> 单行</td><td>SQLite</td><td>transform 成功写入；<kbd>⌘⇧L</kbd> 读取；<kbd>⌘K</kbd> 清空</td></tr>
+        <tr><td><b>settings</b></td><td>自写 JSON 文件 Store</td><td>JSON 文件 + 内存缓存</td><td>写入后 emit <code>settings:changed</code></td></tr>
+        <tr><td><b>ai</b></td><td>DeepSeek HTTP + secrets 读</td><td>secrets.json</td><td>外网调用；前端用本地 loading 状态展示进度</td></tr>
+        <tr><td><b>window</b></td><td>NSPanel 状态 + 智能缩放记忆</td><td>window.json + 内存 flag</td><td>show / hide / resize UI 动作 + emit <code>window:resized</code></td></tr>
+        <tr><td><b>system</b></td><td>全局快捷键 / 剪贴板 / 日志路径</td><td>系统级注册表</td><td>注册 / 释放快捷键 / Finder reveal</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>分组的硬约束</b>：</p>
+
+    <ul>
+      <li>命令<b>不能跨分组直接读写状态</b>。例：<code>history_*</code> 不直接读 <code>last_session</code> 表；需要联动则由前端按命令返回值更新对应 store</li>
+      <li>纯计算分组（json_ops）<b>不持有任何状态</b>，可任意并发 ── 默认在 CPU 池 <code>spawn_blocking</code> 跑</li>
+      <li>外网分组（ai）<b>不写 SQLite</b>，只读 secrets.json；命令返回后由前端决定是否落历史。这样 ai 模块可以被替换（换成 OpenAI / Claude）而不影响历史模型</li>
+      <li><b>window 分组</b>不感知业务（不知道有 JSON / 历史 / AI），只接收 React 推来的 ContentMetrics 算尺寸 ── 这样窗口逻辑可独立测试</li>
+    </ul>
+
+    <h2><span class="h2-num">3</span>错误传播模型</h2>
+
+    <p>所有 command 返回 <code>Result&lt;T, JsonitaError&gt;</code>，<code>JsonitaError</code> 是<b>全局单一错误 enum</b>（定义见 <a href="13_schemas.html">13 § 1</a>，9 个变体）。</p>
+
+    <h3><span class="h3-num">3.1</span>为什么是单一 enum 而不是 anyhow / 每模块自带 Error</h3>
+
+    <ul>
+      <li><b>前端只需一个类型守卫</b>：<code>parseJsonitaError(e)</code> 返回 discriminated union，TS exhaustive switch 静态保证覆盖所有 kind ── 漏处理一个变体编译报错</li>
+      <li><b>UI 分级响应</b>：当前实现用 <code>isJsonitaError(e)</code> 在各调用点按场景展示（状态栏 / AI 面板 / 设置项消息）；统一 <code>handleIpcError</code> 与 Toast 是保留目标</li>
+      <li><b>跨 IPC 不丢类型</b>：<code>anyhow::Error</code> 跨进程会退化为 String；自定义 enum 通过 serde tag/content 保留 enum + payload 结构</li>
+      <li><b>变体可控（9 个，不爆炸）</b>：每加一个变体都要权衡是否真的需要分类，强制保持错误"扁平"易处理</li>
+    </ul>
+
+    <h3><span class="h3-num">3.2</span>跨 IPC 边界的序列化形态</h3>
+
+    <p>Rust 端 enum 加 <code>#[serde(tag = "kind", content = "data")]</code>，序列化为对象而非 Rust adjacent 风格：</p>
+
+    <pre><code>// Rust enum 变体：JsonitaError::Parse { line: 3, col: 12, msg: "..." }
+//   ↓ serde
+// 跨 IPC JSON：    { "kind": "Parse", "data": { "line": 3, "col": 12, "msg": "..." } }
+//   ↓ Tauri invoke reject
+// TS 端拿到：       { kind: 'Parse', data: { line, col, msg } }</code></pre>
+
+    <p>TS 端统一拦截：</p>
+
+    <pre><code>// src/ipc/error.ts
+export function isJsonitaError(e: unknown): e is JsonitaError {
+  return typeof e === 'object' &amp;&amp; e !== null &amp;&amp; 'kind' in e;
 }
-</script>
 
-<article class="doc">
-<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">IPC 合约</span><span data-locale="en" data-locale-active="false">IPC Contract</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
-<main>
-<section class="doc-section" id="overview">
-<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
-<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">原则</span><span data-locale="en" data-locale-active="false">Principle</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">前端只通过 typed IPC 调 Rust；Rust 返回可序列化 payload。</span><span data-locale="en" data-locale-active="false">Frontend calls Rust only through typed IPC; Rust returns serializable payloads.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">错误</span><span data-locale="en" data-locale-active="false">Errors</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">所有业务错误统一映射到 JsonitaError / TS discriminated union。</span><span data-locale="en" data-locale-active="false">All business errors map into JsonitaError and a TypeScript discriminated union.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">事件</span><span data-locale="en" data-locale-active="false">Events</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">窗口、主题、历史和设置变化可通过事件通知，但不得携带敏感正文。</span><span data-locale="en" data-locale-active="false">Window, theme, history, and settings changes may emit events but must not carry sensitive body content.</span></li></ul></section>
-</section>
+// 调用点：
+try { return await invoke('json_format', { text, opts }); }
+catch (e) {
+  if (isJsonitaError(e)) {
+    // 当前按调用场景呈现：Parse -> 状态栏，AI 错误 -> AI 面板，设置错误 -> 行内消息
+    return handleCommandError(e);
+  }
+  throw e; // Tauri 自身错误（如反序列化失败）
+}</code></pre>
 
-<section class="doc-section" id="summary">
-<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
-<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
-</section>
+    <h3><span class="h3-num">3.3</span>UI 分级响应原则</h3>
 
-<section class="doc-section" id="command-groups">
-<h2><span data-locale="zh-CN" data-locale-active="true">Command Groups</span><span data-locale="en" data-locale-active="false">Command Groups</span></h2>
-<table>
-<tr><th><span data-locale="zh-CN" data-locale-active="true">组</span><span data-locale="en" data-locale-active="false">Group</span></th><th><span data-locale="zh-CN" data-locale-active="true">命令</span><span data-locale="en" data-locale-active="false">Commands</span></th></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">JSON</span><span data-locale="en" data-locale-active="false">JSON</span></td><td><span data-locale="zh-CN" data-locale-active="true">format/minify/tree/to_string/to_json/unwrap。</span><span data-locale="en" data-locale-active="false">format/minify/tree/to_string/to_json/unwrap.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">AI</span><span data-locale="en" data-locale-active="false">AI</span></td><td><span data-locale="zh-CN" data-locale-active="true">ai_fix、ai_test_connection、secret read/write/delete。</span><span data-locale="en" data-locale-active="false">ai_fix, ai_test_connection, secret read/write/delete.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Storage</span><span data-locale="en" data-locale-active="false">Storage</span></td><td><span data-locale="zh-CN" data-locale-active="true">settings、history、session、window state。</span><span data-locale="en" data-locale-active="false">settings, history, session, window state.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Window</span><span data-locale="en" data-locale-active="false">Window</span></td><td><span data-locale="zh-CN" data-locale-active="true">show/hide/resize/theme/permission。</span><span data-locale="en" data-locale-active="false">show/hide/resize/theme/permission.</span></td></tr>
-</table>
-</section>
+    <p>错误按"用户能否立刻继续工作"分 3 级（完整 kind × command 映射见 § 8）：</p>
 
-<section class="doc-section" id="error-model">
-<h2><span data-locale="zh-CN" data-locale-active="true">Error Model</span><span data-locale="en" data-locale-active="false">Error Model</span></h2>
-<table>
-<tr><th><span data-locale="zh-CN" data-locale-active="true">错误</span><span data-locale="en" data-locale-active="false">Error</span></th><th><span data-locale="zh-CN" data-locale-active="true">含义</span><span data-locale="en" data-locale-active="false">Meaning</span></th></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Json</span><span data-locale="en" data-locale-active="false">Json</span></td><td><span data-locale="zh-CN" data-locale-active="true">JSON parse / transform 错误，带 line/column。</span><span data-locale="en" data-locale-active="false">JSON parse/transform error with line/column.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Storage</span><span data-locale="en" data-locale-active="false">Storage</span></td><td><span data-locale="zh-CN" data-locale-active="true">SQLite/settings/window 文件读写或迁移错误。</span><span data-locale="en" data-locale-active="false">SQLite/settings/window file read/write or migration error.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Secrets</span><span data-locale="en" data-locale-active="false">Secrets</span></td><td><span data-locale="zh-CN" data-locale-active="true">secrets.json 读取、写入、权限或缺 key。</span><span data-locale="en" data-locale-active="false">secrets.json read, write, permission, or missing key.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Ai</span><span data-locale="en" data-locale-active="false">Ai</span></td><td><span data-locale="zh-CN" data-locale-active="true">网络、模型返回、extract_json 或 timeout。</span><span data-locale="en" data-locale-active="false">Network, model response, extract_json, or timeout.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Window</span><span data-locale="en" data-locale-active="false">Window</span></td><td><span data-locale="zh-CN" data-locale-active="true">窗口或快捷键注册失败。</span><span data-locale="en" data-locale-active="false">Window or shortcut registration failure.</span></td></tr>
-</table>
-</section>
+    <ul>
+      <li><b>状态栏（轻）</b>：能让用户边输入边解决的，如 <code>Parse</code> ── 标红 + 高亮位置，不打断打字</li>
+      <li><b>局部错误（中）</b>：操作失败但应用可继续用，如 <code>Http</code> / <code>RateLimit</code> / <code>UnwrapTimeout</code> ── 当前显示在 AI 面板 / 设置项消息；Toast 为保留目标</li>
+      <li><b>Modal（重）</b>：必须用户决策才能继续，如 <code>AiInvalidJson</code> 拿到 raw 需用户决定 / secrets fs 写权限错 ── 阻塞输入</li>
+    </ul>
 
-<section class="doc-section" id="invariants">
-<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
-<ul><li><span data-locale="zh-CN" data-locale-active="true">IPC payload 不包含 API key。</span><span data-locale="en" data-locale-active="false">IPC payloads do not include API keys.</span></li><li><span data-locale="zh-CN" data-locale-active="true">错误文本可以给用户看，但日志记录要脱敏。</span><span data-locale="en" data-locale-active="false">Error text may be shown to users, but logs must redact sensitive data.</span></li><li><span data-locale="zh-CN" data-locale-active="true">前端 fallback 只能用于 dev/non-Tauri 环境。</span><span data-locale="en" data-locale-active="false">Frontend fallback is only for dev/non-Tauri environments.</span></li></ul>
-</section>
+    <h2><span class="h2-num">4</span>命名、同步语义、幂等、大小</h2>
 
-<section class="doc-section" id="testing-plan">
-<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
-<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">TS command wrappers 使用 discriminated union。</span><span data-locale="en" data-locale-active="false">TS command wrappers use discriminated unions.</span></li><li><span data-locale="zh-CN" data-locale-active="true">Rust command 返回 serde 可序列化结构。</span><span data-locale="en" data-locale-active="false">Rust commands return serde-serializable structures.</span></li></ol>
-</section>
+    <p>这些是<b>所有命令必须遵守的横向规则</b>，写新命令时核对一遍。</p>
 
-<section class="doc-section" id="open-questions">
-<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
-<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
-</section>
+    <table>
+      <thead><tr><th>维度</th><th>规则</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td>命令命名</td><td>snake_case，如 <code>json_format</code></td><td>Rust 风格；invoke 字符串直接对应函数名</td></tr>
+        <tr><td>事件命名</td><td>namespace:name，如 <code>settings:changed</code></td><td>方便前端按 prefix 过滤监听 / 调试</td></tr>
+        <tr><td>Rust struct 字段</td><td>snake_case</td><td>Rust 风格</td></tr>
+        <tr><td>JSON / TS 字段</td><td>camelCase</td><td>JS/TS 风格；通过 <code>#[serde(rename_all = "camelCase")]</code> 自动转换（统一规则见 <a href="13_schemas.html">13 § 7</a>）</td></tr>
+        <tr><td>同步语义</td><td>所有 command 一律 <code>async</code></td><td>前端永远 <code>await invoke()</code>；CPU 密集内部走 <code>spawn_blocking</code></td></tr>
+        <tr><td>幂等性</td><td>read 全幂等；write 通过 <code>request_id</code>（UUID v4）去重 ── v1 仅 <code>ai_fix</code> 用</td><td>双击 / 重试不重复扣 token</td></tr>
+        <tr><td>大小上限</td><td>payload &lt; 4 MB</td><td>Tauri IPC 单次序列化上限；超出预留 event 流式分块（v1 未触发）</td></tr>
+        <tr><td>类型同步</td><td>改 Rust struct → 同步改 <code>src/types/*.ts</code> + 13 § N 字段表 → PR 模板复选框检查</td><td>v1 手工，详流程见 <a href="13_schemas.html">13 § 8</a></td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>二 · 工作机制</b></p>
+
+    <h2><span class="h2-num">5</span>关键时序图</h2>
+
+    <p>三张时序图覆盖<b>最容易实现错的链路</b>，是理解上面分组职责的最佳入口。<b>点击图卡放大</b>，放大后支持滚轮缩放 + 拖动平移 + <kbd>Esc</kbd> 关闭。</p>
+
+    <h3><span class="h3-num">5.1</span>呼出（快捷键路径）</h3>
+
+    <p>从 <code>⌘⇧J</code> 按下到窗口显示。关键点：<b>定位算法在 Rust 端完成</b>（多屏感知），窗口定位后再 show → 避免闪烁。</p>
+
+    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-02-ipc-diagram-1">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" viewBox="-50 -10 978 588" role="graphics-document document" aria-roledescription="sequence"><g><rect x="649" y="502" fill="#eaeaea" stroke="#666" width="150" height="65" name="Win" rx="3" ry="3" class="actor actor-bottom"/><text x="724" y="534.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="724" dy="0">Tauri Window</tspan></text></g><g><rect x="400" y="502" fill="#eaeaea" stroke="#666" width="150" height="65" name="Rust" rx="3" ry="3" class="actor actor-bottom"/><text x="475" y="534.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="475" dy="0">Rust host</tspan></text></g><g><rect x="200" y="502" fill="#eaeaea" stroke="#666" width="150" height="65" name="GS" rx="3" ry="3" class="actor actor-bottom"/><text x="275" y="534.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="275" dy="0">GlobalShortcut</tspan></text></g><g/><g><line id="actor3" x1="724" y1="65" x2="724" y2="502" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Win" data-et="life-line" data-id="Win"/><g id="root-3" data-et="participant" data-type="participant" data-id="Win"><rect x="649" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="Win" rx="3" ry="3" class="actor actor-top"/><text x="724" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="724" dy="0">Tauri Window</tspan></text></g></g><g><line id="actor2" x1="475" y1="65" x2="475" y2="502" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Rust" data-et="life-line" data-id="Rust"/><g id="root-2" data-et="participant" data-type="participant" data-id="Rust"><rect x="400" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="Rust" rx="3" ry="3" class="actor actor-top"/><text x="475" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="475" dy="0">Rust host</tspan></text></g></g><g><line id="actor1" x1="275" y1="65" x2="275" y2="502" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="GS" data-et="life-line" data-id="GS"/><g id="root-1" data-et="participant" data-type="participant" data-id="GS"><rect x="200" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="GS" rx="3" ry="3" class="actor actor-top"/><text x="275" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="275" dy="0">GlobalShortcut</tspan></text></g></g><g><line id="actor0" x1="75" y1="80" x2="75" y2="502" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="User" data-et="life-line" data-id="User"/></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:#9370DB;fill:#ECECFF;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg rect.note[data-look="neo"]{stroke:#aaaa33;fill:#fff5ad;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg text.actor&gt;tspan{fill:black;stroke:none;}#my-svg .actor-line{stroke:#9370DB;}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:#9370DB;fill:#ECECFF;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:black;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:black;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:black;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#9370DB;fill:#9370DB;}#my-svg .note{stroke:#aaaa33;fill:#fff5ad;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:black;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#ECECFF;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#ECECFF;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));stroke:#9370DB;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="note" data-id="i8"><rect x="50" y="443" fill="#EDF2AE" stroke="#666" width="699" height="39" class="note"/><text x="400" y="448" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="400">总耗时 P95 &lt; 500ms（已驻留 WebView）</tspan></text></g><g class="actor-man actor-top" name="User" data-et="participant" data-type="actor" data-id="User" style="stroke: rgb(147, 112, 219);"><line id="actor-man-torso0" x1="75" y1="25" x2="75" y2="45"/><line id="actor-man-arms0" x1="57" y1="33" x2="93" y2="33"/><line x1="57" y1="60" x2="75" y2="45"/><line x1="75" y1="45" x2="91" y2="60"/><circle cx="75" cy="10" r="15" width="150" height="65"/><text x="75" y="67.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">用户</tspan></text></g><text x="174" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">按 ⌘⇧J</text><line x1="82" y1="109" x2="271" y2="109" class="messageLine0" data-et="message" data-id="i1" data-from="User" data-to="GS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="75" y1="109" x2="75" y2="109" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="75" y="113" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">1</text><text x="374" y="124" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">handler triggered</text><line x1="282" y1="153" x2="471" y2="153" class="messageLine0" data-et="message" data-id="i2" data-from="GS" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="275" y1="153" x2="275" y2="153" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="157" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">2</text><text x="476" y="168" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">cursor_position() → 找鼠标所在屏</text><path d="M 476,197 C 536,187 536,227 476,217" class="messageLine0" data-et="message" data-id="i3" data-from="Rust" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="482" style="fill: none;"/><line x1="475" y1="197" x2="475" y2="197" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="475" y="201" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">3</text><text x="598" y="242" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">set_position(center, top 1/3)</text><line x1="482" y1="271" x2="720" y2="271" class="messageLine0" data-et="message" data-id="i4" data-from="Rust" data-to="Win" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="475" y1="271" x2="475" y2="271" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="475" y="275" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">4</text><text x="598" y="286" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">show() + set_focus()</text><line x1="482" y1="315" x2="720" y2="315" class="messageLine0" data-et="message" data-id="i5" data-from="Rust" data-to="Win" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="475" y1="315" x2="475" y2="315" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="475" y="319" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">5</text><text x="601" y="330" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">ok</text><line x1="729" y1="359" x2="479" y2="359" class="messageLine1" data-et="message" data-id="i6" data-from="Win" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="724" y1="359" x2="724" y2="359" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="724" y="363" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">6</text><text x="725" y="374" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">WebView 已预热，React 保持当前 store 状态</text><path d="M 725,403 C 785,393 785,433 725,423" class="messageLine0" data-et="message" data-id="i7" data-from="Win" data-to="Win" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="731" style="fill: none;"/><line x1="724" y1="403" x2="724" y2="403" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="724" y="407" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">7</text><g class="actor-man actor-bottom" name="User" style="stroke: rgb(147, 112, 219);"><line id="actor-man-torso3" x1="75" y1="527" x2="75" y2="547"/><line id="actor-man-arms3" x1="57" y1="535" x2="93" y2="535"/><line x1="57" y1="562" x2="75" y2="547"/><line x1="75" y1="547" x2="91" y2="562"/><circle cx="75" cy="512" r="15" width="150" height="65"/><text x="75" y="569.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">用户</tspan></text></g></svg>
+</figure>
+
+    <h3><span class="h3-num">5.2</span>AI Fix（含错误透传）</h3>
+
+    <p>AI Fix 由前端本地 loading 状态驱动；错误按 3 类分支处理（200 成功 / 429 限流 / 其他 HTTP 错）。当前实现把错误文本显示在 AI Fix 面板内；<code>AiInvalidJson</code> raw Modal 是保留设计，尚未渲染。</p>
+
+    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-02-ipc-diagram-2">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" viewBox="-50 -10 1299 1798" role="graphics-document document" aria-roledescription="sequence"><g><rect x="1049" y="1712" fill="#eaeaea" stroke="#666" width="150" height="65" name="DS" rx="3" ry="3" class="actor actor-bottom"/><text x="1124" y="1744.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1124" dy="0">DeepSeek API</tspan></text></g><g><rect x="849" y="1712" fill="#eaeaea" stroke="#666" width="150" height="65" name="KC" rx="3" ry="3" class="actor actor-bottom"/><text x="924" y="1744.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="924" dy="0">secrets.json</tspan></text></g><g><rect x="618" y="1712" fill="#eaeaea" stroke="#666" width="150" height="65" name="Rust" rx="3" ry="3" class="actor actor-bottom"/><text x="693" y="1744.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="693" dy="0">Rust ai_fix</tspan></text></g><g><rect x="418" y="1712" fill="#eaeaea" stroke="#666" width="150" height="65" name="Store" rx="3" ry="3" class="actor actor-bottom"/><text x="493" y="1744.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="493" dy="0">ai_store</tspan></text></g><g><rect x="200" y="1712" fill="#eaeaea" stroke="#666" width="150" height="65" name="React" rx="3" ry="3" class="actor actor-bottom"/><text x="275" y="1744.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="275" dy="0">React UI</tspan></text></g><g/><g><line id="actor5" x1="1124" y1="65" x2="1124" y2="1712" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="DS" data-et="life-line" data-id="DS"/><g id="root-5" data-et="participant" data-type="participant" data-id="DS"><rect x="1049" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="DS" rx="3" ry="3" class="actor actor-top"/><text x="1124" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1124" dy="0">DeepSeek API</tspan></text></g></g><g><line id="actor4" x1="924" y1="65" x2="924" y2="1712" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="KC" data-et="life-line" data-id="KC"/><g id="root-4" data-et="participant" data-type="participant" data-id="KC"><rect x="849" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="KC" rx="3" ry="3" class="actor actor-top"/><text x="924" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="924" dy="0">secrets.json</tspan></text></g></g><g><line id="actor3" x1="693" y1="65" x2="693" y2="1712" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Rust" data-et="life-line" data-id="Rust"/><g id="root-3" data-et="participant" data-type="participant" data-id="Rust"><rect x="618" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="Rust" rx="3" ry="3" class="actor actor-top"/><text x="693" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="693" dy="0">Rust ai_fix</tspan></text></g></g><g><line id="actor2" x1="493" y1="65" x2="493" y2="1712" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Store" data-et="life-line" data-id="Store"/><g id="root-2" data-et="participant" data-type="participant" data-id="Store"><rect x="418" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="Store" rx="3" ry="3" class="actor actor-top"/><text x="493" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="493" dy="0">ai_store</tspan></text></g></g><g><line id="actor1" x1="275" y1="65" x2="275" y2="1712" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="React" data-et="life-line" data-id="React"/><g id="root-1" data-et="participant" data-type="participant" data-id="React"><rect x="200" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="React" rx="3" ry="3" class="actor actor-top"/><text x="275" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="275" dy="0">React UI</tspan></text></g></g><g><line id="actor0" x1="75" y1="80" x2="75" y2="1712" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="User" data-et="life-line" data-id="User"/></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:#9370DB;fill:#ECECFF;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg rect.note[data-look="neo"]{stroke:#aaaa33;fill:#fff5ad;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg text.actor&gt;tspan{fill:black;stroke:none;}#my-svg .actor-line{stroke:#9370DB;}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:#9370DB;fill:#ECECFF;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:black;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:black;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:black;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#9370DB;fill:#9370DB;}#my-svg .note{stroke:#aaaa33;fill:#fff5ad;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:black;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#ECECFF;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#ECECFF;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));stroke:#9370DB;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="control-structure" data-id="i20"><line x1="64" y1="739" x2="504" y2="739" class="loopLine"/><line x1="504" y1="739" x2="504" y2="1035" class="loopLine"/><line x1="64" y1="1035" x2="504" y2="1035" class="loopLine"/><line x1="64" y1="739" x2="64" y2="1035" class="loopLine"/><line x1="64" y1="907" x2="504" y2="907" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="64,739 114,739 114,752 105.6,759 64,759" class="labelBox"/><text x="89" y="752" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="309" y="757" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="309">[用户 Accept]</tspan></text><text x="284" y="925" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[用户 Cancel]</text></g><g data-et="control-structure" data-id="i24"><line x1="54" y1="576" x2="704" y2="576" class="loopLine"/><line x1="704" y1="576" x2="704" y2="1238" class="loopLine"/><line x1="54" y1="1238" x2="704" y2="1238" class="loopLine"/><line x1="54" y1="576" x2="54" y2="1238" class="loopLine"/><line x1="54" y1="1050" x2="704" y2="1050" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="54,576 104,576 104,589 95.6,596 54,596" class="labelBox"/><text x="79" y="589" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="404" y="594" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="404">[验证通过]</tspan></text><text x="379" y="1068" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[验证失败]</text></g><g data-et="control-structure" data-id="i33"><line x1="44" y1="413" x2="1135" y2="413" class="loopLine"/><line x1="1135" y1="413" x2="1135" y2="1692" class="loopLine"/><line x1="44" y1="1692" x2="1135" y2="1692" class="loopLine"/><line x1="44" y1="413" x2="44" y2="1692" class="loopLine"/><line x1="44" y1="1253" x2="1135" y2="1253" class="loopLine" style="stroke-dasharray: 3, 3;"/><line x1="44" y1="1460" x2="1135" y2="1460" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="44,413 94,413 94,426 85.6,433 44,433" class="labelBox"/><text x="69" y="426" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="614.5" y="431" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="614.5">[200 OK]</tspan></text><text x="589.5" y="1271" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[429 Rate Limit]</text><text x="589.5" y="1478" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[其他状态]</text></g><g class="actor-man actor-top" name="User" data-et="participant" data-type="actor" data-id="User" style="stroke: rgb(147, 112, 219);"><line id="actor-man-torso0" x1="75" y1="25" x2="75" y2="45"/><line id="actor-man-arms0" x1="57" y1="33" x2="93" y2="33"/><line x1="57" y1="60" x2="75" y2="45"/><line x1="75" y1="45" x2="91" y2="60"/><circle cx="75" cy="10" r="15" width="150" height="65"/><text x="75" y="67.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">用户</tspan></text></g><text x="174" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">click AI Fix</text><line x1="82" y1="109" x2="271" y2="109" class="messageLine0" data-et="message" data-id="i1" data-from="User" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="75" y1="109" x2="75" y2="109" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="75" y="113" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">1</text><text x="383" y="124" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">startFix(text, errorLoc)</text><line x1="282" y1="153" x2="489" y2="153" class="messageLine0" data-et="message" data-id="i2" data-from="React" data-to="Store" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="275" y1="153" x2="275" y2="153" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="157" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">2</text><text x="483" y="168" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">invoke ai_fix(req)</text><line x1="282" y1="197" x2="689" y2="197" class="messageLine0" data-et="message" data-id="i3" data-from="React" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="275" y1="197" x2="275" y2="197" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="201" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">3</text><text x="807" y="212" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">get("deepseek_api_key")</text><line x1="700" y1="241" x2="920" y2="241" class="messageLine0" data-et="message" data-id="i4" data-from="Rust" data-to="KC" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="693" y1="241" x2="693" y2="241" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="245" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">4</text><text x="810" y="256" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">api_key</text><line x1="929" y1="285" x2="697" y2="285" class="messageLine1" data-et="message" data-id="i5" data-from="KC" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="924" y1="285" x2="924" y2="285" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="924" y="289" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">5</text><text x="694" y="300" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">build_prompt(text, line, col, msg)</text><path d="M 694,329 C 754,319 754,359 694,349" class="messageLine0" data-et="message" data-id="i6" data-from="Rust" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="700" style="fill: none;"/><line x1="693" y1="329" x2="693" y2="329" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="333" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">6</text><text x="907" y="374" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">POST /v1/chat/completions</text><line x1="700" y1="403" x2="1120" y2="403" class="messageLine0" data-et="message" data-id="i7" data-from="Rust" data-to="DS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="693" y1="403" x2="693" y2="403" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="407" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">7</text><text x="910" y="463" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">{ fixed JSON }</text><line x1="1129" y1="492" x2="697" y2="492" class="messageLine1" data-et="message" data-id="i9" data-from="DS" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="1124" y1="492" x2="1124" y2="492" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1124" y="496" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">8</text><text x="694" y="507" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">serde_json::from_str 验证</text><path d="M 694,536 C 754,526 754,566 694,556" class="messageLine0" data-et="message" data-id="i10" data-from="Rust" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="700" style="fill: none;"/><line x1="693" y1="536" x2="693" y2="536" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="540" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">9</text><text x="486" y="626" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Ok(AiFixResp)</text><line x1="698" y1="655" x2="279" y2="655" class="messageLine1" data-et="message" data-id="i12" data-from="Rust" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="693" y1="655" x2="693" y2="655" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="659" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">10</text><text x="276" y="670" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">render DiffView</text><path d="M 276,699 C 336,689 336,729 276,719" class="messageLine0" data-et="message" data-id="i13" data-from="React" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="282" style="fill: none;"/><line x1="275" y1="699" x2="275" y2="699" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="703" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">11</text><text x="174" y="789" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Accept</text><line x1="82" y1="818" x2="271" y2="818" class="messageLine0" data-et="message" data-id="i15" data-from="User" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="75" y1="818" x2="75" y2="818" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="75" y="822" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">12</text><text x="276" y="833" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">editor.setContent + history_add</text><path d="M 276,862 C 336,852 336,892 276,882" class="messageLine0" data-et="message" data-id="i16" data-from="React" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="282" style="fill: none;"/><line x1="275" y1="862" x2="275" y2="862" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="866" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">13</text><text x="174" y="952" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Cancel</text><line x1="82" y1="981" x2="271" y2="981" class="messageLine0" data-et="message" data-id="i18" data-from="User" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="75" y1="981" x2="75" y2="981" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="75" y="985" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">14</text><text x="383" y="996" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">discard()</text><line x1="282" y1="1025" x2="489" y2="1025" class="messageLine0" data-et="message" data-id="i19" data-from="React" data-to="Store" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="275" y1="1025" x2="275" y2="1025" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="1029" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">15</text><text x="486" y="1095" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Err(AiInvalidJson, raw)</text><line x1="698" y1="1124" x2="279" y2="1124" class="messageLine1" data-et="message" data-id="i22" data-from="Rust" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="693" y1="1124" x2="693" y2="1124" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="1128" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">16</text><text x="276" y="1139" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">AI 面板显示错误文本</text><path d="M 276,1168 C 336,1158 336,1198 276,1188" class="messageLine0" data-et="message" data-id="i23" data-from="React" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="282" style="fill: none;"/><line x1="275" y1="1168" x2="275" y2="1168" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="1172" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">17</text><text x="910" y="1298" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">429 + Retry-After</text><line x1="1129" y1="1327" x2="697" y2="1327" class="messageLine1" data-et="message" data-id="i26" data-from="DS" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="1124" y1="1327" x2="1124" y2="1327" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1124" y="1331" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">18</text><text x="486" y="1342" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Err(RateLimit, retryAfterSec)</text><line x1="698" y1="1371" x2="279" y2="1371" class="messageLine1" data-et="message" data-id="i27" data-from="Rust" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="693" y1="1371" x2="693" y2="1371" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="1375" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">19</text><text x="276" y="1386" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">AI 面板显示 retry-after</text><path d="M 276,1415 C 336,1405 336,1445 276,1435" class="messageLine0" data-et="message" data-id="i28" data-from="React" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="282" style="fill: none;"/><line x1="275" y1="1415" x2="275" y2="1415" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="1419" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">20</text><text x="910" y="1505" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">status + body</text><line x1="1129" y1="1534" x2="697" y2="1534" class="messageLine1" data-et="message" data-id="i30" data-from="DS" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="1124" y1="1534" x2="1124" y2="1534" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1124" y="1538" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">21</text><text x="486" y="1549" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Err(Http, status, body)</text><line x1="698" y1="1578" x2="279" y2="1578" class="messageLine1" data-et="message" data-id="i31" data-from="Rust" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="693" y1="1578" x2="693" y2="1578" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="693" y="1582" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">22</text><text x="276" y="1593" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">AI 面板显示 HTTP 错误</text><path d="M 276,1622 C 336,1612 336,1652 276,1642" class="messageLine0" data-et="message" data-id="i32" data-from="React" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="282" style="fill: none;"/><line x1="275" y1="1622" x2="275" y2="1622" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="1626" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">23</text><g class="actor-man actor-bottom" name="User" style="stroke: rgb(147, 112, 219);"><line id="actor-man-torso5" x1="75" y1="1737" x2="75" y2="1757"/><line id="actor-man-arms5" x1="57" y1="1745" x2="93" y2="1745"/><line x1="57" y1="1772" x2="75" y2="1757"/><line x1="75" y1="1757" x2="91" y2="1772"/><circle cx="75" cy="1722" r="15" width="150" height="65"/><text x="75" y="1779.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">用户</tspan></text></g></svg>
+</figure>
+
+    <h3><span class="h3-num">5.3</span>关闭浮窗 → 保留会话</h3>
+
+    <p>当前实现中，合法输入在 transform 成功时通过 <code>session_save_last</code> 持久化；关闭路径只负责退出 editing 或隐藏窗口，避免无效 / 空白内容覆盖 last_session。</p>
+
+    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-02-ipc-diagram-3">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" viewBox="-50 -10 676 656" role="graphics-document document" aria-roledescription="sequence"><g><rect x="415" y="570" fill="#eaeaea" stroke="#666" width="150" height="65" name="Rust" rx="3" ry="3" class="actor actor-bottom"/><text x="490" y="602.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="490" dy="0">Rust host</tspan></text></g><g><rect x="200" y="570" fill="#eaeaea" stroke="#666" width="150" height="65" name="React" rx="3" ry="3" class="actor actor-bottom"/><text x="275" y="602.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="275" dy="0">React UI</tspan></text></g><g/><g><line id="actor2" x1="490" y1="65" x2="490" y2="570" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Rust" data-et="life-line" data-id="Rust"/><g id="root-2" data-et="participant" data-type="participant" data-id="Rust"><rect x="415" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="Rust" rx="3" ry="3" class="actor actor-top"/><text x="490" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="490" dy="0">Rust host</tspan></text></g></g><g><line id="actor1" x1="275" y1="65" x2="275" y2="570" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="React" data-et="life-line" data-id="React"/><g id="root-1" data-et="participant" data-type="participant" data-id="React"><rect x="200" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="React" rx="3" ry="3" class="actor actor-top"/><text x="275" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="275" dy="0">React UI</tspan></text></g></g><g><line id="actor0" x1="75" y1="80" x2="75" y2="570" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="User" data-et="life-line" data-id="User"/></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:#9370DB;fill:#ECECFF;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg rect.note[data-look="neo"]{stroke:#aaaa33;fill:#fff5ad;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg text.actor&gt;tspan{fill:black;stroke:none;}#my-svg .actor-line{stroke:#9370DB;}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:#9370DB;fill:#ECECFF;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:black;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:black;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:black;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#9370DB;fill:#9370DB;}#my-svg .note{stroke:#aaaa33;fill:#fff5ad;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:black;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#ECECFF;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#ECECFF;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));stroke:#9370DB;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="control-structure" data-id="i9"><line x1="191" y1="119" x2="576" y2="119" class="loopLine"/><line x1="576" y1="119" x2="576" y2="550" class="loopLine"/><line x1="191" y1="550" x2="576" y2="550" class="loopLine"/><line x1="191" y1="119" x2="191" y2="550" class="loopLine"/><line x1="191" y1="243" x2="576" y2="243" class="loopLine" style="stroke-dasharray: 3, 3;"/><line x1="191" y1="406" x2="576" y2="406" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="191,119 241,119 241,132 232.6,139 191,139" class="labelBox"/><text x="216" y="132" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="408.5" y="137" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="408.5">[焦点在 CodeMirror / 表单输入内]</tspan></text><text x="383.5" y="261" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[非 editing 连续两次 Esc 或 ⌘W]</text><text x="383.5" y="424" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[失焦且 hideOnBlur=true]</text></g><g class="actor-man actor-top" name="User" data-et="participant" data-type="actor" data-id="User" style="stroke: rgb(147, 112, 219);"><line id="actor-man-torso0" x1="75" y1="25" x2="75" y2="45"/><line id="actor-man-arms0" x1="57" y1="33" x2="93" y2="33"/><line x1="57" y1="60" x2="75" y2="45"/><line x1="75" y1="45" x2="91" y2="60"/><circle cx="75" cy="10" r="15" width="150" height="65"/><text x="75" y="67.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">用户</tspan></text></g><text x="174" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Esc / 失焦 / ⌘W</text><line x1="82" y1="109" x2="271" y2="109" class="messageLine0" data-et="message" data-id="i1" data-from="User" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="75" y1="109" x2="75" y2="109" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="75" y="113" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">1</text><text x="276" y="169" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">activeElement.blur()</text><path d="M 276,198 C 336,188 336,228 276,218" class="messageLine0" data-et="message" data-id="i3" data-from="React" data-to="React" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="282" style="fill: none;"/><line x1="275" y1="198" x2="275" y2="198" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="202" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">2</text><text x="381" y="288" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">invoke window_hide()</text><line x1="282" y1="317" x2="486" y2="317" class="messageLine0" data-et="message" data-id="i5" data-from="React" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="275" y1="317" x2="275" y2="317" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="275" y="321" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">3</text><text x="491" y="332" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">window.hide()</text><path d="M 491,361 C 551,351 551,391 491,381" class="messageLine0" data-et="message" data-id="i6" data-from="Rust" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="497" style="fill: none;"/><line x1="490" y1="361" x2="490" y2="361" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="490" y="365" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">4</text><text x="491" y="451" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">window.hide()</text><path d="M 491,480 C 551,470 551,510 491,500" class="messageLine0" data-et="message" data-id="i8" data-from="Rust" data-to="Rust" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="497" style="fill: none;"/><line x1="490" y1="480" x2="490" y2="480" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="490" y="484" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">5</text><g class="actor-man actor-bottom" name="User" style="stroke: rgb(147, 112, 219);"><line id="actor-man-torso2" x1="75" y1="595" x2="75" y2="615"/><line id="actor-man-arms2" x1="57" y1="603" x2="93" y2="603"/><line x1="57" y1="630" x2="75" y2="615"/><line x1="75" y1="615" x2="91" y2="630"/><circle cx="75" cy="580" r="15" width="150" height="65"/><text x="75" y="637.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">用户</tspan></text></g></svg>
+</figure>
+
+    <p class="section-divider"><b>三 · 契约速查（schema 区）</b></p>
+
+    <h2><span class="h2-num">6</span>Commands 总表</h2>
+
+    <p>速查表 ── 当前实现的 29 个命令按 7 组排列。所有命令返回 <code>Result&lt;T, JsonitaError&gt;</code> 或等价前端可消费结果；幂等列「✓」表示同样输入多次调用结果一致且无副作用。</p>
+
+    <table>
+      <thead><tr><th>分组</th><th>命令</th><th>幂等</th><th>P95 耗时</th><th>描述</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="5"><b>json_ops</b></td>
+            <td><code>json_format</code></td><td>✓</td><td>&lt; 50 ms</td><td>格式化（缩进 / sort_keys / minify）</td></tr>
+        <tr><td><code>json_minify</code></td><td>✓</td><td>&lt; 30 ms</td><td>压缩为单行</td></tr>
+        <tr><td><code>json_unwrap_stringified</code></td><td>✓</td><td>&lt; 200 ms</td><td>递归解开嵌套 stringified JSON（含超时）</td></tr>
+        <tr><td><code>json_stringify</code></td><td>✓</td><td>&lt; 20 ms</td><td>JSON → 转义字符串字面量</td></tr>
+        <tr><td><code>json_parse</code></td><td>✓</td><td>&lt; 20 ms</td><td>转义字符串字面量 → JSON 文本</td></tr>
+
+        <tr><td rowspan="6"><b>history</b></td>
+            <td><code>history_list</code></td><td>✓</td><td>&lt; 30 ms</td><td>分页 + 排序（pinned 优先）</td></tr>
+        <tr><td><code>history_search</code></td><td>✓</td><td>&lt; 30 ms</td><td>子串匹配 content / summary；历史上限小，优先直觉搜索</td></tr>
+        <tr><td><code>history_pin</code></td><td>—</td><td>&lt; 10 ms</td><td>置顶 / 取消</td></tr>
+        <tr><td><code>history_star</code></td><td>—</td><td>&lt; 10 ms</td><td>收藏 / 取消</td></tr>
+        <tr><td><code>history_clear</code></td><td>—</td><td>&lt; 50 ms</td><td>一键清空（不删 pinned / starred）</td></tr>
+        <tr><td><code>history_add</code></td><td>—</td><td>&lt; 20 ms</td><td>写入历史并按 settings.historyLimit 裁剪</td></tr>
+
+        <tr><td rowspan="3"><b>session</b></td>
+            <td><code>session_save_last</code></td><td>—</td><td>&lt; 10 ms</td><td>覆盖式写 last_session</td></tr>
+        <tr><td><code>session_load_last</code></td><td>✓</td><td>&lt; 10 ms</td><td>读 last_session</td></tr>
+        <tr><td><code>session_clear_last</code></td><td>—</td><td>&lt; 10 ms</td><td>清空 last_session（⌘K 触发）</td></tr>
+
+        <tr><td rowspan="3"><b>settings</b></td>
+            <td><code>settings_get_all</code></td><td>✓</td><td>&lt; 10 ms</td><td>读全量设置</td></tr>
+        <tr><td><code>settings_set</code></td><td>—</td><td>&lt; 20 ms</td><td>按 key 写；触发 <code>settings:changed</code> 事件</td></tr>
+        <tr><td><code>settings_reset</code></td><td>—</td><td>&lt; 20 ms</td><td>恢复出厂；触发 <code>settings:changed</code></td></tr>
+
+        <tr><td rowspan="5"><b>ai</b></td>
+            <td><code>ai_fix</code></td><td>—</td><td>P50 3 s / P95 8 s</td><td>调 DeepSeek 修复 JSON</td></tr>
+        <tr><td><code>ai_test_connection</code></td><td>—</td><td>&lt; 3 s</td><td>测 API key + 模型可用</td></tr>
+        <tr><td><code>ai_set_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>写 secrets.json（masked 显示前端）</td></tr>
+        <tr><td><code>ai_delete_api_key</code></td><td>—</td><td>&lt; 50 ms</td><td>删除 secrets.json 中的 API key</td></tr>
+        <tr><td><code>ai_has_api_key</code></td><td>✓</td><td>&lt; 10 ms</td><td>只返回是否已保存 key，不返回明文</td></tr>
+
+        <tr><td rowspan="5"><b>window</b></td>
+            <td><code>window_show</code></td><td>—</td><td>&lt; 200 ms</td><td>显示浮窗 + focus（不重新定位）</td></tr>
+        <tr><td><code>window_hide</code></td><td>—</td><td>&lt; 100 ms</td><td>隐藏浮窗（保持进程）</td></tr>
+        <tr><td><code>window_toggle</code></td><td>—</td><td>&lt; 200 ms</td><td>show / hide 切换</td></tr>
+        <tr><td><code>window_resize_for_content</code></td><td>—</td><td>&lt; 50 ms</td><td>按内容 / 字号智能缩放（详见 plan F10 / 06 § 7）</td></tr>
+        <tr><td><code>window_reset_size</code></td><td>—</td><td>&lt; 10 ms</td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
+
+        <tr><td rowspan="8"><b>system</b></td>
+            <td><code>shortcut_register</code></td><td>—</td><td>&lt; 50 ms</td><td>注册新快捷键（检测冲突）</td></tr>
+        <tr><td><code>shortcut_status</code></td><td>✓</td><td>&lt; 10 ms</td><td>检查 toggle shortcut 是否已注册成功</td></tr>
+        <tr><td><code>shortcut_retry</code></td><td>—</td><td>&lt; 50 ms</td><td>重新注册默认快捷键，用于权限授予后轮询</td></tr>
+        <tr><td><code>open_accessibility_settings</code></td><td>—</td><td>&lt; 50 ms</td><td>打开 macOS Accessibility 设置页</td></tr>
+        <tr><td><code>clipboard_read</code></td><td>—</td><td>&lt; 20 ms</td><td>读剪贴板 + JSON sniff</td></tr>
+        <tr><td><code>open_log_dir</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 ~/Library/Logs/Jsonita/</td></tr>
+        <tr><td><code>open_db_path</code></td><td>—</td><td>&lt; 50 ms</td><td>Finder 打开 history.db 所在目录</td></tr>
+        <tr><td><code>quit_app</code></td><td>—</td><td>—</td><td>正常退出（不弹确认）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">6.1</span>命令签名（按分组）</h2>
+
+    <p>每个签名一行 + 参数类型链接到 13 § N。命名约定见 § 4。</p>
+
+    <h3><span class="h3-num">6.1.1</span>json_ops</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>opts schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>json_format(text, opts)</code></td><td><code>String</code></td><td><a href="13_schemas.html">13 § 3.1 FormatOpts</a></td></tr>
+        <tr><td><code>json_minify(text)</code></td><td><code>String</code></td><td>—</td></tr>
+        <tr><td><code>json_unwrap_stringified(text, opts)</code></td><td><code>String</code></td><td><a href="13_schemas.html">13 § 3.1 UnwrapOpts</a></td></tr>
+        <tr><td><code>json_stringify(text, opts)</code></td><td><code>String</code></td><td><a href="13_schemas.html">13 § 3.1 StringifyOpts</a></td></tr>
+        <tr><td><code>json_parse(text)</code></td><td><code>String</code></td><td>输入为 JSON 字符串字面量</td></tr>
+      </tbody>
+    </table>
+
+    <p>错误分支：<code>json_unwrap_stringified</code> 可能 <code>UnwrapTimeout</code>；其余通常 <code>Parse</code>。</p>
+
+    <h3><span class="h3-num">6.1.2</span>history</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>history_list(opts)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td><a href="13_schemas.html">13 § 3.2 ListOpts / HistoryRow</a></td></tr>
+        <tr><td><code>history_search(query, limit)</code></td><td><code>Vec&lt;HistoryRow&gt;</code></td><td>content / summary 子串匹配</td></tr>
+        <tr><td><code>history_pin(id, pinned)</code></td><td><code>()</code></td><td>—</td></tr>
+        <tr><td><code>history_star(id, starred)</code></td><td><code>()</code></td><td>—</td></tr>
+        <tr><td><code>history_clear()</code></td><td><code>u32</code></td><td>返回删除条数（不删 pinned / starred）</td></tr>
+        <tr><td><code>history_add(content, opType)</code></td><td><code>HistoryRow</code></td><td>写入历史并按 historyLimit 裁剪</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.3</span>session</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>session_save_last(s)</code></td><td><code>()</code></td><td><a href="13_schemas.html">13 § 3.2 LastSession</a></td></tr>
+        <tr><td><code>session_load_last()</code></td><td><code>Option&lt;LastSession&gt;</code></td><td>—</td></tr>
+        <tr><td><code>session_clear_last()</code></td><td><code>()</code></td><td>⌘K 触发</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.4</span>settings</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>settings_get_all()</code></td><td><code>Settings</code></td><td>全量字段见 <a href="13_schemas.html">13 § 3.3</a></td></tr>
+        <tr><td><code>settings_set(patch)</code></td><td><code>Settings</code></td><td>patch 为 partial JSON 对象；副作用：emit <code>settings:changed</code></td></tr>
+        <tr><td><code>settings_reset()</code></td><td><code>Settings</code></td><td>恢复出厂；副作用同上</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.5</span>ai</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th><th>错误分支</th></tr></thead>
+      <tbody>
+        <tr><td><code>ai_fix(req)</code></td><td><code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4 AiFixReq / Resp</a></td><td>Http / RateLimit / AiInvalidJson / AiDisabled / Secrets</td></tr>
+        <tr><td><code>ai_test_connection(apiKey, modelId)</code></td><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a>；apiKey 直接传，不入 secrets.json</td><td>Http / RateLimit</td></tr>
+        <tr><td><code>ai_set_api_key(apiKey)</code></td><td><code>()</code></td><td>明文 → secrets.json（chmod 600）</td><td>Secrets</td></tr>
+        <tr><td><code>ai_delete_api_key()</code></td><td><code>()</code></td><td>删除保存的 key</td><td>Secrets</td></tr>
+        <tr><td><code>ai_has_api_key()</code></td><td><code>bool</code></td><td>只返回是否存在 key</td><td>Secrets</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.6</span>window</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 / 说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>window_show()</code></td><td><code>()</code></td><td>显示浮窗 + focus；定位由 shortcut / tray toggle 路径负责</td></tr>
+        <tr><td><code>window_hide()</code></td><td><code>()</code></td><td>—</td></tr>
+        <tr><td><code>window_toggle()</code></td><td><code>()</code></td><td>show / hide 切换</td></tr>
+        <tr><td><code>window_resize_for_content(metrics)</code></td><td><code>(u32, u32)</code></td><td>metrics: <a href="13_schemas.html">13 § 3.5 ContentMetrics</a>；按内容行长 / 行数 / 字号动态缩放，算法 <a href="06_window.html">06 § 7</a></td></tr>
+        <tr><td><code>window_reset_size()</code></td><td><code>()</code></td><td>清掉 window.json 记忆，下次呼出回默认</td></tr>
+        <tr><td><code>window_set_theme(mode)</code></td><td><code>"light" | "dark"</code></td><td>mode: "light" | "dark" | "system"；让原生 vibrancy 材质 + NSWindow appearance 跟随主题（<a href="06_window.html">06 § 2.6</a>）；system 由原生读 <code>NSApp.effectiveAppearance</code> 解析并回传 effective theme 给前端作权威值</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.1.7</span>system</h3>
+
+    <table>
+      <thead><tr><th>命令</th><th>返回</th><th>参数 schema</th></tr></thead>
+      <tbody>
+        <tr><td><code>shortcut_register(req)</code></td><td><code>ShortcutRegisterResp</code></td><td>resp = <code>Ok</code> | <code>Conflict { withApp? }</code> | <code>Reserved</code> | <code>InvalidAccelerator { reason }</code></td></tr>
+        <tr><td><code>shortcut_status()</code></td><td><code>bool</code></td><td>检查 toggle shortcut 是否注册</td></tr>
+        <tr><td><code>shortcut_retry()</code></td><td><code>bool</code></td><td>重新注册 settings 中的快捷键</td></tr>
+        <tr><td><code>open_accessibility_settings()</code></td><td><code>()</code></td><td>macOS 打开 Accessibility 设置页；其他平台 no-op</td></tr>
+        <tr><td><code>clipboard_read()</code></td><td><code>ClipboardSniff</code></td><td><a href="13_schemas.html">13 § 3.5</a></td></tr>
+        <tr><td><code>open_log_dir()</code></td><td><code>()</code></td><td>Finder 打开 <code>~/Library/Logs/Jsonita/</code></td></tr>
+        <tr><td><code>open_db_path()</code></td><td><code>()</code></td><td>Finder 打开 history.db 所在目录</td></tr>
+        <tr><td><code>quit_app()</code></td><td><code>()</code></td><td>正常退出（不弹确认）</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">7</span>Events 总表（Rust → 前端）</h2>
+
+    <table>
+      <thead><tr><th>事件名</th><th>触发时机</th><th>payload 类型</th><th>消费方</th></tr></thead>
+      <tbody>
+        <tr><td><code>tray:toggle</code></td><td>tray 左键 / Toggle Jsonita 菜单项</td><td><code>{}</code></td><td>Rust main listener → window::toggle</td></tr>
+        <tr><td><code>tray:open-settings</code></td><td>tray Settings 菜单项</td><td><code>{}</code></td><td>App.tsx → setSettingsModalOpen(true)</td></tr>
+        <tr><td><code>permission:accessibility_missing</code></td><td>macOS 快捷键权限缺失</td><td><code>{}</code></td><td>App.tsx → AccessibilityModal</td></tr>
+        <tr><td><code>window:shown</code></td><td>浮窗被 show/focus</td><td><code>{}</code></td><td>FloatingWindow summon 动效；旧 ShortcutHint HUD 已移除</td></tr>
+        <tr><td><code>window:resized</code></td><td>智能缩放完成</td><td><code>WindowResizedPayload</code></td><td>shell / store 同步尺寸</td></tr>
+        <tr><td><code>shortcut:restore_last</code></td><td>全局 ⌘⇧L 触发（Rust 先 show/focus）</td><td><code>{}</code></td><td>shell（调 <code>session_load_last</code>）</td></tr>
+        <tr><td><code>settings:changed</code></td><td><code>settings_set</code> / <code>settings_reset</code> 后</td><td><code>Settings</code></td><td>store/settings（更新本地缓存 + 重渲染）</td></tr>
+      </tbody>
+    </table>
+
+    <p>所有 payload 完整字段定义：<code>ClipboardSniff</code> / <code>LastSession</code> / <code>WindowResizedPayload</code> 见 <a href="13_schemas.html">13 § 3.2 / 3.5</a>。</p>
+
+    <h3><span class="h3-num">7.1</span>TS 监听封装</h3>
+
+    <p>所有事件用一个泛型 <code>on()</code> 监听 ── 编译期检查事件名 + payload 类型匹配。</p>
+
+    <pre><code>// src/ipc/events.ts
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+
+type EventMap = {
+  'tray:toggle':           Record&lt;string, never&gt;;
+  'tray:open-settings':    Record&lt;string, never&gt;;
+  'permission:accessibility_missing': Record&lt;string, never&gt;;
+  'window:shown':          Record&lt;string, never&gt;;
+  'window:resized':        WindowResizedPayload;
+  'shortcut:restore_last': Record&lt;string, never&gt;;
+  'settings:changed':      Settings;
+};
+
+export function on&lt;K extends keyof EventMap&gt;(
+  name: K,
+  handler: (payload: EventMap[K]) =&gt; void,
+): Promise&lt;UnlistenFn&gt; {
+  return listen&lt;EventMap[K]&gt;(name, (e) =&gt; handler(e.payload));
+}</code></pre>
+
+    <h2><span class="h2-num">8</span>错误矩阵（UI 视角）</h2>
+
+    <p>错误类型的完整定义（variant / payload）见 <a href="13_schemas.html">13 § 1</a>；本表是 IPC 章特有的横截视角 ── <b>什么命令在什么错误下，前端应该怎么呈现给用户</b>。</p>
+
+    <table>
+      <thead><tr><th>错误 kind</th><th>常见 command</th><th>UI 呈现</th><th>用户操作建议</th></tr></thead>
+      <tbody>
+        <tr><td><code>Parse</code></td><td>json_format / minify / stringify</td><td>状态栏红 + 高亮位置</td><td>点 AI Fix 或手动修</td></tr>
+        <tr><td><code>UnwrapTimeout</code></td><td>json_unwrap_stringified</td><td>状态栏 / 局部错误</td><td>建议关 auto-unwrap 或提高超时</td></tr>
+        <tr><td><code>Sqlite</code></td><td>history_* / session_*</td><td>调用方捕获；当前多处静默忽略，后续补统一错误 UI</td><td>反馈 issue</td></tr>
+        <tr><td><code>Secrets</code></td><td>ai_set_api_key / ai_fix</td><td>AI 面板错误 / 设置项错误</td><td>检查数据目录权限 / 磁盘空间</td></tr>
+        <tr><td><code>Http</code></td><td>ai_fix / ai_test_connection</td><td>AI 面板错误 / API key 输入区错误</td><td>检查网络 / API key</td></tr>
+        <tr><td><code>RateLimit</code></td><td>ai_fix</td><td>AI 面板显示 retryAfterSec</td><td>等待 retryAfterSec 后重试</td></tr>
+        <tr><td><code>AiInvalidJson</code></td><td>ai_fix</td><td>AI 面板错误文本</td><td>必要时反馈 issue</td></tr>
+        <tr><td><code>Io</code></td><td>open_log_dir / open_db_path</td><td>调用方捕获；当前未做全局 Toast</td><td>反馈 issue</td></tr>
+      </tbody>
+    </table>
+
+    <p class="section-divider"><b>四 · 运行时数字</b></p>
+
+    <h2><span class="h2-num">9</span>性能与限流</h2>
+
+    <ul>
+      <li><b>前端 debounce</b>：编辑器 onChange → format/parse 调用，统一 300 ms debounce（见 <a href="00_architecture.html">00 § 5.1</a>）</li>
+      <li><b>后端不主动节流</b>：所有 command 来一个跑一个；CPU 密集走 <code>spawn_blocking</code></li>
+      <li><b>AI 不限频</b>：依 <a href="../plan/01_features.html">plan/01 F4</a>，用户用自己 key，仅透传上游 429</li>
+      <li><b>SQLite WAL</b>：所有 read 并发；write 串行（rusqlite + single connection per thread + r2d2 pool）</li>
+    </ul>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
 </main>
-<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
-</article>
 
-<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#command-groups"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Command Groups</span><span data-locale="en" data-locale-active="false">Command Groups</span></a></li><li><a href="#error-model"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Error Model</span><span data-locale="en" data-locale-active="false">Error Model</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
-<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">IPC 合约</span><span data-locale="en" data-locale-active="false">IPC Contract</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
-
-
-<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
-  const config = window.CAST_DOCS_I18N;
-  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
-  const MEMORY_KEY = 'cast-docs:global-memory';
-  const root = document.documentElement;
-  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
-  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
-  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
-  function readMemory() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) {
-      return {};
-    }
-  }
-  function writeMemory(memory) {
-    try {
-      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-  function rememberDefaultLocale(locale) {
-    if (!config.locales.includes(locale)) return false;
-    const memory = readMemory();
-    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
-    memory.version = 1;
-    memory.preferences = {
-      ...preferences,
-      defaultLocale: locale,
-      defaultLocaleUpdatedAt: new Date().toISOString(),
-    };
-    return writeMemory(memory);
-  }
-  function defaultLocaleFromMemory() {
-    const locale = readMemory().preferences?.defaultLocale;
-    return config.locales.includes(locale) ? locale : null;
-  }
-  function apply(locale) {
-    if (!config.locales.includes(locale)) return;
-    root.lang = locale;
-    root.setAttribute('data-active-locale', locale);
-    config.activeLocale = locale;
-    document.querySelectorAll('[data-locale]').forEach((node) => {
-      const active = node.getAttribute('data-locale') === locale;
-      node.setAttribute('data-locale-active', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-locale-target]').forEach((button) => {
-      const active = button.getAttribute('data-locale-target') === locale;
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-key');
-      if (key) node.textContent = label(locale, key, node.textContent);
-    });
-  }
-  function maybeSetDefaultLocale(locale) {
-    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
-    const message = label(
-      locale,
-      'chrome.defaultLanguagePrompt',
-      `Set ${displayName(locale)} as the default language for CAST Docs?`
-    ).replace('{language}', displayName(locale));
-    if (window.confirm(message)) {
-      rememberDefaultLocale(locale);
-    }
-  }
-  document.querySelectorAll('[data-locale-target]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const locale = button.getAttribute('data-locale-target');
-      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
-      apply(locale);
-      maybeSetDefaultLocale(locale);
-    });
-  });
-  apply(defaultLocaleFromMemory() || config.activeLocale);
-})();
-</script>
+<script src="../assets/nav.js"></script>
 </body>
 </html>

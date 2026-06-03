@@ -1,941 +1,381 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="DeepSeek AI Fix 的配置、prompt、请求、响应提取、错误处理和隐私边界。">
-<title>AI Client</title>
-<style>
-:root {
-  color-scheme: light dark;
-  --bg: #f8f8f7;
-  --surface: #ffffff;
-  --soft: #f2f3f3;
-  --text: #24272b;
-  --muted: #68717b;
-  --faint: #9aa1a8;
-  --border: #dedede;
-  --primary: #315f9f;
-  --primary-soft: #eef3fa;
-  --accent: #52686a;
-  --info: #566f99;
-  --info-soft: #f4f5f7;
-  --warn: #8a6d3b;
-  --warn-soft: #f8f4ea;
-  --danger: #9b4d49;
-  --danger-soft: #faf0ef;
-  --ok: #55745f;
-  --ok-soft: #eef4ef;
-  --code: #f1f2f2;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --font-xs: 11px;
-  --font-sm: 12.5px;
-  --font-base: 14px;
-  --font-md: 16px;
-  --font-lg: 20px;
-  --font-xl: 28px;
-  --font-title: 30px;
-  --line-tight: 1.25;
-  --line-normal: 1.65;
-  --line-loose: 1.75;
-  --line-code: 1.55;
-  --weight-regular: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 28px;
-  --space-10: 34px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 10px;
-  --radius-pill: 999px;
-  --motion-fast: 120ms;
-  --motion-base: 160ms;
-  --motion-slow: 220ms;
-  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
-  --surface-shadow: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111315;
-    --surface: #17191c;
-    --soft: #202328;
-    --text: #e2e5e8;
-    --muted: #a1a7ad;
-    --faint: #767d84;
-    --border: #30343a;
-    --primary: #9bb7d9;
-    --primary-soft: #182231;
-    --accent: #9ab4b1;
-    --info: #9aaeca;
-    --info-soft: #1b2027;
-    --warn: #c7b27e;
-    --warn-soft: #242117;
-    --danger: #d09a95;
-    --danger-soft: #271b1a;
-    --ok: #9ebaa5;
-    --ok-soft: #1a241d;
-    --code: #202328;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
-  }
-}
-:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
-a { color: var(--primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
-code, pre { font-family: var(--mono); }
-code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
-pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
-pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
-mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
-del { color: var(--muted); text-decoration: line-through; }
-u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
-[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
-[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
-[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
-[data-locale][data-locale-active="false"] { display: none; }
-.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
-.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.toc ol { list-style: none; margin: 0; padding: 0; }
-.toc li { margin: 0; }
-.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
-.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
-.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
-.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
-.brand-logo:hover { text-decoration: none; }
-.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
-.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
-.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project { flex: 0 0 auto; }
-.topbar-doc { color: var(--muted); font-weight: 500; }
-.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
-.topbar-links { display: flex; gap: 12px; align-items: center; }
-.topbar-links:empty { display: none; }
-.topbar-link { color: var(--muted); font-size: var(--font-sm); }
-.topbar-spacer { flex: 1; }
-.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
-.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
-.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
-.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
-.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
-.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
-.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
-.doc-summary { padding: 16px 18px; }
-.doc-summary ul { margin: 0; }
-.set-grid { display: grid; gap: 22px; }
-.set-section { margin: 0; }
-.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
-.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
-.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
-.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
-.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
-.chapter-card a:hover { text-decoration: none; }
-.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
-.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
-.chapter-content { display: grid; gap: 5px; min-width: 0; }
-.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
-.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
-.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
-.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
-.set-pagination-next { text-align: right; }
-.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
-.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
-.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
-.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
-.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
-.section-title { overflow-wrap: anywhere; }
-.section-empty { color: var(--muted); font-style: italic; }
-.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
-.callout p { margin: 6px 0 0; }
-.callout-info { border-left-color: var(--info); background: var(--info-soft); }
-.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
-.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
-.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
-table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
-th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
-tr:last-child td { border-bottom: 0; }
-.details-block { padding: 0 14px; }
-.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
-.diagram { position: relative; padding: 16px; overflow: auto; }
-.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
-.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
-.diagram:hover .diagram-toolbar { opacity: 1; }
-button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
-.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
-.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
-.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
-.code-status-ok { color: var(--ok); }
-.code-status-error { color: var(--danger); }
-.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
-.code-status + .code-copy { margin-left: 0; }
-.code-copy:hover { color: var(--text); }
-.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
-.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
-.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.code-line-content { padding: 0 14px; white-space: pre; }
-.code-token-key { color: var(--primary); }
-.code-token-bool { color: var(--info); }
-.code-token-number { color: var(--warn); }
-.code-token-flag { color: var(--accent); }
-.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
-.diff-block > h3 { grid-column: 1 / -1; }
-.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
-.diff-side + .diff-side { margin-left: -1px; }
-.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
-.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
-.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
-.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
-.diff-line-content { padding-right: 14px; white-space: pre; }
-.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
-.line-add { color: var(--ok); }
-.line-remove { color: var(--danger); }
-.line-warning { color: var(--warn); }
-.line-context { color: var(--text); }
-.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.participant-card, .value-card, .action-card { padding: 14px 16px; }
-.action-card { padding: 20px; }
-.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
-.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
-.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
-.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
-.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
-.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
-.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
-.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
-.open-question + .open-question { border-top: 1px solid var(--border); }
-.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
-.open-question-text { min-width: 0; }
-.prompt-block { margin-top: 20px; }
-.prompt-block .code-header { padding: 12px 14px; }
-.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
-.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
-.prompt-block .code-line-number { padding-right: 12px; }
-.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
-.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.media-frame { margin: 0; overflow: hidden; }
-.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
-.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
-.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
-.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
-.column { min-width: 0; }
-.column h3 { margin-top: 0; }
-.column p:first-child { margin-top: 0; }
-.column p:last-child { margin-bottom: 0; }
-.column > .code-shell, .column > table { margin-top: 12px; }
-.toggle-view { padding: 14px; }
-.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
-.toggle-button { border: 0; background: transparent; color: var(--muted); }
-.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.toggle-panel[data-view-active="false"] { display: none; }
-.toggle-panel > :first-child { margin-top: 0; }
-.toggle-panel > :last-child { margin-bottom: 0; }
-.slider-control { padding: 16px; }
-.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.slider-header label { font-weight: 700; }
-.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
-.slider-range { display: block; width: 100%; accent-color: var(--primary); }
-.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
-.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
-.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
-.lightbox.open { display: flex; }
-.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
-.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
-.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
-.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
-.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
-@media (max-width: 760px) {
-  body { display: flex; flex-direction: column; }
-  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
-  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
-  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
-  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
-  .doc-header h1 { font-size: var(--font-xl); }
-  .diff-block { grid-template-columns: 1fr; }
-  .set-pagination { grid-template-columns: 1fr; }
-  .set-pagination-next { text-align: left; }
-  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
-  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
-}
-@media print {
-  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
-  .doc { margin-left: 0; max-width: none; padding: 0; }
-}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 11 AI 客户端</title>
+<link rel="stylesheet" href="../assets/style.css">
 </head>
-<body>
+<body data-section="spec" data-chapter="11">
 
-<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
-{
-  "metadata": {
-    "language": "zh-CN",
-    "owner": "Jin Huang",
-    "logo": {
-      "src": ".cast-docs/assets/jsonita-logo.png",
-      "alt": {
-        "zh-CN": "Jsonita 标志",
-        "en": "Jsonita logo"
-      },
-      "href": "../index.html"
-    },
-    "title": {
-      "zh-CN": "AI Client",
-      "en": "AI Client"
-    },
-    "description": {
-      "zh-CN": "DeepSeek AI Fix 的配置、prompt、请求、响应提取、错误处理和隐私边界。",
-      "en": "DeepSeek AI Fix configuration, prompt, request, response extraction, error handling, and privacy boundary."
-    },
-    "schemaVersion": "1.0",
-    "locales": [
-      "zh-CN",
-      "en"
-    ],
-    "status": "review",
-    "audience": [
-      "engineering",
-      "product"
-    ],
-    "updatedAt": "2026-06-03",
-    "showMeta": true,
-    "shellLinks": [
-      {
-        "label": {
-          "zh-CN": "首页",
-          "en": "Home"
-        },
-        "href": "../index.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "TODO",
-          "en": "TODO"
-        },
-        "href": "../todo.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "Changelist",
-          "en": "Changelist"
-        },
-        "href": "../changelist.html",
-        "placement": "topbar"
-      }
-    ]
-  },
-  "manifest": {
-    "documentType": "engineering-spec",
-    "scenario": "none",
-    "sections": [
-      "overview",
-      "summary",
-      "request-flow",
-      "invariants",
-      "testing-plan",
-      "open-questions"
-    ],
-    "components": {
-      "required": [
-        "summary-block",
-        "metadata-block",
-        "toc",
-        "section",
-        "paragraph"
-      ],
-      "optional": [
-        "table",
-        "callout",
-        "values-grid",
-        "acceptance-criteria",
-        "open-questions",
-        "source-refs",
-        "diagram",
-        "code-block"
-      ],
-      "omitted": [
-        "media-grid",
-        "diff-block",
-        "toggle-view",
-        "slider-control"
-      ]
-    }
-  },
-  "sections": [
-    {
-      "id": "overview",
-      "title": {
-        "zh-CN": "概览",
-        "en": "Overview"
-      },
-      "blocks": [
-        {
-          "type": "summary",
-          "items": [
-            {
-              "label": {
-                "zh-CN": "模型",
-                "en": "Model"
-              },
-              "body": {
-                "zh-CN": "使用 DeepSeek-compatible chat completion，由用户提供 key。",
-                "en": "Uses DeepSeek-compatible chat completion with user-provided key."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "触发",
-                "en": "Trigger"
-              },
-              "body": {
-                "zh-CN": "只有用户点击 AI Fix 才发送当前内容。",
-                "en": "Only a user AI Fix click sends the current content."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "结果",
-                "en": "Result"
-              },
-              "body": {
-                "zh-CN": "必须 extract_json、parse 成功并展示 diff。",
-                "en": "Must extract_json, parse successfully, and show a diff."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "summary",
-      "title": {
-        "zh-CN": "摘要",
-        "en": "Summary"
-      },
-      "blocks": [
-        {
-          "type": "paragraph",
-          "text": {
-            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
-            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
-          }
-        }
-      ]
-    },
-    {
-      "id": "request-flow",
-      "title": {
-        "zh-CN": "Request Flow",
-        "en": "Request Flow"
-      },
-      "blocks": [
-        {
-          "type": "diagram",
-          "kind": "flow",
-          "title": {
-            "zh-CN": "ai-fix-flow",
-            "en": "ai-fix-flow"
-          },
-          "downloadName": "ai-fix-flow",
-          "source": {
-            "format": "structured-flow",
-            "nodes": [
-              {
-                "id": "Invalid JSON",
-                "label": {
-                  "zh-CN": "Invalid JSON",
-                  "en": "Invalid JSON"
-                }
-              },
-              {
-                "id": "Prompt",
-                "label": {
-                  "zh-CN": "Prompt",
-                  "en": "Prompt"
-                }
-              },
-              {
-                "id": "DeepSeek",
-                "label": {
-                  "zh-CN": "DeepSeek",
-                  "en": "DeepSeek"
-                }
-              },
-              {
-                "id": "Extract JSON",
-                "label": {
-                  "zh-CN": "Extract JSON",
-                  "en": "Extract JSON"
-                }
-              },
-              {
-                "id": "DiffView",
-                "label": {
-                  "zh-CN": "DiffView",
-                  "en": "DiffView"
-                }
-              }
-            ],
-            "edges": [
-              {
-                "from": "Invalid JSON",
-                "to": "Prompt",
-                "label": {
-                  "zh-CN": "user clicks",
-                  "en": "user clicks"
-                }
-              },
-              {
-                "from": "Prompt",
-                "to": "DeepSeek",
-                "label": {
-                  "zh-CN": "request",
-                  "en": "request"
-                }
-              },
-              {
-                "from": "DeepSeek",
-                "to": "Extract JSON",
-                "label": {
-                  "zh-CN": "response",
-                  "en": "response"
-                }
-              },
-              {
-                "from": "Extract JSON",
-                "to": "DiffView",
-                "label": {
-                  "zh-CN": "valid JSON",
-                  "en": "valid JSON"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "table",
-          "tableType": "data",
-          "headers": [
-            {
-              "zh-CN": "步骤",
-              "en": "Step"
-            },
-            {
-              "zh-CN": "失败处理",
-              "en": "Failure Handling"
-            }
-          ],
-          "rows": [
-            [
-              {
-                "zh-CN": "缺 key",
-                "en": "Missing key"
-              },
-              {
-                "zh-CN": "disabled prompt，不发请求。",
-                "en": "Disabled prompt; no request."
-              }
-            ],
-            [
-              {
-                "zh-CN": "网络失败",
-                "en": "Network failure"
-              },
-              {
-                "zh-CN": "Ai error，保留输入。",
-                "en": "Ai error; preserve input."
-              }
-            ],
-            [
-              {
-                "zh-CN": "返回非 JSON",
-                "en": "Non-JSON response"
-              },
-              {
-                "zh-CN": "extract_json 失败，提示用户。",
-                "en": "extract_json fails and informs user."
-              }
-            ],
-            [
-              {
-                "zh-CN": "语义风险",
-                "en": "Semantic risk"
-              },
-              {
-                "zh-CN": "用户通过 diff 自行确认。",
-                "en": "User confirms through diff."
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "id": "invariants",
-      "title": {
-        "zh-CN": "不变量",
-        "en": "Invariants"
-      },
-      "blocks": [
-        {
-          "type": "list",
-          "items": [
-            {
-              "zh-CN": "API key 不暴露给 WebView。",
-              "en": "API key is not exposed to WebView."
-            },
-            {
-              "zh-CN": "日志不记录 prompt 正文或 key。",
-              "en": "Logs do not record prompt body or key."
-            },
-            {
-              "zh-CN": "AI 修复不自动 Accept。",
-              "en": "AI repair does not auto-accept."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "testing-plan",
-      "title": {
-        "zh-CN": "测试计划",
-        "en": "Testing Plan"
-      },
-      "blocks": [
-        {
-          "type": "acceptance-criteria",
-          "items": [
-            {
-              "zh-CN": "extract_json 覆盖 markdown fence、前后说明、纯 JSON。",
-              "en": "extract_json covers markdown fences, surrounding explanation, and pure JSON."
-            },
-            {
-              "zh-CN": "ai_test_connection 不泄露 key。",
-              "en": "ai_test_connection does not leak the key."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "open-questions",
-      "title": {
-        "zh-CN": "开放问题",
-        "en": "Open Questions"
-      },
-      "blocks": [
-        {
-          "type": "open-questions",
-          "questions": [
-            {
-              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
-              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
-            }
-          ]
-        }
-      ]
-    }
-  ]
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 11</span>
+      <h1 class="doc-title">AI 客户端</h1>
+      <p class="doc-subtitle">DeepSeek 请求 / Prompt / 响应验证 / Diff / 错误透传 ── 先讲设计原则与协议选型，再讲核心算法，最后给契约。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">REF</span>
+      <div class="callout-body">
+        <p>对外 IPC 类型 <code>AiFixReq</code> / <code>AiFixResp</code> 定义见 <a href="13_schemas.html">13 § 3.4</a>；API key 走本地 <code>secrets.json</code>（<a href="13_schemas.html">13 § 6</a>），设计动因见 <a href="../plan/03_tech_stack.html">plan/03 § 2.5</a> / <a href="10_storage.html">10 § 6</a>。本章描述<b>设计原则 + 协议构造 + 算法</b>。</p>
+      </div>
+    </div>
+
+    <p class="section-divider"><b>一 · 设计</b></p>
+
+    <h2><span class="h2-num">1</span>设计原则</h2>
+
+    <p>AI 在 Jsonita 是<b>可选附加能力</b>而非核心 ── 用户大部分时候不会用，但用的时候必须可靠 / 可控 / 透明。五条硬约束：</p>
+
+    <table>
+      <thead><tr><th>原则</th><th>含义</th><th>实现影响</th></tr></thead>
+      <tbody>
+        <tr><td><b>用户用自己 API key</b></td><td>不当家长，<b>不限频</b>，<b>不缓存</b>请求结果</td><td>没有 client-side rate limit；每次都打 DeepSeek</td></tr>
+        <tr><td><b>仅修复，不解释</b></td><td>prompt 严格要求"只返回合法 JSON"</td><td>system prompt 5 条规则 + <code>response_format: json_object</code> 双保险</td></tr>
+        <tr><td><b>错误透传</b></td><td>上游 429 / 5xx 原样回前端 + 携带 retry-after</td><td>Rust 错误结构带 status / body / retry_after_sec；IPC 到前端为 retryAfterSec</td></tr>
+        <tr><td><b>开关完全关</b></td><td><code>ai_enabled = false</code> 时入口隐藏 + Rust 端 early return</td><td>命令入口检查 settings；UI 不渲染 AI Fix Tab</td></tr>
+        <tr><td><b>无 telemetry</b></td><td>用户 JSON 不发到任何 Jsonita 自己的后端</td><td>只有 <code>api.deepseek.com</code> 出网；tauri.conf http allowlist 限定</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">2</span>为何选 DeepSeek（而非 OpenAI / Claude）</h2>
+
+    <ul>
+      <li><b>OpenAI 兼容 API</b>：DeepSeek 完全兼容 OpenAI Chat Completions 协议 ── 同一套 <code>ChatRequest</code> / <code>ChatResponse</code> 结构可以零成本支持其他兼容 provider（Moonshot / Together 等）</li>
+      <li><b>价格 + 性能</b>：deepseek-chat 在 JSON 修复任务上表现稳定，价格约为 GPT-4 的 1/20</li>
+      <li><b>支持 <code>response_format: json_object</code></b>：强制返回 JSON（避免模型用 markdown code fence 包裹），这是修复任务的关键能力</li>
+      <li><b>v2 扩展路径</b>：保留 <code>settings.ai_provider</code> 预留字段（v1 写死 deepseek），未来切换 provider 改 URL + key account 名即可</li>
+    </ul>
+
+    <h2><span class="h2-num">3</span>模块结构 & 关注点分离</h2>
+
+    <table>
+      <thead><tr><th>层</th><th>模块</th><th>职责</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="3">Rust 后端</td><td><code>ai/deepseek.rs</code></td><td>构造 HTTP 请求、发送、解析 / 拆解状态码 / emit 进度事件</td></tr>
+        <tr><td><code>ai/prompt.rs</code></td><td>system + user prompt 模板拼装（纯字符串函数，无 IO）</td></tr>
+        <tr><td><code>ai/validate.rs</code></td><td>从 AI 响应中抽取 JSON（容忍 markdown 包裹 / 解释文字）+ 合法性二次验证</td></tr>
+        <tr><td rowspan="2">React 前端</td><td><code>panes/AiFixPane.tsx</code></td><td>DiffView 容器 + Accept / Reject 按钮</td></tr>
+        <tr><td><code>store/ai.ts</code></td><td>zustand store：status (idle / requesting / awaiting-decision) + before/after + 错误</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>关键划分</b>：prompt 与 validate 是<b>纯函数</b>（无 IO，可独立单测）；deepseek 处理网络 + 状态机 + 错误映射；前端只关心 status 三态 + diff 渲染。</p>
+
+    <p class="section-divider"><b>二 · 机制</b></p>
+
+    <h2><span class="h2-num">4</span>Prompt 设计</h2>
+
+    <h3><span class="h3-num">4.1</span>5 条规则的设计意图</h3>
+
+    <ol>
+      <li><b>Output a SINGLE valid JSON</b> ── 阻止模型输出多份候选 / 解释</li>
+      <li><b>NO explanation / markdown / code fence</b> ── 双重保险（虽然 <code>response_format: json_object</code> 也强制了）</li>
+      <li><b>Preserve original intent</b> ── 关键。明确告诉模型"只修语法，不改值" ── 防止模型"过度修复"（如把空字符串改成 null）</li>
+      <li><b>Already-valid JSON returned unchanged</b> ── 避免误触发时输入返回不同的结果（影响 diff 体验）</li>
+      <li><b>无法修复时返回特殊标记</b> <code>{"_jsonita_repair_failed": true, "reason": "..."}</code> ── 模型无法修时给出明确信号，前端可以 UI 提示而不是把空对象当成功</li>
+    </ol>
+
+    <h3><span class="h3-num">4.2</span>system + user 模板（核心 ~25 行）</h3>
+
+    <pre><code>// src-tauri/src/ai/prompt.rs ── 纯函数
+pub fn system_prompt() -&gt; &amp;'static str {
+    r#"You are a JSON repair tool. Your only job is to fix invalid JSON.
+
+RULES:
+1. Output a SINGLE valid JSON object or array.
+2. Do NOT add any explanation, markdown, code fence, or commentary.
+3. Preserve the original intent: keep all keys and values exactly as the user
+   typed them, only fix syntax (quotes, commas, brackets, escapes).
+4. If the input is already valid JSON, return it unchanged (after standard
+   pretty-printing).
+5. If repair is impossible, return:
+   { "_jsonita_repair_failed": true, "reason": "&lt;short reason&gt;" }
+
+OUTPUT FORMAT: plain JSON text. No prefix, no suffix."#
 }
-</script>
 
-<article class="doc">
-<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">AI Client</span><span data-locale="en" data-locale-active="false">AI Client</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
-<main>
-<section class="doc-section" id="overview">
-<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
-<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">模型</span><span data-locale="en" data-locale-active="false">Model</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">使用 DeepSeek-compatible chat completion，由用户提供 key。</span><span data-locale="en" data-locale-active="false">Uses DeepSeek-compatible chat completion with user-provided key.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">触发</span><span data-locale="en" data-locale-active="false">Trigger</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">只有用户点击 AI Fix 才发送当前内容。</span><span data-locale="en" data-locale-active="false">Only a user AI Fix click sends the current content.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">结果</span><span data-locale="en" data-locale-active="false">Result</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">必须 extract_json、parse 成功并展示 diff。</span><span data-locale="en" data-locale-active="false">Must extract_json, parse successfully, and show a diff.</span></li></ul></section>
-</section>
+pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&gt;, msg: Option&lt;&amp;str&gt;) -&gt; String {
+    let mut p = String::from("Fix this JSON:\n\n```\n");
+    p.push_str(text);
+    p.push_str("\n```\n");
+    if let (Some(l), Some(c)) = (line, col) {
+        use std::fmt::Write;
+        let _ = write!(p, "\nHint: parse error at line {}, column {}", l, c);
+        if let Some(m) = msg { let _ = write!(p, " ({})", m); }
+        p.push('.');
+    }
+    p
+}</code></pre>
 
-<section class="doc-section" id="summary">
-<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
-<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
-</section>
+    <p><b>error_loc 注入</b>：把 CodeMirror linter 拿到的 line/col/msg 拼进 user prompt。这是显著提升修复准确率的 hint ── 没有这个 hint 时模型经常修错位置。</p>
 
-<section class="doc-section" id="request-flow">
-<h2><span data-locale="zh-CN" data-locale-active="true">Request Flow</span><span data-locale="en" data-locale-active="false">Request Flow</span></h2>
-<figure class="diagram" data-download-name="ai-fix-flow"><figcaption><span data-locale="zh-CN" data-locale-active="true">ai-fix-flow</span><span data-locale="en" data-locale-active="false">ai-fix-flow</span></figcaption><svg viewBox="0 0 1100 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ai-fix-flow"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#8a929b"></path></marker></defs><line x1="200" y1="82" x2="300" y2="82" stroke="#8a929b" stroke-width="2" marker-end="url(#arrow)"></line><text x="250" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="zh-CN" data-locale-active="true">user clicks</text><text x="250" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="en" data-locale-active="false">user clicks</text><line x1="420" y1="82" x2="520" y2="82" stroke="#8a929b" stroke-width="2" marker-end="url(#arrow)"></line><text x="470" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="zh-CN" data-locale-active="true">request</text><text x="470" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="en" data-locale-active="false">request</text><line x1="640" y1="82" x2="740" y2="82" stroke="#8a929b" stroke-width="2" marker-end="url(#arrow)"></line><text x="690" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="zh-CN" data-locale-active="true">response</text><text x="690" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="en" data-locale-active="false">response</text><line x1="860" y1="82" x2="960" y2="82" stroke="#8a929b" stroke-width="2" marker-end="url(#arrow)"></line><text x="910" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="zh-CN" data-locale-active="true">valid JSON</text><text x="910" y="66" text-anchor="middle" font-size="12" fill="#68717b" data-locale="en" data-locale-active="false">valid JSON</text><rect x="80" y="54" width="120" height="56" rx="7" fill="#f3f4f4" stroke="#9aa1a8"></rect><text x="140" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="zh-CN" data-locale-active="true">Invalid JSON</text><text x="140" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="en" data-locale-active="false">Invalid JSON</text><rect x="300" y="54" width="120" height="56" rx="7" fill="#f3f4f4" stroke="#9aa1a8"></rect><text x="360" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="zh-CN" data-locale-active="true">Prompt</text><text x="360" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="en" data-locale-active="false">Prompt</text><rect x="520" y="54" width="120" height="56" rx="7" fill="#f3f4f4" stroke="#9aa1a8"></rect><text x="580" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="zh-CN" data-locale-active="true">DeepSeek</text><text x="580" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="en" data-locale-active="false">DeepSeek</text><rect x="740" y="54" width="120" height="56" rx="7" fill="#f3f4f4" stroke="#9aa1a8"></rect><text x="800" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="zh-CN" data-locale-active="true">Extract JSON</text><text x="800" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="en" data-locale-active="false">Extract JSON</text><rect x="960" y="54" width="120" height="56" rx="7" fill="#f3f4f4" stroke="#9aa1a8"></rect><text x="1020" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="zh-CN" data-locale-active="true">DiffView</text><text x="1020" y="87" text-anchor="middle" font-size="13" fill="#2f3439" data-locale="en" data-locale-active="false">DiffView</text></svg></figure>
-<table>
-<tr><th><span data-locale="zh-CN" data-locale-active="true">步骤</span><span data-locale="en" data-locale-active="false">Step</span></th><th><span data-locale="zh-CN" data-locale-active="true">失败处理</span><span data-locale="en" data-locale-active="false">Failure Handling</span></th></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">缺 key</span><span data-locale="en" data-locale-active="false">Missing key</span></td><td><span data-locale="zh-CN" data-locale-active="true">disabled prompt，不发请求。</span><span data-locale="en" data-locale-active="false">Disabled prompt; no request.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">网络失败</span><span data-locale="en" data-locale-active="false">Network failure</span></td><td><span data-locale="zh-CN" data-locale-active="true">Ai error，保留输入。</span><span data-locale="en" data-locale-active="false">Ai error; preserve input.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">返回非 JSON</span><span data-locale="en" data-locale-active="false">Non-JSON response</span></td><td><span data-locale="zh-CN" data-locale-active="true">extract_json 失败，提示用户。</span><span data-locale="en" data-locale-active="false">extract_json fails and informs user.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">语义风险</span><span data-locale="en" data-locale-active="false">Semantic risk</span></td><td><span data-locale="zh-CN" data-locale-active="true">用户通过 diff 自行确认。</span><span data-locale="en" data-locale-active="false">User confirms through diff.</span></td></tr>
-</table>
-</section>
+    <h2><span class="h2-num">5</span>请求执行流程</h2>
 
-<section class="doc-section" id="invariants">
-<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
-<ul><li><span data-locale="zh-CN" data-locale-active="true">API key 不暴露给 WebView。</span><span data-locale="en" data-locale-active="false">API key is not exposed to WebView.</span></li><li><span data-locale="zh-CN" data-locale-active="true">日志不记录 prompt 正文或 key。</span><span data-locale="en" data-locale-active="false">Logs do not record prompt body or key.</span></li><li><span data-locale="zh-CN" data-locale-active="true">AI 修复不自动 Accept。</span><span data-locale="en" data-locale-active="false">AI repair does not auto-accept.</span></li></ul>
-</section>
+    <h3><span class="h3-num">5.1</span>关键步骤</h3>
 
-<section class="doc-section" id="testing-plan">
-<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
-<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">extract_json 覆盖 markdown fence、前后说明、纯 JSON。</span><span data-locale="en" data-locale-active="false">extract_json covers markdown fences, surrounding explanation, and pure JSON.</span></li><li><span data-locale="zh-CN" data-locale-active="true">ai_test_connection 不泄露 key。</span><span data-locale="en" data-locale-active="false">ai_test_connection does not leak the key.</span></li></ol>
-</section>
+    <p>整体走单次 <code>ai_fix</code> command：前端进入 <code>requesting</code> loading 状态，Rust 在 60s timeout 内完成 HTTP、状态码映射、响应抽取和二次 JSON 验证后一次性返回结果或错误。</p>
 
-<section class="doc-section" id="open-questions">
-<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
-<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
-</section>
+    <table>
+      <thead><tr><th>步骤</th><th>动作</th><th>失败处理</th></tr></thead>
+      <tbody>
+        <tr><td>1. 双重开关</td><td>检查 <code>settings.ai_enabled</code></td><td>false 时 early return <code>AiDisabled</code>（UI 友好提示"在 Settings 启用 AI Fix"）</td></tr>
+        <tr><td>2. 取 key</td><td><code>secrets::get("deepseek_api_key")</code></td><td>None → <code>Secrets("no api key")</code></td></tr>
+        <tr><td>3. 构造 body</td><td>system + user 拼装 + 设置默认参数</td><td>纯字符串操作，无失败</td></tr>
+        <tr><td>4. 构造 HTTP client</td><td>60s timeout</td><td>构建失败 → <code>Http { status: 0, body }</code></td></tr>
+        <tr><td>5. POST</td><td>reqwest 60s timeout</td><td>网络错 → <code>Http { status: 0, body }</code></td></tr>
+        <tr><td>6. 状态码分支</td><td>429 / 5xx / 4xx / 200</td><td>分别映射为 RateLimit / Http</td></tr>
+        <tr><td>7. 抽 content</td><td><code>choices[0].message.content</code></td><td>空 → 当成 AiInvalidJson</td></tr>
+        <tr><td>8. extract + 验证</td><td><code>validate::extract_json</code> + <code>serde_json::from_str</code></td><td>失败 → <code>AiInvalidJson { raw }</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">5.2</span>请求默认参数</h3>
+
+    <table>
+      <thead><tr><th>参数</th><th>值</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>settings.ai_model_id</code>（默认 <code>deepseek-chat</code>）</td><td>plan/01 F7.3 用户可改</td></tr>
+        <tr><td>temperature</td><td>0.0</td><td>修复任务无创造性需求，最低温更可控可复现</td></tr>
+        <tr><td>max_tokens</td><td><code>clamp(input_chars/3 × 2, 512, 8192)</code></td><td>修复后输出 ≈ 输入大小；字符 ÷ 3 ≈ tokens；× 2 留余量</td></tr>
+        <tr><td>stream</td><td><b>false</b>（v1）</td><td>简化端到端验证；v2 可换流式</td></tr>
+        <tr><td>response_format</td><td><code>{ type: "json_object" }</code></td><td>DeepSeek / OpenAI 兼容，强制返回 JSON</td></tr>
+        <tr><td>request_id</td><td>UUID v4 by caller</td><td>幂等去重（前端双击 AI Fix 不重复扣 token）</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">5.3</span>fix 核心骨架</h3>
+
+    <pre><code>// src-tauri/src/ai/deepseek.rs ── 完整实现见源码；这里只展示骨架
+pub async fn fix(settings: &amp;Settings, req: &amp;AiFixReq) -&gt; Result&lt;AiFixResp, JsonitaError&gt; {
+    let started = Instant::now();
+
+    // 1-2: 检查开关 + 取 key
+    if !settings.ai_enabled {
+        return Err(JsonitaError::AiDisabled);
+    }
+    let key = secrets::get("deepseek_api_key")?
+        .ok_or_else(|| JsonitaError::Secrets("no api key".into()))?;
+
+    // 3-4: body + HTTP client
+    let body = build_request(req, settings)?;
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(60)).build()?;
+
+    // 5-6: HTTP + 状态码分支（完整实现 ~40 行，含 RateLimit / Http 映射）
+    let resp = client.post(ENDPOINT).bearer_auth(&amp;key).json(&amp;body).send().await?;
+
+    // 7-8: extract + 验证
+    let resp_struct: ChatResponse = resp.json().await
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+    let content = resp_struct.choices.first()
+        .map(|c| c.message.content.clone()).unwrap_or_default();
+    let fixed = validate::extract_json(&amp;content)
+        .ok_or(JsonitaError::AiInvalidJson { raw: content.clone() })?;
+    serde_json::from_str::&lt;serde_json::Value&gt;(&amp;fixed)
+        .map_err(|_| JsonitaError::AiInvalidJson { raw: content })?;
+
+    Ok(AiFixResp { fixed, model: resp_struct.model.unwrap_or_default(),
+                   tokens_in: ..., tokens_out: ..., elapsed_ms: ... })
+}</code></pre>
+
+    <h2><span class="h2-num">6</span>响应验证：extract_json 算法</h2>
+
+    <h3><span class="h3-num">6.1</span>三个 case</h3>
+
+    <p>虽然 prompt 明确禁止 markdown 包裹，但模型偶尔违反指令。<code>extract_json</code> 用三层 fallback 尽量救回：</p>
+
+    <table>
+      <thead><tr><th>case</th><th>识别</th><th>抽取</th></tr></thead>
+      <tbody>
+        <tr><td>1. 纯 JSON</td><td>trim 后首字符是 <code>{</code> 或 <code>[</code></td><td>直接返回</td></tr>
+        <tr><td>2. ``` 包裹</td><td>含 <code>```</code> 或 <code>```json</code></td><td>取首个 ``` 与末尾 ``` 之间的内容</td></tr>
+        <tr><td>3. 文本中夹带</td><td>找首个 <code>{[</code> 到末尾 <code>}]</code></td><td>子串</td></tr>
+        <tr><td>都不行</td><td>—</td><td>返回 None → <code>AiInvalidJson</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">6.2</span>核心 ~25 行</h3>
+
+    <pre><code>// src-tauri/src/ai/validate.rs
+pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt; {
+    let t = raw.trim();
+
+    // case 1: 直接是 JSON
+    if t.starts_with('{') || t.starts_with('[') {
+        return Some(t.to_string());
+    }
+
+    // case 2: ```json ... ``` 包裹
+    if let Some(start) = t.find("```") {
+        let after = &amp;t[start+3..];
+        let after = after.trim_start_matches("json").trim_start();
+        if let Some(end) = after.rfind("```") {
+            let inner = after[..end].trim();
+            if inner.starts_with('{') || inner.starts_with('[') {
+                return Some(inner.to_string());
+            }
+        }
+    }
+
+    // case 3: 文本中找首个 { 到末尾 } 之间
+    let first = t.find(|c: char| c == '{' || c == '[')?;
+    let last  = t.rfind(|c: char| c == '}' || c == ']')?;
+    if last &gt; first { Some(t[first..=last].to_string()) } else { None }
+}</code></pre>
+
+    <p><b>抽取后还要二次验证</b>：把 <code>extract_json</code> 返回的字符串再喂 <code>serde_json::from_str</code>，失败仍返 <code>AiInvalidJson</code>。"形似 JSON" 不等于 "是合法 JSON"，比如缺末尾 <code>}</code>、引号不对称等。</p>
+
+    <h2><span class="h2-num">7</span>错误透传策略</h2>
+
+    <p>所有错误都映射到 <code>JsonitaError</code> 9 个变体（<a href="13_schemas.html">13 § 1</a>）。本章特有的映射：</p>
+
+    <table>
+      <thead><tr><th>上游情况</th><th>映射为</th><th>UI 呈现</th></tr></thead>
+      <tbody>
+        <tr><td>HTTP 401</td><td><code>Http { status: 401, body }</code></td><td>AI Fix 面板错误；API key 测试时显示在输入区下方</td></tr>
+        <tr><td>HTTP 429</td><td><code>RateLimit { retry_after_sec }</code>（IPC <code>retryAfterSec</code>）</td><td>AI Fix 面板显示 retry-after</td></tr>
+        <tr><td>HTTP 5xx</td><td><code>Http { status, body }</code></td><td>AI Fix 面板显示 HTTP 状态和 body 摘要</td></tr>
+        <tr><td>网络错（reqwest）</td><td><code>Http { status: 0, body }</code></td><td>AI Fix 面板 / API key 输入区显示错误文本</td></tr>
+        <tr><td>AI 返回不合法</td><td><code>AiInvalidJson { raw }</code></td><td>AI Fix 面板错误文本；raw Modal 为保留设计</td></tr>
+        <tr><td>无 API key</td><td><code>Secrets("no api key")</code></td><td>AI Fix 面板提示 Settings → AI</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>retry-after 透传</b>：429 时优先解析 HTTP <code>Retry-After</code> header；缺失则默认 60 秒。这样前端倒计时是<b>遵守上游真实节奏</b>，而非客户端瞎猜。</p>
+
+    <h2><span class="h2-num">8</span>Diff 与决策流（前端）</h2>
+
+    <h3><span class="h3-num">8.1</span>状态机</h3>
+
+    <p>前端 store 三态：</p>
+
+    <ul>
+      <li><b>idle</b>：默认；用户未触发 / 上次已 Accept/Reject</li>
+      <li><b>requesting</b>：fix command 进行中；显示本地 loading 文案</li>
+      <li><b>awaiting-decision</b>：fix 完成，展示 DiffView；等待 Accept / Reject</li>
+      <li><b>error</b>：命令失败；展示错误信息，用户可修改输入或设置后重试</li>
+    </ul>
+
+    <p>状态转换由 <code>startFix</code> / <code>setSuccess</code> / <code>setError</code> / <code>reset</code> 触发。</p>
+
+    <p><b>键盘决策</b>：AI Fix 快捷键优先级高于普通 single-pane apply 和双击 <kbd>Esc</kbd> 隐藏窗口。当前内容明确是 parse error 且 AI Fix 可用时，<kbd>⌘Enter</kbd> 直接切到 <code>AiFixPane</code> 并触发请求；<code>awaiting-decision</code> 时 <kbd>⌘Enter</kbd> = Accept，<kbd>Esc</kbd> = Cancel；错误态 <kbd>Esc</kbd> 关闭 AI Fix 面板回 Format。</p>
+
+    <h3><span class="h3-num">8.2</span>Diff 算法</h3>
+
+    <p>用 npm 包 <code>diff</code>（<code>^7.0.0</code>） 的 <code>diffLines</code>；不引入更重的 monaco-diff（300 KB）。输出按行分类为 <code>eq / add / del</code>：</p>
+
+    <pre><code>// src/panes/diff.ts ── 核心 ~15 行
+import { diffLines } from 'diff';
+
+export type DiffLine = { type: 'eq' | 'add' | 'del'; text: string };
+
+export function computeDiff(before: string, after: string): DiffLine[] {
+  const parts = diffLines(before, after, { newlineIsToken: false });
+  const out: DiffLine[] = [];
+  for (const p of parts) {
+    const lines = p.value.split(/\n/);
+    if (lines[lines.length - 1] === '') lines.pop();
+    for (const line of lines) {
+      out.push({ type: p.added ? 'add' : p.removed ? 'del' : 'eq', text: line });
+    }
+  }
+  return out;
+}</code></pre>
+
+    <h3><span class="h3-num">8.3</span>DiffView 组件 props</h3>
+
+    <p>组件实现见 <code>src/panes/DiffView.tsx</code>；视觉效果见 <a href="01_mockups.html">01 § AI Fix DiffView mockup</a>。Props 契约：</p>
+
+    <table>
+      <thead><tr><th>prop</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>before</td><td>string</td><td>用户原文</td></tr>
+        <tr><td>after</td><td>string</td><td>AI 修复后</td></tr>
+        <tr><td>onAccept</td><td>() =&gt; void</td><td>替换编辑器内容 + 写入历史 op_type='ai-fix'</td></tr>
+        <tr><td>onReject</td><td>() =&gt; void</td><td>store.reject() → 回 idle</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="h2-num">9</span>测试连接（settings 面板用）</h2>
+
+    <p><b>关键设计</b>：<code>ai_test_connection(apiKey, modelId)</code> 接收待验证的 key + model 作为参数，<b>不读 secrets.json 里已存的 key</b>。理由：用户在设置面板输入新 key 时，需要"先测试再保存" ── 如果先入 secrets 再测，失败会污染已存的有效 key。</p>
+
+    <ul>
+      <li>发一个最小请求："respond with <code>{"ok":true}</code> only" + max_tokens=4</li>
+      <li>200 → ok=true + 返回模型 echo（验证 model id 确实可用）</li>
+      <li>非 200 → ok=false + 错误码 + 前 120 字 body</li>
+      <li>独立 timeout 15s（不复用 fix 的 60s）</li>
+    </ul>
+
+    <p class="section-divider"><b>三 · 契约速查</b></p>
+
+    <h2><span class="h2-num">10</span>schema 索引</h2>
+
+    <h3><span class="h3-num">10.1</span>对外类型（IPC）</h3>
+
+    <table>
+      <thead><tr><th>类型</th><th>定义</th></tr></thead>
+      <tbody>
+        <tr><td><code>AiFixReq</code> · <code>AiFixResp</code></td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
+        <tr><td><code>TestConnectionResp</code></td><td><a href="13_schemas.html">13 § 3.4</a></td></tr>
+        <tr><td><code>JsonitaError::Http / RateLimit / AiInvalidJson / AiDisabled / Secrets</code></td><td><a href="13_schemas.html">13 § 1</a></td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">10.2</span>内部 HTTP 协议类型（DeepSeek wire format）</h3>
+
+    <p>这些 struct <b>不出现在</b> IPC 边界，只在 <code>ai/deepseek.rs</code> 内部用，因此不进 13 § 3。完整字段映射 OpenAI Chat Completions 协议：</p>
+
+    <table>
+      <thead><tr><th>类型</th><th>关键字段</th></tr></thead>
+      <tbody>
+        <tr><td><code>ChatRequest</code></td><td>model / messages[] / temperature / max_tokens / stream / response_format</td></tr>
+        <tr><td><code>ChatMessage</code></td><td>role: "system" | "user" / content</td></tr>
+        <tr><td><code>ResponseFormat</code></td><td>type: "json_object"</td></tr>
+        <tr><td><code>ChatResponse</code></td><td>choices[] / usage / model</td></tr>
+        <tr><td><code>Choice</code></td><td>message.content / finish_reason</td></tr>
+        <tr><td><code>Usage</code></td><td>prompt_tokens / completion_tokens</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">10.3</span>函数签名</h3>
+
+    <pre><code>// src-tauri/src/ai/
+pub async fn fix(app: &amp;AppHandle, req: AiFixReq) -&gt; Result&lt;AiFixResp, JsonitaError&gt;;
+pub async fn test_connection(api_key: String, model_id: String)
+    -&gt; Result&lt;TestConnectionResp, JsonitaError&gt;;
+
+// 纯函数（无 IO）
+pub fn system_prompt() -&gt; &amp;'static str;
+pub fn user_prompt(text: &amp;str, line: Option&lt;u32&gt;, col: Option&lt;u32&gt;, msg: Option&lt;&amp;str&gt;) -&gt; String;
+pub fn extract_json(raw: &amp;str) -&gt; Option&lt;String&gt;;</code></pre>
+
+    <p class="section-divider"><b>四 · 运行时数字</b></p>
+
+    <h2><span class="h2-num">11</span>性能与容量</h2>
+
+    <table>
+      <thead><tr><th>指标</th><th>目标</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>typical fix latency</td><td>P50 &lt; 3s / P95 &lt; 8s</td><td>跟随 DeepSeek 当前性能；客户端开销 &lt; 100ms</td></tr>
+        <tr><td>最大输入</td><td>100 KB</td><td>大于此值时仍会请求；输入上限提示为保留 UI</td></tr>
+        <tr><td>请求超时</td><td>60 s（fix）/ 15 s（test_connection）</td><td>reqwest client timeout</td></tr>
+        <tr><td>进度推送频率</td><td>500 ms / 次</td><td>tokio::time::interval</td></tr>
+        <tr><td>token 上限</td><td>clamp(512, 8192)</td><td>避免模型截断 / 失控扣费</td></tr>
+      </tbody>
+    </table>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
 </main>
-<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
-</article>
 
-<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#request-flow"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Request Flow</span><span data-locale="en" data-locale-active="false">Request Flow</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
-<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">AI Client</span><span data-locale="en" data-locale-active="false">AI Client</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
-
-<div class="lightbox" data-renderer-owned="true" data-interaction="diagram-viewer" role="dialog" aria-modal="true" aria-label="图表查看器"><div class="lightbox-panel"><button class="lightbox-close" type="button" data-renderer-owned="true" aria-label="关闭"><span data-i18n-key="diagram.close">关闭</span></button><div class="lightbox-body"></div><div class="lightbox-toolbar"></div></div></div>
-<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="diagram-viewer">
-(() => {
-  const lightbox = document.querySelector('.lightbox[data-interaction="diagram-viewer"]');
-  if (!lightbox) return;
-  const body = lightbox.querySelector('.lightbox-body');
-  const toolbar = lightbox.querySelector('.lightbox-toolbar');
-  const closeButton = lightbox.querySelector('.lightbox-close');
-  let sourceSvg = null;
-  let cloneSvg = null;
-  let zoom = 1;
-  let panX = 0;
-  let panY = 0;
-  function label(key, fallback) {
-    const config = window.CAST_DOCS_I18N || {};
-    const locale = config.activeLocale || document.documentElement.lang || 'en';
-    const strings = (config.strings && config.strings[locale]) || {};
-    const fallbackStrings = (config.strings && config.strings.en) || {};
-    return strings[key] || fallbackStrings[key] || fallback;
-  }
-  function fileBase(svg) {
-    return svg.closest('[data-download-name]')?.getAttribute('data-download-name') || 'diagram';
-  }
-  function serialize(svg) {
-    const clone = svg.cloneNode(true);
-    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    return new XMLSerializer().serializeToString(clone);
-  }
-  function downloadBlob(blob, name) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 250);
-  }
-  function downloadSvg(svg) {
-    downloadBlob(new Blob([serialize(svg)], { type: 'image/svg+xml;charset=utf-8' }), `${fileBase(svg)}.svg`);
-  }
-  function downloadPng(svg) {
-    const url = URL.createObjectURL(new Blob([serialize(svg)], { type: 'image/svg+xml;charset=utf-8' }));
-    const img = new Image();
-    img.onload = () => {
-      const box = svg.viewBox && svg.viewBox.baseVal;
-      const width = box && box.width ? box.width : 900;
-      const height = box && box.height ? box.height : 520;
-      const canvas = document.createElement('canvas');
-      canvas.width = width * 2;
-      canvas.height = height * 2;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.scale(2, 2);
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-      canvas.toBlob((blob) => blob && downloadBlob(blob, `${fileBase(svg)}.png`), 'image/png');
-    };
-    img.src = url;
-  }
-  function setTransform() {
-    if (cloneSvg) cloneSvg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-  }
-  function makeButton(label, action) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = label;
-    button.setAttribute('data-renderer-owned', 'true');
-    button.addEventListener('click', action);
-    return button;
-  }
-  function makeI18nButton(key, fallback, action) {
-    const button = makeButton(label(key, fallback), action);
-    button.setAttribute('data-i18n-key', key);
-    return button;
-  }
-  function open(svg) {
-    sourceSvg = svg;
-    cloneSvg = svg.cloneNode(true);
-    cloneSvg.removeAttribute('width');
-    cloneSvg.removeAttribute('height');
-    cloneSvg.style.transformOrigin = 'center';
-    zoom = 1;
-    panX = 0;
-    panY = 0;
-    body.replaceChildren(cloneSvg);
-    toolbar.replaceChildren(
-      makeI18nButton('diagram.zoomOut', 'Zoom -', () => { zoom = Math.max(0.25, zoom * 0.8); setTransform(); }),
-      makeI18nButton('diagram.zoomIn', 'Zoom +', () => { zoom = Math.min(8, zoom * 1.25); setTransform(); }),
-      makeI18nButton('diagram.reset', 'Reset', () => { zoom = 1; panX = 0; panY = 0; setTransform(); }),
-      makeI18nButton('diagram.svg', 'SVG', () => downloadSvg(sourceSvg)),
-      makeI18nButton('diagram.png', 'PNG', () => downloadPng(sourceSvg))
-    );
-    lightbox.classList.add('open');
-    setTransform();
-  }
-  function close() {
-    lightbox.classList.remove('open');
-    body.replaceChildren();
-    toolbar.replaceChildren();
-    sourceSvg = null;
-    cloneSvg = null;
-  }
-  closeButton.addEventListener('click', close);
-  lightbox.addEventListener('click', (event) => { if (event.target === lightbox) close(); });
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
-  body.addEventListener('wheel', (event) => {
-    if (!cloneSvg) return;
-    event.preventDefault();
-    zoom = Math.max(0.25, Math.min(8, zoom * Math.exp(-event.deltaY * 0.0015)));
-    setTransform();
-  }, { passive: false });
-  let drag = null;
-  body.addEventListener('mousedown', (event) => {
-    if (!cloneSvg) return;
-    drag = { x: event.clientX, y: event.clientY, panX, panY };
-  });
-  window.addEventListener('mousemove', (event) => {
-    if (!drag) return;
-    panX = drag.panX + event.clientX - drag.x;
-    panY = drag.panY + event.clientY - drag.y;
-    setTransform();
-  });
-  window.addEventListener('mouseup', () => { drag = null; });
-  document.querySelectorAll('.diagram').forEach((figure) => {
-    const svg = figure.querySelector('svg');
-    if (!svg) return;
-    const tools = document.createElement('div');
-    tools.className = 'diagram-toolbar';
-    tools.setAttribute('data-renderer-owned', 'true');
-    tools.append(
-      makeI18nButton('diagram.open', 'Open', () => open(svg)),
-      makeI18nButton('diagram.svg', 'SVG', () => downloadSvg(svg)),
-      makeI18nButton('diagram.png', 'PNG', () => downloadPng(svg))
-    );
-    figure.appendChild(tools);
-  });
-})();
-</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
-  const config = window.CAST_DOCS_I18N;
-  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
-  const MEMORY_KEY = 'cast-docs:global-memory';
-  const root = document.documentElement;
-  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
-  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
-  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
-  function readMemory() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) {
-      return {};
-    }
-  }
-  function writeMemory(memory) {
-    try {
-      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-  function rememberDefaultLocale(locale) {
-    if (!config.locales.includes(locale)) return false;
-    const memory = readMemory();
-    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
-    memory.version = 1;
-    memory.preferences = {
-      ...preferences,
-      defaultLocale: locale,
-      defaultLocaleUpdatedAt: new Date().toISOString(),
-    };
-    return writeMemory(memory);
-  }
-  function defaultLocaleFromMemory() {
-    const locale = readMemory().preferences?.defaultLocale;
-    return config.locales.includes(locale) ? locale : null;
-  }
-  function apply(locale) {
-    if (!config.locales.includes(locale)) return;
-    root.lang = locale;
-    root.setAttribute('data-active-locale', locale);
-    config.activeLocale = locale;
-    document.querySelectorAll('[data-locale]').forEach((node) => {
-      const active = node.getAttribute('data-locale') === locale;
-      node.setAttribute('data-locale-active', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-locale-target]').forEach((button) => {
-      const active = button.getAttribute('data-locale-target') === locale;
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-key');
-      if (key) node.textContent = label(locale, key, node.textContent);
-    });
-  }
-  function maybeSetDefaultLocale(locale) {
-    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
-    const message = label(
-      locale,
-      'chrome.defaultLanguagePrompt',
-      `Set ${displayName(locale)} as the default language for CAST Docs?`
-    ).replace('{language}', displayName(locale));
-    if (window.confirm(message)) {
-      rememberDefaultLocale(locale);
-    }
-  }
-  document.querySelectorAll('[data-locale-target]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const locale = button.getAttribute('data-locale-target');
-      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
-      apply(locale);
-      maybeSetDefaultLocale(locale);
-    });
-  });
-  apply(defaultLocaleFromMemory() || config.activeLocale);
-})();
-</script>
+<script src="../assets/nav.js"></script>
 </body>
 </html>

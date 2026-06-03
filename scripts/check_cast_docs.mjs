@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { mkdtempSync, readFileSync, readdirSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -12,25 +12,36 @@ const RENDERER_ROOT = process.env.CAST_A_DOC_ROOT || "/Users/jin.huang/.codex/sk
 const VALIDATE_PROFILE = resolve(RENDERER_ROOT, "scripts/validate_project_profile.py");
 const RENDER_HTML = resolve(RENDERER_ROOT, "scripts/render_html.py");
 
-function docsInDir(dir) {
-  return readdirSync(resolve(ROOT, dir), { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((entry) => [`${dir}/${entry.name}`, `${dir}/${basename(entry.name, ".json")}.html`]);
-}
-
-const PLAN_DOCS = docsInDir("plan");
-const SPEC_DOCS = docsInDir("spec");
 const DOCS = [
   ["site/index.cast.json", "index.html"],
   ["site/todo.json", "todo.html"],
   ["site/changelist.json", "changelist.html"],
-  ["site/workflow.json", "workflow.html"],
-  ...PLAN_DOCS,
-  ...SPEC_DOCS,
 ];
 
-const STRICT_HTML = DOCS.map(([, output]) => output);
+const STRICT_HTML = [
+  "index.html",
+  "todo.html",
+  "changelist.html",
+  ...["00_overview.html", "01_features.html", "02_interaction.html", "03_tech_stack.html", "04_nfr.html"].map((name) => `plan/${name}`),
+  ...[
+    "00_architecture.html",
+    "01_mockups.html",
+    "02_ipc.html",
+    "03_design_tokens.html",
+    "04_components.html",
+    "05_icons_theme.html",
+    "06_window.html",
+    "07_menubar.html",
+    "08_editor.html",
+    "09_json_engine.html",
+    "10_storage.html",
+    "11_ai_client.html",
+    "12_packaging.html",
+    "13_schemas.html",
+    "14_i18n_a11y.html",
+    "15_logging.html",
+  ].map((name) => `spec/${name}`),
+];
 
 function run(args, opts = {}) {
   const result = spawnSync(args[0], args.slice(1), {
@@ -90,21 +101,12 @@ for (const rel of STRICT_HTML) {
   }
 }
 
-for (const [source, output] of [...PLAN_DOCS, ...SPEC_DOCS]) {
-  if (!existsSync(resolve(ROOT, source))) fail(`${output} is missing CAST JSON source ${source}`);
-  const html = readFileSync(resolve(ROOT, output), "utf8");
-  if (!html.includes('data-locale-target="zh-CN"') || !html.includes('data-locale-target="en"')) {
-    fail(`${output} is missing CAST bilingual locale switcher`);
-  }
-  if (!html.includes('data-renderer-owned="true"')) {
-    fail(`${output} does not look rendered by cast-a-doc`);
-  }
-}
-
 const indexSource = readFileSync(resolve(ROOT, "site/index.cast.json"), "utf8");
 for (const forbidden of [
   "\"href\": \"site/todo.json\"",
   "\"href\": \"site/changelist.json\"",
+  "\"href\": \".cast-docs/project.json\"",
+  "\"href\": \".cast-docs/i18n.json\"",
   "\"href\": \"site/index.cast.json\"",
   "\"href\": \"plan/\"",
   "\"href\": \"spec/\"",

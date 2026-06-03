@@ -1,873 +1,986 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="视觉权威、主浮窗状态、设置/历史弹窗、状态栏和动效约束。">
-<title>原型图与交互细节</title>
-<style>
-:root {
-  color-scheme: light dark;
-  --bg: #f8f8f7;
-  --surface: #ffffff;
-  --soft: #f2f3f3;
-  --text: #24272b;
-  --muted: #68717b;
-  --faint: #9aa1a8;
-  --border: #dedede;
-  --primary: #315f9f;
-  --primary-soft: #eef3fa;
-  --accent: #52686a;
-  --info: #566f99;
-  --info-soft: #f4f5f7;
-  --warn: #8a6d3b;
-  --warn-soft: #f8f4ea;
-  --danger: #9b4d49;
-  --danger-soft: #faf0ef;
-  --ok: #55745f;
-  --ok-soft: #eef4ef;
-  --code: #f1f2f2;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --font-xs: 11px;
-  --font-sm: 12.5px;
-  --font-base: 14px;
-  --font-md: 16px;
-  --font-lg: 20px;
-  --font-xl: 28px;
-  --font-title: 30px;
-  --line-tight: 1.25;
-  --line-normal: 1.65;
-  --line-loose: 1.75;
-  --line-code: 1.55;
-  --weight-regular: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 28px;
-  --space-10: 34px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 10px;
-  --radius-pill: 999px;
-  --motion-fast: 120ms;
-  --motion-base: 160ms;
-  --motion-slow: 220ms;
-  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
-  --surface-shadow: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111315;
-    --surface: #17191c;
-    --soft: #202328;
-    --text: #e2e5e8;
-    --muted: #a1a7ad;
-    --faint: #767d84;
-    --border: #30343a;
-    --primary: #9bb7d9;
-    --primary-soft: #182231;
-    --accent: #9ab4b1;
-    --info: #9aaeca;
-    --info-soft: #1b2027;
-    --warn: #c7b27e;
-    --warn-soft: #242117;
-    --danger: #d09a95;
-    --danger-soft: #271b1a;
-    --ok: #9ebaa5;
-    --ok-soft: #1a241d;
-    --code: #202328;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
-  }
-}
-:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
-a { color: var(--primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
-code, pre { font-family: var(--mono); }
-code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
-pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
-pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
-mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
-del { color: var(--muted); text-decoration: line-through; }
-u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
-[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
-[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
-[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
-[data-locale][data-locale-active="false"] { display: none; }
-.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
-.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.toc ol { list-style: none; margin: 0; padding: 0; }
-.toc li { margin: 0; }
-.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
-.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
-.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
-.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
-.brand-logo:hover { text-decoration: none; }
-.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
-.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
-.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project { flex: 0 0 auto; }
-.topbar-doc { color: var(--muted); font-weight: 500; }
-.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
-.topbar-links { display: flex; gap: 12px; align-items: center; }
-.topbar-links:empty { display: none; }
-.topbar-link { color: var(--muted); font-size: var(--font-sm); }
-.topbar-spacer { flex: 1; }
-.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
-.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
-.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
-.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
-.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
-.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
-.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
-.doc-summary { padding: 16px 18px; }
-.doc-summary ul { margin: 0; }
-.set-grid { display: grid; gap: 22px; }
-.set-section { margin: 0; }
-.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
-.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
-.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
-.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
-.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
-.chapter-card a:hover { text-decoration: none; }
-.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
-.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
-.chapter-content { display: grid; gap: 5px; min-width: 0; }
-.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
-.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
-.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
-.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
-.set-pagination-next { text-align: right; }
-.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
-.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
-.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
-.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
-.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
-.section-title { overflow-wrap: anywhere; }
-.section-empty { color: var(--muted); font-style: italic; }
-.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
-.callout p { margin: 6px 0 0; }
-.callout-info { border-left-color: var(--info); background: var(--info-soft); }
-.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
-.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
-.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
-table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
-th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
-tr:last-child td { border-bottom: 0; }
-.details-block { padding: 0 14px; }
-.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
-.diagram { position: relative; padding: 16px; overflow: auto; }
-.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
-.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
-.diagram:hover .diagram-toolbar { opacity: 1; }
-button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
-.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
-.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
-.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
-.code-status-ok { color: var(--ok); }
-.code-status-error { color: var(--danger); }
-.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
-.code-status + .code-copy { margin-left: 0; }
-.code-copy:hover { color: var(--text); }
-.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
-.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
-.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.code-line-content { padding: 0 14px; white-space: pre; }
-.code-token-key { color: var(--primary); }
-.code-token-bool { color: var(--info); }
-.code-token-number { color: var(--warn); }
-.code-token-flag { color: var(--accent); }
-.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
-.diff-block > h3 { grid-column: 1 / -1; }
-.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
-.diff-side + .diff-side { margin-left: -1px; }
-.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
-.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
-.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
-.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
-.diff-line-content { padding-right: 14px; white-space: pre; }
-.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
-.line-add { color: var(--ok); }
-.line-remove { color: var(--danger); }
-.line-warning { color: var(--warn); }
-.line-context { color: var(--text); }
-.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.participant-card, .value-card, .action-card { padding: 14px 16px; }
-.action-card { padding: 20px; }
-.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
-.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
-.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
-.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
-.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
-.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
-.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
-.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
-.open-question + .open-question { border-top: 1px solid var(--border); }
-.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
-.open-question-text { min-width: 0; }
-.prompt-block { margin-top: 20px; }
-.prompt-block .code-header { padding: 12px 14px; }
-.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
-.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
-.prompt-block .code-line-number { padding-right: 12px; }
-.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
-.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.media-frame { margin: 0; overflow: hidden; }
-.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
-.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
-.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
-.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
-.column { min-width: 0; }
-.column h3 { margin-top: 0; }
-.column p:first-child { margin-top: 0; }
-.column p:last-child { margin-bottom: 0; }
-.column > .code-shell, .column > table { margin-top: 12px; }
-.toggle-view { padding: 14px; }
-.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
-.toggle-button { border: 0; background: transparent; color: var(--muted); }
-.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.toggle-panel[data-view-active="false"] { display: none; }
-.toggle-panel > :first-child { margin-top: 0; }
-.toggle-panel > :last-child { margin-bottom: 0; }
-.slider-control { padding: 16px; }
-.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.slider-header label { font-weight: 700; }
-.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
-.slider-range { display: block; width: 100%; accent-color: var(--primary); }
-.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
-.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
-.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
-.lightbox.open { display: flex; }
-.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
-.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
-.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
-.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
-.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
-@media (max-width: 760px) {
-  body { display: flex; flex-direction: column; }
-  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
-  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
-  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
-  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
-  .doc-header h1 { font-size: var(--font-xl); }
-  .diff-block { grid-template-columns: 1fr; }
-  .set-pagination { grid-template-columns: 1fr; }
-  .set-pagination-next { text-align: left; }
-  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
-  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
-}
-@media print {
-  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
-  .doc { margin-left: 0; max-width: none; padding: 0; }
-}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 01 原型图 & 交互细节</title>
+<link rel="stylesheet" href="../assets/style.css">
 </head>
-<body>
+<body data-section="spec" data-chapter="01">
 
-<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
-{
-  "metadata": {
-    "language": "zh-CN",
-    "owner": "Jin Huang",
-    "logo": {
-      "src": ".cast-docs/assets/jsonita-logo.png",
-      "alt": {
-        "zh-CN": "Jsonita 标志",
-        "en": "Jsonita logo"
-      },
-      "href": "../index.html"
-    },
-    "title": {
-      "zh-CN": "原型图与交互细节",
-      "en": "Mockups And Interaction Details"
-    },
-    "description": {
-      "zh-CN": "视觉权威、主浮窗状态、设置/历史弹窗、状态栏和动效约束。",
-      "en": "Visual authority, main-window states, settings/history modals, status bar, and motion constraints."
-    },
-    "schemaVersion": "1.0",
-    "locales": [
-      "zh-CN",
-      "en"
-    ],
-    "status": "review",
-    "audience": [
-      "engineering",
-      "product"
-    ],
-    "updatedAt": "2026-06-03",
-    "showMeta": true,
-    "shellLinks": [
-      {
-        "label": {
-          "zh-CN": "首页",
-          "en": "Home"
-        },
-        "href": "../index.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "TODO",
-          "en": "TODO"
-        },
-        "href": "../todo.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "Changelist",
-          "en": "Changelist"
-        },
-        "href": "../changelist.html",
-        "placement": "topbar"
-      }
-    ]
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 01</span>
+      <h1 class="doc-title">原型图 & 交互细节</h1>
+      <p class="doc-subtitle">所有界面真实 HTML/CSS mockup ── 每个 mock 左右 light/dark 双版。本章是 Jsonita 视觉层的唯一权威。</p>
+    </div>
+
+    <p class="callout">单窗 Tree 不是执行动作：切到 Tree 且 JSON 合法时，主区域直接显示树视图，不出现右下角 <kbd>⌘↵</kbd> Run 提示。</p>
+
+    <p>其他章节（04 组件库 / 06 窗口 / 07 菜单栏 / 08 编辑器）若需引用界面外观，均链到此章对应 § 节。<b>不允许</b>在别处重复画 UI。</p>
+
+    <p class="callout callout-ok">阶段 3 已落地：本章已从 flat 重绘为<b>原生玻璃（macOS vibrancy）</b>视觉权威；材质 / 调色 / 动效出处仍见 <a href="../design/HANDOFF.md">design/HANDOFF.md</a> 与 <code>design/*.html</code>。当前实现使用 Tauri 透明窗口 + macOS window effects；CSS mockup 用 <code>backdrop-filter</code> 仅模拟文档预览。实现层必须保持主窗单层玻璃 tint，TabBar / StatusBar / editor 只用轻量叠层，避免叠成旧 flat 深色面板。</p>
+
+    <h2><span class="h2-num">1</span>主浮窗 ── 6 种状态</h2>
+
+    <h3 id="1.1"><span class="h3-num">1.1</span>Format Tab · valid JSON（默认呼出后）</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{"name":"alice","age":30,"items":["a","b","c"]}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · 2 spaces</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30,
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 5 lines · 76 bytes</span>
+            <span>⌘Y History</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{"name":"alice","age":30,"items":["a","b","c"]}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · 2 spaces</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30,
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 5 lines · 76 bytes</span>
+            <span>⌘Y History</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ul>
+      <li><b>顶部 Tab 条</b>：6 个 Tab（AI Fix 仅在 parse error 时出现，见 § 1.5）</li>
+      <li><b>左右栏</b>：1:1 等宽，可拖动 resize；记忆到 <code>window.json</code></li>
+      <li><b>JSON 类型染色</b>：见 <a href="03_design_tokens.html">03 § 2</a> 颜色 token</li>
+    </ul>
+
+    <h3 id="1.2"><span class="h3-num">1.2</span>Minify Tab</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab active">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · single line</div>
+<pre><code>{"name":"alice","age":30}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 1 line · 26 bytes</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab active">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Output · single line</div>
+<pre><code>{"name":"alice","age":30}</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 1 line · 26 bytes</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="1.3"><span class="h3-num">1.3</span>Tree Tab（含 hover 复制 ── 见 § 12）</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab active">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "user": {
+    "name": "alice",
+    "active": true,
+    "age": 30
   },
-  "manifest": {
-    "documentType": "engineering-spec",
-    "scenario": "none",
-    "sections": [
-      "overview",
-      "summary",
-      "visual-contract",
-      "state-matrix",
-      "source-references",
-      "invariants",
-      "testing-plan",
-      "open-questions"
-    ],
-    "components": {
-      "required": [
-        "summary-block",
-        "metadata-block",
-        "toc",
-        "section",
-        "paragraph"
-      ],
-      "optional": [
-        "table",
-        "callout",
-        "values-grid",
-        "acceptance-criteria",
-        "open-questions",
-        "source-refs",
-        "diagram",
-        "code-block"
-      ],
-      "omitted": [
-        "media-grid",
-        "diff-block",
-        "toggle-view",
-        "slider-control"
-      ]
-    }
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 Copy</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{3}</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span></div>
+<div class="tree-node"><span class="tree-key">active</span>: <span class="tree-bool">true</span></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[3]</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-index">[0]</span>: <span class="tree-string">"a"</span></div>
+<div class="tree-node"><span class="tree-index">[1]</span>: <span class="tree-string">"b"</span></div>
+<div class="tree-node"><span class="tree-index">[2]</span>: <span class="tree-string">"c"</span></div>
+</div>
+</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 11 nodes</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab active">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input</div>
+<pre><code>{
+  "user": {
+    "name": "alice",
+    "active": true,
+    "age": 30
   },
-  "sections": [
-    {
-      "id": "overview",
-      "title": {
-        "zh-CN": "概览",
-        "en": "Overview"
-      },
-      "blocks": [
-        {
-          "type": "summary",
-          "items": [
-            {
-              "label": {
-                "zh-CN": "视觉权威",
-                "en": "Visual Authority"
-              },
-              "body": {
-                "zh-CN": "真实实现以 src/styles/tokens.css 与 design/HANDOFF.md 的稳定结论为准。",
-                "en": "The implementation follows src/styles/tokens.css and stable conclusions in design/HANDOFF.md."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "主状态",
-                "en": "Main States"
-              },
-              "body": {
-                "zh-CN": "empty、valid、invalid、AI-fix、history-restore、settings 六类状态需要一致。",
-                "en": "empty, valid, invalid, AI-fix, history-restore, and settings states must remain consistent."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "动效",
-                "en": "Motion"
-              },
-              "body": {
-                "zh-CN": "只做短时原生感 transition，尊重 prefers-reduced-motion，不动画 blur 半径。",
-                "en": "Use short native-feeling transitions, respect prefers-reduced-motion, and do not animate blur radius."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "summary",
-      "title": {
-        "zh-CN": "摘要",
-        "en": "Summary"
-      },
-      "blocks": [
-        {
-          "type": "paragraph",
-          "text": {
-            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
-            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
-          }
-        }
-      ]
-    },
-    {
-      "id": "visual-contract",
-      "title": {
-        "zh-CN": "Visual Contract",
-        "en": "Visual Contract"
-      },
-      "blocks": [
-        {
-          "type": "table",
-          "tableType": "data",
-          "headers": [
-            {
-              "zh-CN": "对象",
-              "en": "Object"
-            },
-            {
-              "zh-CN": "契约",
-              "en": "Contract"
-            }
-          ],
-          "rows": [
-            [
-              {
-                "zh-CN": "浮窗",
-                "en": "Floating window"
-              },
-              {
-                "zh-CN": "玻璃材质、紧凑密度、8px 内圆角体系、状态栏轻量。",
-                "en": "Glass material, compact density, 8px-or-less radius system, lightweight status bar."
-              }
-            ],
-            [
-              {
-                "zh-CN": "设置弹窗",
-                "en": "Settings modal"
-              },
-              {
-                "zh-CN": "悬浮卡片使用 elevated surface，左侧分组导航，右侧表单。",
-                "en": "Floating card uses elevated surface, group navigation on the left, forms on the right."
-              }
-            ],
-            [
-              {
-                "zh-CN": "History",
-                "en": "History"
-              },
-              {
-                "zh-CN": "搜索、pin/star、operation chip 和 restore action 保持扫描友好。",
-                "en": "Search, pin/star, operation chips, and restore action remain scannable."
-              }
-            ],
-            [
-              {
-                "zh-CN": "DiffView",
-                "en": "DiffView"
-              },
-              {
-                "zh-CN": "AI Fix 结果必须以 before/after diff 呈现。",
-                "en": "AI Fix result must be shown as before/after diff."
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "id": "state-matrix",
-      "title": {
-        "zh-CN": "State Matrix",
-        "en": "State Matrix"
-      },
-      "blocks": [
-        {
-          "type": "table",
-          "tableType": "data",
-          "headers": [
-            {
-              "zh-CN": "状态",
-              "en": "State"
-            },
-            {
-              "zh-CN": "触发",
-              "en": "Trigger"
-            },
-            {
-              "zh-CN": "显示",
-              "en": "Display"
-            }
-          ],
-          "rows": [
-            [
-              {
-                "zh-CN": "Empty",
-                "en": "Empty"
-              },
-              {
-                "zh-CN": "首次打开或 Cmd+K。",
-                "en": "First open or Cmd+K."
-              },
-              {
-                "zh-CN": "输入占位、无输出、状态栏 idle。",
-                "en": "Input placeholder, no output, idle status bar."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Valid",
-                "en": "Valid"
-              },
-              {
-                "zh-CN": "JSON parse 成功。",
-                "en": "JSON parse succeeds."
-              },
-              {
-                "zh-CN": "输出 tab 可用，状态 Valid JSON。",
-                "en": "Output tabs available, Valid JSON status."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Invalid",
-                "en": "Invalid"
-              },
-              {
-                "zh-CN": "parse 失败。",
-                "en": "Parse fails."
-              },
-              {
-                "zh-CN": "lint 标注、状态错误、AI Fix 条件出现。",
-                "en": "Lint annotation, status error, AI Fix conditions appear."
-              }
-            ],
-            [
-              {
-                "zh-CN": "AI Fix",
-                "en": "AI Fix"
-              },
-              {
-                "zh-CN": "用户点击 repair。",
-                "en": "User clicks repair."
-              },
-              {
-                "zh-CN": "loading、diff、Accept/Cancel。",
-                "en": "Loading, diff, Accept/Cancel."
-              }
-            ],
-            [
-              {
-                "zh-CN": "History restore",
-                "en": "History restore"
-              },
-              {
-                "zh-CN": "恢复历史或 Cmd+Shift+L。",
-                "en": "Restore history or Cmd+Shift+L."
-              },
-              {
-                "zh-CN": "输入和 tab state 更新，不重启窗口。",
-                "en": "Input and tab state update without restarting the window."
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "id": "source-references",
-      "title": {
-        "zh-CN": "源参考",
-        "en": "Source References"
-      },
-      "blocks": [
-        {
-          "type": "source-refs",
-          "items": [
-            {
-              "label": {
-                "zh-CN": "design/HANDOFF.md",
-                "en": "design/HANDOFF.md"
-              },
-              "url": "../design/HANDOFF.md",
-              "text": {
-                "zh-CN": "视觉探索的稳定结论。",
-                "en": "Stable conclusions from visual exploration."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "tokens.css",
-                "en": "tokens.css"
-              },
-              "url": "../src/styles/tokens.css",
-              "text": {
-                "zh-CN": "真实 token 源。",
-                "en": "Real token source."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "invariants",
-      "title": {
-        "zh-CN": "不变量",
-        "en": "Invariants"
-      },
-      "blocks": [
-        {
-          "type": "list",
-          "items": [
-            {
-              "zh-CN": "图标按钮优先使用图标，不用 emoji 表达工具。",
-              "en": "Icon buttons prefer icons, not emoji tool symbols."
-            },
-            {
-              "zh-CN": "切换 tab 或单窗不得 remount 编辑器。",
-              "en": "Switching tabs or panes must not remount the editor."
-            },
-            {
-              "zh-CN": "文本不得在按钮、卡片或状态栏中溢出。",
-              "en": "Text must not overflow buttons, cards, or status bars."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "testing-plan",
-      "title": {
-        "zh-CN": "测试计划",
-        "en": "Testing Plan"
-      },
-      "blocks": [
-        {
-          "type": "acceptance-criteria",
-          "items": [
-            {
-              "zh-CN": "用真实 macOS 检查 light/dark/system vibrancy。",
-              "en": "Check light/dark/system vibrancy on real macOS."
-            },
-            {
-              "zh-CN": "用键盘 walkthrough 覆盖主状态。",
-              "en": "Use keyboard walkthrough to cover main states."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "open-questions",
-      "title": {
-        "zh-CN": "开放问题",
-        "en": "Open Questions"
-      },
-      "blocks": [
-        {
-          "type": "open-questions",
-          "questions": [
-            {
-              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
-              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-</script>
+  "items": ["a", "b", "c"]
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 Copy</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{3}</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span></div>
+<div class="tree-node"><span class="tree-key">active</span>: <span class="tree-bool">true</span></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[3]</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-index">[0]</span>: <span class="tree-string">"a"</span></div>
+<div class="tree-node"><span class="tree-index">[1]</span>: <span class="tree-string">"b"</span></div>
+<div class="tree-node"><span class="tree-index">[2]</span>: <span class="tree-string">"c"</span></div>
+</div>
+</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · 11 nodes</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<article class="doc">
-<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">原型图与交互细节</span><span data-locale="en" data-locale-active="false">Mockups And Interaction Details</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
-<main>
-<section class="doc-section" id="overview">
-<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
-<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">视觉权威</span><span data-locale="en" data-locale-active="false">Visual Authority</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">真实实现以 src/styles/tokens.css 与 design/HANDOFF.md 的稳定结论为准。</span><span data-locale="en" data-locale-active="false">The implementation follows src/styles/tokens.css and stable conclusions in design/HANDOFF.md.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">主状态</span><span data-locale="en" data-locale-active="false">Main States</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">empty、valid、invalid、AI-fix、history-restore、settings 六类状态需要一致。</span><span data-locale="en" data-locale-active="false">empty, valid, invalid, AI-fix, history-restore, and settings states must remain consistent.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">动效</span><span data-locale="en" data-locale-active="false">Motion</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">只做短时原生感 transition，尊重 prefers-reduced-motion，不动画 blur 半径。</span><span data-locale="en" data-locale-active="false">Use short native-feeling transitions, respect prefers-reduced-motion, and do not animate blur radius.</span></li></ul></section>
-</section>
+    <h3 id="1.4"><span class="h3-num">1.4</span>→Str / →JSON 互转</h3>
 
-<section class="doc-section" id="summary">
-<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
-<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
-</section>
+    <p>结构同 § 1.1，仅 active tab 与 panel 内容变。略 ── light/dark 配色规则同 § 1.1-1.3。</p>
 
-<section class="doc-section" id="visual-contract">
-<h2><span data-locale="zh-CN" data-locale-active="true">Visual Contract</span><span data-locale="en" data-locale-active="false">Visual Contract</span></h2>
-<table>
-<tr><th><span data-locale="zh-CN" data-locale-active="true">对象</span><span data-locale="en" data-locale-active="false">Object</span></th><th><span data-locale="zh-CN" data-locale-active="true">契约</span><span data-locale="en" data-locale-active="false">Contract</span></th></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">浮窗</span><span data-locale="en" data-locale-active="false">Floating window</span></td><td><span data-locale="zh-CN" data-locale-active="true">玻璃材质、紧凑密度、8px 内圆角体系、状态栏轻量。</span><span data-locale="en" data-locale-active="false">Glass material, compact density, 8px-or-less radius system, lightweight status bar.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">设置弹窗</span><span data-locale="en" data-locale-active="false">Settings modal</span></td><td><span data-locale="zh-CN" data-locale-active="true">悬浮卡片使用 elevated surface，左侧分组导航，右侧表单。</span><span data-locale="en" data-locale-active="false">Floating card uses elevated surface, group navigation on the left, forms on the right.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">History</span><span data-locale="en" data-locale-active="false">History</span></td><td><span data-locale="zh-CN" data-locale-active="true">搜索、pin/star、operation chip 和 restore action 保持扫描友好。</span><span data-locale="en" data-locale-active="false">Search, pin/star, operation chips, and restore action remain scannable.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">DiffView</span><span data-locale="en" data-locale-active="false">DiffView</span></td><td><span data-locale="zh-CN" data-locale-active="true">AI Fix 结果必须以 before/after diff 呈现。</span><span data-locale="en" data-locale-active="false">AI Fix result must be shown as before/after diff.</span></td></tr>
-</table>
-</section>
+    <h3 id="1.5"><span class="h3-num">1.5</span>错误状态 + AI Fix Tab 出现</h3>
 
-<section class="doc-section" id="state-matrix">
-<h2><span data-locale="zh-CN" data-locale-active="true">State Matrix</span><span data-locale="en" data-locale-active="false">State Matrix</span></h2>
-<table>
-<tr><th><span data-locale="zh-CN" data-locale-active="true">状态</span><span data-locale="en" data-locale-active="false">State</span></th><th><span data-locale="zh-CN" data-locale-active="true">触发</span><span data-locale="en" data-locale-active="false">Trigger</span></th><th><span data-locale="zh-CN" data-locale-active="true">显示</span><span data-locale="en" data-locale-active="false">Display</span></th></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Empty</span><span data-locale="en" data-locale-active="false">Empty</span></td><td><span data-locale="zh-CN" data-locale-active="true">首次打开或 Cmd+K。</span><span data-locale="en" data-locale-active="false">First open or Cmd+K.</span></td><td><span data-locale="zh-CN" data-locale-active="true">输入占位、无输出、状态栏 idle。</span><span data-locale="en" data-locale-active="false">Input placeholder, no output, idle status bar.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Valid</span><span data-locale="en" data-locale-active="false">Valid</span></td><td><span data-locale="zh-CN" data-locale-active="true">JSON parse 成功。</span><span data-locale="en" data-locale-active="false">JSON parse succeeds.</span></td><td><span data-locale="zh-CN" data-locale-active="true">输出 tab 可用，状态 Valid JSON。</span><span data-locale="en" data-locale-active="false">Output tabs available, Valid JSON status.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Invalid</span><span data-locale="en" data-locale-active="false">Invalid</span></td><td><span data-locale="zh-CN" data-locale-active="true">parse 失败。</span><span data-locale="en" data-locale-active="false">Parse fails.</span></td><td><span data-locale="zh-CN" data-locale-active="true">lint 标注、状态错误、AI Fix 条件出现。</span><span data-locale="en" data-locale-active="false">Lint annotation, status error, AI Fix conditions appear.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">AI Fix</span><span data-locale="en" data-locale-active="false">AI Fix</span></td><td><span data-locale="zh-CN" data-locale-active="true">用户点击 repair。</span><span data-locale="en" data-locale-active="false">User clicks repair.</span></td><td><span data-locale="zh-CN" data-locale-active="true">loading、diff、Accept/Cancel。</span><span data-locale="en" data-locale-active="false">Loading, diff, Accept/Cancel.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">History restore</span><span data-locale="en" data-locale-active="false">History restore</span></td><td><span data-locale="zh-CN" data-locale-active="true">恢复历史或 Cmd+Shift+L。</span><span data-locale="en" data-locale-active="false">Restore history or Cmd+Shift+L.</span></td><td><span data-locale="zh-CN" data-locale-active="true">输入和 tab state 更新，不重启窗口。</span><span data-locale="en" data-locale-active="false">Input and tab state update without restarting the window.</span></td></tr>
-</table>
-</section>
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai">AI Fix</button>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input · 非法</div>
+<pre><code>{
+  name: 'alice',
+  age: 30,
+  items: ["a","b",],
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label" style="color: var(--danger);">Output · 错误</div>
+<pre style="color: var(--text-faint); font-style: italic;"><code>// 等待修复后输出</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span style="color: var(--danger); font-weight: 600;">● Line 2, Col 3: key must be a string</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai">AI Fix</button>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Input · 非法</div>
+<pre><code>{
+  name: 'alice',
+  age: 30,
+  items: ["a","b",],
+}</code></pre>
+            </div>
+            <div class="mockup-panel">
+              <div class="mockup-panel-label" style="color: #F27A7A;">Output · 错误</div>
+<pre style="color: rgba(255,255,255,0.4); font-style: italic;"><code>// 等待修复后输出</code></pre>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span style="color: #F27A7A; font-weight: 600;">● Line 2, Col 3: key must be a string</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<section class="doc-section" id="source-references">
-<h2><span data-locale="zh-CN" data-locale-active="true">源参考</span><span data-locale="en" data-locale-active="false">Source References</span></h2>
-<ul class="source-refs"><li><a href="../design/HANDOFF.md"><span data-locale="zh-CN" data-locale-active="true">design/HANDOFF.md</span><span data-locale="en" data-locale-active="false">design/HANDOFF.md</span></a> - <span data-locale="zh-CN" data-locale-active="true">视觉探索的稳定结论。</span><span data-locale="en" data-locale-active="false">Stable conclusions from visual exploration.</span></li><li><a href="../src/styles/tokens.css"><span data-locale="zh-CN" data-locale-active="true">tokens.css</span><span data-locale="en" data-locale-active="false">tokens.css</span></a> - <span data-locale="zh-CN" data-locale-active="true">真实 token 源。</span><span data-locale="en" data-locale-active="false">Real token source.</span></li></ul>
-</section>
+    <h3 id="1.6"><span class="h3-num">1.6</span>单窗模式（Single-pane）</h3>
 
-<section class="doc-section" id="invariants">
-<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
-<ul><li><span data-locale="zh-CN" data-locale-active="true">图标按钮优先使用图标，不用 emoji 表达工具。</span><span data-locale="en" data-locale-active="false">Icon buttons prefer icons, not emoji tool symbols.</span></li><li><span data-locale="zh-CN" data-locale-active="true">切换 tab 或单窗不得 remount 编辑器。</span><span data-locale="en" data-locale-active="false">Switching tabs or panes must not remount the editor.</span></li><li><span data-locale="zh-CN" data-locale-active="true">文本不得在按钮、卡片或状态栏中溢出。</span><span data-locale="en" data-locale-active="false">Text must not overflow buttons, cards, or status bars.</span></li></ul>
-</section>
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">In-place editor · ⌘Enter applies active tab</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+              <div style="position:absolute;right:10px;bottom:34px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);font-size:11px;color:var(--text-muted);box-shadow:var(--shadow-sm);"><kbd>⌘↵</kbd> Run Format</div>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · single-pane</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">In-place editor · ⌘Enter applies active tab</div>
+<pre><code>{
+  "name": "alice",
+  "age": 30
+}</code></pre>
+              <div style="position:absolute;right:10px;bottom:34px;padding:5px 8px;border:1px solid #3F3F46;border-radius:6px;background:#232326;font-size:11px;color:#9BA3AF;box-shadow:var(--shadow-sm);"><kbd>⌘↵</kbd> Run Format</div>
+            </div>
+          </div>
+          <div class="mockup-statusbar">
+            <span><span class="mockup-status-ok">● Valid JSON</span> · single-pane</span>
+            <span>History</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<section class="doc-section" id="testing-plan">
-<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
-<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">用真实 macOS 检查 light/dark/system vibrancy。</span><span data-locale="en" data-locale-active="false">Check light/dark/system vibrancy on real macOS.</span></li><li><span data-locale="zh-CN" data-locale-active="true">用键盘 walkthrough 覆盖主状态。</span><span data-locale="en" data-locale-active="false">Use keyboard walkthrough to cover main states.</span></li></ol>
-</section>
+    <h2 id="2"><span class="h2-num">2</span>状态栏 ── 4 态对照</h2>
 
-<section class="doc-section" id="open-questions">
-<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
-<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
-</section>
+    <table>
+      <thead><tr><th>状态</th><th>light</th><th>dark</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>valid</td>
+          <td><div style="padding:6px 12px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px;"><span style="color:var(--ok);font-weight:600;">●</span> Valid JSON · 5 lines · 76 bytes</div></td>
+          <td><div style="padding:6px 12px; background:#1F2329; border:1px solid #343A46; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#E6EAF0;"><span style="color:#67C288;font-weight:600;">●</span> Valid JSON · 5 lines · 76 bytes</div></td>
+        </tr>
+        <tr>
+          <td>error</td>
+          <td><div style="padding:6px 12px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px; color:var(--danger); font-weight:600;">● Invalid JSON · Line 3, Col 12</div></td>
+          <td><div style="padding:6px 12px; background:#1F2329; border:1px solid #343A46; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#F27A7A; font-weight:600;">● Invalid JSON · Line 3, Col 12</div></td>
+        </tr>
+        <tr>
+          <td>empty</td>
+          <td><div style="padding:6px 12px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">— Paste JSON to start</div></td>
+          <td><div style="padding:6px 12px; background:#1F2329; border:1px solid #343A46; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#7D8592;">— Paste JSON to start</div></td>
+        </tr>
+        <tr>
+          <td>large</td>
+          <td><div style="padding:6px 12px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px; color:var(--warn); font-weight:600;">● Large file · 5.4 MB</div></td>
+          <td><div style="padding:6px 12px; background:#1F2329; border:1px solid #343A46; border-radius:6px; font-family:var(--font-mono); font-size:11px; color:#E0A14A; font-weight:600;">● Large file · 5.4 MB</div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><b>状态栏右侧交互（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：右侧两个控件<b>对称</b> —— <code>Switch to [Single / Split] Panel</code>（切换单窗 / 双栏，纯文字无图标）与 <code>History</code>。两者平时只显文字，hover / 键盘聚焦才<b>滑出</b>各自快捷键（<kbd>⌘\</kbd> / <kbd>⌘Y</kbd>；max-width + opacity + translateX，~150 ms <code>--ease-native</code>）。点 <code>Switch…</code> 或按 <kbd>⌘\</kbd> <b>即时切换布局</b>（不改窗口尺寸，避免 toggle 抖动）；单窗下左侧不再显示 "single-pane"（与右侧控件文字重复）。</p>
+
+    <h2><span class="h2-num">3</span>菜单栏 tray + 下拉菜单</h2>
+
+    <p>左键 toggle 浮窗；右键弹下拉。tray 图标用 template variant 自动反色（见 <a href="05_icons_theme.html">05 § 3.5</a>）。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light menubar</div>
+        <div class="mockup-window" style="max-width: 340px;">
+          <div class="mockup-titlebar" style="background: var(--bg-subtle);">
+            <span class="mockup-menubar-icon">
+              <img src="../assets/icons/menubar/jsonita-menubar-template-22@2x.png" width="14" height="14" style="vertical-align: -2px;"> Jsonita
+            </span>
+            <div style="flex:1;"></div>
+            <span style="color: var(--text-muted); font-size: 11px; font-family: var(--font-mono);">10:42</span>
+          </div>
+          <div style="padding: 6px 0; background: #FBFCFE;">
+            <div style="padding: 7px 14px; font-size: 12.5px;">Toggle Jsonita</div>
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd>⌘,</kbd></div>
+            <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
+            <div style="padding: 7px 14px; font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd>⌘Q</kbd></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark menubar</div>
+        <div class="mockup-window dark" style="max-width: 340px;">
+          <div class="mockup-titlebar">
+            <span class="mockup-menubar-icon">
+              <img src="../assets/icons/menubar/jsonita-menubar-template-22@2x.png" width="14" height="14" style="filter: invert(1); vertical-align: -2px;"> Jsonita
+            </span>
+            <div style="flex:1;"></div>
+            <span style="color: rgba(255,255,255,0.55); font-size: 11px; font-family: var(--font-mono);">10:42</span>
+          </div>
+          <div style="padding: 6px 0; background: #252B35; color: #E6EAF0;">
+            <div style="padding: 7px 14px; font-size: 12.5px;">Toggle Jsonita</div>
+            <div style="padding: 7px 14px; font-size: 12.5px; display: flex; justify-content: space-between;"><span>Settings…</span><kbd style="background:#1F2329; border-color:#343A46; color:#E6EAF0;">⌘,</kbd></div>
+            <div style="border-top: 1px solid #343A46; margin: 4px 0;"></div>
+            <div style="padding: 7px 14px; font-size: 12.5px; color: #A8B0BD; display: flex; justify-content: space-between;"><span>Quit Jsonita</span><kbd style="background:#1F2329; border-color:#343A46; color:#E6EAF0;">⌘Q</kbd></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 id="4"><span class="h2-num">4</span>设置 Modal</h2>
+
+    <p>当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。详版交互已从 <code>design/jsonita-settings-detail.html</code> 迁入本节和 <a href="04_components.html">04 § 4.6-4.8</a>。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">Settings</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 130px 1fr; min-height: 260px; background: var(--bg);">
+            <nav style="background: var(--bg-card); border-right: 1px solid var(--border); padding: 12px 0; font-size: 12px;">
+              <div style="padding: 6px 12px; background: var(--primary-soft); color: var(--primary); border-left: 2px solid var(--primary); font-weight: 600;">General</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">Shortcuts</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">AI</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">History</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">JSON Transform</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">About</div>
+            </nav>
+            <div style="padding: 14px 18px; font-size: 12px;">
+              <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>开机自启动</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>智能缩放</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>主题</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">System ▾</span></div>
+            </div>
+          </div>
+          <div style="padding: 8px 16px; background: var(--bg-card); border-top: 1px solid var(--border); text-align: right;">
+            <button style="padding: 4px 12px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 12px; margin-right: 4px;">Reset all</button>
+            <button style="padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">Done</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">Settings</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 130px 1fr; min-height: 260px; background: var(--bg);">
+            <nav style="background: var(--bg-card); border-right: 1px solid var(--border); padding: 12px 0; font-size: 12px;">
+              <div style="padding: 6px 12px; background: var(--primary-soft); color: var(--primary); border-left: 2px solid var(--primary); font-weight: 600;">General</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">Shortcuts</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">AI</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">History</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">JSON Transform</div>
+              <div style="padding: 6px 12px; color: var(--text-muted);">About</div>
+            </nav>
+            <div style="padding: 14px 18px; font-size: 12px; color: var(--text);">
+              <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">General</div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>开机自启动</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>智能缩放</span><span style="width:30px;height:17px;background:var(--primary);border-radius:9px;position:relative;"><span style="position:absolute;top:2px;right:2px;width:13px;height:13px;background:white;border-radius:50%;"></span></span></div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span>主题</span><span style="padding:2px 8px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:4px;">System ▾</span></div>
+            </div>
+          </div>
+          <div style="padding: 8px 16px; background: var(--bg-card); border-top: 1px solid var(--border); text-align: right;">
+            <button style="padding: 4px 12px; background: var(--bg-card); border: 1px solid var(--border-strong); color: var(--text); border-radius: 4px; font-size: 12px; margin-right: 4px;">Reset all</button>
+            <button style="padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">4.1</span>6 分组与真实字段</h3>
+
+    <table>
+      <thead><tr><th>分组</th><th>显示字段 / 控件</th><th>不显示但存在的相关字段</th></tr></thead>
+      <tbody>
+        <tr><td>General</td><td>语言 select、主题 select、开机自启动 / 失焦自动隐藏 / 智能缩放 / 单窗模式 / 自动粘贴剪贴板 checkbox</td><td><code>showInMenubar</code> tray 当前始终创建；<code>restoreWindow</code> / <code>initialWidth</code> 为保留字段</td></tr>
+        <tr><td>Shortcuts</td><td>呼出浮窗、恢复上次会话、切换单窗 / 双栏 3 个可录入快捷键；下方展示 9 个内置快捷键</td><td>系统保留组合默认阻塞，Override 为 ShortcutInput 内部确认流程</td></tr>
+        <tr><td>AI</td><td>启用 AI Fix checkbox；DeepSeek API key password 输入；Test / Save / Remove；保存状态行内反馈</td><td><code>aiModelId</code> 当前默认 <code>deepseek-chat</code>，不单独暴露编辑控件</td></tr>
+        <tr><td>History</td><td>历史上限 select：10 / 50 / 100 / 200</td><td>Clear 行为在 History Modal 内，不放 Settings</td></tr>
+        <tr><td>JSON Transform</td><td>自动解嵌套 checkbox、Unwrap 超时 number、编辑器软换行 checkbox</td><td><code>maxDepth</code> 仍为引擎选项，默认无层数限制，不放 Settings</td></tr>
+        <tr><td>About</td><td>Jsonita、版本、MIT、作者、GitHub、数据与日志路径</td><td>检查更新不内置，v1 由 GitHub Release 人工分发</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>控件规范</b>：boolean 项统一用小号圆角方形 checkbox（选中 = primary 背景 + 白色 check），不用 iOS switch；下拉 / 数字输入保持紧凑，所有分组 light / dark 都只用系统蓝做交互强调。设置左 nav 只切换 panel，不触发保存；保存由每个控件变更即时完成。</p>
+
+    <h2 id="5"><span class="h2-num">5</span>历史 Modal</h2>
+
+    <p class="callout">当前实现已渲染 History Modal：StatusBar 点击 History 打开；支持搜索、All / Pinned / Starred 筛选、点击载入、Pin / Star、Clear 普通条目。</p>
+
+    <p>结构：搜索框 + 筛选 chips（All / Pinned / Starred）+ ScrollArea 列表。op-type chip 配色见 <a href="04_components.html">04 § 4.5</a>。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">History</div>
+          </div>
+          <div style="padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center;">
+            <div style="flex: 1; padding: 4px 10px; background: var(--bg-subtle); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 11px; color: var(--text-muted);">Search…</div>
+            <span style="padding: 3px 8px; background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-edge); border-radius: 10px; font-size: 10px;">All</span>
+            <span style="padding: 3px 8px; background: var(--bg-code); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 10px;">Pin</span>
+            <span style="padding: 3px 8px; background: var(--bg-code); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 10px;">Star</span>
+          </div>
+          <div style="background: var(--bg-card);">
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); border-left: 3px solid var(--primary); background: var(--primary-soft);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--op-ai-fix-bg); color:var(--op-ai-fix); border-radius:3px; font-size:9.5px; font-weight:600;">AI-FIX</span><span style="font-size:10px; color:var(--text-faint);">Pinned · 2m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"name":"alice","age":30}</div>
+            </div>
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--op-format-bg); color:var(--op-format); border-radius:3px; font-size:9.5px; font-weight:600;">FORMAT</span><span style="font-size:10px; color:var(--text-faint);">Starred · 12m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"code":200,"data":{"name":"alice"}}</div>
+            </div>
+            <div style="padding: 10px 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--op-tree-bg); color:var(--op-tree); border-radius:3px; font-size:9.5px; font-weight:600;">TREE</span><span style="font-size:10px; color:var(--text-faint);">38m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[{"x":1,"y":2},{"x":3,"y":4}]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-titlebar">
+            <div class="mockup-traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <div class="mockup-title">History</div>
+          </div>
+          <div style="padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center;">
+            <div style="flex: 1; padding: 4px 10px; background: var(--bg-subtle); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 11px; color: var(--text-muted);">Search…</div>
+            <span style="padding: 3px 8px; background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-edge); border-radius: 10px; font-size: 10px;">All</span>
+            <span style="padding: 3px 8px; background: var(--bg-code); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 10px;">Pin</span>
+            <span style="padding: 3px 8px; background: var(--bg-code); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-size: 10px;">Star</span>
+          </div>
+          <div style="background: var(--bg-card); color: var(--text);">
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); border-left: 2px solid var(--primary); background: var(--primary-soft);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--op-ai-fix-bg); color:var(--op-ai-fix); border:1px solid color-mix(in srgb, var(--op-ai-fix) 30%, transparent); border-radius:3px; font-size:9.5px; font-weight:600;">AI-FIX</span><span style="font-size:10px; color:var(--text-faint);">Pinned · 2m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"name":"alice","age":30}</div>
+            </div>
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--op-format-bg); color:var(--op-format); border-radius:3px; font-size:9.5px; font-weight:600;">FORMAT</span><span style="font-size:10px; color:var(--text-faint);">Starred · 12m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{"code":200,"data":{"name":"alice"}}</div>
+            </div>
+            <div style="padding: 10px 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="padding:2px 6px; background:var(--op-tree-bg); color:var(--op-tree); border-radius:3px; font-size:9.5px; font-weight:600;">TREE</span><span style="font-size:10px; color:var(--text-faint);">38m ago</span></div>
+              <div style="font-size: 11px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">[{"x":1,"y":2},{"x":3,"y":4}]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 id="6"><span class="h2-num">6</span>RestoreBar（reserved / future）</h2>
+
+    <p class="callout callout-warn">当前实现不渲染 RestoreBar；上次会话通过 <kbd>⌘⇧L</kbd> 手动恢复。本节仅保留未来自动恢复 UI 的视觉备选，不作为当前实现契约。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div style="padding: 10px 16px; background: var(--info-bg); border: 1px solid var(--info); border-radius: 6px; display: flex; justify-content: space-between; color: var(--info); font-size: 13px;">
+          <span>↻ Restored from 3 min ago</span>
+          <span style="cursor: pointer; font-weight: 500;">Discard ×</span>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div style="padding: 10px 16px; background: var(--primary-soft); border: 1px solid var(--primary-edge); border-radius: 6px; display: flex; justify-content: space-between; color: var(--primary); font-size: 13px;">
+          <span>↻ Restored from 3 min ago</span>
+          <span style="cursor: pointer; font-weight: 500;">Discard ×</span>
+        </div>
+      </div>
+    </div>
+
+    <p>未来自动恢复版本可采用：5 秒后自动淡出，点 Discard 立即清空 + 隐藏。</p>
+
+    <h2 id="7"><span class="h2-num">7</span>Toast ── 4 variant × light/dark（reserved / future）</h2>
+
+    <p class="callout callout-warn">当前实现未接入 Toast / sonner；错误反馈走状态栏、AI 面板、设置项行内消息。本节只保留未来 Toast 视觉。</p>
+
+    <table>
+      <thead><tr><th>variant</th><th>light</th><th>dark</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>info</td>
+          <td><div style="padding: 8px 12px; background: var(--info-bg); border: 1px solid var(--info); color: var(--info); border-radius: 6px; font-size: 12px;"><b>ℹ Restored from 3 min ago</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Cmd+Z to revert</span></div></td>
+          <td><div style="padding: 8px 12px; background: var(--primary-soft); border: 1px solid var(--primary-edge); color: var(--primary); border-radius: 6px; font-size: 12px;"><b>Info · Restored from 3 min ago</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Cmd+Z to revert</span></div></td>
+        </tr>
+        <tr>
+          <td>ok</td>
+          <td><div style="padding: 8px 12px; background: var(--ok-bg); border: 1px solid var(--ok); color: var(--ok); border-radius: 6px; font-size: 12px;"><b>✓ Copied: user.name</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Path 已复制</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(103,194,136,0.14); border: 1px solid rgba(103,194,136,0.34); color: #67C288; border-radius: 6px; font-size: 12px;"><b>OK · Copied: user.name</b><br><span style="font-size: 10.5px; color: #A8B0BD;">Path 已复制</span></div></td>
+        </tr>
+        <tr>
+          <td>warn</td>
+          <td><div style="padding: 8px 12px; background: var(--warn-bg); border: 1px solid var(--warn); color: var(--warn); border-radius: 6px; font-size: 12px;"><b>⚠ Rate limited</b><br><span style="font-size: 10.5px; color: var(--text-muted);">请 42s 后重试</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(224,161,74,0.14); border: 1px solid rgba(224,161,74,0.34); color: #E0A14A; border-radius: 6px; font-size: 12px;"><b>Warn · Rate limited</b><br><span style="font-size: 10.5px; color: #A8B0BD;">请 42s 后重试</span></div></td>
+        </tr>
+        <tr>
+          <td>danger</td>
+          <td><div style="padding: 8px 12px; background: var(--danger-bg); border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; font-size: 12px;"><b>✕ API key invalid</b><br><span style="font-size: 10.5px; color: var(--text-muted);">Open Settings</span></div></td>
+          <td><div style="padding: 8px 12px; background: rgba(242,122,122,0.14); border: 1px solid rgba(242,122,122,0.34); color: #F27A7A; border-radius: 6px; font-size: 12px;"><b>Error · API key invalid</b><br><span style="font-size: 10.5px; color: #A8B0BD;">Open Settings</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="8"><span class="h2-num">8</span>AI Fix · DiffView</h2>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai active">AI Fix</button>
+          </div>
+          <div style="padding: 12px 14px; background: var(--bg-card); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75;">
+            <div style="background: rgba(220,38,38,0.08);"><span style="color: var(--danger);">-</span>  {</div>
+            <div style="background: rgba(220,38,38,0.08);"><span style="color: var(--danger);">-</span>    name: 'alice',</div>
+            <div style="background: rgba(6,183,143,0.10);"><span style="color: var(--ok);">+</span>  {</div>
+            <div style="background: rgba(6,183,143,0.10);"><span style="color: var(--ok);">+</span>    "name": "alice",</div>
+            <div><span style="color: var(--text-faint);"> </span>    "age": 30,</div>
+            <div style="background: rgba(220,38,38,0.08);"><span style="color: var(--danger);">-</span>    items: ["a",],</div>
+            <div style="background: rgba(6,183,143,0.10);"><span style="color: var(--ok);">+</span>    "items": ["a"]</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: flex-end; padding: 8px 14px; background: var(--bg); border-top: 1px solid var(--border);">
+            <button style="padding: 4px 12px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 12px;">Cancel</button>
+            <button style="padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px; display:inline-flex; align-items:center; gap:8px;"><kbd style="background:transparent;border-color:rgba(255,255,255,0.45);color:white;">⌘↵</kbd> Accept</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-tab ai active">AI Fix</button>
+          </div>
+          <div style="padding: 12px 14px; background: #1F2329; color: #E6EAF0; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75;">
+            <div style="background: rgba(242,122,122,0.14);"><span style="color: #F27A7A;">-</span>  {</div>
+            <div style="background: rgba(242,122,122,0.14);"><span style="color: #F27A7A;">-</span>    name: 'alice',</div>
+            <div style="background: rgba(103,194,136,0.14);"><span style="color: #67C288;">+</span>  {</div>
+            <div style="background: rgba(103,194,136,0.14);"><span style="color: #67C288;">+</span>    "name": "alice",</div>
+            <div><span style="color: #7D8592;"> </span>    "age": 30,</div>
+            <div style="background: rgba(242,122,122,0.14);"><span style="color: #F27A7A;">-</span>    items: ["a",],</div>
+            <div style="background: rgba(103,194,136,0.14);"><span style="color: #67C288;">+</span>    "items": ["a"]</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: flex-end; padding: 8px 14px; background: #252B35; border-top: 1px solid #343A46;">
+            <button style="padding: 4px 12px; background: #252B35; border: 1px solid #343A46; color: #E6EAF0; border-radius: 4px; font-size: 12px;">Cancel</button>
+            <button style="padding: 4px 12px; background: var(--accent); color: white; border: none; border-radius: 4px; font-size: 12px; display:inline-flex; align-items:center; gap:8px;"><kbd style="background:transparent;border-color:rgba(255,255,255,0.45);color:white;">⌘↵</kbd> Accept</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="h2-num">9</span>macOS 权限引导 Modal</h2>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window" style="max-width: 360px;">
+          <div style="padding: 20px 22px; background: var(--bg-card); text-align: center;">
+            <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-faint); margin-bottom: 8px;">INPUT MONITORING</div>
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">需要键盘事件权限</div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.55; margin-bottom: 16px;">全局快捷键 <kbd>⌘⇧J</kbd> 需要 Input Monitoring。</div>
+            <div style="display: flex; gap: 6px; justify-content: center;">
+              <button style="padding: 6px 14px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 4px; font-size: 12px;">稍后</button>
+              <button style="padding: 6px 14px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">打开系统设置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark" style="max-width: 360px;">
+          <div style="padding: 20px 22px; background: #1F2329; color: #E6EAF0; text-align: center;">
+            <div style="font-size: 12px; font-family: var(--font-mono); color: #7D8592; margin-bottom: 8px;">INPUT MONITORING</div>
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">需要键盘事件权限</div>
+            <div style="font-size: 12px; color: #A8B0BD; line-height: 1.55; margin-bottom: 16px;">全局快捷键 <kbd style="background:#252B35; border-color:#343A46; color:#E6EAF0;">⌘⇧J</kbd> 需要 Input Monitoring。</div>
+            <div style="display: flex; gap: 6px; justify-content: center;">
+              <button style="padding: 6px 14px; background: #252B35; border: 1px solid #343A46; color: #E6EAF0; border-radius: 4px; font-size: 12px;">稍后</button>
+              <button style="padding: 6px 14px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px;">打开系统设置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 id="10"><span class="h2-num">10</span>Empty States</h2>
+
+    <h3><span class="h3-num">10.1</span>浮窗无内容</h3>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light</div>
+        <div class="mockup-window">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body" style="min-height: 160px;">
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: var(--text-faint);">
+              <div style="text-align: center;">
+                <div style="font-size: 22px; margin-bottom: 6px;">{ }</div>
+                <div style="font-size: 12px;">Paste JSON to start</div>
+                <div style="font-size: 10.5px; margin-top: 4px;"><kbd>⌘V</kbd></div>
+              </div>
+            </div>
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 11px;">→ output</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark</div>
+        <div class="mockup-window dark">
+          <div class="mockup-tabs">
+            <button class="mockup-tab active">Format</button>
+            <button class="mockup-tab">Minify</button>
+            <button class="mockup-tab">Tree</button>
+            <button class="mockup-tab">→Str</button>
+            <button class="mockup-tab">→JSON</button>
+            <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+          </div>
+          <div class="mockup-body" style="min-height: 160px;">
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: #646A73;">
+              <div style="text-align: center;">
+                <div style="font-size: 22px; margin-bottom: 6px;">{ }</div>
+                <div style="font-size: 12px;">Paste JSON to start</div>
+                <div style="font-size: 10.5px; margin-top: 4px;"><kbd style="background:#252B35; border-color:#343A46; color:#E6EAF0;">⌘V</kbd></div>
+              </div>
+            </div>
+            <div class="mockup-panel" style="display: flex; align-items: center; justify-content: center; color: #646A73; font-size: 11px;">→ output</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">10.2</span>历史空 / 无 API key</h3>
+
+    <p>结构同上 ── "No history yet · 操作过的 JSON 自动保存" / "AI Fix 未配置 · 打开设置配置 DeepSeek API key"。略。</p>
+
+    <h2 id="11"><span class="h2-num">11</span>浮窗智能缩放（plan F10）</h2>
+
+    <p>4 层逻辑（首次 / 内容动态缩放 / 手动拖边 / soft-wrap）的视觉示意。<b>克制：最大不占满屏 · 初次不能太小</b>。详细算法见 <a href="06_window.html">06 § 7 智能缩放</a>。</p>
+
+    <h3><span class="h3-num">11.1</span>层 1 ── 首次呼出（默认 860 × 560）</h3>
+
+    <div class="mockup-window" style="max-width: 460px;">
+      <div class="mockup-tabs">
+        <button class="mockup-tab active">Format</button>
+        <button class="mockup-tab">Minify</button>
+        <button class="mockup-tab">Tree</button>
+        <button class="mockup-tab">→Str</button>
+        <button class="mockup-tab">→JSON</button>
+        <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+      </div>
+      <div class="mockup-body" style="min-height: 100px;">
+        <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">860 × 560 · empty</div>
+        <div class="mockup-panel" style="display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;">→</div>
+      </div>
+      <div class="mockup-statusbar"><span style="color:var(--text-faint);">— Paste JSON to start</span><span>History</span></div>
+    </div>
+
+    <h3><span class="h3-num">11.2</span>层 2 ── 内容 / 字号变化后动态缩放</h3>
+
+    <table>
+      <thead><tr><th>输入</th><th>计算</th><th>ideal size</th><th>行为</th></tr></thead>
+      <tbody>
+        <tr><td>短 JSON</td><td>cols / lines 都小</td><td>约 600 × 360 起</td><td>保持克制尺寸</td></tr>
+        <tr><td>160 ch 长行</td><td>cols × char_px + padding</td><td>约 1210 × 360</td><td>自动加宽</td></tr>
+        <tr><td>多行 JSON</td><td>line_count × line_px + padding</td><td>宽度克制，高度增加</td><td>自动增高</td></tr>
+        <tr><td><kbd>⌘+</kbd> 放大字体</td><td>fontSize 参与 char_px / line_px</td><td>宽高重新估算</td><td>避免文字挤压</td></tr>
+      </tbody>
+    </table>
+
+    <div class="mockup-window">
+      <div class="mockup-tabs">
+        <button class="mockup-tab active">Format</button>
+        <button class="mockup-tab">Minify</button>
+        <button class="mockup-tab">Tree</button>
+        <button class="mockup-tab">→Str</button>
+        <button class="mockup-tab">→JSON</button>
+        <div class="mockup-tab-spacer"></div>
+            <button class="mockup-settings-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></button>
+      </div>
+      <div class="mockup-body" style="min-height: 80px;">
+        <div class="mockup-panel"><div class="mockup-panel-label">Input · 160 ch 长行</div><pre style="white-space: nowrap; overflow-x: auto;"><code>{"description":"a very long single-line description that triggers auto-size","ok":true}</code></pre></div>
+        <div class="mockup-panel"><div class="mockup-panel-label">Output</div><pre><code>{
+  "description": "a very long ...",
+  "ok": true
+}</code></pre></div>
+      </div>
+      <div class="mockup-statusbar"><span><span class="mockup-status-ok">● Valid JSON</span> · auto-sized for content</span><span>History</span></div>
+    </div>
+
+    <h3><span class="h3-num">11.3</span>层 3 ── 手动拖动记忆尺寸</h3>
+
+    <ul>
+      <li>用户拖动后立即写 <code>window.json</code> + <code>user_dragged = true</code></li>
+      <li>下次呼出沿用</li>
+      <li>之后再粘贴长内容 / 调整字体时，只要 General「智能缩放」开启，仍会按内容重新调整</li>
+      <li>内部 <code>window_reset_size</code> command 可清掉记忆尺寸；当前 Settings 不渲染该入口</li>
+    </ul>
+
+    <h3><span class="h3-num">11.4</span>层 4 ── soft-wrap 保守估宽</h3>
+
+    <p>soft-wrap = on（默认）→ 长行换行不溢出，宽度按最多 96 列估算，但仍按行数 / 字号增高。soft-wrap = off → 长行水平滚动，宽度按实际最长行估算。</p>
+
+    <h2 id="12"><span class="h2-num">12</span>Tree 节点 Hover 复制（plan F2 · spec 08 § 4.5）</h2>
+
+    <p>hover 任意节点 → 行尾出现描边 copy 图标 + <code>copy</code> 文案。leaf 复制 raw value；object/array 递归复制 pretty JSON。</p>
+
+    <div class="mock-row">
+      <div>
+        <div class="mock-label light">light · 悬停在 leaf "alice"</div>
+        <div class="mockup-window">
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 Copy</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node" style="background: var(--primary-soft);"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span><button class="tree-copy-icon" style="opacity: 1;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg><span class="tree-copy-label">copy</span></button></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[2]</span></div>
+</div>
+              </div>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px;">点 copy → 剪贴板 = <code>"alice"</code>（带引号 raw）；复制反馈切换为 <code>copied</code> + 勾选图标</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mock-label dark">dark · 悬停在 object root</div>
+        <div class="mockup-window dark">
+          <div class="mockup-body" style="grid-template-columns: 1fr;">
+            <div class="mockup-panel">
+              <div class="mockup-panel-label">Tree · hover 行尾 Copy</div>
+              <div class="tree-mock" style="padding: 0;">
+<div class="tree-node" style="background: var(--primary-soft);">▾ <span class="tree-key">root</span><span class="tree-type">{2}</span><button class="tree-copy-icon" style="opacity: 1;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg><span class="tree-copy-label">copy</span></button></div>
+<div class="tree-children">
+<div class="tree-node">▾ <span class="tree-key">user</span><span class="tree-type">{2}</span></div>
+<div class="tree-children">
+<div class="tree-node"><span class="tree-key">name</span>: <span class="tree-string">"alice"</span></div>
+<div class="tree-node"><span class="tree-key">age</span>: <span class="tree-number">30</span></div>
+</div>
+<div class="tree-node">▾ <span class="tree-key">items</span><span class="tree-type">[2]</span></div>
+</div>
+              </div>
+              <p style="font-size: 11.5px; color: #A8B0BD; margin-top: 8px;">点 copy → 剪贴板 = 整个 subtree pretty JSON（含 user / items）</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p><b>复制内容规则</b>：</p>
+
+    <table>
+      <thead><tr><th>node 类型</th><th>剪贴板内容</th></tr></thead>
+      <tbody>
+        <tr><td>string leaf</td><td>带引号 raw：<code>"alice"</code></td></tr>
+        <tr><td>number leaf</td><td>字面量：<code>30</code></td></tr>
+        <tr><td>bool leaf</td><td><code>true</code> / <code>false</code></td></tr>
+        <tr><td>null leaf</td><td><code>null</code></td></tr>
+        <tr><td>object / array node（含 root）</td><td>递归 pretty-print 2 空格缩进 JSON</td></tr>
+      </tbody>
+    </table>
+
+    <p><b>键盘可达</b>：聚焦节点行按 <kbd>⌘C</kbd> 等同于点 copy 图标。点击 key 文字本身仍复制 path（如 <code>user.name</code>），两者独立。</p>
+
+    <h2><span class="h2-num">13</span>承接关系</h2>
+
+    <table>
+      <thead><tr><th>章节</th><th>引用本章哪节</th></tr></thead>
+      <tbody>
+        <tr><td>04 组件库 · TreeView</td><td>§ 1.3 · § 12</td></tr>
+        <tr><td>04 组件库 · SettingsModal / DiffView；HistoryItem 为保留设计</td><td>§ 4 · § 8；§ 5 reserved</td></tr>
+        <tr><td>06 窗口 runtime · 智能缩放</td><td>§ 11</td></tr>
+        <tr><td>07 菜单栏 · tray / 权限</td><td>§ 3 · § 9</td></tr>
+        <tr><td>08 编辑器 & 树 · hover 复制</td><td>§ 1.3 · § 12</td></tr>
+        <tr><td>11 AI 客户端 · DiffView · 无 API key</td><td>§ 8 · § 10.2</td></tr>
+      </tbody>
+    </table>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
 </main>
-<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
-</article>
 
-<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#visual-contract"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Visual Contract</span><span data-locale="en" data-locale-active="false">Visual Contract</span></a></li><li><a href="#state-matrix"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">State Matrix</span><span data-locale="en" data-locale-active="false">State Matrix</span></a></li><li><a href="#source-references"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">源参考</span><span data-locale="en" data-locale-active="false">Source References</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
-<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">原型图与交互细节</span><span data-locale="en" data-locale-active="false">Mockups And Interaction Details</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
-
-
-<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
-  const config = window.CAST_DOCS_I18N;
-  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
-  const MEMORY_KEY = 'cast-docs:global-memory';
-  const root = document.documentElement;
-  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
-  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
-  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
-  function readMemory() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) {
-      return {};
-    }
-  }
-  function writeMemory(memory) {
-    try {
-      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-  function rememberDefaultLocale(locale) {
-    if (!config.locales.includes(locale)) return false;
-    const memory = readMemory();
-    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
-    memory.version = 1;
-    memory.preferences = {
-      ...preferences,
-      defaultLocale: locale,
-      defaultLocaleUpdatedAt: new Date().toISOString(),
-    };
-    return writeMemory(memory);
-  }
-  function defaultLocaleFromMemory() {
-    const locale = readMemory().preferences?.defaultLocale;
-    return config.locales.includes(locale) ? locale : null;
-  }
-  function apply(locale) {
-    if (!config.locales.includes(locale)) return;
-    root.lang = locale;
-    root.setAttribute('data-active-locale', locale);
-    config.activeLocale = locale;
-    document.querySelectorAll('[data-locale]').forEach((node) => {
-      const active = node.getAttribute('data-locale') === locale;
-      node.setAttribute('data-locale-active', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-locale-target]').forEach((button) => {
-      const active = button.getAttribute('data-locale-target') === locale;
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-key');
-      if (key) node.textContent = label(locale, key, node.textContent);
-    });
-  }
-  function maybeSetDefaultLocale(locale) {
-    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
-    const message = label(
-      locale,
-      'chrome.defaultLanguagePrompt',
-      `Set ${displayName(locale)} as the default language for CAST Docs?`
-    ).replace('{language}', displayName(locale));
-    if (window.confirm(message)) {
-      rememberDefaultLocale(locale);
-    }
-  }
-  document.querySelectorAll('[data-locale-target]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const locale = button.getAttribute('data-locale-target');
-      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
-      apply(locale);
-      maybeSetDefaultLocale(locale);
-    });
-  });
-  apply(defaultLocaleFromMemory() || config.activeLocale);
-})();
-</script>
+<script src="../assets/nav.js"></script>
 </body>
 </html>

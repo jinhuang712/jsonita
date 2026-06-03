@@ -5,8 +5,8 @@
       "en": "Jsonita Project Documentation"
     },
     "description": {
-      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、workflow、TODO 与 Changelist。",
-      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, workflow, TODO, and changelist."
+      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO 与 Changelist。",
+      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, TODO, and changelist."
     },
     "schemaVersion": "1.0",
     "language": "zh-CN",
@@ -126,8 +126,8 @@
         {
           "type": "paragraph",
           "text": {
-            "zh-CN": "这个首页由 site/index.cast.json 渲染而来；README、workflow、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。",
-            "en": "This homepage is rendered from site/index.cast.json. README, workflow, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section."
+            "zh-CN": "这个首页由 site/index.cast.json 渲染而来；README、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。",
+            "en": "This homepage is rendered from site/index.cast.json. README, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section."
           }
         }
       ]
@@ -253,19 +253,6 @@
                 "en": "Project introduction, installation, usage flow, and CAST documentation contract."
               },
               "href": "README.md"
-            },
-            {
-              "id": "workflow",
-              "number": "html",
-              "title": {
-                "zh-CN": "Workflow",
-                "en": "Workflow"
-              },
-              "description": {
-                "zh-CN": "公开 CAST workflow、.cast-docs 维护层、渲染与检查命令。",
-                "en": "Public CAST workflow, .cast-docs maintenance layer, rendering, and check commands."
-              },
-              "href": "workflow.html"
             },
             {
               "id": "todo",
@@ -610,14 +597,14 @@
         },
         {
           "type": "callout",
-          "variant": "success",
+          "variant": "warning",
           "title": {
-            "zh-CN": "CAST JSON-first 已完成",
-            "en": "CAST JSON-first Complete"
+            "zh-CN": "迁移状态",
+            "en": "Migration Status"
           },
           "body": {
-            "zh-CN": "plan/ 与 spec/ 的每个发布页现在都有同名 CAST JSON 源，并由 cast-a-doc 渲染为中英双语 HTML。",
-            "en": "Every published page under plan/ and spec/ now has a same-name CAST JSON source and is rendered by cast-a-doc into bilingual Chinese/English HTML."
+            "zh-CN": "plan/spec 当前仍是 legacy HTML 发布页；它们已保持读者可用，但完整 CAST JSON-first 迁移需要逐页进行，见 TODO P1。",
+            "en": "plan/spec are still legacy HTML published pages. They remain reader-usable, but complete CAST JSON-first migration must happen page by page; see TODO P1."
           }
         }
       ]
@@ -726,63 +713,6 @@
       },
       "blocks": [
         {
-          "type": "chapter-list",
-          "items": [
-            {
-              "id": "workflow-html",
-              "number": "html",
-              "title": {
-                "zh-CN": "Workflow HTML",
-                "en": "Workflow HTML"
-              },
-              "description": {
-                "zh-CN": "公开 workflow 页面。",
-                "en": "Public workflow page."
-              },
-              "href": "workflow.html"
-            },
-            {
-              "id": "cast-workflow",
-              "number": "md",
-              "title": {
-                "zh-CN": ".cast-docs/WORKFLOW.md",
-                "en": ".cast-docs/WORKFLOW.md"
-              },
-              "description": {
-                "zh-CN": "仓库级 CAST agent workflow。",
-                "en": "Repository-level CAST agent workflow."
-              },
-              "href": ".cast-docs/WORKFLOW.md"
-            },
-            {
-              "id": "cast-project",
-              "number": "json",
-              "title": {
-                "zh-CN": ".cast-docs/project.json",
-                "en": ".cast-docs/project.json"
-              },
-              "description": {
-                "zh-CN": "项目 profile、品牌资产与渲染默认值。",
-                "en": "Project profile, brand asset, and rendering defaults."
-              },
-              "href": ".cast-docs/project.json"
-            },
-            {
-              "id": "cast-i18n",
-              "number": "json",
-              "title": {
-                "zh-CN": ".cast-docs/i18n.json",
-                "en": ".cast-docs/i18n.json"
-              },
-              "description": {
-                "zh-CN": "仓库双语 locale 与术语策略。",
-                "en": "Repository bilingual locale and terminology policy."
-              },
-              "href": ".cast-docs/i18n.json"
-            }
-          ]
-        },
-        {
           "type": "table",
           "tableType": "data",
           "headers": [
@@ -804,13 +734,6 @@
               }
             ],
             [
-              "site/workflow.json",
-              {
-                "zh-CN": "Workflow CAST JSON 源。",
-                "en": "CAST JSON source for workflow."
-              }
-            ],
-            [
               "site/todo.json",
               {
                 "zh-CN": "TODO CAST JSON 源。",
@@ -825,10 +748,17 @@
               }
             ],
             [
-              "plan/*.json / spec/*.json",
+              ".cast-docs/WORKFLOW.md",
               {
-                "zh-CN": "Plan / Spec CAST JSON 源。",
-                "en": "Plan / Spec CAST JSON sources."
+                "zh-CN": "仓库级 CAST agent workflow。",
+                "en": "Repository-level CAST agent workflow."
+              }
+            ],
+            [
+              ".cast-docs/project.json",
+              {
+                "zh-CN": "项目 profile、品牌资产与渲染默认值。",
+                "en": "Project profile, brand asset, and rendering defaults."
               }
             ]
           ]
@@ -836,8 +766,8 @@
         {
           "type": "paragraph",
           "text": {
-            "zh-CN": "维护源放在最后；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。",
-            "en": "Maintenance sources are kept last. Regular readers should start from the reader-facing HTML / Markdown paths above."
+            "zh-CN": "维护源不作为首页主导航目标；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。",
+            "en": "Maintenance sources are not homepage primary navigation targets. Regular readers should start from the reader-facing HTML / Markdown paths above."
           }
         }
       ]
