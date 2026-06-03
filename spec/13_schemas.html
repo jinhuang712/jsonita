@@ -1,435 +1,730 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jsonita Spec · 13 数据模型参考</title>
-<link rel="stylesheet" href="../assets/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Rust/TypeScript 错误、设置、IPC payload、SQLite schema、JSON 文件和 secrets schema。">
+<title>Schema 合约</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f8f8f7;
+  --surface: #ffffff;
+  --soft: #f2f3f3;
+  --text: #24272b;
+  --muted: #68717b;
+  --faint: #9aa1a8;
+  --border: #dedede;
+  --primary: #315f9f;
+  --primary-soft: #eef3fa;
+  --accent: #52686a;
+  --info: #566f99;
+  --info-soft: #f4f5f7;
+  --warn: #8a6d3b;
+  --warn-soft: #f8f4ea;
+  --danger: #9b4d49;
+  --danger-soft: #faf0ef;
+  --ok: #55745f;
+  --ok-soft: #eef4ef;
+  --code: #f1f2f2;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --font-xs: 11px;
+  --font-sm: 12.5px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 20px;
+  --font-xl: 28px;
+  --font-title: 30px;
+  --line-tight: 1.25;
+  --line-normal: 1.65;
+  --line-loose: 1.75;
+  --line-code: 1.55;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 28px;
+  --space-10: 34px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --surface-shadow: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111315;
+    --surface: #17191c;
+    --soft: #202328;
+    --text: #e2e5e8;
+    --muted: #a1a7ad;
+    --faint: #767d84;
+    --border: #30343a;
+    --primary: #9bb7d9;
+    --primary-soft: #182231;
+    --accent: #9ab4b1;
+    --info: #9aaeca;
+    --info-soft: #1b2027;
+    --warn: #c7b27e;
+    --warn-soft: #242117;
+    --danger: #d09a95;
+    --danger-soft: #271b1a;
+    --ok: #9ebaa5;
+    --ok-soft: #1a241d;
+    --code: #202328;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+}
+:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
+pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
+pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
+mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
+del { color: var(--muted); text-decoration: line-through; }
+u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
+[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
+[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
+[data-locale][data-locale-active="false"] { display: none; }
+.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
+.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
+.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
+.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
+.brand-logo:hover { text-decoration: none; }
+.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
+.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
+.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project { flex: 0 0 auto; }
+.topbar-doc { color: var(--muted); font-weight: 500; }
+.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
+.topbar-links { display: flex; gap: 12px; align-items: center; }
+.topbar-links:empty { display: none; }
+.topbar-link { color: var(--muted); font-size: var(--font-sm); }
+.topbar-spacer { flex: 1; }
+.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
+.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
+.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
+.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
+.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
+.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
+.doc-summary { padding: 16px 18px; }
+.doc-summary ul { margin: 0; }
+.set-grid { display: grid; gap: 22px; }
+.set-section { margin: 0; }
+.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
+.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
+.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
+.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
+.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
+.chapter-card a:hover { text-decoration: none; }
+.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
+.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
+.chapter-content { display: grid; gap: 5px; min-width: 0; }
+.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
+.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
+.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
+.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
+.set-pagination-next { text-align: right; }
+.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
+.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
+.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
+.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
+.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
+.section-title { overflow-wrap: anywhere; }
+.section-empty { color: var(--muted); font-style: italic; }
+.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
+.callout p { margin: 6px 0 0; }
+.callout-info { border-left-color: var(--info); background: var(--info-soft); }
+.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
+.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
+table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
+th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.details-block { padding: 0 14px; }
+.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
+.diagram { position: relative; padding: 16px; overflow: auto; }
+.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
+.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+.diagram:hover .diagram-toolbar { opacity: 1; }
+button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
+.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
+.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
+.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
+.code-status-ok { color: var(--ok); }
+.code-status-error { color: var(--danger); }
+.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
+.code-status + .code-copy { margin-left: 0; }
+.code-copy:hover { color: var(--text); }
+.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
+.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
+.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.code-line-content { padding: 0 14px; white-space: pre; }
+.code-token-key { color: var(--primary); }
+.code-token-bool { color: var(--info); }
+.code-token-number { color: var(--warn); }
+.code-token-flag { color: var(--accent); }
+.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+.diff-block > h3 { grid-column: 1 / -1; }
+.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
+.diff-side + .diff-side { margin-left: -1px; }
+.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
+.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
+.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
+.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
+.diff-line-content { padding-right: 14px; white-space: pre; }
+.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
+.line-add { color: var(--ok); }
+.line-remove { color: var(--danger); }
+.line-warning { color: var(--warn); }
+.line-context { color: var(--text); }
+.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.participant-card, .value-card, .action-card { padding: 14px 16px; }
+.action-card { padding: 20px; }
+.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
+.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
+.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
+.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
+.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
+.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
+.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
+.open-question + .open-question { border-top: 1px solid var(--border); }
+.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
+.open-question-text { min-width: 0; }
+.prompt-block { margin-top: 20px; }
+.prompt-block .code-header { padding: 12px 14px; }
+.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
+.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
+.prompt-block .code-line-number { padding-right: 12px; }
+.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.media-frame { margin: 0; overflow: hidden; }
+.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
+.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
+.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
+.column { min-width: 0; }
+.column h3 { margin-top: 0; }
+.column p:first-child { margin-top: 0; }
+.column p:last-child { margin-bottom: 0; }
+.column > .code-shell, .column > table { margin-top: 12px; }
+.toggle-view { padding: 14px; }
+.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
+.toggle-button { border: 0; background: transparent; color: var(--muted); }
+.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.toggle-panel[data-view-active="false"] { display: none; }
+.toggle-panel > :first-child { margin-top: 0; }
+.toggle-panel > :last-child { margin-bottom: 0; }
+.slider-control { padding: 16px; }
+.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.slider-header label { font-weight: 700; }
+.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
+.slider-range { display: block; width: 100%; accent-color: var(--primary); }
+.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
+.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
+.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
+.lightbox.open { display: flex; }
+.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
+.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
+.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
+.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
+.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
+@media (max-width: 760px) {
+  body { display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
+  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
+  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
+  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
+  .doc-header h1 { font-size: var(--font-xl); }
+  .diff-block { grid-template-columns: 1fr; }
+  .set-pagination { grid-template-columns: 1fr; }
+  .set-pagination-next { text-align: left; }
+  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
+  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
+}
+@media print {
+  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
+  .doc { margin-left: 0; max-width: none; padding: 0; }
+}
+</style>
 </head>
-<body data-section="spec" data-chapter="13">
-
-<aside class="sidebar" id="sidebar"></aside>
-<header class="topbar" id="topbar"></header>
-
-<main class="doc-main">
-  <article class="doc-article">
-
-    <div class="doc-header">
-      <span class="doc-tag">SPEC · 章节 13</span>
-      <h1 class="doc-title">数据模型参考</h1>
-      <p class="doc-subtitle">所有 Rust struct / enum / SQL DDL / TypeScript interface / 配置文件 schema 唯一权威。其他章节<b>不</b>重复定义，仅以接口签名 + link 引用。</p>
-    </div>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">REF</span>
-      <div class="callout-body">
-        <p>本章是<b>数据契约的单一来源</b>。Rust ↔ TypeScript 双向镜像在此对齐；改 Rust struct 必须同步改本章 + 对应 TS 表。其他章节（02 IPC / 10 storage / 11 ai 等）只引用，不重复定义。</p>
-      </div>
-    </div>
-
-    <h2><span class="h2-num">1</span>错误类型</h2>
-
-    <h3><span class="h3-num">1.1</span><code>JsonitaError</code>（统一错误枚举）</h3>
-
-    <p>Rust 端单一错误，所有内部错误统一映射；通过 serde 跨 IPC 序列化为 TS discriminated union。</p>
-
-    <table>
-      <thead><tr><th>variant</th><th>payload</th><th>触发场景</th><th>UI 呈现（错误矩阵见 02 § 5）</th></tr></thead>
-      <tbody>
-        <tr><td><code>Parse</code></td><td><code>{ line: u32, col: u32, msg: String }</code></td><td>JSON 解析失败</td><td>状态栏红 + AI Fix Tab 出现</td></tr>
-        <tr><td><code>UnwrapTimeout</code></td><td><code>{ ms: u64, depth: u32 }</code></td><td>嵌套 unwrap 超时</td><td>状态栏 / 局部错误</td></tr>
-        <tr><td><code>Sqlite</code></td><td><code>String</code></td><td>SQLite 错误</td><td>调用方捕获；当前多处静默忽略</td></tr>
-        <tr><td><code>Secrets</code></td><td><code>String</code></td><td>secrets.json 存取错（读写 / chmod / 序列化失败）</td><td>AI 面板 / 设置项错误</td></tr>
-        <tr><td><code>Http</code></td><td><code>{ status: u16, body: String }</code></td><td>DeepSeek HTTP 错</td><td>AI 面板 / API key 输入区错误</td></tr>
-        <tr><td><code>AiInvalidJson</code></td><td><code>{ raw: String }</code></td><td>AI 返回非合法 JSON</td><td>AI 面板错误文本；raw Modal 为保留设计</td></tr>
-        <tr><td><code>RateLimit</code></td><td><code>{ retry_after_sec: u64 }</code>（IPC 为 <code>retryAfterSec</code>）</td><td>上游 429</td><td>AI 面板显示 retryAfterSec</td></tr>
-        <tr><td><code>Io</code></td><td><code>String</code></td><td>FS / 网络 / 其他</td><td>调用方捕获；当前未做全局 Toast</td></tr>
-        <tr><td><code>AiDisabled</code></td><td>—</td><td>settings.ai_enabled=false 时调 ai_fix</td><td>AI 面板提示 Settings → AI</td></tr>
-      </tbody>
-    </table>
-
-    <pre><code>// src-tauri/src/error.rs ── 唯一定义点
-#[derive(Debug, thiserror::Error, serde::Serialize)]
-#[serde(tag = "kind", content = "data")]
-pub enum JsonitaError {
-    #[error("JSON parse error at line {line}, col {col}: {msg}")]
-    Parse { line: u32, col: u32, msg: String },
-
-    #[error("Unwrap timeout after {ms}ms (depth {depth})")]
-    UnwrapTimeout { ms: u64, depth: u32 },
-
-    #[error("SQLite: {0}")]  Sqlite(String),
-    #[error("Secrets: {0}")] Secrets(String),
-    #[error("HTTP {status}: {body}")] Http { status: u16, body: String },
-    #[error("AI invalid JSON: {raw}")] AiInvalidJson { raw: String },
-    #[error("Rate limited; retry after {retry_after_sec}s")]
-    #[serde(rename_all = "camelCase")]
-    RateLimit { retry_after_sec: u64 },
-    #[error("IO: {0}")] Io(String),
-    #[error("AI Fix is disabled in Settings")] AiDisabled,
-}</code></pre>
-
-    <p><b>TS 镜像</b>（<code>src/types/error.ts</code>）：</p>
-
-    <pre><code>export type JsonitaError =
-  | { kind: 'Parse';          data: { line: number; col: number; msg: string } }
-  | { kind: 'UnwrapTimeout';  data: { ms: number; depth: number } }
-  | { kind: 'Sqlite';         data: string }
-  | { kind: 'Secrets';        data: string }
-  | { kind: 'Http';           data: { status: number; body: string } }
-  | { kind: 'AiInvalidJson';  data: { raw: string } }
-  | { kind: 'RateLimit';      data: { retryAfterSec: number } }
-  | { kind: 'Io';             data: string }
-  | { kind: 'AiDisabled' };</code></pre>
-
-    <h2><span class="h2-num">2</span>枚举集合</h2>
-
-    <p>所有 enum 都用 <code>#[serde(rename_all = "kebab-case")]</code> 序列化。</p>
-
-    <table>
-      <thead><tr><th>枚举</th><th>变体</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td><code>IndentMode</code></td><td><code>spaces2</code> / <code>spaces4</code> / <code>tab</code></td><td>F1 Formatter 缩进选项</td></tr>
-        <tr><td><code>QuoteStyle</code></td><td><code>double</code> / <code>single</code></td><td>F3 String 互转 quote 风格</td></tr>
-        <tr><td><code>OpType</code></td><td><code>format</code> / <code>minify</code> / <code>tree</code> / <code>str-to-json</code> / <code>json-to-str</code> / <code>ai-fix</code></td><td>历史记录 op_type 字段</td></tr>
-        <tr><td><code>ThemeMode</code></td><td><code>system</code> / <code>light</code> / <code>dark</code></td><td>主题设置项</td></tr>
-        <tr><td><code>RestoreWindow</code></td><td><code>off</code> / <code>min-1</code> / <code>min-5</code> / <code>min-15</code> / <code>hour-1</code></td><td>保留设置字段；当前版本不驱动自动恢复 UI</td></tr>
-        <tr><td><code>ShortcutAction</code></td><td><code>toggle-window</code> / <code>restore-last</code></td><td>F6 可注册全局快捷键</td></tr>
-        <tr><td><code>InitialWidth</code></td><td><code>w-720</code> / <code>w-860</code> / <code>w-920</code> / <code>w-1080</code></td><td>保留设置字段；当前窗口默认固定 860 px，未消费此枚举</td></tr>
-      </tbody>
-    </table>
-
-    <pre><code>// src-tauri/src/types.rs
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum IndentMode    { Spaces2, Spaces4, Tab }
-
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum QuoteStyle    { Double, Single }
-
-#[derive(Serialize, Deserialize, Clone, Copy, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum OpType        { Format, Minify, Tree, StrToJson, JsonToStr, AiFix }
-
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum ThemeMode     { System, Light, Dark }
-
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum RestoreWindow { Off, Min1, Min5, Min15, Hour1 }
-
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum ShortcutAction { ToggleWindow, RestoreLast }
-
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum InitialWidth  { W720, W860, W920, W1080 }
-
-// ShortcutAction 目前后端 command 使用 String 解析；此 enum 作为 schema 约束保留。</code></pre>
-
-    <h2><span class="h2-num">3</span>IPC payload structs</h2>
-
-    <p>所有 IPC struct 都用 <code>#[serde(rename_all = "camelCase")]</code> ── Rust snake_case 字段 ↔ TS camelCase。</p>
-
-    <h3><span class="h3-num">3.1</span>json_ops 选项</h3>
-
-    <table>
-      <thead><tr><th>struct · 字段</th><th>类型</th><th>默认</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><b>FormatOpts</b></td><td colspan="3"></td></tr>
-        <tr><td>· indent</td><td>IndentMode</td><td>Spaces2</td><td>缩进档</td></tr>
-        <tr><td>· sortKeys</td><td>bool</td><td>false</td><td>递归字典序 sort</td></tr>
-        <tr><td>· trailingNewline</td><td>bool</td><td>true</td><td>末尾加 \n</td></tr>
-        <tr><td><b>UnwrapOpts</b></td><td colspan="3"></td></tr>
-        <tr><td>· timeoutMs</td><td>u64</td><td>200</td><td>超时保护</td></tr>
-        <tr><td>· maxDepth</td><td>Option&lt;u32&gt;</td><td>None</td><td>无层数限制（默认）</td></tr>
-        <tr><td><b>StringifyOpts</b></td><td colspan="3"></td></tr>
-        <tr><td>· quote</td><td>QuoteStyle</td><td>Double</td><td>包裹引号</td></tr>
-        <tr><td>· escapeUnicode</td><td>bool</td><td>false</td><td>\\uXXXX 转义</td></tr>
-        <tr><td>· minify</td><td>bool</td><td>true</td><td>转 string 时是否先压缩</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">3.2</span>历史 / 会话</h3>
-
-    <table>
-      <thead><tr><th>struct · 字段</th><th>类型</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><b>HistoryRow</b></td><td colspan="2">SQLite history 表行（同 § 4.1）</td></tr>
-        <tr><td>· id</td><td>i64</td><td>PK</td></tr>
-        <tr><td>· createdAt</td><td>i64</td><td>unix ms</td></tr>
-        <tr><td>· content</td><td>String</td><td>完整 JSON 文本</td></tr>
-        <tr><td>· summary</td><td>String</td><td>前 80 字符</td></tr>
-        <tr><td>· contentHash</td><td>String</td><td>sha256 hex（去重）</td></tr>
-        <tr><td>· opType</td><td>OpType</td><td></td></tr>
-        <tr><td>· pinned</td><td>bool</td><td></td></tr>
-        <tr><td>· starred</td><td>bool</td><td></td></tr>
-        <tr><td><b>ListOpts</b></td><td colspan="2"></td></tr>
-        <tr><td>· limit</td><td>u32</td><td>默认 50</td></tr>
-        <tr><td>· offset</td><td>u32</td><td>默认 0</td></tr>
-        <tr><td>· onlyPinned</td><td>Option&lt;bool&gt;</td><td></td></tr>
-        <tr><td>· onlyStarred</td><td>Option&lt;bool&gt;</td><td></td></tr>
-        <tr><td><b>LastSession</b></td><td colspan="2">last_session 单行（同 § 4.2）</td></tr>
-        <tr><td>· content</td><td>String</td><td></td></tr>
-        <tr><td>· opType</td><td>OpType</td><td></td></tr>
-        <tr><td>· savedAt</td><td>i64</td><td>unix ms</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">3.3</span>设置</h3>
-
-    <p>所有可配置项的<b>权威字段表</b>。新增设置项必须先改本表。</p>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th><th>默认</th><th>UI 位置</th></tr></thead>
-      <tbody>
-        <tr><td colspan="4"><b>· General</b></td></tr>
-        <tr><td>launchAtLogin</td><td>bool</td><td>true</td><td>F7.1（字段与 UI 已有；当前未接系统 Login Items）</td></tr>
-        <tr><td>showInMenubar</td><td>bool</td><td>true</td><td>保留字段；当前 UI 未渲染，tray 始终创建</td></tr>
-        <tr><td>autoPasteClipboard</td><td>bool</td><td>true</td><td>F7.1（字段与 UI 已有；当前未自动读剪贴板）</td></tr>
-        <tr><td>hideOnBlur</td><td>bool</td><td>true</td><td>F7.1</td></tr>
-        <tr><td>singlePaneMode</td><td>bool</td><td>false</td><td>F7.1</td></tr>
-        <tr><td>theme</td><td>ThemeMode</td><td>System</td><td>F7.1</td></tr>
-        <tr><td>locale</td><td>Locale</td><td>EnUs</td><td>F7.1 (English / 简体中文)</td></tr>
-        <tr><td>restoreWindow</td><td>RestoreWindow</td><td>Min5</td><td>F7.1（保留字段；当前不驱动自动恢复）</td></tr>
-        <tr><td>initialWidth</td><td>InitialWidth</td><td>W920</td><td>保留字段；当前窗口默认 860 px，Settings UI 未渲染</td></tr>
-        <tr><td>smartWidth</td><td>bool</td><td>true</td><td>F7.1（plan F10）</td></tr>
-        <tr><td colspan="4"><b>· Shortcuts</b></td></tr>
-        <tr><td>shortcutToggle</td><td>String</td><td>"Cmd+Shift+J"</td><td>F7.2</td></tr>
-        <tr><td>shortcutRestoreLast</td><td>String</td><td>"Cmd+Shift+L"</td><td>F7.2</td></tr>
-        <tr><td>shortcutSplitToggle</td><td>String</td><td>"Cmd+\\"</td><td>切换单窗 / 双栏（阶段 1 已实现；窗口内、可自定义；旧 settings.json 缺字段时默认补齐）</td></tr>
-        <tr><td colspan="4"><b>· AI</b></td></tr>
-        <tr><td>aiEnabled</td><td>bool</td><td>false</td><td>F7.3</td></tr>
-        <tr><td>aiModelId</td><td>String</td><td>"deepseek-chat"</td><td>F7.3</td></tr>
-        <tr><td colspan="4"><b>· History</b></td></tr>
-        <tr><td>historyLimit</td><td>u32</td><td>100</td><td>F7.4 (10/50/100/200)</td></tr>
-        <tr><td colspan="4"><b>· JSON Transform</b></td></tr>
-        <tr><td>autoUnwrap</td><td>bool</td><td>true</td><td>F7.5 (F3.3)</td></tr>
-        <tr><td>unwrapTimeoutMs</td><td>u64</td><td>200</td><td>F7.5</td></tr>
-        <tr><td colspan="4"><b>· Editor（08 章）</b></td></tr>
-        <tr><td>editorSoftWrap</td><td>bool</td><td>true</td><td>F1 编辑器</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>Settings UI 暴露边界</b>：当前 6 分组设置面板只展示 <code>locale</code>、<code>theme</code>、<code>launchAtLogin</code>、<code>hideOnBlur</code>、<code>smartWidth</code>、<code>singlePaneMode</code>、<code>autoPasteClipboard</code>、3 个 shortcut、<code>aiEnabled</code>、<code>historyLimit</code>、<code>autoUnwrap</code>、<code>unwrapTimeoutMs</code>、<code>editorSoftWrap</code> 与 About 只读信息。<code>showInMenubar</code>、<code>restoreWindow</code>、<code>initialWidth</code>、<code>aiModelId</code> 是 schema / 运行时保留或内部字段，当前不作为可编辑设置暴露。</p>
-
-    <p><b>Locale enum</b>：Rust 端使用 <code>Locale::EnUs</code> / <code>Locale::ZhCn</code>，序列化为 <code>"en-US"</code> / <code>"zh-CN"</code>；TS 镜像为 <code>'en-US' | 'zh-CN'</code>。文档中所有用户可见语言选项必须和这里保持一致。</p>
-
-    <h3><span class="h3-num">3.4</span>AI Fix</h3>
-
-    <table>
-      <thead><tr><th>struct · 字段</th><th>类型</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><b>AiFixReq</b></td><td colspan="2"></td></tr>
-        <tr><td>· text</td><td>String</td><td>原文</td></tr>
-        <tr><td>· errorLine / errorCol / errorMsg</td><td>Option&lt;...&gt;</td><td>parse 错误位置（hint）</td></tr>
-        <tr><td>· requestId</td><td>String</td><td>UUID v4，幂等去重</td></tr>
-        <tr><td><b>AiFixResp</b></td><td colspan="2"></td></tr>
-        <tr><td>· fixed</td><td>String</td><td>已验证为合法 JSON</td></tr>
-        <tr><td>· model</td><td>String</td><td>echoed from server</td></tr>
-        <tr><td>· tokensIn / tokensOut</td><td>u32</td><td></td></tr>
-        <tr><td>· elapsedMs</td><td>u64</td><td></td></tr>
-        <tr><td><b>TestConnectionResp</b></td><td colspan="2"></td></tr>
-        <tr><td>· ok</td><td>bool</td><td></td></tr>
-        <tr><td>· latencyMs</td><td>u64</td><td></td></tr>
-        <tr><td>· modelEchoed</td><td>String</td><td>or error string</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">3.5</span>窗口 / 系统</h3>
-
-    <table>
-      <thead><tr><th>struct · 字段</th><th>类型</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><b>ClipboardSniff</b></td><td colspan="2"></td></tr>
-        <tr><td>· text</td><td>String</td><td></td></tr>
-        <tr><td>· looksLikeJson</td><td>bool</td><td>trim 后以 {[" 起结</td></tr>
-        <tr><td><b>ContentMetrics</b>（plan F10 智能缩放）</td><td colspan="2"></td></tr>
-        <tr><td>· maxLineChars</td><td>u32</td><td>最长结构行字符数；前端忽略行首缩进，避免按 <kbd>Tab</kbd> 触发窗口 resize</td></tr>
-        <tr><td>· lineCount</td><td>u32</td><td></td></tr>
-        <tr><td>· bytes</td><td>u64</td><td></td></tr>
-        <tr><td>· nonWhitespaceChars</td><td>u32</td><td>非空白字符数；极小 JSON 不触发自动缩小</td></tr>
-        <tr><td>· softWrapOn</td><td>bool</td><td>true → 宽度保守，仍按高度 / 字号动态缩放</td></tr>
-        <tr><td>· fontSize</td><td>f64</td><td>当前编辑器字号，参与宽高估算</td></tr>
-        <tr><td><b>WindowResizedPayload</b>（event）</td><td colspan="2"></td></tr>
-        <tr><td>· width / height</td><td>u32</td><td></td></tr>
-        <tr><td>· source</td><td>"user" | "auto"</td><td>用户拖动 / 智能缩放触发</td></tr>
-        <tr><td><b>ShortcutRegisterReq / Resp</b></td><td colspan="2">见 02 § 2.1.7</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">3.6</span>TreeView 复制（plan F2 · spec 08 § 4.5）</h3>
-
-    <table>
-      <thead><tr><th>struct · 字段</th><th>类型</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><b>CopyNodeInfo</b>（TS only · 前端事件）</td><td colspan="2"></td></tr>
-        <tr><td>· path</td><td>string</td><td>'user.items[2]'</td></tr>
-        <tr><td>· isLeaf</td><td>boolean</td><td></td></tr>
-        <tr><td>· text</td><td>string</td><td>已计算好的剪贴板字符串</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">4</span>SQLite schema</h2>
-
-    <h3><span class="h3-num">4.1</span><code>history</code> 表</h3>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td>id</td><td>INTEGER</td><td>PK AUTOINCREMENT</td><td>主键</td></tr>
-        <tr><td>created_at</td><td>INTEGER</td><td>NOT NULL</td><td>unix ms</td></tr>
-        <tr><td>content</td><td>TEXT</td><td>NOT NULL</td><td>完整 JSON 文本</td></tr>
-        <tr><td>summary</td><td>TEXT</td><td>NOT NULL</td><td>前 80 字符</td></tr>
-        <tr><td>content_hash</td><td>TEXT</td><td>NOT NULL · UNIQUE</td><td>sha256 hex</td></tr>
-        <tr><td>op_type</td><td>TEXT</td><td>CHECK in OpType 值集</td><td></td></tr>
-        <tr><td>pinned</td><td>INTEGER</td><td>0/1 default 0</td><td></td></tr>
-        <tr><td>starred</td><td>INTEGER</td><td>0/1 default 0</td><td></td></tr>
-        <tr><td>tags</td><td>TEXT</td><td>NULL</td><td>预留 JSON array</td></tr>
-      </tbody>
-    </table>
-
-    <p><b>索引</b>：</p>
-
-    <table>
-      <thead><tr><th>索引</th><th>字段</th><th>用途</th></tr></thead>
-      <tbody>
-        <tr><td>idx_history_hash</td><td>content_hash UNIQUE</td><td>去重 UPSERT</td></tr>
-        <tr><td>idx_history_pinned_created</td><td>pinned DESC, created_at DESC</td><td>list 默认排序</td></tr>
-        <tr><td>idx_history_starred</td><td>starred</td><td>筛选 Starred</td></tr>
-        <tr><td>history_fts (FTS5)</td><td>content + summary</td><td>全文搜索</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">4.2</span><code>last_session</code> 表</h3>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th><th>约束</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td>id</td><td>INTEGER</td><td>PK · CHECK (id = 1)</td><td>强制单行</td></tr>
-        <tr><td>content</td><td>TEXT</td><td>NOT NULL</td><td></td></tr>
-        <tr><td>op_type</td><td>TEXT</td><td>NOT NULL</td><td></td></tr>
-        <tr><td>saved_at</td><td>INTEGER</td><td>NOT NULL</td><td>unix ms</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">4.3</span><code>app_meta</code> 表</h3>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th></tr></thead>
-      <tbody>
-        <tr><td>key</td><td>TEXT PRIMARY KEY</td></tr>
-        <tr><td>value</td><td>TEXT NOT NULL</td></tr>
-      </tbody>
-    </table>
-
-    <p>当前已建表但未写入业务数据；用途保留给 <code>install_at</code> 等未来元数据。迁移版本权威在独立 <code>schema_version</code> 表。</p>
-
-    <h3><span class="h3-num">4.4</span><code>schema_version</code> 迁移表</h3>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th></tr></thead>
-      <tbody>
-        <tr><td>v</td><td>INTEGER NOT NULL</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">4.5</span>PRAGMA</h3>
-
-    <table>
-      <thead><tr><th>pragma</th><th>值</th><th>原因</th></tr></thead>
-      <tbody>
-        <tr><td>journal_mode</td><td>WAL</td><td>读 / 写并发</td></tr>
-        <tr><td>synchronous</td><td>NORMAL</td><td>WAL 下安全 + 快</td></tr>
-        <tr><td>foreign_keys</td><td>ON</td><td>预防未来表关系</td></tr>
-        <tr><td>busy_timeout</td><td>5000</td><td>避免 lock 失败</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">5</span>配置文件（JSON Store）</h2>
-
-    <h3><span class="h3-num">5.1</span><code>settings.json</code></h3>
-
-    <p>由 § 3.3 设置项字段表展开。文件路径 <code>~/Library/Application Support/Jsonita/settings.json</code>。</p>
-
-    <h3><span class="h3-num">5.2</span><code>window.json</code></h3>
-
-    <table>
-      <thead><tr><th>key</th><th>类型</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td>width / height</td><td>u32</td><td>用户拖动 / 智能缩放后的尺寸；读取时会自愈旧版自动缩放写出的过小尺寸</td></tr>
-        <tr><td>userDragged</td><td>bool</td><td>记录用户曾手动拖边，用于恢复上次尺寸；<code>true</code> 时智能缩放 no-op，<code>false</code> 的过小自动尺寸会恢复默认值</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">5.3</span><code>assets/icons/manifest.json</code></h3>
-
-    <p>见 <a href="05_icons_theme.html">05 § 1</a>；权威字段：<code>masters</code> · <code>palette</code> · <code>pngSizes</code> · <code>macOS</code> · <code>windows</code> · <code>menubar</code>。</p>
-
-    <h2><span class="h2-num">6</span>secrets.json schema</h2>
-
-    <p>路径：<code>~/Library/Application Support/Jsonita/secrets.json</code>，权限 <code>chmod 600</code>。结构是<b>扁平 map</b>：account → plain string。</p>
-
-    <table>
-      <thead><tr><th>key</th><th>value 类型</th><th>状态</th></tr></thead>
-      <tbody>
-        <tr><td><code>deepseek_api_key</code></td><td>string · DeepSeek API key（<code>sk-*</code>）</td><td>v1 唯一项</td></tr>
-        <tr><td><code>openai_api_key</code></td><td>—</td><td>v2 预留</td></tr>
-      </tbody>
-    </table>
-
-    <p>示例：</p>
-    <pre><code>{
-  "deepseek_api_key": "sk-xxxxxxxxxxxxxxxx"
-}</code></pre>
-
-    <p>封装实现见 <a href="10_storage.html">10 § 6</a>。此文件只保存 API key，不进入 settings、日志或事件 payload。</p>
-
-    <h2><span class="h2-num">7</span>命名规范汇总</h2>
-
-    <ul>
-      <li><b>Rust struct 字段</b>：snake_case</li>
-      <li><b>Rust enum variant</b>：CamelCase，序列化时 kebab-case（统一加 <code>#[serde(rename_all = "kebab-case")]</code>）</li>
-      <li><b>TS interface 字段</b>：camelCase（由 Rust struct 的 <code>#[serde(rename_all = "camelCase")]</code> 自动转换）</li>
-      <li><b>SQL 字段</b>：snake_case</li>
-      <li><b>Tauri command 名</b>：snake_case（<code>json_format</code>）</li>
-      <li><b>Tauri event 名</b>：冒号分隔的 namespace:name（如 <code>settings:changed</code>）</li>
-      <li><b>OpType 字符串</b>：kebab-case，与 enum 序列化一致（<code>"ai-fix"</code> 不是 <code>"ai_fix"</code>）</li>
-    </ul>
-
-    <h2><span class="h2-num">8</span>类型同步流程（Rust ↔ TS）</h2>
-
-    <ol>
-      <li>改 Rust struct/enum → 立刻改本章对应字段表</li>
-      <li>改本章 → 同步 <code>src/types/*.ts</code> 镜像</li>
-      <li>PR 模板复选框：<code>[ ] 13 § N updated</code> + <code>[ ] src/types updated</code></li>
-      <li>CI smoke test：调每个 command 一次 + listen 每个 event，验 (de)serialize 双向</li>
-    </ol>
-
-    <h2><span class="h2-num">9</span>各章节引用入口</h2>
-
-    <table>
-      <thead><tr><th>章节</th><th>引用本章哪节</th></tr></thead>
-      <tbody>
-        <tr><td>02 IPC 合约</td><td>§ 1 · § 3.1-3.5（命令签名 + payload）</td></tr>
-        <tr><td>03 设计令牌</td><td>§ 3.3 settings.theme / initialWidth / editorSoftWrap</td></tr>
-        <tr><td>04 组件库映射</td><td>§ 3.6 CopyNodeInfo</td></tr>
-        <tr><td>06 窗口 runtime</td><td>§ 3.5 ContentMetrics / WindowResizedPayload · § 5.2 window.json</td></tr>
-        <tr><td>08 编辑器</td><td>§ 3.6 CopyNodeInfo · § 3.3 editorSoftWrap</td></tr>
-        <tr><td>09 JSON 引擎</td><td>§ 3.1 FormatOpts / UnwrapOpts / StringifyOpts · § 1 Parse / UnwrapTimeout</td></tr>
-        <tr><td>10 存储 & 会话</td><td>§ 4 SQLite 表 · § 3.2 HistoryRow / LastSession · § 6 secrets.json</td></tr>
-        <tr><td>11 AI 客户端</td><td>§ 3.4 AiFixReq / AiFixResp</td></tr>
-      </tbody>
-    </table>
-
-    <nav class="pagination" id="pagination"></nav>
-
-  </article>
+<body>
+
+<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
+{
+  "metadata": {
+    "language": "zh-CN",
+    "owner": "Jin Huang",
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    },
+    "title": {
+      "zh-CN": "Schema 合约",
+      "en": "Schema Contracts"
+    },
+    "description": {
+      "zh-CN": "Rust/TypeScript 错误、设置、IPC payload、SQLite schema、JSON 文件和 secrets schema。",
+      "en": "Rust/TypeScript errors, settings, IPC payloads, SQLite schema, JSON files, and secrets schema."
+    },
+    "schemaVersion": "1.0",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ]
+  },
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "schema-inventory",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "错误",
+                "en": "Errors"
+              },
+              "body": {
+                "zh-CN": "JsonitaError 是 Rust 与 TS 错误映射的中心。",
+                "en": "JsonitaError is the center of Rust and TS error mapping."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "设置",
+                "en": "Settings"
+              },
+              "body": {
+                "zh-CN": "Settings 需要向后兼容默认值。",
+                "en": "Settings need backward-compatible defaults."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "数据",
+                "en": "Data"
+              },
+              "body": {
+                "zh-CN": "SQLite 和 JSON 文件 schema 必须能迁移或安全回退。",
+                "en": "SQLite and JSON-file schemas must migrate or fail back safely."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "schema-inventory",
+      "title": {
+        "zh-CN": "Schema Inventory",
+        "en": "Schema Inventory"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "Schema",
+              "en": "Schema"
+            },
+            {
+              "zh-CN": "字段/约束",
+              "en": "Fields/Constraints"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Settings",
+                "en": "Settings"
+              },
+              {
+                "zh-CN": "language、theme、indent、sortKeys、shortcuts、ai。",
+                "en": "language, theme, indent, sortKeys, shortcuts, ai."
+              }
+            ],
+            [
+              {
+                "zh-CN": "History item",
+                "en": "History item"
+              },
+              {
+                "zh-CN": "id、hash、operation、input/output summary、pin/star、timestamps。",
+                "en": "id, hash, operation, input/output summary, pin/star, timestamps."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Session",
+                "en": "Session"
+              },
+              {
+                "zh-CN": "last valid input/output/tab/pane state。",
+                "en": "last valid input/output/tab/pane state."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Secrets",
+                "en": "Secrets"
+              },
+              {
+                "zh-CN": "provider -> apiKey；不进入 settings。",
+                "en": "provider -> apiKey; not in settings."
+              }
+            ],
+            [
+              {
+                "zh-CN": "JsonitaError",
+                "en": "JsonitaError"
+              },
+              {
+                "zh-CN": "Json、Storage、Secrets、Ai、Window、Permission 等分类。",
+                "en": "Json, Storage, Secrets, Ai, Window, Permission, and related categories."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "新增 IPC payload 要同步 Rust type、TS wrapper 和 spec/02。",
+              "en": "New IPC payloads must sync Rust type, TS wrapper, and spec/02."
+            },
+            {
+              "zh-CN": "新增 settings 字段要提供旧文件默认值。",
+              "en": "New settings fields must provide defaults for old files."
+            },
+            {
+              "zh-CN": "Secrets 字段不允许进入日志、history 或 settings。",
+              "en": "Secrets fields must not enter logs, history, or settings."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "serde round-trip 和 TS type check。",
+              "en": "serde round-trip and TS type check."
+            },
+            {
+              "zh-CN": "老 settings.json 缺字段回归。",
+              "en": "Regression for old settings.json missing fields."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<article class="doc">
+<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">Schema 合约</span><span data-locale="en" data-locale-active="false">Schema Contracts</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
+<main>
+<section class="doc-section" id="overview">
+<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
+<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">错误</span><span data-locale="en" data-locale-active="false">Errors</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">JsonitaError 是 Rust 与 TS 错误映射的中心。</span><span data-locale="en" data-locale-active="false">JsonitaError is the center of Rust and TS error mapping.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">设置</span><span data-locale="en" data-locale-active="false">Settings</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">Settings 需要向后兼容默认值。</span><span data-locale="en" data-locale-active="false">Settings need backward-compatible defaults.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">数据</span><span data-locale="en" data-locale-active="false">Data</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">SQLite 和 JSON 文件 schema 必须能迁移或安全回退。</span><span data-locale="en" data-locale-active="false">SQLite and JSON-file schemas must migrate or fail back safely.</span></li></ul></section>
+</section>
+
+<section class="doc-section" id="summary">
+<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
+<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
+</section>
+
+<section class="doc-section" id="schema-inventory">
+<h2><span data-locale="zh-CN" data-locale-active="true">Schema Inventory</span><span data-locale="en" data-locale-active="false">Schema Inventory</span></h2>
+<table>
+<tr><th><span data-locale="zh-CN" data-locale-active="true">Schema</span><span data-locale="en" data-locale-active="false">Schema</span></th><th><span data-locale="zh-CN" data-locale-active="true">字段/约束</span><span data-locale="en" data-locale-active="false">Fields/Constraints</span></th></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Settings</span><span data-locale="en" data-locale-active="false">Settings</span></td><td><span data-locale="zh-CN" data-locale-active="true">language、theme、indent、sortKeys、shortcuts、ai。</span><span data-locale="en" data-locale-active="false">language, theme, indent, sortKeys, shortcuts, ai.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">History item</span><span data-locale="en" data-locale-active="false">History item</span></td><td><span data-locale="zh-CN" data-locale-active="true">id、hash、operation、input/output summary、pin/star、timestamps。</span><span data-locale="en" data-locale-active="false">id, hash, operation, input/output summary, pin/star, timestamps.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Session</span><span data-locale="en" data-locale-active="false">Session</span></td><td><span data-locale="zh-CN" data-locale-active="true">last valid input/output/tab/pane state。</span><span data-locale="en" data-locale-active="false">last valid input/output/tab/pane state.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Secrets</span><span data-locale="en" data-locale-active="false">Secrets</span></td><td><span data-locale="zh-CN" data-locale-active="true">provider -&gt; apiKey；不进入 settings。</span><span data-locale="en" data-locale-active="false">provider -&gt; apiKey; not in settings.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">JsonitaError</span><span data-locale="en" data-locale-active="false">JsonitaError</span></td><td><span data-locale="zh-CN" data-locale-active="true">Json、Storage、Secrets、Ai、Window、Permission 等分类。</span><span data-locale="en" data-locale-active="false">Json, Storage, Secrets, Ai, Window, Permission, and related categories.</span></td></tr>
+</table>
+</section>
+
+<section class="doc-section" id="invariants">
+<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
+<ul><li><span data-locale="zh-CN" data-locale-active="true">新增 IPC payload 要同步 Rust type、TS wrapper 和 spec/02。</span><span data-locale="en" data-locale-active="false">New IPC payloads must sync Rust type, TS wrapper, and spec/02.</span></li><li><span data-locale="zh-CN" data-locale-active="true">新增 settings 字段要提供旧文件默认值。</span><span data-locale="en" data-locale-active="false">New settings fields must provide defaults for old files.</span></li><li><span data-locale="zh-CN" data-locale-active="true">Secrets 字段不允许进入日志、history 或 settings。</span><span data-locale="en" data-locale-active="false">Secrets fields must not enter logs, history, or settings.</span></li></ul>
+</section>
+
+<section class="doc-section" id="testing-plan">
+<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
+<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">serde round-trip 和 TS type check。</span><span data-locale="en" data-locale-active="false">serde round-trip and TS type check.</span></li><li><span data-locale="zh-CN" data-locale-active="true">老 settings.json 缺字段回归。</span><span data-locale="en" data-locale-active="false">Regression for old settings.json missing fields.</span></li></ol>
+</section>
+
+<section class="doc-section" id="open-questions">
+<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
+<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
+</section>
 </main>
+<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
+</article>
 
-<script src="../assets/nav.js"></script>
+<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#schema-inventory"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Schema Inventory</span><span data-locale="en" data-locale-active="false">Schema Inventory</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
+<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">Schema 合约</span><span data-locale="en" data-locale-active="false">Schema Contracts</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
+
+
+<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
+  const config = window.CAST_DOCS_I18N;
+  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
+  const MEMORY_KEY = 'cast-docs:global-memory';
+  const root = document.documentElement;
+  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
+  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
+  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
+  function readMemory() {
+    try {
+      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+  function writeMemory(memory) {
+    try {
+      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  function rememberDefaultLocale(locale) {
+    if (!config.locales.includes(locale)) return false;
+    const memory = readMemory();
+    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
+    memory.version = 1;
+    memory.preferences = {
+      ...preferences,
+      defaultLocale: locale,
+      defaultLocaleUpdatedAt: new Date().toISOString(),
+    };
+    return writeMemory(memory);
+  }
+  function defaultLocaleFromMemory() {
+    const locale = readMemory().preferences?.defaultLocale;
+    return config.locales.includes(locale) ? locale : null;
+  }
+  function apply(locale) {
+    if (!config.locales.includes(locale)) return;
+    root.lang = locale;
+    root.setAttribute('data-active-locale', locale);
+    config.activeLocale = locale;
+    document.querySelectorAll('[data-locale]').forEach((node) => {
+      const active = node.getAttribute('data-locale') === locale;
+      node.setAttribute('data-locale-active', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-locale-target]').forEach((button) => {
+      const active = button.getAttribute('data-locale-target') === locale;
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
+      const key = node.getAttribute('data-i18n-key');
+      if (key) node.textContent = label(locale, key, node.textContent);
+    });
+  }
+  function maybeSetDefaultLocale(locale) {
+    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
+    const message = label(
+      locale,
+      'chrome.defaultLanguagePrompt',
+      `Set ${displayName(locale)} as the default language for CAST Docs?`
+    ).replace('{language}', displayName(locale));
+    if (window.confirm(message)) {
+      rememberDefaultLocale(locale);
+    }
+  }
+  document.querySelectorAll('[data-locale-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const locale = button.getAttribute('data-locale-target');
+      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
+      apply(locale);
+      maybeSetDefaultLocale(locale);
+    });
+  });
+  apply(defaultLocaleFromMemory() || config.activeLocale);
+})();
+</script>
 </body>
 </html>

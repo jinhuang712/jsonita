@@ -1,275 +1,708 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jsonita Spec · 14 国际化 & 无障碍</title>
-<link rel="stylesheet" href="../assets/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="应用与文档的语言、术语、键盘可达、屏幕阅读和可访问性边界。">
+<title>I18n 与 A11y</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f8f8f7;
+  --surface: #ffffff;
+  --soft: #f2f3f3;
+  --text: #24272b;
+  --muted: #68717b;
+  --faint: #9aa1a8;
+  --border: #dedede;
+  --primary: #315f9f;
+  --primary-soft: #eef3fa;
+  --accent: #52686a;
+  --info: #566f99;
+  --info-soft: #f4f5f7;
+  --warn: #8a6d3b;
+  --warn-soft: #f8f4ea;
+  --danger: #9b4d49;
+  --danger-soft: #faf0ef;
+  --ok: #55745f;
+  --ok-soft: #eef4ef;
+  --code: #f1f2f2;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --font-xs: 11px;
+  --font-sm: 12.5px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 20px;
+  --font-xl: 28px;
+  --font-title: 30px;
+  --line-tight: 1.25;
+  --line-normal: 1.65;
+  --line-loose: 1.75;
+  --line-code: 1.55;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 28px;
+  --space-10: 34px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --surface-shadow: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111315;
+    --surface: #17191c;
+    --soft: #202328;
+    --text: #e2e5e8;
+    --muted: #a1a7ad;
+    --faint: #767d84;
+    --border: #30343a;
+    --primary: #9bb7d9;
+    --primary-soft: #182231;
+    --accent: #9ab4b1;
+    --info: #9aaeca;
+    --info-soft: #1b2027;
+    --warn: #c7b27e;
+    --warn-soft: #242117;
+    --danger: #d09a95;
+    --danger-soft: #271b1a;
+    --ok: #9ebaa5;
+    --ok-soft: #1a241d;
+    --code: #202328;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+}
+:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
+pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
+pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
+mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
+del { color: var(--muted); text-decoration: line-through; }
+u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
+[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
+[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
+[data-locale][data-locale-active="false"] { display: none; }
+.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
+.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
+.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
+.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
+.brand-logo:hover { text-decoration: none; }
+.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
+.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
+.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.topbar-org, .topbar-project { flex: 0 0 auto; }
+.topbar-doc { color: var(--muted); font-weight: 500; }
+.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
+.topbar-links { display: flex; gap: 12px; align-items: center; }
+.topbar-links:empty { display: none; }
+.topbar-link { color: var(--muted); font-size: var(--font-sm); }
+.topbar-spacer { flex: 1; }
+.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
+.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
+.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
+.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
+.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
+.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
+.doc-summary { padding: 16px 18px; }
+.doc-summary ul { margin: 0; }
+.set-grid { display: grid; gap: 22px; }
+.set-section { margin: 0; }
+.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
+.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
+.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
+.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
+.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
+.chapter-card a:hover { text-decoration: none; }
+.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
+.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
+.chapter-content { display: grid; gap: 5px; min-width: 0; }
+.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
+.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
+.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
+.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
+.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
+.set-pagination-next { text-align: right; }
+.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
+.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
+.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
+.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
+.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
+.section-title { overflow-wrap: anywhere; }
+.section-empty { color: var(--muted); font-style: italic; }
+.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
+.callout p { margin: 6px 0 0; }
+.callout-info { border-left-color: var(--info); background: var(--info-soft); }
+.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
+.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
+table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
+th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.details-block { padding: 0 14px; }
+.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
+.diagram { position: relative; padding: 16px; overflow: auto; }
+.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
+.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+.diagram:hover .diagram-toolbar { opacity: 1; }
+button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
+.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
+.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
+.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
+.code-status-ok { color: var(--ok); }
+.code-status-error { color: var(--danger); }
+.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
+.code-status + .code-copy { margin-left: 0; }
+.code-copy:hover { color: var(--text); }
+.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
+.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
+.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.code-line-content { padding: 0 14px; white-space: pre; }
+.code-token-key { color: var(--primary); }
+.code-token-bool { color: var(--info); }
+.code-token-number { color: var(--warn); }
+.code-token-flag { color: var(--accent); }
+.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+.diff-block > h3 { grid-column: 1 / -1; }
+.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
+.diff-side + .diff-side { margin-left: -1px; }
+.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
+.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
+.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
+.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
+.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
+.diff-line-content { padding-right: 14px; white-space: pre; }
+.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
+.line-add { color: var(--ok); }
+.line-remove { color: var(--danger); }
+.line-warning { color: var(--warn); }
+.line-context { color: var(--text); }
+.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.participant-card, .value-card, .action-card { padding: 14px 16px; }
+.action-card { padding: 20px; }
+.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
+.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
+.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
+.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
+.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
+.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
+.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
+.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
+.open-question + .open-question { border-top: 1px solid var(--border); }
+.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
+.open-question-text { min-width: 0; }
+.prompt-block { margin-top: 20px; }
+.prompt-block .code-header { padding: 12px 14px; }
+.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
+.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
+.prompt-block .code-line-number { padding-right: 12px; }
+.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.media-frame { margin: 0; overflow: hidden; }
+.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
+.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
+.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
+.column { min-width: 0; }
+.column h3 { margin-top: 0; }
+.column p:first-child { margin-top: 0; }
+.column p:last-child { margin-bottom: 0; }
+.column > .code-shell, .column > table { margin-top: 12px; }
+.toggle-view { padding: 14px; }
+.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
+.toggle-button { border: 0; background: transparent; color: var(--muted); }
+.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.toggle-panel[data-view-active="false"] { display: none; }
+.toggle-panel > :first-child { margin-top: 0; }
+.toggle-panel > :last-child { margin-bottom: 0; }
+.slider-control { padding: 16px; }
+.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.slider-header label { font-weight: 700; }
+.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
+.slider-range { display: block; width: 100%; accent-color: var(--primary); }
+.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
+.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
+.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
+.lightbox.open { display: flex; }
+.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
+.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
+.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
+.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
+.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
+@media (max-width: 760px) {
+  body { display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
+  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
+  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
+  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
+  .doc-header h1 { font-size: var(--font-xl); }
+  .diff-block { grid-template-columns: 1fr; }
+  .set-pagination { grid-template-columns: 1fr; }
+  .set-pagination-next { text-align: left; }
+  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
+  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
+}
+@media print {
+  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
+  .doc { margin-left: 0; max-width: none; padding: 0; }
+}
+</style>
 </head>
-<body data-section="spec" data-chapter="14">
+<body>
 
-<aside class="sidebar" id="sidebar"></aside>
-<header class="topbar" id="topbar"></header>
-
-<main class="doc-main">
-  <article class="doc-article">
-
-    <div class="doc-header">
-      <span class="doc-tag">SPEC · 章节 14</span>
-      <h1 class="doc-title">国际化 & 无障碍</h1>
-      <p class="doc-subtitle">i18n 架构准备（v1 英文 → M3 中文）+ a11y 清单 ── 先讲设计与回退策略，再列资源结构与 a11y 要求。</p>
-    </div>
-
-    <div class="callout callout-info">
-      <span class="callout-icon">REF</span>
-      <div class="callout-body">
-        <p>本章是<b>横切关注章节</b>：v1 仅交付英文 UI（<a href="../plan/04_nfr.html">plan/04 NFR § 3</a>），但 v1 实施期就要锁定 lib 选型、资源结构、切换机制 ── 否则 M3 中文 UI 会引发大量返工（key 拆分 / 文案外移 / 字体回退调整）。<code>settings.locale</code> 字段补充见 <a href="13_schemas.html">13 § 3.3</a>；字体栈见 <a href="03_design_tokens.html">03 § 6.1</a>。</p>
-      </div>
-    </div>
-
-    <p class="section-divider"><b>一 · 设计</b></p>
-
-    <h2><span class="h2-num">1</span>设计目标与边界</h2>
-
-    <p>i18n 在 Jsonita 是<b>架构准备</b>而不是 v1 功能 ── 五条硬约束：</p>
-
-    <table>
-      <thead><tr><th>原则</th><th>含义</th><th>实现影响</th></tr></thead>
-      <tbody>
-        <tr><td><b>v1 实施期 lock</b></td><td>v1 仅交付英文，但所有 UI 文案<b>必须经</b> <code>t()</code> 函数 ── 不允许 hardcode 英文字符串</td><td>M0 起就引 react-i18next，所有组件按规范写</td></tr>
-        <tr><td><b>Rust 端不翻译</b></td><td>Rust 返回的错误 <code>JsonitaError</code> 永远是英文 + <code>kind</code>；翻译在前端按 kind 映射</td><td>跨 IPC 协议稳定，不受语言切换影响；<code>error.kind</code> 是契约的一部分（<a href="13_schemas.html">13 § 1</a>）</td></tr>
-        <tr><td><b>JSON 内容不受 i18n 影响</b></td><td>用户输入的 JSON 中含 CJK / 阿语 / 表情 ── 永远透传，编辑器渲染由 CodeMirror 处理</td><td>i18n 只影响 chrome（菜单 / 按钮 / 状态栏 / Modal；Toast 为保留设计）</td></tr>
-        <tr><td><b>实时切换</b></td><td>用户切语言 → React 全量 re-render，<b>无需</b> reload 窗口</td><td>所有文案经 hook 订阅 store，避免硬编码 prop drilling</td></tr>
-        <tr><td><b>包内置不下载</b></td><td>语言包打入 bundle（不从远程拉）── 离线可用，且符合 v1 "不联网" 约束</td><td>v1 / M3 都是 2 个 locale (en-US / zh-CN)，bundle 体积可控（每 locale ~10 KB）</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">2</span>关键设计决策</h2>
-
-    <h3><span class="h3-num">2.1</span>i18n lib 选型</h3>
-
-    <table>
-      <thead><tr><th>方案</th><th>体积</th><th>类型友好</th><th>命名空间</th><th>结论</th></tr></thead>
-      <tbody>
-        <tr><td><b>react-i18next</b>（选）</td><td>~30 KB gzipped</td><td>TS plugin 提供 key 自动补全</td><td>原生 namespace + 懒加载</td><td>生态最熟；与 zustand 兼容；fallback chain 内置</td></tr>
-        <tr><td>lingui</td><td>~15 KB</td><td>编译期提取 key（macro）</td><td>需自己组织</td><td>体积小但 macro 增加 build 复杂度；ICU MessageFormat 对我们简单场景过度</td></tr>
-        <tr><td>react-intl (FormatJS)</td><td>~50 KB（含 ICU runtime）</td><td>OK</td><td>需自己组织</td><td>体积偏大；ICU 强大但 Jsonita 不需要复数 / 性别变体等高级特性</td></tr>
-        <tr><td>自写</td><td>~2 KB</td><td>无</td><td>无</td><td>省体积但要自维护 fallback / 复数 / 格式化 / TS 类型 ── 性价比低</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">2.2</span>资源 namespace 划分</h3>
-
-    <p>按<b>章节模块</b>拆 namespace，而非按"类型"（按钮 / 标签 / 错误）拆。理由：组件改名 / 移位时改文案文件位置和组件位置一致，定位快。</p>
-
-    <table>
-      <thead><tr><th>namespace</th><th>覆盖范围</th><th>典型 key</th></tr></thead>
-      <tbody>
-        <tr><td><code>shell</code></td><td>FloatingWindow / TabBar / StatusBar</td><td><code>shell.tabBar.format</code> · <code>shell.statusBar.valid</code></td></tr>
-        <tr><td><code>panes</code></td><td>5 个功能面板的标题、placeholder、empty state</td><td><code>panes.tree.emptyState</code> · <code>panes.aiFix.acceptButton</code></td></tr>
-        <tr><td><code>settings</code></td><td>设置 Modal + 6 个分组 + 字段标签</td><td><code>settings.general.launchAtLogin</code> · <code>settings.ai.testConnection</code></td></tr>
-        <tr><td><code>history</code></td><td>保留 namespace；历史 Modal / Item UI 当前未实现</td><td><code>history.filterPinned</code> · <code>history.confirmClear</code></td></tr>
-        <tr><td><code>errors</code></td><td><code>JsonitaError</code> 9 个 kind 映射 + UI 行动文案</td><td><code>errors.parse.title</code> · <code>errors.rateLimit.retryAfter</code></td></tr>
-        <tr><td><code>about</code></td><td>About 页（版本 / 链接 / 致谢）</td><td><code>about.version</code> · <code>about.openSourceCredits</code></td></tr>
-        <tr><td><code>common</code></td><td>跨 namespace 通用词（OK / Cancel / Confirm / 12 个 base）</td><td><code>common.ok</code> · <code>common.cancel</code></td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">2.3</span>locale 检测与切换</h3>
-
-    <p>三层 fallback chain，<b>显式优先于隐式</b>：</p>
-
-    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-14-i18n-a11y-diagram-1">
-<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" viewBox="0 0 612.109375 998.03125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#333;color:#333;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#333333;stroke-width:1px;}#my-svg .flowchart-link{stroke:#333333;fill:none;}#my-svg .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#my-svg .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#my-svg .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .cond&gt;*{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .cond span{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .use&gt;*{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .use span{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .act&gt;*{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}#my-svg .act span{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M317.953,62L317.953,66.167C317.953,70.333,317.953,78.667,317.953,86.333C317.953,94,317.953,101,317.953,104.5L317.953,108" id="my-svg-L_Boot_S1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Boot_S1_0" data-points="W3sieCI6MzE3Ljk1MzEyNSwieSI6NjJ9LHsieCI6MzE3Ljk1MzEyNSwieSI6ODd9LHsieCI6MzE3Ljk1MzEyNSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M261.38,238.083L235.994,253.678C210.607,269.274,159.835,300.465,134.449,340.009C109.063,379.552,109.063,427.448,109.063,475.344C109.063,523.24,109.063,571.135,109.063,602.583C109.063,634.031,109.063,649.031,109.063,656.531L109.063,664.031" id="my-svg-L_S1_Use1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S1_Use1_0" data-points="W3sieCI6MjYxLjM3OTc5MDU5NTE3MTksInkiOjIzOC4wODI5MTU1OTUxNzE5fSx7IngiOjEwOS4wNjI1LCJ5IjozMzEuNjU2MjV9LHsieCI6MTA5LjA2MjUsInkiOjQ3NS4zNDM3NX0seyJ4IjoxMDkuMDYyNSwieSI6NjE5LjAzMTI1fSx7IngiOjEwOS4wNjI1LCJ5Ijo2NjguMDMxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M360.187,252.423L371.547,265.628C382.907,278.834,405.627,305.245,416.988,323.951C428.348,342.656,428.348,353.656,428.348,359.156L428.348,364.656" id="my-svg-L_S1_S2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S1_S2_0" data-points="W3sieCI6MzYwLjE4Njc2MDA3OTY4ODQ0LCJ5IjoyNTIuNDIyNjE0OTIwMzExNTZ9LHsieCI6NDI4LjM0NzY1NjI1LCJ5IjozMzEuNjU2MjV9LHsieCI6NDI4LjM0NzY1NjI1LCJ5IjozNjguNjU2MjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M384.958,538.641L375.773,552.04C366.589,565.438,348.22,592.235,339.036,613.133C329.852,634.031,329.852,649.031,329.852,656.531L329.852,664.031" id="my-svg-L_S2_Use2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S2_Use2_0" data-points="W3sieCI6Mzg0Ljk1NzgzODQ3MDY4MSwieSI6NTM4LjY0MTQzMjIyMDY4MDl9LHsieCI6MzI5Ljg1MTU2MjUsInkiOjYxOS4wMzEyNX0seyJ4IjozMjkuODUxNTYyNSwieSI6NjY4LjAzMTI1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M471.737,538.641L480.922,552.04C490.106,565.438,508.475,592.235,517.659,611.133C526.844,630.031,526.844,641.031,526.844,646.531L526.844,652.031" id="my-svg-L_S2_Use3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S2_Use3_0" data-points="W3sieCI6NDcxLjczNzQ3NDAyOTMxOSwieSI6NTM4LjY0MTQzMjIyMDY4MDl9LHsieCI6NTI2Ljg0Mzc1LCJ5Ijo2MTkuMDMxMjV9LHsieCI6NTI2Ljg0Mzc1LCJ5Ijo2NTYuMDMxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M109.063,722.031L109.063,728.198C109.063,734.365,109.063,746.698,120.537,756.814C132.011,766.931,154.96,774.83,166.434,778.78L177.908,782.729" id="my-svg-L_Use1_Apply_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Use1_Apply_0" data-points="W3sieCI6MTA5LjA2MjUsInkiOjcyMi4wMzEyNX0seyJ4IjoxMDkuMDYyNSwieSI6NzU5LjAzMTI1fSx7IngiOjE4MS42OTA0ODEwODU1MjYzMywieSI6Nzg0LjAzMTI1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M329.852,722.031L329.852,728.198C329.852,734.365,329.852,746.698,329.852,756.365C329.852,766.031,329.852,773.031,329.852,776.531L329.852,780.031" id="my-svg-L_Use2_Apply_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Use2_Apply_0" data-points="W3sieCI6MzI5Ljg1MTU2MjUsInkiOjcyMi4wMzEyNX0seyJ4IjozMjkuODUxNTYyNSwieSI6NzU5LjAzMTI1fSx7IngiOjMyOS44NTE1NjI1LCJ5Ijo3ODQuMDMxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M526.844,734.031L526.844,738.198C526.844,742.365,526.844,750.698,516.666,758.791C506.488,766.885,486.132,774.738,475.954,778.665L465.776,782.591" id="my-svg-L_Use3_Apply_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Use3_Apply_0" data-points="W3sieCI6NTI2Ljg0Mzc1LCJ5Ijo3MzQuMDMxMjV9LHsieCI6NTI2Ljg0Mzc1LCJ5Ijo3NTkuMDMxMjV9LHsieCI6NDYyLjA0MzY4ODMyMjM2ODQ0LCJ5Ijo3ODQuMDMxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M329.852,886.031L329.852,890.198C329.852,894.365,329.852,902.698,329.852,910.365C329.852,918.031,329.852,925.031,329.852,928.531L329.852,932.031" id="my-svg-L_Apply_Render_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Apply_Render_0" data-points="W3sieCI6MzI5Ljg1MTU2MjUsInkiOjg4Ni4wMzEyNX0seyJ4IjozMjkuODUxNTYyNSwieSI6OTExLjAzMTI1fSx7IngiOjMyOS44NTE1NjI1LCJ5Ijo5MzYuMDMxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_Boot_S1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(109.0625, 475.34375)"><g class="label" data-id="L_S1_Use1_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(428.34765625, 331.65625)"><g class="label" data-id="L_S1_S2_0" transform="translate(-72.03125, -12)"><foreignObject width="144.0625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否 首次启动或 reset</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(329.8515625, 619.03125)"><g class="label" data-id="L_S2_Use2_0" transform="translate(-69.0390625, -12)"><foreignObject width="138.078125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>zh-CN 或 zh 系变体</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(526.84375, 619.03125)"><g class="label" data-id="L_S2_Use3_0" transform="translate(-48.9609375, -12)"><foreignObject width="97.921875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>其他或不匹配</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_Use1_Apply_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_Use2_Apply_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_Use3_Apply_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_Apply_Render_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-Boot-0" data-look="classic" transform="translate(317.953125, 35)"><rect class="basic label-container" style="" x="-62.640625" y="-27" width="125.28125" height="54"/><g class="label" style="" transform="translate(-32.640625, -12)"><rect/><foreignObject width="65.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>应用启动</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-S1-1" data-look="classic" transform="translate(317.953125, 203.328125)"><polygon points="91.328125,0 182.65625,-91.328125 91.328125,-182.65625 0,-91.328125" class="label-container" transform="translate(-90.828125, 91.328125)" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important"/><g class="label" style="" transform="translate(-52.328125, -24)"><rect/><foreignObject width="104.65625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>settings.locale<br />已设置?</p></span></div></foreignObject></g></g><g class="node default use" id="my-svg-flowchart-Use1-3" data-look="classic" transform="translate(109.0625, 695.03125)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-101.0625" y="-27" width="202.125" height="54"/><g class="label" style="" transform="translate(-71.0625, -12)"><rect/><foreignObject width="142.125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>使用 settings.locale</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-S2-5" data-look="classic" transform="translate(428.34765625, 475.34375)"><polygon points="106.6875,0 213.375,-106.6875 106.6875,-213.375 0,-106.6875" class="label-container" transform="translate(-106.1875, 106.6875)" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important"/><g class="label" style="" transform="translate(-67.6875, -24)"><rect/><foreignObject width="135.375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>navigator.language<br />匹配支持的 locale?</p></span></div></foreignObject></g></g><g class="node default use" id="my-svg-flowchart-Use2-7" data-look="classic" transform="translate(329.8515625, 695.03125)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-69.7265625" y="-27" width="139.453125" height="54"/><g class="label" style="" transform="translate(-39.7265625, -12)"><rect/><foreignObject width="79.453125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>使用 zh-CN</p></span></div></foreignObject></g></g><g class="node default use" id="my-svg-flowchart-Use3-9" data-look="classic" transform="translate(526.84375, 695.03125)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-77.265625" y="-39" width="154.53125" height="78"/><g class="label" style="" transform="translate(-47.265625, -24)"><rect/><foreignObject width="94.53125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>使用 en-US<br />作为 fallback</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-Apply-11" data-look="classic" transform="translate(329.8515625, 835.03125)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-151.6328125" y="-51" width="303.265625" height="102"/><g class="label" style="" transform="translate(-121.6328125, -36)"><rect/><foreignObject width="243.265625" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>i18n.changeLanguage locale<br />+ document.documentElement.lang</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-Render-17" data-look="classic" transform="translate(329.8515625, 963.03125)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-105.359375" y="-27" width="210.71875" height="54"/><g class="label" style="" transform="translate(-75.359375, -12)"><rect/><foreignObject width="150.71875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>React 全量 re-render</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
-</figure>
-
-    <p><b>切换时机</b>：用户在 Settings → General → Language 改 locale → <code>settings_set({ locale: 'zh-CN' })</code> → Rust emit <code>settings:changed</code> → 前端 store update → <code>i18n.changeLanguage</code> → React 重渲染。无需 reload 窗口。</p>
-
-    <h3><span class="h3-num">2.4</span>Rust 错误为何不翻译</h3>
-
-    <ul>
-      <li><b>kind 是契约</b>：<code>JsonitaError.kind</code> 是跨 IPC 的稳定标识符（<a href="13_schemas.html">13 § 1</a>），用于 UI 分级响应（<a href="02_ipc.html">02 § 3.3</a>）。若 Rust 翻译，前端按 kind 映射文案的链路就被打破</li>
-      <li><b>错误日志稳定</b>：日志和 issue 报告中错误信息都是英文 + kind，便于跨语言用户提交 bug</li>
-      <li><b>前端单源</b>：所有用户文案都在 <code>errors.*</code> namespace，集中维护</li>
-    </ul>
-
-    <p><b>映射示例</b>：Rust 返 <code>{ kind: 'RateLimit', data: { retryAfterSec: 30 } }</code> → 前端 <code>t('errors.rateLimit.retryAfter', { sec: 30 })</code> → 中文显示"请 30 秒后重试"。</p>
-
-    <p class="section-divider"><b>二 · 工作机制</b></p>
-
-    <h2><span class="h2-num">3</span>加载与切换数据流</h2>
-
-    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-14-i18n-a11y-diagram-2">
-<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" viewBox="0 0 652.15625 1019" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#333;color:#333;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#333333;stroke-width:1px;}#my-svg .flowchart-link{stroke:#333333;fill:none;}#my-svg .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#my-svg .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#my-svg .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .boot&gt;*{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .boot span{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .rt&gt;*{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .rt span{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .comp&gt;*{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}#my-svg .comp span{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Components" data-look="classic"><rect style="" x="61.40234375" y="803" width="512.0078125" height="208"/><g class="cluster-label" transform="translate(268.4453125, 803)"><foreignObject width="97.921875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>所有文案订阅</p></span></div></foreignObject></g></g><g class="cluster" id="my-svg-Runtime" data-look="classic"><rect style="" x="328.734375" y="8" width="315.421875" height="745"/><g class="cluster-label" transform="translate(445.640625, 8)"><foreignObject width="81.609375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>运行时切换</p></span></div></foreignObject></g></g><g class="cluster" id="my-svg-Boot" data-look="classic"><rect style="" x="8" y="137" width="300.734375" height="616"/><g class="cluster-label" transform="translate(125.7265625, 137)"><foreignObject width="65.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>启动加载</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M158.367,216L158.367,220.167C158.367,224.333,158.367,232.667,158.367,242.333C158.367,252,158.367,263,158.367,268.5L158.367,274" id="my-svg-L_B1_B2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B1_B2_0" data-points="W3sieCI6MTU4LjM2NzE4NzUsInkiOjIxNn0seyJ4IjoxNTguMzY3MTg3NSwieSI6MjQxfSx7IngiOjE1OC4zNjcxODc1LCJ5IjoyNzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M158.367,332L158.367,338.167C158.367,344.333,158.367,356.667,158.367,366.333C158.367,376,158.367,383,158.367,386.5L158.367,390" id="my-svg-L_B2_B3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B2_B3_0" data-points="W3sieCI6MTU4LjM2NzE4NzUsInkiOjMzMn0seyJ4IjoxNTguMzY3MTg3NSwieSI6MzY5fSx7IngiOjE1OC4zNjcxODc1LCJ5IjozOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M158.367,472L158.367,476.167C158.367,480.333,158.367,488.667,158.367,496.333C158.367,504,158.367,511,158.367,514.5L158.367,518" id="my-svg-L_B3_B4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B3_B4_0" data-points="W3sieCI6MTU4LjM2NzE4NzUsInkiOjQ3Mn0seyJ4IjoxNTguMzY3MTg3NSwieSI6NDk3fSx7IngiOjE1OC4zNjcxODc1LCJ5Ijo1MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M158.367,600L158.367,604.167C158.367,608.333,158.367,616.667,158.367,626.333C158.367,636,158.367,647,158.367,652.5L158.367,658" id="my-svg-L_B4_B5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B4_B5_0" data-points="W3sieCI6MTU4LjM2NzE4NzUsInkiOjYwMH0seyJ4IjoxNTguMzY3MTg3NSwieSI6NjI1fSx7IngiOjE1OC4zNjcxODc1LCJ5Ijo2NjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.445,87L486.445,91.167C486.445,95.333,486.445,103.667,486.445,112C486.445,120.333,486.445,128.667,486.445,136.333C486.445,144,486.445,151,486.445,154.5L486.445,158" id="my-svg-L_U_SS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_U_SS_0" data-points="W3sieCI6NDg2LjQ0NTMxMjUsInkiOjg3fSx7IngiOjQ4Ni40NDUzMTI1LCJ5IjoxMTJ9LHsieCI6NDg2LjQ0NTMxMjUsInkiOjEzN30seyJ4Ijo0ODYuNDQ1MzEyNSwieSI6MTYyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.445,216L486.445,220.167C486.445,224.333,486.445,232.667,486.445,240.333C486.445,248,486.445,255,486.445,258.5L486.445,262" id="my-svg-L_SS_EV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SS_EV_0" data-points="W3sieCI6NDg2LjQ0NTMxMjUsInkiOjIxNn0seyJ4Ijo0ODYuNDQ1MzEyNSwieSI6MjQxfSx7IngiOjQ4Ni40NDUzMTI1LCJ5IjoyNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.445,344L486.445,348.167C486.445,352.333,486.445,360.667,486.445,370.333C486.445,380,486.445,391,486.445,396.5L486.445,402" id="my-svg-L_EV_ST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EV_ST_0" data-points="W3sieCI6NDg2LjQ0NTMxMjUsInkiOjM0NH0seyJ4Ijo0ODYuNDQ1MzEyNSwieSI6MzY5fSx7IngiOjQ4Ni40NDUzMTI1LCJ5Ijo0MDZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.445,460L486.445,466.167C486.445,472.333,486.445,484.667,486.445,496.333C486.445,508,486.445,519,486.445,524.5L486.445,530" id="my-svg-L_ST_CH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ST_CH_0" data-points="W3sieCI6NDg2LjQ0NTMxMjUsInkiOjQ2MH0seyJ4Ijo0ODYuNDQ1MzEyNSwieSI6NDk3fSx7IngiOjQ4Ni40NDUzMTI1LCJ5Ijo1MzR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.445,588L486.445,594.167C486.445,600.333,486.445,612.667,486.445,622.333C486.445,632,486.445,639,486.445,642.5L486.445,646" id="my-svg-L_CH_RR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CH_RR_0" data-points="W3sieCI6NDg2LjQ0NTMxMjUsInkiOjU4OH0seyJ4Ijo0ODYuNDQ1MzEyNSwieSI6NjI1fSx7IngiOjQ4Ni40NDUzMTI1LCJ5Ijo2NTB9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M322.406,882L322.406,886.167C322.406,890.333,322.406,898.667,322.406,907C322.406,915.333,322.406,923.667,322.406,927.833L322.406,932" id="my-svg-L_H_T_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_T_0" data-points="W3sieCI6MzIyLjQwNjI1LCJ5Ijo4ODJ9LHsieCI6MzIyLjQwNjI1LCJ5Ijo5MDd9LHsieCI6MzIyLjQwNjI1LCJ5Ijo5MzJ9XQ==" data-look="classic"/><path d="M158.367,716L158.367,722.167C158.367,728.333,158.367,740.667,158.367,751C158.367,761.333,158.367,769.667,158.367,778C158.367,786.333,158.367,794.667,170.876,802.799C183.384,810.93,208.402,818.861,220.91,822.826L233.419,826.791" id="my-svg-L_B5_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B5_H_0" data-points="W3sieCI6MTU4LjM2NzE4NzUsInkiOjcxNn0seyJ4IjoxNTguMzY3MTg3NSwieSI6NzUzfSx7IngiOjE1OC4zNjcxODc1LCJ5Ijo3Nzh9LHsieCI6MTU4LjM2NzE4NzUsInkiOjgwM30seyJ4IjoyMzcuMjMyMTIxMzk0MjMwNzcsInkiOjgyOH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.445,728L486.445,732.167C486.445,736.333,486.445,744.667,486.445,753C486.445,761.333,486.445,769.667,486.445,778C486.445,786.333,486.445,794.667,473.937,802.799C461.428,810.93,436.411,818.861,423.902,822.826L411.393,826.791" id="my-svg-L_RR_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RR_H_0" data-points="W3sieCI6NDg2LjQ0NTMxMjUsInkiOjcyOH0seyJ4Ijo0ODYuNDQ1MzEyNSwieSI6NzUzfSx7IngiOjQ4Ni40NDUzMTI1LCJ5Ijo3Nzh9LHsieCI6NDg2LjQ0NTMxMjUsInkiOjgwM30seyJ4Ijo0MDcuNTgwMzc4NjA1NzY5MiwieSI6ODI4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_B1_B2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B2_B3_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B3_B4_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B4_B5_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_U_SS_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_SS_EV_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_EV_ST_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_ST_CH_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_CH_RR_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_H_T_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B5_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_RR_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default boot" id="my-svg-flowchart-B1-0" data-look="classic" transform="translate(158.3671875, 189)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-105.765625" y="-27" width="211.53125" height="54"/><g class="label" style="" transform="translate(-75.765625, -12)"><rect/><foreignObject width="151.53125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>index.html bootstrap</p></span></div></foreignObject></g></g><g class="node default boot" id="my-svg-flowchart-B2-1" data-look="classic" transform="translate(158.3671875, 305)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-86.71875" y="-27" width="173.4375" height="54"/><g class="label" style="" transform="translate(-56.71875, -12)"><rect/><foreignObject width="113.4375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>settings_get_all</p></span></div></foreignObject></g></g><g class="node default boot" id="my-svg-flowchart-B3-2" data-look="classic" transform="translate(158.3671875, 433)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-84.1875" y="-39" width="168.375" height="78"/><g class="label" style="" transform="translate(-54.1875, -24)"><rect/><foreignObject width="108.375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>resolve locale<br />(§ 2.3 fallback)</p></span></div></foreignObject></g></g><g class="node default boot" id="my-svg-flowchart-B4-3" data-look="classic" transform="translate(158.3671875, 561)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-115.3671875" y="-39" width="230.734375" height="78"/><g class="label" style="" transform="translate(-85.3671875, -24)"><rect/><foreignObject width="170.734375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>i18n.init<br />动态 import locale 资源</p></span></div></foreignObject></g></g><g class="node default boot" id="my-svg-flowchart-B5-4" data-look="classic" transform="translate(158.3671875, 689)"><rect class="basic label-container" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important" x="-92.71875" y="-27" width="185.4375" height="54"/><g class="label" style="" transform="translate(-62.71875, -12)"><rect/><foreignObject width="125.4375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>ReactDOM.render</p></span></div></foreignObject></g></g><g class="node default rt" id="my-svg-flowchart-U-10" data-look="classic" transform="translate(486.4453125, 60)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-78.4296875" y="-27" width="156.859375" height="54"/><g class="label" style="" transform="translate(-48.4296875, -12)"><rect/><foreignObject width="96.859375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>用户改 locale</p></span></div></foreignObject></g></g><g class="node default rt" id="my-svg-flowchart-SS-11" data-look="classic" transform="translate(486.4453125, 189)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-96.7734375" y="-27" width="193.546875" height="54"/><g class="label" style="" transform="translate(-66.7734375, -12)"><rect/><foreignObject width="133.546875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>settings_set locale</p></span></div></foreignObject></g></g><g class="node default rt" id="my-svg-flowchart-EV-13" data-look="classic" transform="translate(486.4453125, 305)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-90.53125" y="-39" width="181.0625" height="78"/><g class="label" style="" transform="translate(-60.53125, -24)"><rect/><foreignObject width="121.0625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Rust emit<br />settings:changed</p></span></div></foreignObject></g></g><g class="node default rt" id="my-svg-flowchart-ST-15" data-look="classic" transform="translate(486.4453125, 433)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-105.875" y="-27" width="211.75" height="54"/><g class="label" style="" transform="translate(-75.875, -12)"><rect/><foreignObject width="151.75" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>settings store update</p></span></div></foreignObject></g></g><g class="node default rt" id="my-svg-flowchart-CH-17" data-look="classic" transform="translate(486.4453125, 561)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-106.859375" y="-27" width="213.71875" height="54"/><g class="label" style="" transform="translate(-76.859375, -12)"><rect/><foreignObject width="153.71875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>i18n.changeLanguage</p></span></div></foreignObject></g></g><g class="node default rt" id="my-svg-flowchart-RR-19" data-look="classic" transform="translate(486.4453125, 689)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-122.7109375" y="-39" width="245.421875" height="78"/><g class="label" style="" transform="translate(-92.7109375, -24)"><rect/><foreignObject width="185.421875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>React re-render<br />所有 useTranslation hooks</p></span></div></foreignObject></g></g><g class="node default comp" id="my-svg-flowchart-H-20" data-look="classic" transform="translate(322.40625, 855)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-100.7421875" y="-27" width="201.484375" height="54"/><g class="label" style="" transform="translate(-70.7421875, -12)"><rect/><foreignObject width="141.484375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>useTranslation hook</p></span></div></foreignObject></g></g><g class="node default comp" id="my-svg-flowchart-T-21" data-look="classic" transform="translate(322.40625, 959)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-118.9296875" y="-27" width="237.859375" height="54"/><g class="label" style="" transform="translate(-88.9296875, -12)"><rect/><foreignObject width="177.859375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>t namespace.key params</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
-</figure>
-
-    <h3><span class="h3-num">3.1</span>资源懒加载</h3>
-
-    <p>启动只加载<b>当前 locale</b> 的全部 namespace（en-US 或 zh-CN）。切换到另一 locale 时 dynamic <code>import()</code>，首次切换会有一次 ~10 KB 异步加载 ── 用户感知不到（&lt; 50 ms）。</p>
-
-    <h2><span class="h2-num">4</span>字体回退机制</h2>
-
-    <p>这是 i18n 章节里<b>最容易翻车</b>的设计点 ── mono 字体（SF Mono / JetBrains Mono / Cascadia Code）<b>都不含 CJK 字符</b>。处理不当会让中文 chrome 渲染成方框或回退到衬线字体（视觉不一致）。</p>
-
-    <h3><span class="h3-num">4.1</span>三种字符场景</h3>
-
-    <figure class="cast-diagram" data-diagram-source="mermaid" id="spec-14-i18n-a11y-diagram-3">
-<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" viewBox="0 0 578.35546875 1189.828125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#333333;stroke:#333333;}#my-svg .marker.cross{stroke:#333333;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#333;color:#333;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#333333;stroke-width:1px;}#my-svg .flowchart-link{stroke:#333333;fill:none;}#my-svg .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#my-svg .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#my-svg .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#9370DB;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#my-svg [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .cond&gt;*{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .cond span{fill:rgb(241, 243, 246)!important;stroke:rgb(63, 74, 90)!important;}#my-svg .act&gt;*{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .act span{fill:rgb(242, 245, 255)!important;stroke:rgb(36, 91, 219)!important;}#my-svg .ok&gt;*{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}#my-svg .ok span{fill:rgb(240, 248, 243)!important;stroke:rgb(35, 123, 75)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M341.813,62L341.813,66.167C341.813,70.333,341.813,78.667,341.813,86.333C341.813,94,341.813,101,341.813,104.5L341.813,108" id="my-svg-L_Char_C1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Char_C1_0" data-points="W3sieCI6MzQxLjgxMjUsInkiOjYyfSx7IngiOjM0MS44MTI1LCJ5Ijo4N30seyJ4IjozNDEuODEyNSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M393.873,287.861L406.357,302.705C418.841,317.548,443.809,347.235,456.293,374.137C468.777,401.039,468.777,425.156,468.777,437.215L468.777,449.273" id="my-svg-L_C1_F1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C1_F1_0" data-points="W3sieCI6MzkzLjg3MzI3ODgxMDEzNzksInkiOjI4Ny44NjEwOTYxODk4NjIxfSx7IngiOjQ2OC43NzczNDM3NSwieSI6Mzc2LjkyMTg3NX0seyJ4Ijo0NjguNzc3MzQzNzUsInkiOjQ1My4yNzM0Mzc1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M289.752,287.861L277.268,302.705C264.784,317.548,239.816,347.235,227.332,367.578C214.848,387.922,214.848,398.922,214.848,404.422L214.848,409.922" id="my-svg-L_C1_C2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C1_C2_0" data-points="W3sieCI6Mjg5Ljc1MTcyMTE4OTg2MjEsInkiOjI4Ny44NjEwOTYxODk4NjIxfSx7IngiOjIxNC44NDc2NTYyNSwieSI6Mzc2LjkyMTg3NX0seyJ4IjoyMTQuODQ3NjU2MjUsInkiOjQxMy45MjE4NzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M214.848,618.625L214.848,624.792C214.848,630.958,214.848,643.292,214.848,654.958C214.848,666.625,214.848,677.625,214.848,683.125L214.848,688.625" id="my-svg-L_C2_C3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C2_C3_0" data-points="W3sieCI6MjE0Ljg0NzY1NjI1LCJ5Ijo2MTguNjI1fSx7IngiOjIxNC44NDc2NTYyNSwieSI6NjU1LjYyNX0seyJ4IjoyMTQuODQ3NjU2MjUsInkiOjY5Mi42MjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M172.692,811.672L158.226,824.865C143.761,838.058,114.83,864.443,100.364,887.136C85.898,909.828,85.898,928.828,85.898,938.328L85.898,947.828" id="my-svg-L_C3_F2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C3_F2_0" data-points="W3sieCI6MTcyLjY5MjAwNTk1NDcxNTA2LCJ5Ijo4MTEuNjcyNDc0NzA0NzE1fSx7IngiOjg1Ljg5ODQzNzUsInkiOjg5MC44MjgxMjV9LHsieCI6ODUuODk4NDM3NSwieSI6OTUxLjgyODEyNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M257.003,811.672L271.469,824.865C285.934,838.058,314.866,864.443,329.331,883.136C343.797,901.828,343.797,912.828,343.797,918.328L343.797,923.828" id="my-svg-L_C3_F3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C3_F3_0" data-points="W3sieCI6MjU3LjAwMzMwNjU0NTI4NDk0LCJ5Ijo4MTEuNjcyNDc0NzA0NzE1fSx7IngiOjM0My43OTY4NzUsInkiOjg5MC44MjgxMjV9LHsieCI6MzQzLjc5Njg3NSwieSI6OTI3LjgyODEyNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M468.777,579.273L468.777,591.999C468.777,604.724,468.777,630.174,468.777,657.333C468.777,684.492,468.777,713.359,468.777,727.793L468.777,742.227" id="my-svg-L_F1_R1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F1_R1_0" data-points="W3sieCI6NDY4Ljc3NzM0Mzc1LCJ5Ijo1NzkuMjczNDM3NX0seyJ4Ijo0NjguNzc3MzQzNzUsInkiOjY1NS42MjV9LHsieCI6NDY4Ljc3NzM0Mzc1LCJ5Ijo3NDYuMjI2NTYyNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M85.898,1029.828L85.898,1037.995C85.898,1046.161,85.898,1062.495,85.898,1076.161C85.898,1089.828,85.898,1100.828,85.898,1106.328L85.898,1111.828" id="my-svg-L_F2_R2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F2_R2_0" data-points="W3sieCI6ODUuODk4NDM3NSwieSI6MTAyOS44MjgxMjV9LHsieCI6ODUuODk4NDM3NSwieSI6MTA3OC44MjgxMjV9LHsieCI6ODUuODk4NDM3NSwieSI6MTExNS44MjgxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M343.797,1053.828L343.797,1057.995C343.797,1062.161,343.797,1070.495,343.797,1078.161C343.797,1085.828,343.797,1092.828,343.797,1096.328L343.797,1099.828" id="my-svg-L_F3_R3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F3_R3_0" data-points="W3sieCI6MzQzLjc5Njg3NSwieSI6MTA1My44MjgxMjV9LHsieCI6MzQzLjc5Njg3NSwieSI6MTA3OC44MjgxMjV9LHsieCI6MzQzLjc5Njg3NSwieSI6MTEwMy44MjgxMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_Char_C1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(468.77734375, 376.921875)"><g class="label" data-id="L_C1_F1_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(214.84765625, 376.921875)"><g class="label" data-id="L_C1_C2_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(214.84765625, 655.625)"><g class="label" data-id="L_C2_C3_0" transform="translate(-8.1640625, -12)"><foreignObject width="16.328125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(85.8984375, 890.828125)"><g class="label" data-id="L_C3_F2_0" transform="translate(-57.7421875, -12)"><foreignObject width="115.484375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>否 ASCII 或 latin</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(343.796875, 890.828125)"><g class="label" data-id="L_C3_F3_0" transform="translate(-23.7734375, -12)"><foreignObject width="47.546875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>是 CJK</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F1_R1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F2_R2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F3_R3_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-Char-0" data-look="classic" transform="translate(341.8125, 35)"><rect class="basic label-container" style="" x="-78.9609375" y="-27" width="157.921875" height="54"/><g class="label" style="" transform="translate(-48.9609375, -12)"><rect/><foreignObject width="97.921875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>字符出现位置</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-C1-1" data-look="classic" transform="translate(341.8125, 225.9609375)"><polygon points="113.9609375,0 227.921875,-113.9609375 113.9609375,-227.921875 0,-113.9609375" class="label-container" transform="translate(-113.4609375, 113.9609375)" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important"/><g class="label" style="" transform="translate(-74.9609375, -24)"><rect/><foreignObject width="149.921875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>在 chrome UI<br />menu, button, label?</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-F1-3" data-look="classic" transform="translate(468.77734375, 516.2734375)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-101.578125" y="-63" width="203.15625" height="126"/><g class="label" style="" transform="translate(-71.578125, -48)"><rect/><foreignObject width="143.15625" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>font-sans 栈<br />SF Pro 优先<br />+ PingFang SC<br />+ Microsoft YaHei UI</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-C2-5" data-look="classic" transform="translate(214.84765625, 516.2734375)"><polygon points="102.3515625,0 204.703125,-102.3515625 102.3515625,-204.703125 0,-102.3515625" class="label-container" transform="translate(-101.8515625, 102.3515625)" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important"/><g class="label" style="" transform="translate(-63.3515625, -24)"><rect/><foreignObject width="126.703125" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>在 mono 区域<br />编辑器, 树, code?</p></span></div></foreignObject></g></g><g class="node default cond" id="my-svg-flowchart-C3-7" data-look="classic" transform="translate(214.84765625, 773.2265625)"><polygon points="80.6015625,0 161.203125,-80.6015625 80.6015625,-161.203125 0,-80.6015625" class="label-container" transform="translate(-80.1015625, 80.6015625)" style="fill:#F1F3F6 !important;stroke:#3F4A5A !important"/><g class="label" style="" transform="translate(-53.6015625, -12)"><rect/><foreignObject width="107.203125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>是否 CJK 字符?</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-F2-9" data-look="classic" transform="translate(85.8984375, 990.828125)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-77.8984375" y="-39" width="155.796875" height="78"/><g class="label" style="" transform="translate(-47.8984375, -24)"><rect/><foreignObject width="95.796875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>font-mono 栈<br />SF Mono 等</p></span></div></foreignObject></g></g><g class="node default act" id="my-svg-flowchart-F3-11" data-look="classic" transform="translate(343.796875, 990.828125)"><rect class="basic label-container" style="fill:#F2F5FF !important;stroke:#245BDB !important" x="-130" y="-63" width="260" height="126"/><g class="label" style="" transform="translate(-100, -48)"><rect/><foreignObject width="200" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>font-mono 栈末尾追加<br />PingFang SC + Microsoft YaHei UI<br />浏览器逐字符回退</p></span></div></foreignObject></g></g><g class="node default ok" id="my-svg-flowchart-R1-13" data-look="classic" transform="translate(468.77734375, 773.2265625)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-62.640625" y="-27" width="125.28125" height="54"/><g class="label" style="" transform="translate(-32.640625, -12)"><rect/><foreignObject width="65.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>正常渲染</p></span></div></foreignObject></g></g><g class="node default ok" id="my-svg-flowchart-R2-15" data-look="classic" transform="translate(85.8984375, 1142.828125)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-62.640625" y="-27" width="125.28125" height="54"/><g class="label" style="" transform="translate(-32.640625, -12)"><rect/><foreignObject width="65.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>等宽渲染</p></span></div></foreignObject></g></g><g class="node default ok" id="my-svg-flowchart-R3-17" data-look="classic" transform="translate(343.796875, 1142.828125)"><rect class="basic label-container" style="fill:#F0F8F3 !important;stroke:#237B4B !important" x="-116.953125" y="-39" width="233.90625" height="78"/><g class="label" style="" transform="translate(-86.953125, -24)"><rect/><foreignObject width="173.90625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>CJK 字符变宽<br />但行高一致, 视觉可接受</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
-</figure>
-
-    <h3><span class="h3-num">4.2</span>关键调整</h3>
-
-    <p>03 § 6.1 字体栈已基本覆盖此场景（已含 <code>PingFang SC</code> / <code>Microsoft YaHei UI</code> 在 sans 栈末尾）。<b>需要在 14 章新增</b> 的事：</p>
-
-    <ul>
-      <li><code>--font-mono</code> 栈末尾追加 <code>"PingFang SC", "Microsoft YaHei UI"</code> ── CJK 字符在编辑器 / 树视图也能 fallback 渲染（不出现方框）</li>
-      <li>JSON 树视图 fs 微调：tree-view 当字符包含 CJK 时整行高度可能略升 ── 不调，让 line-height 1.7 自然吸收</li>
-      <li>错误信息中包含 CJK：state bar fs 12.5 px + line-height 1.4 → CJK 字符勉强可读，<b>不需要</b>另开 fs；如视觉差再升 fs-sm（13）</li>
-      <li>placeholder 文案 i18n：所有 <code>&lt;input placeholder="..."&gt;</code> 必须用 <code>t()</code>，不能 hardcode</li>
-    </ul>
-
-    <p class="section-divider"><b>三 · 契约</b></p>
-
-    <h2><span class="h2-num">5</span>资源结构</h2>
-
-    <h3><span class="h3-num">5.1</span>目录组织</h3>
-
-    <table>
-      <thead><tr><th>路径</th><th>内容</th></tr></thead>
-      <tbody>
-        <tr><td><code>src/i18n/index.ts</code></td><td>i18n.init() + 配置 + 类型增强（让 TS 推 key autocomplete）</td></tr>
-        <tr><td><code>src/i18n/en-US/{shell,panes,settings,history,errors,about,common}.json</code></td><td>7 个 namespace × 1 个 locale = 7 个文件</td></tr>
-        <tr><td><code>src/i18n/zh-CN/{...}.json</code></td><td>同上 7 个 namespace（M3 添加）</td></tr>
-        <tr><td><code>src/types/i18n.d.ts</code></td><td><code>declare module 'react-i18next'</code> 的 resources 类型增强（基于 en-US 推 key 类型）</td></tr>
-      </tbody>
-    </table>
-
-    <h3><span class="h3-num">5.2</span>资源 JSON 示例</h3>
-
-    <pre><code>// src/i18n/en-US/errors.json ── 部分
+<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
 {
-  "parse": {
-    "title": "JSON parse error",
-    "atLineCol": "Line {{line}}, Col {{col}}: {{msg}}",
-    "actionAiFix": "Try AI Fix"
+  "metadata": {
+    "language": "zh-CN",
+    "owner": "Jin Huang",
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    },
+    "title": {
+      "zh-CN": "I18n 与 A11y",
+      "en": "I18n And Accessibility"
+    },
+    "description": {
+      "zh-CN": "应用与文档的语言、术语、键盘可达、屏幕阅读和可访问性边界。",
+      "en": "Language, terminology, keyboard reachability, screen-reader, and accessibility boundaries for app and docs."
+    },
+    "schemaVersion": "1.0",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ]
   },
-  "rateLimit": {
-    "title": "Rate limited",
-    "retryAfter": "Please retry in {{sec}}s",
-    "actionWait": "Waiting…"
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "language-contract",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
   },
-  "aiInvalidJson": {
-    "title": "AI returned invalid JSON",
-    "actionCopyRaw": "Copy raw",
-    "actionRetry": "Retry"
-  }
-}</code></pre>
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "语言",
+                "en": "Language"
+              },
+              "body": {
+                "zh-CN": "应用和 CAST 文档都支持 zh-CN / en。",
+                "en": "Both app and CAST docs support zh-CN / en."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "键盘",
+                "en": "Keyboard"
+              },
+              "body": {
+                "zh-CN": "核心流程必须键盘可达。",
+                "en": "Core flows must be keyboard reachable."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "文案",
+                "en": "Copy"
+              },
+              "body": {
+                "zh-CN": "技术标识如 JSON、AI Fix、DeepSeek、secrets.json 不强行翻译。",
+                "en": "Technical identifiers such as JSON, AI Fix, DeepSeek, and secrets.json are not forced into translation."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "language-contract",
+      "title": {
+        "zh-CN": "Language Contract",
+        "en": "Language Contract"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "对象",
+              "en": "Object"
+            },
+            {
+              "zh-CN": "约定",
+              "en": "Contract"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "App UI",
+                "en": "App UI"
+              },
+              {
+                "zh-CN": "i18next + react-i18next，语言可设置。",
+                "en": "i18next plus react-i18next, configurable language."
+              }
+            ],
+            [
+              {
+                "zh-CN": "CAST Docs",
+                "en": "CAST Docs"
+              },
+              {
+                "zh-CN": "metadata.locales = zh-CN/en，渲染器生成语言切换。",
+                "en": "metadata.locales = zh-CN/en, renderer generates language switcher."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Terminology",
+                "en": "Terminology"
+              },
+              {
+                "zh-CN": "路径、快捷键、代码标识保持原文。",
+                "en": "Paths, shortcuts, and code identifiers keep their source form."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "按钮和表单控件要有可理解 label。",
+              "en": "Buttons and form controls need understandable labels."
+            },
+            {
+              "zh-CN": "文字不得依赖颜色单独表达状态。",
+              "en": "Text must not rely on color alone to express state."
+            },
+            {
+              "zh-CN": "文档不能出现中文-only plan/spec 发布页。",
+              "en": "Docs must not publish Chinese-only plan/spec pages."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "切换 app 语言 smoke。",
+              "en": "Smoke switching app language."
+            },
+            {
+              "zh-CN": "docs:check 检查 plan/spec 双语结构。",
+              "en": "docs:check checks bilingual structure for plan/spec."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</script>
 
-    <h3><span class="h3-num">5.3</span>初始化骨架（≤ 20 行）</h3>
+<article class="doc">
+<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">I18n 与 A11y</span><span data-locale="en" data-locale-active="false">I18n And Accessibility</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
+<main>
+<section class="doc-section" id="overview">
+<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
+<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">语言</span><span data-locale="en" data-locale-active="false">Language</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">应用和 CAST 文档都支持 zh-CN / en。</span><span data-locale="en" data-locale-active="false">Both app and CAST docs support zh-CN / en.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">键盘</span><span data-locale="en" data-locale-active="false">Keyboard</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">核心流程必须键盘可达。</span><span data-locale="en" data-locale-active="false">Core flows must be keyboard reachable.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">文案</span><span data-locale="en" data-locale-active="false">Copy</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">技术标识如 JSON、AI Fix、DeepSeek、secrets.json 不强行翻译。</span><span data-locale="en" data-locale-active="false">Technical identifiers such as JSON, AI Fix, DeepSeek, and secrets.json are not forced into translation.</span></li></ul></section>
+</section>
 
-    <pre><code>// src/i18n/index.ts
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+<section class="doc-section" id="summary">
+<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
+<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
+</section>
 
-const NS = ['shell', 'panes', 'settings', 'history', 'errors', 'about', 'common'];
+<section class="doc-section" id="language-contract">
+<h2><span data-locale="zh-CN" data-locale-active="true">Language Contract</span><span data-locale="en" data-locale-active="false">Language Contract</span></h2>
+<table>
+<tr><th><span data-locale="zh-CN" data-locale-active="true">对象</span><span data-locale="en" data-locale-active="false">Object</span></th><th><span data-locale="zh-CN" data-locale-active="true">约定</span><span data-locale="en" data-locale-active="false">Contract</span></th></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">App UI</span><span data-locale="en" data-locale-active="false">App UI</span></td><td><span data-locale="zh-CN" data-locale-active="true">i18next + react-i18next，语言可设置。</span><span data-locale="en" data-locale-active="false">i18next plus react-i18next, configurable language.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">CAST Docs</span><span data-locale="en" data-locale-active="false">CAST Docs</span></td><td><span data-locale="zh-CN" data-locale-active="true">metadata.locales = zh-CN/en，渲染器生成语言切换。</span><span data-locale="en" data-locale-active="false">metadata.locales = zh-CN/en, renderer generates language switcher.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">Terminology</span><span data-locale="en" data-locale-active="false">Terminology</span></td><td><span data-locale="zh-CN" data-locale-active="true">路径、快捷键、代码标识保持原文。</span><span data-locale="en" data-locale-active="false">Paths, shortcuts, and code identifiers keep their source form.</span></td></tr>
+</table>
+</section>
 
-export async function initI18n(locale: 'en-US' | 'zh-CN') {
-  const resources = Object.fromEntries(
-    await Promise.all(NS.map(async (ns) =&gt; [
-      ns, (await import(`./${locale}/${ns}.json`)).default,
-    ]))
-  );
-  await i18n.use(initReactI18next).init({
-    lng: locale, fallbackLng: 'en-US',
-    resources: { [locale]: resources },
-    interpolation: { escapeValue: false },  // React 已自动 escape
-    ns: NS, defaultNS: 'common',
-  });
-}</code></pre>
+<section class="doc-section" id="invariants">
+<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
+<ul><li><span data-locale="zh-CN" data-locale-active="true">按钮和表单控件要有可理解 label。</span><span data-locale="en" data-locale-active="false">Buttons and form controls need understandable labels.</span></li><li><span data-locale="zh-CN" data-locale-active="true">文字不得依赖颜色单独表达状态。</span><span data-locale="en" data-locale-active="false">Text must not rely on color alone to express state.</span></li><li><span data-locale="zh-CN" data-locale-active="true">文档不能出现中文-only plan/spec 发布页。</span><span data-locale="en" data-locale-active="false">Docs must not publish Chinese-only plan/spec pages.</span></li></ul>
+</section>
 
-    <h3><span class="h3-num">5.4</span>组件使用示例（≤ 15 行）</h3>
+<section class="doc-section" id="testing-plan">
+<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
+<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">切换 app 语言 smoke。</span><span data-locale="en" data-locale-active="false">Smoke switching app language.</span></li><li><span data-locale="zh-CN" data-locale-active="true">docs:check 检查 plan/spec 双语结构。</span><span data-locale="en" data-locale-active="false">docs:check checks bilingual structure for plan/spec.</span></li></ol>
+</section>
 
-    <pre><code>// src/shell/StatusBar.tsx ── 使用 useTranslation
-import { useTranslation } from 'react-i18next';
-
-export function StatusBar({ status, errorLoc }: StatusBarProps) {
-  const { t } = useTranslation('shell');  // namespace = shell
-  if (status === 'error' &amp;&amp; errorLoc) {
-    return &lt;span&gt;
-      ● {t('statusBar.invalid')} · {t('statusBar.line')} {errorLoc.line},
-        {t('statusBar.col')} {errorLoc.col}
-    &lt;/span&gt;;
-  }
-  return &lt;span&gt;● {t('statusBar.valid')}&lt;/span&gt;;
-}</code></pre>
-
-    <h2><span class="h2-num">6</span>settings 字段补充</h2>
-
-    <p><a href="13_schemas.html">13 § 3.3</a> Settings struct 需要新增字段（M0 起就支持，v1 只允许 <code>en-US</code> ── M3 解锁 <code>zh-CN</code>）：</p>
-
-    <table>
-      <thead><tr><th>字段</th><th>类型</th><th>默认</th><th>UI 位置</th></tr></thead>
-      <tbody>
-        <tr><td><code>locale</code></td><td><code>'en-US' | 'zh-CN'</code></td><td>auto-detect（§ 2.3）</td><td>设置 General → Language Select</td></tr>
-      </tbody>
-    </table>
-
-    <p>对应 Rust enum：</p>
-
-    <pre><code>// src-tauri/src/types.rs ── 同步加入
-#[derive(Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum Locale { EnUs, ZhCn }   // serialize: "en-us" | "zh-cn"</code></pre>
-
-    <p class="section-divider"><b>四 · a11y 清单</b></p>
-
-    <h2><span class="h2-num">7</span>a11y 强制要求</h2>
-
-    <table>
-      <thead><tr><th>类别</th><th>要求</th><th>实现位置</th></tr></thead>
-      <tbody>
-        <tr><td><b>键盘可达</b></td><td>所有交互元素可通过 Tab 序列到达；无键盘陷阱</td><td>shadcn 默认满足；自定义组件须保持（<a href="04_components.html">04 各组件 props</a>）</td></tr>
-        <tr><td><b>focus-visible</b></td><td>只在键盘聚焦时显示 focus ring，不在鼠标点击时显示</td><td>所有组件用 <code>:focus-visible</code> 而非 <code>:focus</code>（<a href="04_components.html">04 § 6</a>）</td></tr>
-        <tr><td><b>ARIA labels</b></td><td>纯图标按钮（settings 等）必须有 <code>aria-label</code></td><td>状态栏按钮；HistoryItem 为保留设计</td></tr>
-        <tr><td><b>ARIA live regions</b></td><td>状态栏动态变化用 <code>role="status"</code> 或 <code>aria-live="polite"</code> 让屏阅器朗读；未来 Toast 也应遵守</td><td>StatusBar</td></tr>
-        <tr><td><b>语义化 HTML</b></td><td>用 <code>&lt;button&gt;</code> 不用 <code>&lt;div onClick&gt;</code>；用 <code>&lt;nav&gt;</code> / <code>&lt;main&gt;</code> 等 landmark</td><td>所有自写组件</td></tr>
-        <tr><td><b>对比度</b></td><td>所有正文文本 ≥ AA（4.5:1）；body text ≥ AAA</td><td>已核验，见 <a href="03_design_tokens.html">03 § 5</a></td></tr>
-        <tr><td><b>reduced motion</b></td><td><code>prefers-reduced-motion: reduce</code> 时动画时长 → 1 ms</td><td>已实现，见 <a href="03_design_tokens.html">03 § 9.1</a></td></tr>
-        <tr><td><b>高对比度模式</b></td><td>v1 不专门支持 Windows 高对比模式；macOS Increase Contrast 通过 token 设计满足</td><td>—</td></tr>
-        <tr><td><b>缩放</b></td><td>UI 至 200% zoom 不破布局</td><td>所有间距 / 字号用 px（不用 vw / vh）</td></tr>
-        <tr><td><b>语言声明</b></td><td><code>&lt;html lang="..."&gt;</code> 随 locale 切换</td><td>i18n.changeLanguage 时同步</td></tr>
-      </tbody>
-    </table>
-
-    <h2><span class="h2-num">8</span>screen reader 关键流</h2>
-
-    <p>三条核心交互必须通过 screen reader（VoiceOver）测试：</p>
-
-    <ol>
-      <li><b>呼出浮窗 → 编辑器获焦</b>：用户应听到"JSON editor, edit text" + tabBar 当前激活 Tab 名</li>
-      <li><b>parse 错误</b>：状态栏 <code>aria-live="polite"</code> → 自动朗读 "Invalid JSON, Line 3, Col 12"；详细 reason 由 inline lint tooltip 承载</li>
-      <li><b>AI Fix 完成</b>：DiffView Accept/Reject 按钮可 Tab；错误文本在 AI 面板内可读，未来 Toast 接入后再补 <code>role="status"</code></li>
-    </ol>
-
-
-    <h2><span class="h2-num">9</span>与其他章节对接</h2>
-
-    <table>
-      <thead><tr><th>章节</th><th>对接点</th></tr></thead>
-      <tbody>
-        <tr><td>03 design tokens § 6.1</td><td>需要在 mono 字体栈末尾追加 <code>"PingFang SC", "Microsoft YaHei UI"</code></td></tr>
-        <tr><td>13 schemas § 3.3</td><td>Settings struct 加 <code>locale</code> 字段（同步新增 <code>Locale</code> enum）</td></tr>
-        <tr><td>04 components</td><td>各组件 props 加可选 <code>aria-label</code> / <code>aria-describedby</code>；StatusBar 加 <code>aria-live</code> region；Toast 为保留设计</td></tr>
-        <tr><td>02 IPC § 2.1.4 settings</td><td><code>settings.locale</code> 改动触发 <code>settings:changed</code> 事件 → 前端 i18n.changeLanguage</td></tr>
-        <tr><td>11 AI client § 7</td><td>错误透传不变，UI 层按 <code>errors.*</code> namespace 翻译</td></tr>
-      </tbody>
-    </table>
-
-    <nav class="pagination" id="pagination"></nav>
-
-  </article>
+<section class="doc-section" id="open-questions">
+<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
+<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
+</section>
 </main>
+<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
+</article>
 
-<script src="../assets/nav.js"></script>
+<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#language-contract"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Language Contract</span><span data-locale="en" data-locale-active="false">Language Contract</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
+<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">I18n 与 A11y</span><span data-locale="en" data-locale-active="false">I18n And Accessibility</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
+
+
+<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
+  const config = window.CAST_DOCS_I18N;
+  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
+  const MEMORY_KEY = 'cast-docs:global-memory';
+  const root = document.documentElement;
+  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
+  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
+  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
+  function readMemory() {
+    try {
+      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+  function writeMemory(memory) {
+    try {
+      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  function rememberDefaultLocale(locale) {
+    if (!config.locales.includes(locale)) return false;
+    const memory = readMemory();
+    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
+    memory.version = 1;
+    memory.preferences = {
+      ...preferences,
+      defaultLocale: locale,
+      defaultLocaleUpdatedAt: new Date().toISOString(),
+    };
+    return writeMemory(memory);
+  }
+  function defaultLocaleFromMemory() {
+    const locale = readMemory().preferences?.defaultLocale;
+    return config.locales.includes(locale) ? locale : null;
+  }
+  function apply(locale) {
+    if (!config.locales.includes(locale)) return;
+    root.lang = locale;
+    root.setAttribute('data-active-locale', locale);
+    config.activeLocale = locale;
+    document.querySelectorAll('[data-locale]').forEach((node) => {
+      const active = node.getAttribute('data-locale') === locale;
+      node.setAttribute('data-locale-active', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-locale-target]').forEach((button) => {
+      const active = button.getAttribute('data-locale-target') === locale;
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
+      const key = node.getAttribute('data-i18n-key');
+      if (key) node.textContent = label(locale, key, node.textContent);
+    });
+  }
+  function maybeSetDefaultLocale(locale) {
+    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
+    const message = label(
+      locale,
+      'chrome.defaultLanguagePrompt',
+      `Set ${displayName(locale)} as the default language for CAST Docs?`
+    ).replace('{language}', displayName(locale));
+    if (window.confirm(message)) {
+      rememberDefaultLocale(locale);
+    }
+  }
+  document.querySelectorAll('[data-locale-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const locale = button.getAttribute('data-locale-target');
+      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
+      apply(locale);
+      maybeSetDefaultLocale(locale);
+    });
+  });
+  apply(defaultLocaleFromMemory() || config.activeLocale);
+})();
+</script>
 </body>
 </html>

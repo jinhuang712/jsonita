@@ -6,15 +6,25 @@
 
 ## [Unreleased]
 
+### docs · full CAST JSON rewrite for plan/spec
+
+彻底重写 plan/spec 文档发布面：5 篇 `plan/*.html` 与 16 篇 `spec/*.html` 现在全部由同名 CAST JSON 源通过 `cast-a-doc` 渲染为中英双语 HTML。
+
+- 新增 `plan/*.json` 与 `spec/*.json`，每个发布页都有同名 JSON source-of-truth。
+- 新增 `site/workflow.json` / `workflow.html`，公开 CAST workflow、`.cast-docs` profile、渲染命令与检查规则。
+- `scripts/render_cast_docs.mjs` 改为遍历 `site`、`plan`、`spec` 的 CAST JSON 源，并逐页调用 `cast-a-doc/scripts/render_html.py --validate`。
+- `scripts/check_cast_docs.mjs` 改为逐页校验 CAST profile、render freshness、plan/spec JSON 源、双语 switcher、renderer-owned HTML 和 raw Mermaid/CDN 回归。
+- `README.md`、`TODO.md`、`site/index.cast.json`、`site/todo.json`、`site/changelist.json` 同步：plan/spec 不再是 legacy HTML；TODO 只保留真实开放项。
+
 ### docs · repair CAST strict structure
 
 按最新版 `$cast-a-start` 修复 Jsonita 文档结构，让当前发布入口、TODO、Changelist、agent workflow 和图表发布面可验证。
 
 - 新增 `.cast-docs/WORKFLOW.md`，把项目级 agent 规则迁入 CAST profile 层；`AGENTS.md` / `CLAUDE.md` 瘦身为入口文件。
 - `site/index.cast.json`、`site/todo.json`、`site/changelist.json` 升级为 `cast-a-doc` 可验证 JSON 源，并重新渲染 `index.html`、`todo.html`、`changelist.html`。
-- 新增 `pnpm docs:render`、`pnpm docs:check`、`pnpm docs:render-mermaid`，校验 profile、渲染 freshness、首页 reader path、raw Mermaid/CDN 回归。
+- 新增 `pnpm docs:render`、`pnpm docs:check`，校验 profile、渲染 freshness、首页 reader path、raw Mermaid/CDN 回归。
 - 将 legacy `plan/` / `spec/` 中的 Mermaid 图转换为内联 SVG figure，并移除 `assets/nav.js` 的运行时 Mermaid / svg-pan-zoom CDN 依赖。
-- `TODO.md` / `site/todo.json` 改为 P1/P2/P3 开放 backlog；plan/spec 全量 JSON-first 迁移保留为 P1，不伪装成已完成。
+- `TODO.md` / `site/todo.json` 改为 P1/P2/P3 开放 backlog；plan/spec 全量 JSON-first 迁移已在后续同日条目完成。
 
 ### docs · design 核心决策迁入 plan/spec
 

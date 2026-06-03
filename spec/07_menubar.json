@@ -1,0 +1,296 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "菜单栏与快捷键",
+      "en": "Menu Bar And Shortcuts"
+    },
+    "description": {
+      "zh-CN": "菜单栏生命周期、全局快捷键、权限、冲突处理和窗口内快捷键。",
+      "en": "Menu-bar lifecycle, global shortcuts, permissions, conflict handling, and in-window shortcuts."
+    },
+    "schemaVersion": "1.0",
+    "language": "zh-CN",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ],
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    }
+  },
+  "manifest": {
+    "documentType": "engineering-spec",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "shortcut-classes",
+      "invariants",
+      "testing-plan",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "入口",
+                "en": "Entry"
+              },
+              "body": {
+                "zh-CN": "菜单栏图标提供 show、settings、quit 等动作。",
+                "en": "Menu-bar icon provides show, settings, quit, and related actions."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "全局快捷键",
+                "en": "Global Shortcuts"
+              },
+              "body": {
+                "zh-CN": "Cmd+Shift+J 和 Cmd+Shift+L 可配置。",
+                "en": "Cmd+Shift+J and Cmd+Shift+L are configurable."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "权限",
+                "en": "Permission"
+              },
+              "body": {
+                "zh-CN": "macOS Accessibility 权限由 modal 引导。",
+                "en": "macOS Accessibility permission is guided by a modal."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "摘要",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
+            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-classes",
+      "title": {
+        "zh-CN": "Shortcut Classes",
+        "en": "Shortcut Classes"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "类型",
+              "en": "Class"
+            },
+            {
+              "zh-CN": "示例",
+              "en": "Example"
+            },
+            {
+              "zh-CN": "处理",
+              "en": "Handling"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "Global",
+                "en": "Global"
+              },
+              {
+                "zh-CN": "Cmd+Shift+J / Cmd+Shift+L",
+                "en": "Cmd+Shift+J / Cmd+Shift+L"
+              },
+              {
+                "zh-CN": "Rust 注册，冲突检测。",
+                "en": "Registered by Rust with conflict detection."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Window",
+                "en": "Window"
+              },
+              {
+                "zh-CN": "Cmd+K / Cmd+\\",
+                "en": "Cmd+K / Cmd+\\"
+              },
+              {
+                "zh-CN": "前端捕获，不注册系统全局。",
+                "en": "Captured by frontend, not registered globally."
+              }
+            ],
+            [
+              {
+                "zh-CN": "Native close",
+                "en": "Native close"
+              },
+              {
+                "zh-CN": "Esc / Cmd+W",
+                "en": "Esc / Cmd+W"
+              },
+              {
+                "zh-CN": "隐藏浮窗。",
+                "en": "Hide floating window."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invariants",
+      "title": {
+        "zh-CN": "不变量",
+        "en": "Invariants"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "快捷键冲突必须给用户二次确认。",
+              "en": "Shortcut conflicts must require user confirmation."
+            },
+            {
+              "zh-CN": "无权限时不能静默失败。",
+              "en": "Missing permission must not fail silently."
+            },
+            {
+              "zh-CN": "Windows 正式快捷键体验是后续分发验收项。",
+              "en": "Formal Windows shortcut experience is a later distribution acceptance item."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testing-plan",
+      "title": {
+        "zh-CN": "测试计划",
+        "en": "Testing Plan"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "修改快捷键后重启 app 验证注册。",
+              "en": "After changing shortcuts, restart app and verify registration."
+            },
+            {
+              "zh-CN": "权限缺失状态手动 smoke。",
+              "en": "Manual smoke missing-permission state."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
+              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

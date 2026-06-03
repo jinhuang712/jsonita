@@ -1,0 +1,498 @@
+{
+  "metadata": {
+    "title": {
+      "zh-CN": "项目概览",
+      "en": "Project Overview"
+    },
+    "description": {
+      "zh-CN": "Jsonita 的产品定位、读者边界、文档权威和 v1 内测约束。",
+      "en": "Jsonita product positioning, reader boundaries, documentation authority, and v1 beta constraints."
+    },
+    "schemaVersion": "1.0",
+    "language": "zh-CN",
+    "locales": [
+      "zh-CN",
+      "en"
+    ],
+    "status": "review",
+    "owner": "Jin Huang",
+    "audience": [
+      "engineering",
+      "product"
+    ],
+    "updatedAt": "2026-06-03",
+    "showMeta": true,
+    "shellLinks": [
+      {
+        "label": {
+          "zh-CN": "首页",
+          "en": "Home"
+        },
+        "href": "../index.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "TODO",
+          "en": "TODO"
+        },
+        "href": "../todo.html",
+        "placement": "topbar"
+      },
+      {
+        "label": {
+          "zh-CN": "Changelist",
+          "en": "Changelist"
+        },
+        "href": "../changelist.html",
+        "placement": "topbar"
+      }
+    ],
+    "logo": {
+      "src": ".cast-docs/assets/jsonita-logo.png",
+      "alt": {
+        "zh-CN": "Jsonita 标志",
+        "en": "Jsonita logo"
+      },
+      "href": "../index.html"
+    }
+  },
+  "manifest": {
+    "documentType": "engineering-plan",
+    "scenario": "none",
+    "sections": [
+      "overview",
+      "summary",
+      "background",
+      "goals",
+      "non-goals",
+      "current-state",
+      "proposed-plan",
+      "risks",
+      "acceptance-criteria",
+      "open-questions"
+    ],
+    "components": {
+      "required": [
+        "summary-block",
+        "metadata-block",
+        "toc",
+        "section",
+        "paragraph"
+      ],
+      "optional": [
+        "table",
+        "callout",
+        "values-grid",
+        "acceptance-criteria",
+        "open-questions",
+        "source-refs",
+        "diagram",
+        "code-block"
+      ],
+      "omitted": [
+        "media-grid",
+        "diff-block",
+        "toggle-view",
+        "slider-control"
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": {
+        "zh-CN": "概览",
+        "en": "Overview"
+      },
+      "blocks": [
+        {
+          "type": "summary",
+          "items": [
+            {
+              "label": {
+                "zh-CN": "产品",
+                "en": "Product"
+              },
+              "body": {
+                "zh-CN": "macOS 菜单栏 JSON 工具，默认用 Cmd+Shift+J 呼出。",
+                "en": "A macOS menu-bar JSON toolkit, summoned by Cmd+Shift+J by default."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "v1 目标",
+                "en": "v1 Goal"
+              },
+              "body": {
+                "zh-CN": "贴近剪贴板工作流：粘贴、格式化、修复、复制。",
+                "en": "Stay close to the clipboard workflow: paste, format, fix, copy."
+              }
+            },
+            {
+              "label": {
+                "zh-CN": "隐私",
+                "en": "Privacy"
+              },
+              "body": {
+                "zh-CN": "用户 JSON、本地历史、设置和 API key 默认保留在本机。",
+                "en": "User JSON, local history, settings, and API keys stay on the device by default."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": {
+        "zh-CN": "Summary",
+        "en": "Summary"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "Jsonita 是给开发者、QA、产品技术同学使用的轻量 JSON 浮窗。它不是 IDE、Postman 或通用 AI 聊天工具；它解决的是日常复制粘贴 JSON 时的高频低摩擦问题。",
+            "en": "Jsonita is a lightweight JSON floating window for developers, QA, and technical product users. It is not an IDE, Postman, or a general AI chat tool; it solves high-frequency low-friction JSON clipboard work."
+          }
+        },
+        {
+          "type": "values-grid",
+          "items": [
+            {
+              "title": {
+                "zh-CN": "瞬时",
+                "en": "Instant"
+              },
+              "body": {
+                "zh-CN": "浮窗 P95 小于 500 ms，合法 JSON 预览 P95 小于 300 ms。",
+                "en": "Floating-window P95 under 500 ms and valid JSON preview P95 under 300 ms."
+              }
+            },
+            {
+              "title": {
+                "zh-CN": "本地",
+                "en": "Local"
+              },
+              "body": {
+                "zh-CN": "SQLite、settings.json、window.json、secrets.json 都在用户数据目录。",
+                "en": "SQLite, settings.json, window.json, and secrets.json live in the user data directory."
+              }
+            },
+            {
+              "title": {
+                "zh-CN": "聚焦",
+                "en": "Focused"
+              },
+              "body": {
+                "zh-CN": "v1 只做 JSON 处理、树视图、string 转换、历史和 DeepSeek Auto-Fix。",
+                "en": "v1 only covers JSON transforms, tree view, string conversion, history, and DeepSeek Auto-Fix."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "background",
+      "title": {
+        "zh-CN": "Background",
+        "en": "Background"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "现有实现已经包含 Tauri 2、React 18、CodeMirror、SQLite FTS5、DeepSeek AI 修复和 macOS 原生窗口处理。文档的目标不是重新设计产品，而是把已确认的产品事实、实现约束和发布策略整理为可验证的 CAST 文档集。",
+            "en": "The current implementation already includes Tauri 2, React 18, CodeMirror, SQLite FTS5, DeepSeek AI repair, and native macOS window handling. The documentation goal is not to redesign the product but to cast confirmed product facts, implementation constraints, and release strategy into a verifiable CAST document set."
+          }
+        }
+      ]
+    },
+    {
+      "id": "goals",
+      "title": {
+        "zh-CN": "Goals",
+        "en": "Goals"
+      },
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            {
+              "zh-CN": "用最少窗口切换完成 JSON 格式化、压缩、树视图、string 转换和复制。",
+              "en": "Complete formatting, minifying, tree viewing, string conversion, and copying with minimal window switching."
+            },
+            {
+              "zh-CN": "非法 JSON 进入 AI Fix tab，用户看 diff 后再 Accept，不自动覆盖输入。",
+              "en": "Route invalid JSON into the AI Fix tab; users inspect the diff before Accept and input is not overwritten automatically."
+            },
+            {
+              "zh-CN": "设置、快捷键、历史、窗口状态和 API key 的行为在 plan/spec 中可追溯。",
+              "en": "Make settings, shortcuts, history, window state, and API-key behavior traceable in plan/spec."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "non-goals",
+      "title": {
+        "zh-CN": "Non-goals",
+        "en": "Non-goals"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "范围",
+              "en": "Area"
+            },
+            {
+              "zh-CN": "不做",
+              "en": "Out Of Scope"
+            },
+            {
+              "zh-CN": "理由",
+              "en": "Reason"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "API 调试",
+                "en": "API debugging"
+              },
+              {
+                "zh-CN": "不替代 Postman / Hoppscotch。",
+                "en": "Does not replace Postman or Hoppscotch."
+              },
+              {
+                "zh-CN": "避免把 JSON 浮窗膨胀成网络工具。",
+                "en": "Avoid inflating a JSON floating window into a network tool."
+              }
+            ],
+            [
+              {
+                "zh-CN": "代码编辑",
+                "en": "Code editing"
+              },
+              {
+                "zh-CN": "不做多文件项目编辑。",
+                "en": "No multi-file project editing."
+              },
+              {
+                "zh-CN": "CodeMirror 只承载当前片段和输出。",
+                "en": "CodeMirror only carries the current snippet and output."
+              }
+            ],
+            [
+              {
+                "zh-CN": "云同步",
+                "en": "Cloud sync"
+              },
+              {
+                "zh-CN": "v1 不做账号、同步或云历史。",
+                "en": "No account, sync, or cloud history in v1."
+              },
+              {
+                "zh-CN": "保护本地隐私并降低发布复杂度。",
+                "en": "Protect local privacy and reduce release complexity."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "current-state",
+      "title": {
+        "zh-CN": "Current State",
+        "en": "Current State"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "主题",
+              "en": "Topic"
+            },
+            {
+              "zh-CN": "当前状态",
+              "en": "Current State"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "版本",
+                "en": "Version"
+              },
+              {
+                "zh-CN": "1.0.0-beta.1 内测候选。",
+                "en": "1.0.0-beta.1 beta candidate."
+              }
+            ],
+            [
+              {
+                "zh-CN": "发布",
+                "en": "Release"
+              },
+              {
+                "zh-CN": "先通过 GitHub Releases + DMG 小范围分发；Homebrew Cask 后置。",
+                "en": "Small-scope distribution via GitHub Releases plus DMG first; Homebrew Cask follows later."
+              }
+            ],
+            [
+              {
+                "zh-CN": "凭据",
+                "en": "Secrets"
+              },
+              {
+                "zh-CN": "DeepSeek key 使用本地 secrets.json + 文件权限；Keychain 不是产品路径。",
+                "en": "DeepSeek key uses local secrets.json plus file permissions; Keychain is not the product path."
+              }
+            ],
+            [
+              {
+                "zh-CN": "文档",
+                "en": "Documentation"
+              },
+              {
+                "zh-CN": "README、index、plan、spec、TODO、CHANGELIST 和 workflow 必须同步。",
+                "en": "README, index, plan, spec, TODO, CHANGELIST, and workflow must stay synchronized."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "proposed-plan",
+      "title": {
+        "zh-CN": "Proposed Plan",
+        "en": "Proposed Plan"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "文档层采用 CAST JSON-first：每个公开 HTML 页面都有同名 JSON 源，渲染通过 cast-a-doc 的公开脚本完成，检查脚本只做 profile、freshness、双语和发布面回归校验。",
+            "en": "The documentation layer uses CAST JSON-first: every published HTML page has a same-name JSON source, rendering is performed through the public cast-a-doc scripts, and the checker only validates profile, freshness, bilingual output, and published-surface regressions."
+          }
+        },
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "plan/*.html 与 spec/*.html 均由同名 CAST JSON 渲染。",
+              "en": "plan/*.html and spec/*.html are all rendered from same-name CAST JSON."
+            },
+            {
+              "zh-CN": "首页能看到 reader path、TODO、CHANGELIST、workflow 和 .cast-docs 维护入口。",
+              "en": "The homepage exposes reader paths, TODO, CHANGELIST, workflow, and .cast-docs maintenance entries."
+            },
+            {
+              "zh-CN": "TODO 中不再保留已经完成的 JSON-first 迁移项。",
+              "en": "TODO no longer keeps the completed JSON-first migration item."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "risks",
+      "title": {
+        "zh-CN": "Risks",
+        "en": "Risks"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "风险",
+              "en": "Risk"
+            },
+            {
+              "zh-CN": "处理",
+              "en": "Handling"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "旧 mockup 细节丢失",
+                "en": "Legacy mockup details could be lost"
+              },
+              {
+                "zh-CN": "spec/01 保留视觉状态矩阵，并将 design/HANDOFF.md 作为源参考。",
+                "en": "spec/01 keeps the visual-state matrix and references design/HANDOFF.md as source material."
+              }
+            ],
+            [
+              {
+                "zh-CN": "发布承诺过度",
+                "en": "Overstated release promise"
+              },
+              {
+                "zh-CN": "计划继续声明 Homebrew/updater 是 v1.1+，不是当前阻塞项。",
+                "en": "The plan keeps Homebrew/updater as v1.1+ work, not a current blocker."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "acceptance-criteria",
+      "title": {
+        "zh-CN": "Acceptance Criteria",
+        "en": "Acceptance Criteria"
+      },
+      "blocks": [
+        {
+          "type": "acceptance-criteria",
+          "items": [
+            {
+              "zh-CN": "用户打开任何 plan/spec 页面都能使用右上角语言切换。",
+              "en": "Users can use the top-right language switcher on any plan/spec page."
+            },
+            {
+              "zh-CN": "pnpm docs:check 能逐页发现 JSON/HTML drift。",
+              "en": "pnpm docs:check can detect JSON/HTML drift page by page."
+            },
+            {
+              "zh-CN": "README 和首页不再把 plan/spec 描述为 legacy HTML。",
+              "en": "README and homepage no longer describe plan/spec as legacy HTML."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": {
+        "zh-CN": "开放问题",
+        "en": "Open Questions"
+      },
+      "blocks": [
+        {
+          "type": "open-questions",
+          "questions": [
+            {
+              "zh-CN": "扩大分发前，签名、公证和 Homebrew Cask sha256 仍需补齐。",
+              "en": "Before broader distribution, signing, notarization, and Homebrew Cask sha256 still need to be completed."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

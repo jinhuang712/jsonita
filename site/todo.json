@@ -113,26 +113,6 @@
                 "zh-CN": "补齐 spec/10_storage.html 与 spec/15_logging.html；完成条件是损坏检测、恢复策略、用户提示、日志边界和验证方式都有明确表述。",
                 "en": "Update spec/10_storage.html and spec/15_logging.html; done when detection, recovery, user messaging, log boundaries, and validation are explicit."
               }
-            ],
-            [
-              {
-                "zh-CN": "CAST JSON-first 迁移：plan/*.html 与 spec/*.html 仍是 legacy HTML 发布页，尚未逐页迁移为 CAST JSON 源。",
-                "en": "CAST JSON-first migration: plan/*.html and spec/*.html are still legacy HTML published pages and have not been migrated page by page into CAST JSON sources."
-              },
-              {
-                "zh-CN": "按页面逐一迁移，先从体量小的 plan/00 或 spec/10 开始；完成条件是每个发布页都有 JSON 源、渲染产物和 freshness check。",
-                "en": "Migrate page by page, starting with a smaller page such as plan/00 or spec/10; done when each published page has a JSON source, rendered artifact, and freshness check."
-              }
-            ],
-            [
-              {
-                "zh-CN": "legacy Mermaid 发布面：现有 plan/spec HTML 中的图需要保持内联 SVG，不允许回退到运行时 CDN 或 raw Mermaid 文本。",
-                "en": "Legacy Mermaid published surface: diagrams in current plan/spec HTML must stay inline SVG and must not regress to runtime CDN or raw Mermaid text."
-              },
-              {
-                "zh-CN": "每次修改图表后运行 pnpm docs:render-mermaid 与 pnpm docs:check；完成条件是 strict HTML 检查不再发现 raw Mermaid/CDN。",
-                "en": "After diagram edits, run pnpm docs:render-mermaid and pnpm docs:check; done when strict HTML checks find no raw Mermaid/CDN."
-              }
             ]
           ]
         }
@@ -171,12 +151,12 @@
             ],
             [
               {
-                "zh-CN": "为 CAST 文档脚本补 CI：本地已有 docs:render、docs:check、docs:render-mermaid，CI 尚未强制执行。",
-                "en": "Add CI coverage for CAST documentation scripts: local docs:render, docs:check, and docs:render-mermaid exist but CI does not enforce them yet."
+                "zh-CN": "为 CAST 文档脚本补 CI：本地已有 docs:render、docs:check，CI 尚未强制执行。",
+                "en": "Add CI coverage for CAST documentation scripts: local docs:render and docs:check exist but CI does not enforce them yet."
               },
               {
-                "zh-CN": "把 docs:check 接入 GitHub Actions 或发布前脚本；完成条件是文档 freshness、homepage contract 和 Mermaid/CDN 检查自动失败。",
-                "en": "Wire docs:check into GitHub Actions or release preflight; done when freshness, homepage contract, and Mermaid/CDN checks fail automatically."
+                "zh-CN": "把 docs:check 接入 GitHub Actions 或发布前脚本；完成条件是文档 freshness、homepage contract、双语结构和 Mermaid/CDN 检查自动失败。",
+                "en": "Wire docs:check into GitHub Actions or release preflight; done when freshness, homepage contract, bilingual structure, and Mermaid/CDN checks fail automatically."
               }
             ]
           ]
