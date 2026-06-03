@@ -1455,8 +1455,8 @@ body.is-index .index-wrap {
 }
 .menubar-strip.dark .menubar-strip-item-label { color: rgba(255,255,255,0.55); }
 
-/* ===== Mermaid 时序图 / 流程图 ===== */
-.mermaid {
+/* ===== Inline SVG diagrams ===== */
+.cast-diagram {
   background: #FFFFFF;            /* 固定白底，dark 主题下也保持可读 */
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1469,11 +1469,11 @@ body.is-index .index-wrap {
   overflow-x: auto;
   min-height: 60px;
 }
-.mermaid:hover {
+.cast-diagram:hover {
   background: var(--bg-subtle);
   border-color: var(--primary-edge);
 }
-.mermaid::after {
+.cast-diagram::after {
   content: '⤢ 点击放大';
   position: absolute;
   top: 8px;
@@ -1485,7 +1485,7 @@ body.is-index .index-wrap {
   pointer-events: none;
   opacity: 0.7;
 }
-.mermaid svg {
+.cast-diagram svg {
   max-width: 100%;
   height: auto;
   display: inline-block;
@@ -1587,8 +1587,8 @@ body.is-index .index-wrap {
   pointer-events: none;
 }
 
-/* dark 主题下保持 mermaid 容器边框对比度 */
-[data-theme="dark"] .mermaid {
+/* dark 主题下保持图表容器边框对比度 */
+[data-theme="dark"] .cast-diagram {
   border-color: var(--border-strong);
 }
 

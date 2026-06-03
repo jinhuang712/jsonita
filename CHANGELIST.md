@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+### docs · repair CAST strict structure
+
+按最新版 `$cast-a-start` 修复 Jsonita 文档结构，让当前发布入口、TODO、Changelist、agent workflow 和图表发布面可验证。
+
+- 新增 `.cast-docs/WORKFLOW.md`，把项目级 agent 规则迁入 CAST profile 层；`AGENTS.md` / `CLAUDE.md` 瘦身为入口文件。
+- `site/index.cast.json`、`site/todo.json`、`site/changelist.json` 升级为 `cast-a-doc` 可验证 JSON 源，并重新渲染 `index.html`、`todo.html`、`changelist.html`。
+- 新增 `pnpm docs:render`、`pnpm docs:check`、`pnpm docs:render-mermaid`，校验 profile、渲染 freshness、首页 reader path、raw Mermaid/CDN 回归。
+- 将 legacy `plan/` / `spec/` 中的 Mermaid 图转换为内联 SVG figure，并移除 `assets/nav.js` 的运行时 Mermaid / svg-pan-zoom CDN 依赖。
+- `TODO.md` / `site/todo.json` 改为 P1/P2/P3 开放 backlog；plan/spec 全量 JSON-first 迁移保留为 P1，不伪装成已完成。
+
 ### docs · design 核心决策迁入 plan/spec
 
 按 `$cast-a-start` 的 Existing Repository Rewrite Mode 做 full alignment：保留 `design/*.html` 为历史探索材料，把已经稳定的核心产品 / 交互 / 技术决策迁入现有 `plan/` 与 `spec/` 权威文档。
