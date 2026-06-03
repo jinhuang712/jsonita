@@ -260,101 +260,24 @@ function highlightJsonBlocks() {
   });
 }
 
-/* ===== Mermaid 时序图 / 流程图 ===== */
+/* ===== Inline SVG diagram zoom ===== */
 
-async function renderMermaid() {
-  const blocks = document.querySelectorAll('.mermaid');
-  if (blocks.length === 0) return;
-
-  let mermaid;
-  try {
-    const mod = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
-    mermaid = mod.default;
-  } catch (e) {
-    // CDN 加载失败 → 显示原始文本 + 提示
-    blocks.forEach(b => {
-      b.innerHTML = '<pre style="white-space: pre-wrap; color: var(--text-muted); font-size: 12px;">' +
-                    b.textContent.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
-                    '</pre><div style="font-size: 11px; color: var(--text-faint); margin-top: 8px;">⚠ Mermaid CDN 加载失败，显示源文本</div>';
-    });
-    return;
-  }
-
-  mermaid.initialize({
-    startOnLoad:  false,
-    securityLevel:'loose',
-    theme:        'base',
-    themeVariables: {
-      fontFamily:        '"SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif',
-      fontSize:          '13px',
-      primaryColor:      '#F2F5FF',
-      primaryTextColor:  '#1F2329',
-      primaryBorderColor:'#245BDB',
-      lineColor:         '#646A73',
-      secondaryColor:    '#FFFFFF',
-      tertiaryColor:     '#F7F8FA',
-      noteBkgColor:      '#FFF7E8',
-      noteBorderColor:   '#A45F00',
-      noteTextColor:     '#6B4400',
-      actorBkg:          '#245BDB',
-      actorTextColor:    '#FFFFFF',
-      actorBorder:       '#245BDB',
-      signalColor:       '#1F2329',
-      signalTextColor:   '#1F2329',
-      labelBoxBkgColor:  '#F2F5FF',
-      labelBoxBorderColor:'#245BDB',
-      labelTextColor:    '#1F2329',
-    },
-    sequence: {
-      diagramMarginX: 30,
-      diagramMarginY: 12,
-      boxMargin: 10,
-      mirrorActors: false,
-      wrap: true,
-      width: 160,
-      messageFontSize: 12,
-      actorFontSize: 13,
-      noteFontSize: 12,
-    },
-  });
-
-  try {
-    await mermaid.run({ querySelector: '.mermaid' });
-  } catch (e) {
-    console.error('mermaid render error', e);
-  }
-
-  attachMermaidZoom();
-}
-
-function attachMermaidZoom() {
-  document.querySelectorAll('.mermaid').forEach(el => {
+function attachDiagramZoom() {
+  document.querySelectorAll('.cast-diagram').forEach(el => {
     if (el.dataset.zoomAttached) return;
     el.dataset.zoomAttached = '1';
     el.style.cursor = 'zoom-in';
     el.title = '点击放大 · 滚轮缩放 · 拖动平移';
-    el.addEventListener('click', () => openMermaidZoom(el));
+    el.addEventListener('click', () => openDiagramZoom(el));
   });
 }
 
-async function loadSvgPanZoom() {
-  if (window.svgPanZoom) return window.svgPanZoom;
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  return window.svgPanZoom;
-}
-
-async function openMermaidZoom(sourceEl) {
+function openDiagramZoom(sourceEl) {
   const svg = sourceEl.querySelector('svg');
   if (!svg) return;
 
   const overlay = document.createElement('div');
-  overlay.className = 'mermaid-zoom-overlay';
+  overlay.className = 'diagram-zoom-overlay mermaid-zoom-overlay';
   overlay.innerHTML = `
     <div class="mermaid-zoom-toolbar">
       <button data-action="zoom-in"  title="放大">+</button>
@@ -379,49 +302,72 @@ async function openMermaidZoom(sourceEl) {
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
 
-  let inst = null;
-  try {
-    const svgPanZoom = await loadSvgPanZoom();
-    inst = svgPanZoom(cloned, {
-      zoomEnabled:           true,
-      controlIconsEnabled:   false,
-      panEnabled:            true,
-      mouseWheelZoomEnabled: true,
-      minZoom:  0.3,
-      maxZoom:  10,
-      contain:  false,
-      fit:      true,
-      center:   true,
-      zoomScaleSensitivity: 0.4,
-    });
-  } catch (e) {
-    // svg-pan-zoom 加载失败：只能看不能放大，但仍能关闭
-    console.warn('svg-pan-zoom load failed', e);
+  let scale = 1;
+  let panX = 0;
+  let panY = 0;
+  let dragging = false;
+  let dragStart = null;
+
+  function applyTransform() {
+    cloned.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    cloned.style.transformOrigin = 'center center';
+  }
+
+  function zoomBy(delta) {
+    scale = Math.max(0.3, Math.min(10, scale + delta));
+    applyTransform();
   }
 
   function close() {
-    if (inst) inst.destroy();
     overlay.remove();
     document.body.style.overflow = '';
     document.removeEventListener('keydown', onKey);
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
   }
 
   function onKey(e) {
     if (e.key === 'Escape') close();
-    else if (e.key === '+' || e.key === '=') inst?.zoomIn();
-    else if (e.key === '-' || e.key === '_') inst?.zoomOut();
-    else if (e.key === '0') { inst?.resetZoom(); inst?.resetPan(); }
+    else if (e.key === '+' || e.key === '=') zoomBy(0.2);
+    else if (e.key === '-' || e.key === '_') zoomBy(-0.2);
+    else if (e.key === '0') { scale = 1; panX = 0; panY = 0; applyTransform(); }
+  }
+
+  function onMove(e) {
+    if (!dragging || !dragStart) return;
+    panX = dragStart.panX + e.clientX - dragStart.x;
+    panY = dragStart.panY + e.clientY - dragStart.y;
+    applyTransform();
+  }
+
+  function onUp() {
+    dragging = false;
+    dragStart = null;
   }
   document.addEventListener('keydown', onKey);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+
+  stage.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoomBy(e.deltaY > 0 ? -0.15 : 0.15);
+  }, { passive: false });
+
+  stage.addEventListener('mousedown', (e) => {
+    dragging = true;
+    dragStart = { x: e.clientX, y: e.clientY, panX, panY };
+  });
 
   overlay.addEventListener('click', (e) => {
     const action = e.target.dataset?.action;
-    if (action === 'zoom-in')  inst?.zoomIn();
-    else if (action === 'zoom-out') inst?.zoomOut();
-    else if (action === 'reset')    { inst?.resetZoom(); inst?.resetPan(); }
+    if (action === 'zoom-in')  zoomBy(0.2);
+    else if (action === 'zoom-out') zoomBy(-0.2);
+    else if (action === 'reset')    { scale = 1; panX = 0; panY = 0; applyTransform(); }
     else if (action === 'close')    close();
     else if (e.target === overlay || e.target === stage) close();
   });
+
+  applyTransform();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -429,5 +375,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSidebar();
   renderPagination();
   highlightJsonBlocks();
-  renderMermaid();
+  attachDiagramZoom();
 });

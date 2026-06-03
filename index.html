@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO、Changelist 与源数据。">
+<meta name="description" content="Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO 与 Changelist。">
 <title>Jsonita 项目文档</title>
 <style>
 :root {
@@ -314,9 +314,10 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
       "en": "Jsonita Project Documentation"
     },
     "description": {
-      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO、Changelist 与源数据。",
-      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, TODO, changelist, and source data."
+      "zh-CN": "Jsonita 的 CAST 文档入口，链接产品计划、技术规格、TODO 与 Changelist。",
+      "en": "The CAST documentation entrypoint for Jsonita, linking product plans, technical specs, TODO, and changelist."
     },
+    "schemaVersion": "1.0",
     "locales": [
       "zh-CN",
       "en"
@@ -326,7 +327,7 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
       "engineering",
       "product"
     ],
-    "updatedAt": "2026-06-02",
+    "updatedAt": "2026-06-03",
     "showMeta": true,
     "shellLinks": [
       {
@@ -360,10 +361,12 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
     "scenario": "none",
     "sections": [
       "overview",
-      "start",
-      "plan",
-      "spec",
-      "cast"
+      "boundaries-installation",
+      "routing",
+      "plan-spec-map",
+      "todo",
+      "changelist",
+      "maintenance"
     ],
     "components": {
       "required": [
@@ -372,16 +375,16 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
         "toc",
         "section",
         "paragraph",
-        "chapter-list"
+        "chapter-list",
+        "columns",
+        "callout"
       ],
       "optional": [
-        "callout",
-        "shell-links"
+        "table"
       ],
       "omitted": [
         "diagram",
         "diff-block",
-        "inline-svg-figure",
         "media-grid"
       ]
     }
@@ -391,7 +394,7 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
       "id": "overview",
       "title": {
         "zh-CN": "入口说明",
-        "en": "Entrypoint"
+        "en": "Overview"
       },
       "blocks": [
         {
@@ -413,40 +416,127 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
                 "en": "Documentation Contract"
               },
               "body": {
-                "zh-CN": "本项目文档严格依赖 CAST：产品范围、实现计划、技术规格、TODO、Changelist 与文档入口必须同步维护。",
-                "en": "This project strictly relies on CAST: product scope, implementation plans, technical specs, TODOs, changelists, and documentation entrypoints must stay synchronized."
+                "zh-CN": "本项目使用 CAST：产品范围、技术规格、TODO、Changelist 与发布入口必须同步维护。",
+                "en": "This project uses CAST: product scope, technical specs, TODOs, changelists, and published entrypoints must stay synchronized."
               }
             }
           ]
         },
         {
-          "type": "callout",
-          "variant": "info",
-          "title": {
-            "zh-CN": "双语规则",
-            "en": "Bilingual Rule"
-          },
-          "body": {
-            "zh-CN": "这个首页由 site/index.cast.json 渲染而来，同一个 HTML 同时包含中文和英文内容，并在右上角提供语言切换。",
-            "en": "This homepage is rendered from site/index.cast.json. The same HTML file contains both Simplified Chinese and English content, with a language switcher in the top-right corner."
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "这个首页由 site/index.cast.json 渲染而来；README、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。",
+            "en": "This homepage is rendered from site/index.cast.json. README, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section."
           }
         }
       ]
     },
     {
-      "id": "start",
+      "id": "boundaries-installation",
       "title": {
-        "zh-CN": "入口与源数据",
-        "en": "Entry Points And Sources"
+        "zh-CN": "边界与安装",
+        "en": "Boundaries And Installation"
       },
       "blocks": [
         {
-          "type": "paragraph",
-          "text": {
-            "zh-CN": "从这里进入项目说明、待办、变更记录和 CAST 源数据。机器可读字段保持单值，面向人的标题与说明提供中英双语。",
-            "en": "Start here for project overview, TODOs, changelog, and CAST source data. Machine-readable fields stay single-valued while human-facing titles and descriptions are bilingual."
+          "type": "callout",
+          "variant": "info",
+          "title": {
+            "zh-CN": "CAST 约定",
+            "en": "CAST Convention"
+          },
+          "body": {
+            "zh-CN": [
+              {
+                "text": "Jsonita follows the CAST convention. See "
+              },
+              {
+                "text": "CAST-docs/cast-a-start",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "https://cast-docs.github.io/cast-a-start/"
+                  }
+                ]
+              },
+              {
+                "text": "."
+              }
+            ],
+            "en": [
+              {
+                "text": "Jsonita follows the CAST convention. See "
+              },
+              {
+                "text": "CAST-docs/cast-a-start",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "https://cast-docs.github.io/cast-a-start/"
+                  }
+                ]
+              },
+              {
+                "text": "."
+              }
+            ]
           }
         },
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "主题",
+              "en": "Topic"
+            },
+            {
+              "zh-CN": "当前约定",
+              "en": "Current Contract"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "zh-CN": "v1 发布",
+                "en": "v1 release"
+              },
+              {
+                "zh-CN": "先用 GitHub Releases + .dmg 做小范围内测；Homebrew、updater、npm wrapper 后置到 v1.1+。",
+                "en": "Use GitHub Releases plus a .dmg for small beta testing first; Homebrew, updater, and npm wrapper stay v1.1+ work."
+              }
+            ],
+            [
+              {
+                "zh-CN": "安装入口",
+                "en": "Install entry"
+              },
+              {
+                "zh-CN": "开发期使用 README 的源码构建命令；内测期从 GitHub Releases 下载 .dmg。",
+                "en": "Use README source-build commands during development; beta users download the .dmg from GitHub Releases."
+              }
+            ],
+            [
+              {
+                "zh-CN": "隐私边界",
+                "en": "Privacy boundary"
+              },
+              {
+                "zh-CN": "用户数据保留本地：SQLite、settings、window 状态和 secrets.json；日志不记录 JSON 内容或 API key。",
+                "en": "User data stays local: SQLite, settings, window state, and secrets.json; logs do not record JSON content or API keys."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "routing",
+      "title": {
+        "zh-CN": "路由指南",
+        "en": "Routing Guide"
+      },
+      "blocks": [
         {
           "type": "chapter-list",
           "items": [
@@ -464,54 +554,28 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
               "href": "README.md"
             },
             {
-              "id": "todo-json",
-              "number": "json",
-              "title": {
-                "zh-CN": "site/todo.json",
-                "en": "site/todo.json"
-              },
-              "description": {
-                "zh-CN": "项目级未决问题与延期工作源数据。",
-                "en": "Source data for project-level open questions and deferred work."
-              },
-              "href": "site/todo.json"
-            },
-            {
-              "id": "changelist-json",
-              "number": "json",
-              "title": {
-                "zh-CN": "site/changelist.json",
-                "en": "site/changelist.json"
-              },
-              "description": {
-                "zh-CN": "产品、计划、规格和重要实现变化的结构化记录。",
-                "en": "Structured record of product, plan, spec, and important implementation changes."
-              },
-              "href": "site/changelist.json"
-            },
-            {
-              "id": "todo-html",
+              "id": "todo",
               "number": "html",
               "title": {
-                "zh-CN": "TODO 页面",
-                "en": "TODO Page"
+                "zh-CN": "TODO",
+                "en": "TODO"
               },
               "description": {
-                "zh-CN": "人类可读的项目级 TODO 入口。",
-                "en": "Human-readable entrypoint for project-level TODOs."
+                "zh-CN": "项目级未决问题、延期决策、风险与 readiness blockers。",
+                "en": "Project-level open questions, deferred decisions, risks, and readiness blockers."
               },
               "href": "todo.html"
             },
             {
-              "id": "changelist-html",
+              "id": "changelist",
               "number": "html",
               "title": {
-                "zh-CN": "Changelist 页面",
-                "en": "Changelist Page"
+                "zh-CN": "Changelist",
+                "en": "Changelist"
               },
               "description": {
-                "zh-CN": "人类可读的变更记录入口。",
-                "en": "Human-readable changelist entrypoint."
+                "zh-CN": "产品、计划、规格、发布与工作流的重要变化记录。",
+                "en": "Important product, plan, spec, release, and workflow changes."
               },
               "href": "changelist.html"
             }
@@ -520,337 +584,335 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
       ]
     },
     {
-      "id": "plan",
+      "id": "plan-spec-map",
       "title": {
-        "zh-CN": "产品计划",
-        "en": "Product Plan"
+        "zh-CN": "Plan / Spec 地图",
+        "en": "Plan / Spec Map"
       },
       "blocks": [
         {
-          "type": "chapter-list",
-          "items": [
+          "type": "columns",
+          "columns": [
             {
-              "id": "plan-dir",
-              "number": "dir",
               "title": {
-                "zh-CN": "plan/ 产品设计目录",
-                "en": "plan/ Product Plan Directory"
+                "zh-CN": "plan/",
+                "en": "plan/"
               },
-              "description": {
-                "zh-CN": "cast-a-start 要求的产品计划目录入口。",
-                "en": "Product plan directory required by cast-a-start."
-              },
-              "href": "plan/"
+              "blocks": [
+                {
+                  "type": "chapter-list",
+                  "items": [
+                    {
+                      "id": "plan-00",
+                      "number": "00",
+                      "title": {
+                        "zh-CN": "项目概览",
+                        "en": "Project Overview"
+                      },
+                      "description": {
+                        "zh-CN": "产品定位、约束与文档权威边界。",
+                        "en": "Product positioning, constraints, and documentation authority boundaries."
+                      },
+                      "href": "plan/00_overview.html"
+                    },
+                    {
+                      "id": "plan-01",
+                      "number": "01",
+                      "title": {
+                        "zh-CN": "功能清单",
+                        "en": "Feature List"
+                      },
+                      "description": {
+                        "zh-CN": "v1.0 范围、非目标与后续路线。",
+                        "en": "v1.0 scope, non-goals, and later roadmap."
+                      },
+                      "href": "plan/01_features.html"
+                    },
+                    {
+                      "id": "plan-02",
+                      "number": "02",
+                      "title": {
+                        "zh-CN": "交互草图",
+                        "en": "Interaction Model"
+                      },
+                      "description": {
+                        "zh-CN": "浮窗、设置、历史、状态栏与快捷键交互。",
+                        "en": "Floating window, settings, history, status bar, and shortcut interactions."
+                      },
+                      "href": "plan/02_interaction.html"
+                    },
+                    {
+                      "id": "plan-03",
+                      "number": "03",
+                      "title": {
+                        "zh-CN": "技术选型",
+                        "en": "Technology Stack"
+                      },
+                      "description": {
+                        "zh-CN": "Tauri、React、SQLite、本地 secrets.json 等选型。",
+                        "en": "Choices such as Tauri, React, SQLite, and local secrets.json."
+                      },
+                      "href": "plan/03_tech_stack.html"
+                    },
+                    {
+                      "id": "plan-04",
+                      "number": "04",
+                      "title": {
+                        "zh-CN": "非功能性需求",
+                        "en": "Non-Functional Requirements"
+                      },
+                      "description": {
+                        "zh-CN": "性能、隐私、安全、可用性与发布约束。",
+                        "en": "Performance, privacy, security, usability, and release constraints."
+                      },
+                      "href": "plan/04_nfr.html"
+                    }
+                  ]
+                }
+              ]
             },
             {
-              "id": "overview-plan",
-              "number": "00",
               "title": {
-                "zh-CN": "项目概览",
-                "en": "Project Overview"
+                "zh-CN": "spec/",
+                "en": "spec/"
               },
-              "description": {
-                "zh-CN": "产品定位、约束与文档权威边界。",
-                "en": "Product positioning, constraints, and documentation authority boundaries."
-              },
-              "href": "plan/00_overview.html"
-            },
-            {
-              "id": "features",
-              "number": "01",
-              "title": {
-                "zh-CN": "功能清单",
-                "en": "Feature List"
-              },
-              "description": {
-                "zh-CN": "v1.0 范围、非目标与后续路线。",
-                "en": "v1.0 scope, non-goals, and later roadmap."
-              },
-              "href": "plan/01_features.html"
-            },
-            {
-              "id": "interaction",
-              "number": "02",
-              "title": {
-                "zh-CN": "交互草图",
-                "en": "Interaction Model"
-              },
-              "description": {
-                "zh-CN": "浮窗、设置、历史、状态栏与快捷键交互。",
-                "en": "Floating window, settings, history, status bar, and shortcut interactions."
-              },
-              "href": "plan/02_interaction.html"
-            },
-            {
-              "id": "tech-stack",
-              "number": "03",
-              "title": {
-                "zh-CN": "技术选型",
-                "en": "Technology Stack"
-              },
-              "description": {
-                "zh-CN": "Tauri、React、SQLite、本地 secrets.json 等选型。",
-                "en": "Choices such as Tauri, React, SQLite, and local secrets.json."
-              },
-              "href": "plan/03_tech_stack.html"
-            },
-            {
-              "id": "nfr",
-              "number": "04",
-              "title": {
-                "zh-CN": "非功能性需求",
-                "en": "Non-Functional Requirements"
-              },
-              "description": {
-                "zh-CN": "性能、隐私、安全、可用性与发布约束。",
-                "en": "Performance, privacy, security, usability, and release constraints."
-              },
-              "href": "plan/04_nfr.html"
+              "blocks": [
+                {
+                  "type": "chapter-list",
+                  "items": [
+                    {
+                      "id": "spec-00",
+                      "number": "00",
+                      "title": {
+                        "zh-CN": "系统架构",
+                        "en": "System Architecture"
+                      },
+                      "description": {
+                        "zh-CN": "进程模型、模块边界、数据流与关键不变量。",
+                        "en": "Process model, module boundaries, data flow, and invariants."
+                      },
+                      "href": "spec/00_architecture.html"
+                    },
+                    {
+                      "id": "spec-01",
+                      "number": "01",
+                      "title": {
+                        "zh-CN": "原型图与交互细节",
+                        "en": "Mockups And Interaction Details"
+                      },
+                      "description": {
+                        "zh-CN": "视觉权威、浮窗布局与关键交互细节。",
+                        "en": "Visual authority, floating-window layout, and key interaction details."
+                      },
+                      "href": "spec/01_mockups.html"
+                    },
+                    {
+                      "id": "spec-02",
+                      "number": "02",
+                      "title": {
+                        "zh-CN": "IPC 合约",
+                        "en": "IPC Contract"
+                      },
+                      "description": {
+                        "zh-CN": "前端与 Rust 主进程之间的命令、事件与错误边界。",
+                        "en": "Commands, events, and error boundaries between frontend and Rust host."
+                      },
+                      "href": "spec/02_ipc.html"
+                    },
+                    {
+                      "id": "spec-03",
+                      "number": "03",
+                      "title": {
+                        "zh-CN": "设计令牌",
+                        "en": "Design Tokens"
+                      },
+                      "description": {
+                        "zh-CN": "颜色、字号、间距、动效与主题规则。",
+                        "en": "Color, type, spacing, motion, and theme rules."
+                      },
+                      "href": "spec/03_design_tokens.html"
+                    },
+                    {
+                      "id": "spec-04",
+                      "number": "04",
+                      "title": {
+                        "zh-CN": "组件库映射",
+                        "en": "Component Mapping"
+                      },
+                      "description": {
+                        "zh-CN": "UI 组件、状态和交互复用边界。",
+                        "en": "UI components, states, and interaction reuse boundaries."
+                      },
+                      "href": "spec/04_components.html"
+                    },
+                    {
+                      "id": "spec-05",
+                      "number": "05",
+                      "title": {
+                        "zh-CN": "图标资源与主题",
+                        "en": "Icons And Theme"
+                      },
+                      "description": {
+                        "zh-CN": "图标资产、菜单栏视觉与主题适配。",
+                        "en": "Icon assets, menu-bar visuals, and theme adaptation."
+                      },
+                      "href": "spec/05_icons_theme.html"
+                    },
+                    {
+                      "id": "spec-06",
+                      "number": "06",
+                      "title": {
+                        "zh-CN": "窗口 runtime",
+                        "en": "Window Runtime"
+                      },
+                      "description": {
+                        "zh-CN": "浮窗生命周期、NSPanel、vibrancy 与尺寸策略。",
+                        "en": "Floating-window lifecycle, NSPanel, vibrancy, and sizing policy."
+                      },
+                      "href": "spec/06_window.html"
+                    },
+                    {
+                      "id": "spec-07",
+                      "number": "07",
+                      "title": {
+                        "zh-CN": "菜单栏与快捷键",
+                        "en": "Menu Bar And Shortcuts"
+                      },
+                      "description": {
+                        "zh-CN": "菜单栏、全局快捷键、权限与冲突处理。",
+                        "en": "Menu bar, global shortcuts, permissions, and conflict handling."
+                      },
+                      "href": "spec/07_menubar.html"
+                    },
+                    {
+                      "id": "spec-08",
+                      "number": "08",
+                      "title": {
+                        "zh-CN": "编辑器与树 UI",
+                        "en": "Editor And Tree UI"
+                      },
+                      "description": {
+                        "zh-CN": "CodeMirror 编辑器、树视图和 JSON 展示。",
+                        "en": "CodeMirror editor, tree view, and JSON presentation."
+                      },
+                      "href": "spec/08_editor.html"
+                    },
+                    {
+                      "id": "spec-09",
+                      "number": "09",
+                      "title": {
+                        "zh-CN": "JSON 引擎",
+                        "en": "JSON Engine"
+                      },
+                      "description": {
+                        "zh-CN": "格式化、压缩、互转、嵌套解开和错误定位。",
+                        "en": "Formatting, minifying, conversion, nested unwrap, and error location."
+                      },
+                      "href": "spec/09_json_engine.html"
+                    },
+                    {
+                      "id": "spec-10",
+                      "number": "10",
+                      "title": {
+                        "zh-CN": "存储与会话",
+                        "en": "Storage And Session"
+                      },
+                      "description": {
+                        "zh-CN": "SQLite、settings、window 状态和本地 secrets.json。",
+                        "en": "SQLite, settings, window state, and local secrets.json."
+                      },
+                      "href": "spec/10_storage.html"
+                    },
+                    {
+                      "id": "spec-11",
+                      "number": "11",
+                      "title": {
+                        "zh-CN": "AI 客户端",
+                        "en": "AI Client"
+                      },
+                      "description": {
+                        "zh-CN": "DeepSeek 修复流程、隐私边界与失败处理。",
+                        "en": "DeepSeek repair flow, privacy boundary, and failure handling."
+                      },
+                      "href": "spec/11_ai_client.html"
+                    },
+                    {
+                      "id": "spec-12",
+                      "number": "12",
+                      "title": {
+                        "zh-CN": "打包、签名、验收",
+                        "en": "Packaging, Signing, And Acceptance"
+                      },
+                      "description": {
+                        "zh-CN": "DMG、APP、Windows installer、GitHub Release 与后续 Homebrew。",
+                        "en": "DMG, APP, Windows installer, GitHub Release, and later Homebrew."
+                      },
+                      "href": "spec/12_packaging.html"
+                    },
+                    {
+                      "id": "spec-13",
+                      "number": "13",
+                      "title": {
+                        "zh-CN": "数据模型参考",
+                        "en": "Schema Reference"
+                      },
+                      "description": {
+                        "zh-CN": "核心数据模型、设置、IPC 和持久化结构。",
+                        "en": "Core data models, settings, IPC, and persistence structures."
+                      },
+                      "href": "spec/13_schemas.html"
+                    },
+                    {
+                      "id": "spec-14",
+                      "number": "14",
+                      "title": {
+                        "zh-CN": "国际化与无障碍",
+                        "en": "Internationalization And Accessibility"
+                      },
+                      "description": {
+                        "zh-CN": "语言、键盘、屏幕阅读器与辅助体验约束。",
+                        "en": "Language, keyboard, screen reader, and accessibility constraints."
+                      },
+                      "href": "spec/14_i18n_a11y.html"
+                    },
+                    {
+                      "id": "spec-15",
+                      "number": "15",
+                      "title": {
+                        "zh-CN": "日志与可观测性",
+                        "en": "Logging And Observability"
+                      },
+                      "description": {
+                        "zh-CN": "日志边界、脱敏策略和排查入口。",
+                        "en": "Logging boundary, redaction policy, and diagnostic entrypoints."
+                      },
+                      "href": "spec/15_logging.html"
+                    }
+                  ]
+                }
+              ]
             }
           ]
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "title": {
+            "zh-CN": "迁移状态",
+            "en": "Migration Status"
+          },
+          "body": {
+            "zh-CN": "plan/spec 当前仍是 legacy HTML 发布页；它们已保持读者可用，但完整 CAST JSON-first 迁移需要逐页进行，见 TODO P1。",
+            "en": "plan/spec are still legacy HTML published pages. They remain reader-usable, but complete CAST JSON-first migration must happen page by page; see TODO P1."
+          }
         }
       ]
     },
     {
-      "id": "spec",
+      "id": "todo",
       "title": {
-        "zh-CN": "技术规格",
-        "en": "Technical Spec"
-      },
-      "blocks": [
-        {
-          "type": "chapter-list",
-          "items": [
-            {
-              "id": "spec-dir",
-              "number": "dir",
-              "title": {
-                "zh-CN": "spec/ 技术设计目录",
-                "en": "spec/ Technical Spec Directory"
-              },
-              "description": {
-                "zh-CN": "cast-a-start 要求的技术规格目录入口。",
-                "en": "Technical specification directory required by cast-a-start."
-              },
-              "href": "spec/"
-            },
-            {
-              "id": "architecture",
-              "number": "00",
-              "title": {
-                "zh-CN": "系统架构",
-                "en": "System Architecture"
-              },
-              "description": {
-                "zh-CN": "进程模型、模块边界、数据流与关键不变量。",
-                "en": "Process model, module boundaries, data flow, and invariants."
-              },
-              "href": "spec/00_architecture.html"
-            },
-            {
-              "id": "mockups",
-              "number": "01",
-              "title": {
-                "zh-CN": "原型图与交互细节",
-                "en": "Mockups And Interaction Details"
-              },
-              "description": {
-                "zh-CN": "视觉权威、浮窗布局与关键交互细节。",
-                "en": "Visual authority, floating-window layout, and key interaction details."
-              },
-              "href": "spec/01_mockups.html"
-            },
-            {
-              "id": "ipc",
-              "number": "02",
-              "title": {
-                "zh-CN": "IPC 合约",
-                "en": "IPC Contract"
-              },
-              "description": {
-                "zh-CN": "前端与 Rust 主进程之间的命令、事件与错误边界。",
-                "en": "Commands, events, and error boundaries between frontend and Rust host."
-              },
-              "href": "spec/02_ipc.html"
-            },
-            {
-              "id": "design-tokens",
-              "number": "03",
-              "title": {
-                "zh-CN": "设计令牌",
-                "en": "Design Tokens"
-              },
-              "description": {
-                "zh-CN": "颜色、字号、间距、动效与主题规则。",
-                "en": "Color, type, spacing, motion, and theme rules."
-              },
-              "href": "spec/03_design_tokens.html"
-            },
-            {
-              "id": "components",
-              "number": "04",
-              "title": {
-                "zh-CN": "组件库映射",
-                "en": "Component Mapping"
-              },
-              "description": {
-                "zh-CN": "UI 组件、状态和交互复用边界。",
-                "en": "UI components, states, and interaction reuse boundaries."
-              },
-              "href": "spec/04_components.html"
-            },
-            {
-              "id": "icons-theme",
-              "number": "05",
-              "title": {
-                "zh-CN": "图标资源与主题",
-                "en": "Icons And Theme"
-              },
-              "description": {
-                "zh-CN": "图标资产、菜单栏视觉与主题适配。",
-                "en": "Icon assets, menu-bar visuals, and theme adaptation."
-              },
-              "href": "spec/05_icons_theme.html"
-            },
-            {
-              "id": "window",
-              "number": "06",
-              "title": {
-                "zh-CN": "窗口 runtime",
-                "en": "Window Runtime"
-              },
-              "description": {
-                "zh-CN": "浮窗生命周期、NSPanel、vibrancy 与尺寸策略。",
-                "en": "Floating-window lifecycle, NSPanel, vibrancy, and sizing policy."
-              },
-              "href": "spec/06_window.html"
-            },
-            {
-              "id": "menubar",
-              "number": "07",
-              "title": {
-                "zh-CN": "菜单栏与快捷键",
-                "en": "Menu Bar And Shortcuts"
-              },
-              "description": {
-                "zh-CN": "菜单栏、全局快捷键、权限与冲突处理。",
-                "en": "Menu bar, global shortcuts, permissions, and conflict handling."
-              },
-              "href": "spec/07_menubar.html"
-            },
-            {
-              "id": "editor",
-              "number": "08",
-              "title": {
-                "zh-CN": "编辑器与树 UI",
-                "en": "Editor And Tree UI"
-              },
-              "description": {
-                "zh-CN": "CodeMirror 编辑器、树视图和 JSON 展示。",
-                "en": "CodeMirror editor, tree view, and JSON presentation."
-              },
-              "href": "spec/08_editor.html"
-            },
-            {
-              "id": "json-engine",
-              "number": "09",
-              "title": {
-                "zh-CN": "JSON 引擎",
-                "en": "JSON Engine"
-              },
-              "description": {
-                "zh-CN": "格式化、压缩、互转、嵌套解开和错误定位。",
-                "en": "Formatting, minifying, conversion, nested unwrap, and error location."
-              },
-              "href": "spec/09_json_engine.html"
-            },
-            {
-              "id": "storage",
-              "number": "10",
-              "title": {
-                "zh-CN": "存储与会话",
-                "en": "Storage And Session"
-              },
-              "description": {
-                "zh-CN": "SQLite、settings、window 状态和本地 secrets.json。",
-                "en": "SQLite, settings, window state, and local secrets.json."
-              },
-              "href": "spec/10_storage.html"
-            },
-            {
-              "id": "ai-client",
-              "number": "11",
-              "title": {
-                "zh-CN": "AI 客户端",
-                "en": "AI Client"
-              },
-              "description": {
-                "zh-CN": "DeepSeek 修复流程、隐私边界与失败处理。",
-                "en": "DeepSeek repair flow, privacy boundary, and failure handling."
-              },
-              "href": "spec/11_ai_client.html"
-            },
-            {
-              "id": "packaging",
-              "number": "12",
-              "title": {
-                "zh-CN": "打包、签名、验收",
-                "en": "Packaging, Signing, And Acceptance"
-              },
-              "description": {
-                "zh-CN": "DMG、APP、Windows installer、GitHub Release 与后续 Homebrew。",
-                "en": "DMG, APP, Windows installer, GitHub Release, and later Homebrew."
-              },
-              "href": "spec/12_packaging.html"
-            },
-            {
-              "id": "schemas",
-              "number": "13",
-              "title": {
-                "zh-CN": "数据模型参考",
-                "en": "Schema Reference"
-              },
-              "description": {
-                "zh-CN": "核心数据模型、设置、IPC 和持久化结构。",
-                "en": "Core data models, settings, IPC, and persistence structures."
-              },
-              "href": "spec/13_schemas.html"
-            },
-            {
-              "id": "i18n-a11y",
-              "number": "14",
-              "title": {
-                "zh-CN": "国际化与无障碍",
-                "en": "Internationalization And Accessibility"
-              },
-              "description": {
-                "zh-CN": "语言、键盘、屏幕阅读器与辅助体验约束。",
-                "en": "Language, keyboard, screen reader, and accessibility constraints."
-              },
-              "href": "spec/14_i18n_a11y.html"
-            },
-            {
-              "id": "logging",
-              "number": "15",
-              "title": {
-                "zh-CN": "日志与可观测性",
-                "en": "Logging And Observability"
-              },
-              "description": {
-                "zh-CN": "日志边界、脱敏策略和排查入口。",
-                "en": "Logging boundary, redaction policy, and diagnostic entrypoints."
-              },
-              "href": "spec/15_logging.html"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "cast",
-      "title": {
-        "zh-CN": "CAST 维护约定",
-        "en": "CAST Maintenance Contract"
+        "zh-CN": "TODO",
+        "en": "TODO"
       },
       "blocks": [
         {
@@ -858,26 +920,14 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
           "text": {
             "zh-CN": [
               {
-                "text": "后续维护者需要先关注 CAST：需求变化先同步结构化源、README、首页、plan、spec、TODO 与 Changelist，再继续实现。CAST 流程参考 "
+                "text": "开放 backlog 见 "
               },
               {
-                "text": "CAST-docs/cast-a-start",
+                "text": "todo.html",
                 "marks": [
                   {
                     "type": "link",
-                    "href": "https://github.com/CAST-docs/cast-a-start"
-                  }
-                ]
-              },
-              {
-                "text": "；双语 HTML 渲染参考 "
-              },
-              {
-                "text": "CAST-docs/cast-a-doc",
-                "marks": [
-                  {
-                    "type": "link",
-                    "href": "https://github.com/CAST-docs/cast-a-doc"
+                    "href": "todo.html"
                   }
                 ]
               },
@@ -887,78 +937,137 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
             ],
             "en": [
               {
-                "text": "Future maintainers should start with CAST: requirement changes must update structured sources, README, homepage, plan, spec, TODO, and changelist before implementation continues. See "
+                "text": "Open backlog is in "
               },
               {
-                "text": "CAST-docs/cast-a-start",
+                "text": "todo.html",
                 "marks": [
                   {
                     "type": "link",
-                    "href": "https://github.com/CAST-docs/cast-a-start"
+                    "href": "todo.html"
                   }
                 ]
               },
               {
-                "text": " for the workflow and "
-              },
-              {
-                "text": "CAST-docs/cast-a-doc",
-                "marks": [
-                  {
-                    "type": "link",
-                    "href": "https://github.com/CAST-docs/cast-a-doc"
-                  }
-                ]
-              },
-              {
-                "text": " for bilingual HTML rendering."
+                "text": "."
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "changelist",
+      "title": {
+        "zh-CN": "CHANGELIST",
+        "en": "CHANGELIST"
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "zh-CN": [
+              {
+                "text": " durable history 见 "
+              },
+              {
+                "text": "changelist.html",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "changelist.html"
+                  }
+                ]
+              },
+              {
+                "text": "。"
+              }
+            ],
+            "en": [
+              {
+                "text": "Durable history is in "
+              },
+              {
+                "text": "changelist.html",
+                "marks": [
+                  {
+                    "type": "link",
+                    "href": "changelist.html"
+                  }
+                ]
+              },
+              {
+                "text": "."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": {
+        "zh-CN": "维护说明",
+        "en": "Maintenance Notes"
+      },
+      "blocks": [
+        {
+          "type": "table",
+          "tableType": "data",
+          "headers": [
+            {
+              "zh-CN": "维护源",
+              "en": "Maintenance source"
+            },
+            {
+              "zh-CN": "用途",
+              "en": "Use"
+            }
+          ],
+          "rows": [
+            [
+              "site/index.cast.json",
+              {
+                "zh-CN": "首页 CAST JSON 源。",
+                "en": "CAST JSON source for the homepage."
+              }
+            ],
+            [
+              "site/todo.json",
+              {
+                "zh-CN": "TODO CAST JSON 源。",
+                "en": "CAST JSON source for TODO."
+              }
+            ],
+            [
+              "site/changelist.json",
+              {
+                "zh-CN": "Changelist CAST JSON 源。",
+                "en": "CAST JSON source for changelist."
+              }
+            ],
+            [
+              ".cast-docs/WORKFLOW.md",
+              {
+                "zh-CN": "仓库级 CAST agent workflow。",
+                "en": "Repository-level CAST agent workflow."
+              }
+            ],
+            [
+              ".cast-docs/project.json",
+              {
+                "zh-CN": "项目 profile、品牌资产与渲染默认值。",
+                "en": "Project profile, brand asset, and rendering defaults."
+              }
+            ]
+          ]
         },
         {
-          "type": "chapter-list",
-          "items": [
-            {
-              "id": "cast-profile",
-              "number": "profile",
-              "title": {
-                "zh-CN": ".cast-docs/project.json",
-                "en": ".cast-docs/project.json"
-              },
-              "description": {
-                "zh-CN": "Jsonita 的 CAST project profile、品牌资产与输出约定。",
-                "en": "Jsonita's CAST project profile, brand assets, and output conventions."
-              },
-              "href": ".cast-docs/project.json"
-            },
-            {
-              "id": "cast-i18n",
-              "number": "i18n",
-              "title": {
-                "zh-CN": ".cast-docs/i18n.json",
-                "en": ".cast-docs/i18n.json"
-              },
-              "description": {
-                "zh-CN": "仓库级中英双语策略。",
-                "en": "Repository-level Simplified Chinese and English language policy."
-              },
-              "href": ".cast-docs/i18n.json"
-            },
-            {
-              "id": "cast-source",
-              "number": "json",
-              "title": {
-                "zh-CN": "site/index.cast.json",
-                "en": "site/index.cast.json"
-              },
-              "description": {
-                "zh-CN": "本首页的结构化 CAST 源。",
-                "en": "The structured CAST source for this homepage."
-              },
-              "href": "site/index.cast.json"
-            }
-          ]
+          "type": "paragraph",
+          "text": {
+            "zh-CN": "维护源不作为首页主导航目标；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。",
+            "en": "Maintenance sources are not homepage primary navigation targets. Regular readers should start from the reader-facing HTML / Markdown paths above."
+          }
         }
       ]
     }
@@ -967,40 +1076,63 @@ button { border: 1px solid var(--border); border-radius: var(--radius-sm); backg
 </script>
 
 <article class="doc">
-<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">Jsonita 项目文档</span><span data-locale="en" data-locale-active="false">Jsonita Project Documentation</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-02</div></header>
+<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">Jsonita 项目文档</span><span data-locale="en" data-locale-active="false">Jsonita Project Documentation</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
 <main>
 <section class="doc-section" id="overview">
-<h2><span data-locale="zh-CN" data-locale-active="true">入口说明</span><span data-locale="en" data-locale-active="false">Entrypoint</span></h2>
-<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">产品</span><span data-locale="en" data-locale-active="false">Product</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">Jsonita 是一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。</span><span data-locale="en" data-locale-active="false">Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a global shortcut.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">文档约定</span><span data-locale="en" data-locale-active="false">Documentation Contract</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">本项目文档严格依赖 CAST：产品范围、实现计划、技术规格、TODO、Changelist 与文档入口必须同步维护。</span><span data-locale="en" data-locale-active="false">This project strictly relies on CAST: product scope, implementation plans, technical specs, TODOs, changelists, and documentation entrypoints must stay synchronized.</span></li></ul></section>
-<aside class="callout callout-info"><strong><span data-locale="zh-CN" data-locale-active="true">双语规则</span><span data-locale="en" data-locale-active="false">Bilingual Rule</span></strong><p><span data-locale="zh-CN" data-locale-active="true">这个首页由 site/index.cast.json 渲染而来，同一个 HTML 同时包含中文和英文内容，并在右上角提供语言切换。</span><span data-locale="en" data-locale-active="false">This homepage is rendered from site/index.cast.json. The same HTML file contains both Simplified Chinese and English content, with a language switcher in the top-right corner.</span></p></aside>
+<h2><span data-locale="zh-CN" data-locale-active="true">入口说明</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
+<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">产品</span><span data-locale="en" data-locale-active="false">Product</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">Jsonita 是一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集。</span><span data-locale="en" data-locale-active="false">Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a global shortcut.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">文档约定</span><span data-locale="en" data-locale-active="false">Documentation Contract</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">本项目使用 CAST：产品范围、技术规格、TODO、Changelist 与发布入口必须同步维护。</span><span data-locale="en" data-locale-active="false">This project uses CAST: product scope, technical specs, TODOs, changelists, and published entrypoints must stay synchronized.</span></li></ul></section>
+<p><span data-locale="zh-CN" data-locale-active="true">这个首页由 site/index.cast.json 渲染而来；README、TODO、Changelist、plan 和 spec 是读者优先路径。维护源文件放在最后的维护说明中。</span><span data-locale="en" data-locale-active="false">This homepage is rendered from site/index.cast.json. README, TODO, changelist, plan, and spec are the reader-first paths; maintenance sources are kept in the final maintenance section.</span></p>
 </section>
 
-<section class="doc-section" id="start">
-<h2><span data-locale="zh-CN" data-locale-active="true">入口与源数据</span><span data-locale="en" data-locale-active="false">Entry Points And Sources</span></h2>
-<p><span data-locale="zh-CN" data-locale-active="true">从这里进入项目说明、待办、变更记录和 CAST 源数据。机器可读字段保持单值，面向人的标题与说明提供中英双语。</span><span data-locale="en" data-locale-active="false">Start here for project overview, TODOs, changelog, and CAST source data. Machine-readable fields stay single-valued while human-facing titles and descriptions are bilingual.</span></p>
-<ul class="chapter-list"><li class="chapter-card"><a href="README.md"><span class="chapter-number">md</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">README</span><span data-locale="en" data-locale-active="false">README</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目介绍、安装方式、使用流程与 CAST 文档约定。</span><span data-locale="en" data-locale-active="false">Project introduction, installation, usage flow, and CAST documentation contract.</span></span></span></a></li><li class="chapter-card"><a href="site/todo.json"><span class="chapter-number">json</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">site/todo.json</span><span data-locale="en" data-locale-active="false">site/todo.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目级未决问题与延期工作源数据。</span><span data-locale="en" data-locale-active="false">Source data for project-level open questions and deferred work.</span></span></span></a></li><li class="chapter-card"><a href="site/changelist.json"><span class="chapter-number">json</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">site/changelist.json</span><span data-locale="en" data-locale-active="false">site/changelist.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品、计划、规格和重要实现变化的结构化记录。</span><span data-locale="en" data-locale-active="false">Structured record of product, plan, spec, and important implementation changes.</span></span></span></a></li><li class="chapter-card"><a href="todo.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">TODO 页面</span><span data-locale="en" data-locale-active="false">TODO Page</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">人类可读的项目级 TODO 入口。</span><span data-locale="en" data-locale-active="false">Human-readable entrypoint for project-level TODOs.</span></span></span></a></li><li class="chapter-card"><a href="changelist.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">Changelist 页面</span><span data-locale="en" data-locale-active="false">Changelist Page</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">人类可读的变更记录入口。</span><span data-locale="en" data-locale-active="false">Human-readable changelist entrypoint.</span></span></span></a></li></ul>
+<section class="doc-section" id="boundaries-installation">
+<h2><span data-locale="zh-CN" data-locale-active="true">边界与安装</span><span data-locale="en" data-locale-active="false">Boundaries And Installation</span></h2>
+<aside class="callout callout-info"><strong><span data-locale="zh-CN" data-locale-active="true">CAST 约定</span><span data-locale="en" data-locale-active="false">CAST Convention</span></strong><p><span data-locale="zh-CN" data-locale-active="true">Jsonita follows the CAST convention. See <a href="https://cast-docs.github.io/cast-a-start/" target="_blank" rel="noopener noreferrer">CAST-docs/cast-a-start</a>.</span><span data-locale="en" data-locale-active="false">Jsonita follows the CAST convention. See <a href="https://cast-docs.github.io/cast-a-start/" target="_blank" rel="noopener noreferrer">CAST-docs/cast-a-start</a>.</span></p></aside>
+<table>
+<tr><th><span data-locale="zh-CN" data-locale-active="true">主题</span><span data-locale="en" data-locale-active="false">Topic</span></th><th><span data-locale="zh-CN" data-locale-active="true">当前约定</span><span data-locale="en" data-locale-active="false">Current Contract</span></th></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">v1 发布</span><span data-locale="en" data-locale-active="false">v1 release</span></td><td><span data-locale="zh-CN" data-locale-active="true">先用 GitHub Releases + .dmg 做小范围内测；Homebrew、updater、npm wrapper 后置到 v1.1+。</span><span data-locale="en" data-locale-active="false">Use GitHub Releases plus a .dmg for small beta testing first; Homebrew, updater, and npm wrapper stay v1.1+ work.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">安装入口</span><span data-locale="en" data-locale-active="false">Install entry</span></td><td><span data-locale="zh-CN" data-locale-active="true">开发期使用 README 的源码构建命令；内测期从 GitHub Releases 下载 .dmg。</span><span data-locale="en" data-locale-active="false">Use README source-build commands during development; beta users download the .dmg from GitHub Releases.</span></td></tr>
+<tr><td><span data-locale="zh-CN" data-locale-active="true">隐私边界</span><span data-locale="en" data-locale-active="false">Privacy boundary</span></td><td><span data-locale="zh-CN" data-locale-active="true">用户数据保留本地：SQLite、settings、window 状态和 secrets.json；日志不记录 JSON 内容或 API key。</span><span data-locale="en" data-locale-active="false">User data stays local: SQLite, settings, window state, and secrets.json; logs do not record JSON content or API keys.</span></td></tr>
+</table>
 </section>
 
-<section class="doc-section" id="plan">
-<h2><span data-locale="zh-CN" data-locale-active="true">产品计划</span><span data-locale="en" data-locale-active="false">Product Plan</span></h2>
-<ul class="chapter-list"><li class="chapter-card"><a href="plan/"><span class="chapter-number">dir</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">plan/ 产品设计目录</span><span data-locale="en" data-locale-active="false">plan/ Product Plan Directory</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">cast-a-start 要求的产品计划目录入口。</span><span data-locale="en" data-locale-active="false">Product plan directory required by cast-a-start.</span></span></span></a></li><li class="chapter-card"><a href="plan/00_overview.html"><span class="chapter-number">00</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">项目概览</span><span data-locale="en" data-locale-active="false">Project Overview</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品定位、约束与文档权威边界。</span><span data-locale="en" data-locale-active="false">Product positioning, constraints, and documentation authority boundaries.</span></span></span></a></li><li class="chapter-card"><a href="plan/01_features.html"><span class="chapter-number">01</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">功能清单</span><span data-locale="en" data-locale-active="false">Feature List</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">v1.0 范围、非目标与后续路线。</span><span data-locale="en" data-locale-active="false">v1.0 scope, non-goals, and later roadmap.</span></span></span></a></li><li class="chapter-card"><a href="plan/02_interaction.html"><span class="chapter-number">02</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">交互草图</span><span data-locale="en" data-locale-active="false">Interaction Model</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">浮窗、设置、历史、状态栏与快捷键交互。</span><span data-locale="en" data-locale-active="false">Floating window, settings, history, status bar, and shortcut interactions.</span></span></span></a></li><li class="chapter-card"><a href="plan/03_tech_stack.html"><span class="chapter-number">03</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">技术选型</span><span data-locale="en" data-locale-active="false">Technology Stack</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">Tauri、React、SQLite、本地 secrets.json 等选型。</span><span data-locale="en" data-locale-active="false">Choices such as Tauri, React, SQLite, and local secrets.json.</span></span></span></a></li><li class="chapter-card"><a href="plan/04_nfr.html"><span class="chapter-number">04</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">非功能性需求</span><span data-locale="en" data-locale-active="false">Non-Functional Requirements</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">性能、隐私、安全、可用性与发布约束。</span><span data-locale="en" data-locale-active="false">Performance, privacy, security, usability, and release constraints.</span></span></span></a></li></ul>
+<section class="doc-section" id="routing">
+<h2><span data-locale="zh-CN" data-locale-active="true">路由指南</span><span data-locale="en" data-locale-active="false">Routing Guide</span></h2>
+<ul class="chapter-list"><li class="chapter-card"><a href="README.md"><span class="chapter-number">md</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">README</span><span data-locale="en" data-locale-active="false">README</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目介绍、安装方式、使用流程与 CAST 文档约定。</span><span data-locale="en" data-locale-active="false">Project introduction, installation, usage flow, and CAST documentation contract.</span></span></span></a></li><li class="chapter-card"><a href="todo.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">项目级未决问题、延期决策、风险与 readiness blockers。</span><span data-locale="en" data-locale-active="false">Project-level open questions, deferred decisions, risks, and readiness blockers.</span></span></span></a></li><li class="chapter-card"><a href="changelist.html"><span class="chapter-number">html</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品、计划、规格、发布与工作流的重要变化记录。</span><span data-locale="en" data-locale-active="false">Important product, plan, spec, release, and workflow changes.</span></span></span></a></li></ul>
 </section>
 
-<section class="doc-section" id="spec">
-<h2><span data-locale="zh-CN" data-locale-active="true">技术规格</span><span data-locale="en" data-locale-active="false">Technical Spec</span></h2>
-<ul class="chapter-list"><li class="chapter-card"><a href="spec/"><span class="chapter-number">dir</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">spec/ 技术设计目录</span><span data-locale="en" data-locale-active="false">spec/ Technical Spec Directory</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">cast-a-start 要求的技术规格目录入口。</span><span data-locale="en" data-locale-active="false">Technical specification directory required by cast-a-start.</span></span></span></a></li><li class="chapter-card"><a href="spec/00_architecture.html"><span class="chapter-number">00</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">系统架构</span><span data-locale="en" data-locale-active="false">System Architecture</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">进程模型、模块边界、数据流与关键不变量。</span><span data-locale="en" data-locale-active="false">Process model, module boundaries, data flow, and invariants.</span></span></span></a></li><li class="chapter-card"><a href="spec/01_mockups.html"><span class="chapter-number">01</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">原型图与交互细节</span><span data-locale="en" data-locale-active="false">Mockups And Interaction Details</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">视觉权威、浮窗布局与关键交互细节。</span><span data-locale="en" data-locale-active="false">Visual authority, floating-window layout, and key interaction details.</span></span></span></a></li><li class="chapter-card"><a href="spec/02_ipc.html"><span class="chapter-number">02</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">IPC 合约</span><span data-locale="en" data-locale-active="false">IPC Contract</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">前端与 Rust 主进程之间的命令、事件与错误边界。</span><span data-locale="en" data-locale-active="false">Commands, events, and error boundaries between frontend and Rust host.</span></span></span></a></li><li class="chapter-card"><a href="spec/03_design_tokens.html"><span class="chapter-number">03</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">设计令牌</span><span data-locale="en" data-locale-active="false">Design Tokens</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">颜色、字号、间距、动效与主题规则。</span><span data-locale="en" data-locale-active="false">Color, type, spacing, motion, and theme rules.</span></span></span></a></li><li class="chapter-card"><a href="spec/04_components.html"><span class="chapter-number">04</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">组件库映射</span><span data-locale="en" data-locale-active="false">Component Mapping</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">UI 组件、状态和交互复用边界。</span><span data-locale="en" data-locale-active="false">UI components, states, and interaction reuse boundaries.</span></span></span></a></li><li class="chapter-card"><a href="spec/05_icons_theme.html"><span class="chapter-number">05</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">图标资源与主题</span><span data-locale="en" data-locale-active="false">Icons And Theme</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">图标资产、菜单栏视觉与主题适配。</span><span data-locale="en" data-locale-active="false">Icon assets, menu-bar visuals, and theme adaptation.</span></span></span></a></li><li class="chapter-card"><a href="spec/06_window.html"><span class="chapter-number">06</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">窗口 runtime</span><span data-locale="en" data-locale-active="false">Window Runtime</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">浮窗生命周期、NSPanel、vibrancy 与尺寸策略。</span><span data-locale="en" data-locale-active="false">Floating-window lifecycle, NSPanel, vibrancy, and sizing policy.</span></span></span></a></li><li class="chapter-card"><a href="spec/07_menubar.html"><span class="chapter-number">07</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">菜单栏与快捷键</span><span data-locale="en" data-locale-active="false">Menu Bar And Shortcuts</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">菜单栏、全局快捷键、权限与冲突处理。</span><span data-locale="en" data-locale-active="false">Menu bar, global shortcuts, permissions, and conflict handling.</span></span></span></a></li><li class="chapter-card"><a href="spec/08_editor.html"><span class="chapter-number">08</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">编辑器与树 UI</span><span data-locale="en" data-locale-active="false">Editor And Tree UI</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">CodeMirror 编辑器、树视图和 JSON 展示。</span><span data-locale="en" data-locale-active="false">CodeMirror editor, tree view, and JSON presentation.</span></span></span></a></li><li class="chapter-card"><a href="spec/09_json_engine.html"><span class="chapter-number">09</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">JSON 引擎</span><span data-locale="en" data-locale-active="false">JSON Engine</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">格式化、压缩、互转、嵌套解开和错误定位。</span><span data-locale="en" data-locale-active="false">Formatting, minifying, conversion, nested unwrap, and error location.</span></span></span></a></li><li class="chapter-card"><a href="spec/10_storage.html"><span class="chapter-number">10</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">存储与会话</span><span data-locale="en" data-locale-active="false">Storage And Session</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">SQLite、settings、window 状态和本地 secrets.json。</span><span data-locale="en" data-locale-active="false">SQLite, settings, window state, and local secrets.json.</span></span></span></a></li><li class="chapter-card"><a href="spec/11_ai_client.html"><span class="chapter-number">11</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">AI 客户端</span><span data-locale="en" data-locale-active="false">AI Client</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">DeepSeek 修复流程、隐私边界与失败处理。</span><span data-locale="en" data-locale-active="false">DeepSeek repair flow, privacy boundary, and failure handling.</span></span></span></a></li><li class="chapter-card"><a href="spec/12_packaging.html"><span class="chapter-number">12</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">打包、签名、验收</span><span data-locale="en" data-locale-active="false">Packaging, Signing, And Acceptance</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">DMG、APP、Windows installer、GitHub Release 与后续 Homebrew。</span><span data-locale="en" data-locale-active="false">DMG, APP, Windows installer, GitHub Release, and later Homebrew.</span></span></span></a></li><li class="chapter-card"><a href="spec/13_schemas.html"><span class="chapter-number">13</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">数据模型参考</span><span data-locale="en" data-locale-active="false">Schema Reference</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">核心数据模型、设置、IPC 和持久化结构。</span><span data-locale="en" data-locale-active="false">Core data models, settings, IPC, and persistence structures.</span></span></span></a></li><li class="chapter-card"><a href="spec/14_i18n_a11y.html"><span class="chapter-number">14</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">国际化与无障碍</span><span data-locale="en" data-locale-active="false">Internationalization And Accessibility</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">语言、键盘、屏幕阅读器与辅助体验约束。</span><span data-locale="en" data-locale-active="false">Language, keyboard, screen reader, and accessibility constraints.</span></span></span></a></li><li class="chapter-card"><a href="spec/15_logging.html"><span class="chapter-number">15</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">日志与可观测性</span><span data-locale="en" data-locale-active="false">Logging And Observability</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">日志边界、脱敏策略和排查入口。</span><span data-locale="en" data-locale-active="false">Logging boundary, redaction policy, and diagnostic entrypoints.</span></span></span></a></li></ul>
+<section class="doc-section" id="plan-spec-map">
+<h2><span data-locale="zh-CN" data-locale-active="true">Plan / Spec 地图</span><span data-locale="en" data-locale-active="false">Plan / Spec Map</span></h2>
+<section class="columns"><div class="column"><h3><span data-locale="zh-CN" data-locale-active="true">plan/</span><span data-locale="en" data-locale-active="false">plan/</span></h3><ul class="chapter-list"><li class="chapter-card"><a href="plan/00_overview.html"><span class="chapter-number">00</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">项目概览</span><span data-locale="en" data-locale-active="false">Project Overview</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">产品定位、约束与文档权威边界。</span><span data-locale="en" data-locale-active="false">Product positioning, constraints, and documentation authority boundaries.</span></span></span></a></li><li class="chapter-card"><a href="plan/01_features.html"><span class="chapter-number">01</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">功能清单</span><span data-locale="en" data-locale-active="false">Feature List</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">v1.0 范围、非目标与后续路线。</span><span data-locale="en" data-locale-active="false">v1.0 scope, non-goals, and later roadmap.</span></span></span></a></li><li class="chapter-card"><a href="plan/02_interaction.html"><span class="chapter-number">02</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">交互草图</span><span data-locale="en" data-locale-active="false">Interaction Model</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">浮窗、设置、历史、状态栏与快捷键交互。</span><span data-locale="en" data-locale-active="false">Floating window, settings, history, status bar, and shortcut interactions.</span></span></span></a></li><li class="chapter-card"><a href="plan/03_tech_stack.html"><span class="chapter-number">03</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">技术选型</span><span data-locale="en" data-locale-active="false">Technology Stack</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">Tauri、React、SQLite、本地 secrets.json 等选型。</span><span data-locale="en" data-locale-active="false">Choices such as Tauri, React, SQLite, and local secrets.json.</span></span></span></a></li><li class="chapter-card"><a href="plan/04_nfr.html"><span class="chapter-number">04</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">非功能性需求</span><span data-locale="en" data-locale-active="false">Non-Functional Requirements</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">性能、隐私、安全、可用性与发布约束。</span><span data-locale="en" data-locale-active="false">Performance, privacy, security, usability, and release constraints.</span></span></span></a></li></ul></div><div class="column"><h3><span data-locale="zh-CN" data-locale-active="true">spec/</span><span data-locale="en" data-locale-active="false">spec/</span></h3><ul class="chapter-list"><li class="chapter-card"><a href="spec/00_architecture.html"><span class="chapter-number">00</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">系统架构</span><span data-locale="en" data-locale-active="false">System Architecture</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">进程模型、模块边界、数据流与关键不变量。</span><span data-locale="en" data-locale-active="false">Process model, module boundaries, data flow, and invariants.</span></span></span></a></li><li class="chapter-card"><a href="spec/01_mockups.html"><span class="chapter-number">01</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">原型图与交互细节</span><span data-locale="en" data-locale-active="false">Mockups And Interaction Details</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">视觉权威、浮窗布局与关键交互细节。</span><span data-locale="en" data-locale-active="false">Visual authority, floating-window layout, and key interaction details.</span></span></span></a></li><li class="chapter-card"><a href="spec/02_ipc.html"><span class="chapter-number">02</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">IPC 合约</span><span data-locale="en" data-locale-active="false">IPC Contract</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">前端与 Rust 主进程之间的命令、事件与错误边界。</span><span data-locale="en" data-locale-active="false">Commands, events, and error boundaries between frontend and Rust host.</span></span></span></a></li><li class="chapter-card"><a href="spec/03_design_tokens.html"><span class="chapter-number">03</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">设计令牌</span><span data-locale="en" data-locale-active="false">Design Tokens</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">颜色、字号、间距、动效与主题规则。</span><span data-locale="en" data-locale-active="false">Color, type, spacing, motion, and theme rules.</span></span></span></a></li><li class="chapter-card"><a href="spec/04_components.html"><span class="chapter-number">04</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">组件库映射</span><span data-locale="en" data-locale-active="false">Component Mapping</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">UI 组件、状态和交互复用边界。</span><span data-locale="en" data-locale-active="false">UI components, states, and interaction reuse boundaries.</span></span></span></a></li><li class="chapter-card"><a href="spec/05_icons_theme.html"><span class="chapter-number">05</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">图标资源与主题</span><span data-locale="en" data-locale-active="false">Icons And Theme</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">图标资产、菜单栏视觉与主题适配。</span><span data-locale="en" data-locale-active="false">Icon assets, menu-bar visuals, and theme adaptation.</span></span></span></a></li><li class="chapter-card"><a href="spec/06_window.html"><span class="chapter-number">06</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">窗口 runtime</span><span data-locale="en" data-locale-active="false">Window Runtime</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">浮窗生命周期、NSPanel、vibrancy 与尺寸策略。</span><span data-locale="en" data-locale-active="false">Floating-window lifecycle, NSPanel, vibrancy, and sizing policy.</span></span></span></a></li><li class="chapter-card"><a href="spec/07_menubar.html"><span class="chapter-number">07</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">菜单栏与快捷键</span><span data-locale="en" data-locale-active="false">Menu Bar And Shortcuts</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">菜单栏、全局快捷键、权限与冲突处理。</span><span data-locale="en" data-locale-active="false">Menu bar, global shortcuts, permissions, and conflict handling.</span></span></span></a></li><li class="chapter-card"><a href="spec/08_editor.html"><span class="chapter-number">08</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">编辑器与树 UI</span><span data-locale="en" data-locale-active="false">Editor And Tree UI</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">CodeMirror 编辑器、树视图和 JSON 展示。</span><span data-locale="en" data-locale-active="false">CodeMirror editor, tree view, and JSON presentation.</span></span></span></a></li><li class="chapter-card"><a href="spec/09_json_engine.html"><span class="chapter-number">09</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">JSON 引擎</span><span data-locale="en" data-locale-active="false">JSON Engine</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">格式化、压缩、互转、嵌套解开和错误定位。</span><span data-locale="en" data-locale-active="false">Formatting, minifying, conversion, nested unwrap, and error location.</span></span></span></a></li><li class="chapter-card"><a href="spec/10_storage.html"><span class="chapter-number">10</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">存储与会话</span><span data-locale="en" data-locale-active="false">Storage And Session</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">SQLite、settings、window 状态和本地 secrets.json。</span><span data-locale="en" data-locale-active="false">SQLite, settings, window state, and local secrets.json.</span></span></span></a></li><li class="chapter-card"><a href="spec/11_ai_client.html"><span class="chapter-number">11</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">AI 客户端</span><span data-locale="en" data-locale-active="false">AI Client</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">DeepSeek 修复流程、隐私边界与失败处理。</span><span data-locale="en" data-locale-active="false">DeepSeek repair flow, privacy boundary, and failure handling.</span></span></span></a></li><li class="chapter-card"><a href="spec/12_packaging.html"><span class="chapter-number">12</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">打包、签名、验收</span><span data-locale="en" data-locale-active="false">Packaging, Signing, And Acceptance</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">DMG、APP、Windows installer、GitHub Release 与后续 Homebrew。</span><span data-locale="en" data-locale-active="false">DMG, APP, Windows installer, GitHub Release, and later Homebrew.</span></span></span></a></li><li class="chapter-card"><a href="spec/13_schemas.html"><span class="chapter-number">13</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">数据模型参考</span><span data-locale="en" data-locale-active="false">Schema Reference</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">核心数据模型、设置、IPC 和持久化结构。</span><span data-locale="en" data-locale-active="false">Core data models, settings, IPC, and persistence structures.</span></span></span></a></li><li class="chapter-card"><a href="spec/14_i18n_a11y.html"><span class="chapter-number">14</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">国际化与无障碍</span><span data-locale="en" data-locale-active="false">Internationalization And Accessibility</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">语言、键盘、屏幕阅读器与辅助体验约束。</span><span data-locale="en" data-locale-active="false">Language, keyboard, screen reader, and accessibility constraints.</span></span></span></a></li><li class="chapter-card"><a href="spec/15_logging.html"><span class="chapter-number">15</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">日志与可观测性</span><span data-locale="en" data-locale-active="false">Logging And Observability</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">日志边界、脱敏策略和排查入口。</span><span data-locale="en" data-locale-active="false">Logging boundary, redaction policy, and diagnostic entrypoints.</span></span></span></a></li></ul></div></section>
+<aside class="callout callout-warning"><strong><span data-locale="zh-CN" data-locale-active="true">迁移状态</span><span data-locale="en" data-locale-active="false">Migration Status</span></strong><p><span data-locale="zh-CN" data-locale-active="true">plan/spec 当前仍是 legacy HTML 发布页；它们已保持读者可用，但完整 CAST JSON-first 迁移需要逐页进行，见 TODO P1。</span><span data-locale="en" data-locale-active="false">plan/spec are still legacy HTML published pages. They remain reader-usable, but complete CAST JSON-first migration must happen page by page; see TODO P1.</span></p></aside>
 </section>
 
-<section class="doc-section" id="cast">
-<h2><span data-locale="zh-CN" data-locale-active="true">CAST 维护约定</span><span data-locale="en" data-locale-active="false">CAST Maintenance Contract</span></h2>
-<p><span data-locale="zh-CN" data-locale-active="true">后续维护者需要先关注 CAST：需求变化先同步结构化源、README、首页、plan、spec、TODO 与 Changelist，再继续实现。CAST 流程参考 <a href="https://github.com/CAST-docs/cast-a-start" target="_blank" rel="noopener noreferrer">CAST-docs/cast-a-start</a>；双语 HTML 渲染参考 <a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST-docs/cast-a-doc</a>。</span><span data-locale="en" data-locale-active="false">Future maintainers should start with CAST: requirement changes must update structured sources, README, homepage, plan, spec, TODO, and changelist before implementation continues. See <a href="https://github.com/CAST-docs/cast-a-start" target="_blank" rel="noopener noreferrer">CAST-docs/cast-a-start</a> for the workflow and <a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST-docs/cast-a-doc</a> for bilingual HTML rendering.</span></p>
-<ul class="chapter-list"><li class="chapter-card"><a href=".cast-docs/project.json"><span class="chapter-number">profile</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">.cast-docs/project.json</span><span data-locale="en" data-locale-active="false">.cast-docs/project.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">Jsonita 的 CAST project profile、品牌资产与输出约定。</span><span data-locale="en" data-locale-active="false">Jsonita&#x27;s CAST project profile, brand assets, and output conventions.</span></span></span></a></li><li class="chapter-card"><a href=".cast-docs/i18n.json"><span class="chapter-number">i18n</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">.cast-docs/i18n.json</span><span data-locale="en" data-locale-active="false">.cast-docs/i18n.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">仓库级中英双语策略。</span><span data-locale="en" data-locale-active="false">Repository-level Simplified Chinese and English language policy.</span></span></span></a></li><li class="chapter-card"><a href="site/index.cast.json"><span class="chapter-number">json</span><span class="chapter-content"><span class="chapter-title"><span data-locale="zh-CN" data-locale-active="true">site/index.cast.json</span><span data-locale="en" data-locale-active="false">site/index.cast.json</span></span><span class="chapter-description"><span data-locale="zh-CN" data-locale-active="true">本首页的结构化 CAST 源。</span><span data-locale="en" data-locale-active="false">The structured CAST source for this homepage.</span></span></span></a></li></ul>
+<section class="doc-section" id="todo">
+<h2><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></h2>
+<p><span data-locale="zh-CN" data-locale-active="true">开放 backlog 见 <a href="todo.html">todo.html</a>。</span><span data-locale="en" data-locale-active="false">Open backlog is in <a href="todo.html">todo.html</a>.</span></p>
+</section>
+
+<section class="doc-section" id="changelist">
+<h2><span data-locale="zh-CN" data-locale-active="true">CHANGELIST</span><span data-locale="en" data-locale-active="false">CHANGELIST</span></h2>
+<p><span data-locale="zh-CN" data-locale-active="true"> durable history 见 <a href="changelist.html">changelist.html</a>。</span><span data-locale="en" data-locale-active="false">Durable history is in <a href="changelist.html">changelist.html</a>.</span></p>
+</section>
+
+<section class="doc-section" id="maintenance">
+<h2><span data-locale="zh-CN" data-locale-active="true">维护说明</span><span data-locale="en" data-locale-active="false">Maintenance Notes</span></h2>
+<table>
+<tr><th><span data-locale="zh-CN" data-locale-active="true">维护源</span><span data-locale="en" data-locale-active="false">Maintenance source</span></th><th><span data-locale="zh-CN" data-locale-active="true">用途</span><span data-locale="en" data-locale-active="false">Use</span></th></tr>
+<tr><td>site/index.cast.json</td><td><span data-locale="zh-CN" data-locale-active="true">首页 CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for the homepage.</span></td></tr>
+<tr><td>site/todo.json</td><td><span data-locale="zh-CN" data-locale-active="true">TODO CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for TODO.</span></td></tr>
+<tr><td>site/changelist.json</td><td><span data-locale="zh-CN" data-locale-active="true">Changelist CAST JSON 源。</span><span data-locale="en" data-locale-active="false">CAST JSON source for changelist.</span></td></tr>
+<tr><td>.cast-docs/WORKFLOW.md</td><td><span data-locale="zh-CN" data-locale-active="true">仓库级 CAST agent workflow。</span><span data-locale="en" data-locale-active="false">Repository-level CAST agent workflow.</span></td></tr>
+<tr><td>.cast-docs/project.json</td><td><span data-locale="zh-CN" data-locale-active="true">项目 profile、品牌资产与渲染默认值。</span><span data-locale="en" data-locale-active="false">Project profile, brand asset, and rendering defaults.</span></td></tr>
+</table>
+<p><span data-locale="zh-CN" data-locale-active="true">维护源不作为首页主导航目标；普通读者应优先使用上面的 reader-facing HTML / Markdown 路径。</span><span data-locale="en" data-locale-active="false">Maintenance sources are not homepage primary navigation targets. Regular readers should start from the reader-facing HTML / Markdown paths above.</span></p>
 </section>
 </main>
 <footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
 </article>
 
-<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">入口说明</span><span data-locale="en" data-locale-active="false">Entrypoint</span></a></li><li><a href="#start"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">入口与源数据</span><span data-locale="en" data-locale-active="false">Entry Points And Sources</span></a></li><li><a href="#plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">产品计划</span><span data-locale="en" data-locale-active="false">Product Plan</span></a></li><li><a href="#spec"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">技术规格</span><span data-locale="en" data-locale-active="false">Technical Spec</span></a></li><li><a href="#cast"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">CAST 维护约定</span><span data-locale="en" data-locale-active="false">CAST Maintenance Contract</span></a></li></ol></nav></aside>
+<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">入口说明</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#boundaries-installation"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">边界与安装</span><span data-locale="en" data-locale-active="false">Boundaries And Installation</span></a></li><li><a href="#routing"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">路由指南</span><span data-locale="en" data-locale-active="false">Routing Guide</span></a></li><li><a href="#plan-spec-map"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Plan / Spec 地图</span><span data-locale="en" data-locale-active="false">Plan / Spec Map</span></a></li><li><a href="#todo"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a></li><li><a href="#changelist"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">CHANGELIST</span><span data-locale="en" data-locale-active="false">CHANGELIST</span></a></li><li><a href="#maintenance"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">维护说明</span><span data-locale="en" data-locale-active="false">Maintenance Notes</span></a></li></ol></nav></aside>
 <header class="topbar"><a class="brand-logo" href="index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,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" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">Jsonita 项目文档</span><span data-locale="en" data-locale-active="false">Jsonita Project Documentation</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="README.md"><span data-locale="zh-CN" data-locale-active="true">README</span><span data-locale="en" data-locale-active="false">README</span></a><a class="topbar-link" href="todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
 
 
