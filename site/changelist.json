@@ -118,27 +118,8 @@
             [
               "2026-06-03",
               {
-                "zh-CN": "彻底重写 plan/spec 文档发布面：为 5 篇 plan 与 16 篇 spec 新增同名 CAST JSON 源，全部通过 cast-a-doc 渲染为中英双语 HTML，并新增 workflow.html 公开 .cast-docs 工作流。",
-                "en": "Thoroughly rewrote the plan/spec published surface: added same-name CAST JSON sources for 5 plan docs and 16 spec docs, rendered all of them with cast-a-doc into bilingual Chinese/English HTML, and added workflow.html to expose the .cast-docs workflow."
-              },
-              {
-                "zh-CN": "plan/*.json、plan/*.html、spec/*.json、spec/*.html、site/workflow.json、workflow.html、site/index.cast.json、site/todo.json、site/changelist.json、README.md、TODO.md、CHANGELIST.md、scripts/render_cast_docs.mjs、scripts/check_cast_docs.mjs。",
-                "en": "plan/*.json, plan/*.html, spec/*.json, spec/*.html, site/workflow.json, workflow.html, site/index.cast.json, site/todo.json, site/changelist.json, README.md, TODO.md, CHANGELIST.md, scripts/render_cast_docs.mjs, scripts/check_cast_docs.mjs."
-              },
-              {
-                "zh-CN": "docs:check 现在逐页校验 CAST profile、render freshness、plan/spec JSON 源、双语 switcher、renderer-owned HTML 和 raw Mermaid/CDN 回归。",
-                "en": "docs:check now validates CAST profile, render freshness, plan/spec JSON sources, bilingual switchers, renderer-owned HTML, and raw Mermaid/CDN regressions page by page."
-              },
-              {
-                "zh-CN": "剩余开放项只保留真实未决问题：崩溃恢复/数据完整性、macOS vibrancy 真实环境验收、CI 接入和更大范围分发合规。",
-                "en": "Remaining open items only keep real unresolved work: crash recovery/data integrity, real macOS vibrancy verification, CI wiring, and broader-distribution compliance."
-              }
-            ],
-            [
-              "2026-06-03",
-              {
-                "zh-CN": "按最新版 cast-a-start 修复 Jsonita 文档结构：新增 .cast-docs/WORKFLOW.md，瘦身 AGENTS.md / CLAUDE.md，升级首页、TODO、CHANGELIST 为 CAST JSON-first 渲染面，并补充 docs:render / docs:check。",
-                "en": "Repaired the Jsonita documentation structure against the latest cast-a-start: added .cast-docs/WORKFLOW.md, thinned AGENTS.md / CLAUDE.md, upgraded homepage, TODO, and CHANGELIST to CAST JSON-first rendered surfaces, and added docs:render / docs:check."
+                "zh-CN": "按最新版 cast-a-start 修复 Jsonita 文档结构：新增 .cast-docs/WORKFLOW.md，瘦身 AGENTS.md / CLAUDE.md，升级首页、TODO、CHANGELIST 为 CAST JSON-first 渲染面，并补充 docs:render / docs:check / docs:render-mermaid。",
+                "en": "Repaired the Jsonita documentation structure against the latest cast-a-start: added .cast-docs/WORKFLOW.md, thinned AGENTS.md / CLAUDE.md, upgraded homepage, TODO, and CHANGELIST to CAST JSON-first rendered surfaces, and added docs:render / docs:check / docs:render-mermaid."
               },
               {
                 "zh-CN": "AGENTS.md、CLAUDE.md、.cast-docs/WORKFLOW.md、site/*.json、index.html、todo.html、changelist.html、scripts/*docs*.mjs、package.json、plan/spec legacy diagram surfaces。",
@@ -149,8 +130,8 @@
                 "en": "Run CAST profile validation, CAST JSON rendering and freshness checks, local link checks, Mermaid/raw CDN published-surface checks, and git diff whitespace checks."
               },
               {
-                "zh-CN": "本条为结构修复记录；后续全量 plan/spec 重写已在同日新增记录中完成。",
-                "en": "This row records the structure repair; full plan/spec rewrite is completed in the newer same-day changelist row."
+                "zh-CN": "plan/spec 全量 JSON-first 迁移仍作为 TODO P1 逐页推进，不在本次结构修复中伪装为已完成。",
+                "en": "Full plan/spec JSON-first migration remains TODO P1 and should proceed page by page; this structure repair does not pretend it is already done."
               }
             ]
           ]

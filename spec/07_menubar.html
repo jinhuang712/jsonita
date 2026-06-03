@@ -1,724 +1,354 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="菜单栏生命周期、全局快捷键、权限、冲突处理和窗口内快捷键。">
-<title>菜单栏与快捷键</title>
-<style>
-:root {
-  color-scheme: light dark;
-  --bg: #f8f8f7;
-  --surface: #ffffff;
-  --soft: #f2f3f3;
-  --text: #24272b;
-  --muted: #68717b;
-  --faint: #9aa1a8;
-  --border: #dedede;
-  --primary: #315f9f;
-  --primary-soft: #eef3fa;
-  --accent: #52686a;
-  --info: #566f99;
-  --info-soft: #f4f5f7;
-  --warn: #8a6d3b;
-  --warn-soft: #f8f4ea;
-  --danger: #9b4d49;
-  --danger-soft: #faf0ef;
-  --ok: #55745f;
-  --ok-soft: #eef4ef;
-  --code: #f1f2f2;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 16px 44px rgba(15, 23, 42, 0.12);
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-  --mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --font-xs: 11px;
-  --font-sm: 12.5px;
-  --font-base: 14px;
-  --font-md: 16px;
-  --font-lg: 20px;
-  --font-xl: 28px;
-  --font-title: 30px;
-  --line-tight: 1.25;
-  --line-normal: 1.65;
-  --line-loose: 1.75;
-  --line-code: 1.55;
-  --weight-regular: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 28px;
-  --space-10: 34px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 10px;
-  --radius-pill: 999px;
-  --motion-fast: 120ms;
-  --motion-base: 160ms;
-  --motion-slow: 220ms;
-  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
-  --surface-shadow: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111315;
-    --surface: #17191c;
-    --soft: #202328;
-    --text: #e2e5e8;
-    --muted: #a1a7ad;
-    --faint: #767d84;
-    --border: #30343a;
-    --primary: #9bb7d9;
-    --primary-soft: #182231;
-    --accent: #9ab4b1;
-    --info: #9aaeca;
-    --info-soft: #1b2027;
-    --warn: #c7b27e;
-    --warn-soft: #242117;
-    --danger: #d09a95;
-    --danger-soft: #271b1a;
-    --ok: #9ebaa5;
-    --ok-soft: #1a241d;
-    --code: #202328;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04);
-  }
-}
-:root { --toc-width: clamp(220px, 16vw, 300px); --topbar-height: 56px; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: var(--font-base)/var(--line-loose) var(--sans); -webkit-font-smoothing: antialiased; }
-a { color: var(--primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
-code, pre { font-family: var(--mono); }
-code { background: var(--code); color: var(--accent); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1px 5px; font-size: .88em; }
-pre { margin: 14px 0; padding: 14px 16px; overflow: auto; background: var(--code); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: var(--font-sm); line-height: var(--line-code); }
-pre code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
-mark { background: var(--warn-soft); color: var(--text); padding: .02em .22em; border-radius: 3px; }
-del { color: var(--muted); text-decoration: line-through; }
-u { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
-[data-mark="deprecated"] { color: var(--muted); text-decoration: line-through; }
-[data-mark="term"] { border-bottom: 1px dotted var(--faint); cursor: help; }
-[data-mark="metric"] { font-variant-numeric: tabular-nums; font-weight: 600; }
-[data-locale][data-locale-active="false"] { display: none; }
-.sidebar { position: fixed; inset: var(--topbar-height) auto 0 0; width: var(--toc-width); padding: 30px 28px 60px 30px; overflow-y: auto; background: var(--bg); }
-.nav-title { margin: 0 0 16px; color: var(--faint); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.toc { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.toc ol { list-style: none; margin: 0; padding: 0; }
-.toc li { margin: 0; }
-.toc a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0 8px 10px; border-left: 2px solid transparent; color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.toc a:hover, .toc a.active { border-left-color: var(--primary); color: var(--text); text-decoration: none; }
-.toc-marker { color: var(--faint); font: 12px/1.45 var(--mono); }
-.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--topbar-height); display: flex; align-items: center; gap: 14px; padding: 0 36px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
-.brand-logo { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: var(--radius-md); overflow: hidden; }
-.brand-logo:hover { text-decoration: none; }
-.brand-logo-image { display: block; width: 34px; height: 34px; object-fit: contain; }
-.topbar-title { min-width: 0; color: var(--text); font-weight: 600; overflow: hidden; }
-.topbar-breadcrumb { display: flex; min-width: 0; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project, .topbar-doc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.topbar-org, .topbar-project { flex: 0 0 auto; }
-.topbar-doc { color: var(--muted); font-weight: 500; }
-.topbar-separator { flex: 0 0 auto; color: var(--faint); font-weight: 500; }
-.topbar-links { display: flex; gap: 12px; align-items: center; }
-.topbar-links:empty { display: none; }
-.topbar-link { color: var(--muted); font-size: var(--font-sm); }
-.topbar-spacer { flex: 1; }
-.locale-switcher { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-.locale-button { min-width: 44px; border: 0; background: transparent; color: var(--muted); padding: 5px 8px; }
-.locale-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.doc { margin-left: var(--toc-width); max-width: 960px; padding: 96px 52px 84px; }
-.doc-header { margin-bottom: 32px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
-.doc-header h1 { margin: 0 0 10px; font-size: var(--font-title); line-height: 1.18; letter-spacing: 0; }
-.doc-meta { margin-top: 14px; color: var(--muted); font: 12.5px/1.4 var(--mono); }
-.doc-summary, .callout, table, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-grid, .columns, .toggle-view, .slider-control, .open-questions-block { margin: 18px 0; }
-.doc-summary, .details-block, .diagram, .participant-card, .value-card, .action-card, .media-frame, .toggle-view, .slider-control, .open-questions-block { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); }
-.doc-summary { padding: 16px 18px; }
-.doc-summary ul { margin: 0; }
-.set-grid { display: grid; gap: 22px; }
-.set-section { margin: 0; }
-.chapter-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.chapter-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); transition: border-color var(--motion-base) var(--motion-ease); }
-.chapter-card:hover, .chapter-card:focus-within { border-color: var(--primary); }
-.chapter-card a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px 16px; color: var(--text); }
-.chapter-card a:has(.chapter-number), .chapter-card a:has(.chapter-icon) { grid-template-columns: 48px minmax(0, 1fr); }
-.chapter-card a:has(.chapter-icon):has(.chapter-number) { grid-template-columns: 42px 48px minmax(0, 1fr); }
-.chapter-card a:hover { text-decoration: none; }
-.chapter-icon { display: inline-grid; width: 32px; height: 32px; place-items: center; align-self: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font: 700 12px/1 var(--mono); }
-.chapter-icon-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.chapter-number { color: var(--faint); font: 700 12px/1.4 var(--mono); }
-.chapter-content { display: grid; gap: 5px; min-width: 0; }
-.chapter-title { overflow-wrap: anywhere; font-weight: 700; }
-.chapter-description { color: var(--muted); font-size: var(--font-sm); line-height: var(--line-normal); overflow-wrap: anywhere; }
-.set-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 0; }
-.set-pagination-link { display: block; min-height: 82px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); color: var(--text); }
-.set-pagination-link:hover { border-color: var(--primary); text-decoration: none; }
-.set-pagination-next { text-align: right; }
-.set-pagination-label { display: block; margin-bottom: 7px; color: var(--faint); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.set-pagination-title { display: block; overflow-wrap: anywhere; font-weight: 700; }
-.doc-section { margin: 46px 0 0; scroll-margin-top: 70px; }
-.doc-section h2 { margin: 0 0 16px; padding: 4px 0 5px 14px; border-left: 3px solid var(--primary); font-size: var(--font-lg); line-height: var(--line-tight); }
-.doc-section h3 { margin: 0 0 8px; font-size: var(--font-md); }
-.section-number { margin-right: 0.55em; color: var(--faint); font: 700 0.78em/1 var(--mono); }
-.section-title { overflow-wrap: anywhere; }
-.section-empty { color: var(--muted); font-style: italic; }
-.callout { padding: 13px 16px; border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-lg); background: var(--info-soft); }
-.callout p { margin: 6px 0 0; }
-.callout-info { border-left-color: var(--info); background: var(--info-soft); }
-.callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
-.callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
-.callout-success { border-left-color: var(--ok); background: var(--ok-soft); }
-table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); font-size: var(--font-sm); }
-th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-th { background: var(--soft); color: var(--muted); font-size: var(--font-sm); font-weight: 600; }
-tr:last-child td { border-bottom: 0; }
-.details-block { padding: 0 14px; }
-.details-block summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
-.diagram { position: relative; padding: 16px; overflow: auto; }
-.diagram figcaption { margin-bottom: 10px; color: var(--muted); font-size: var(--font-sm); font-weight: 700; }
-.diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.diagram-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
-.diagram:hover .diagram-toolbar { opacity: 1; }
-button { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); cursor: pointer; font: 12px/1.2 var(--sans); padding: 5px 9px; }
-.code-shell { margin: 16px 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--code); }
-.code-header { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--soft); }
-.code-language { color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.code-status { margin-left: auto; color: var(--faint); font: 700 11px/1 var(--mono); }
-.code-status-ok { color: var(--ok); }
-.code-status-error { color: var(--danger); }
-.code-copy { flex: 0 0 auto; margin-left: auto; padding: 4px 8px; color: var(--muted); background: transparent; }
-.code-status + .code-copy { margin-left: 0; }
-.code-copy:hover { color: var(--text); }
-.code-pre { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; font-size: var(--font-sm); line-height: var(--line-loose); }
-.code-line { display: grid; grid-template-columns: 42px minmax(max-content, 1fr); min-width: 100%; }
-.code-line-number { padding: 0 10px 0 0; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.code-line-content { padding: 0 14px; white-space: pre; }
-.code-token-key { color: var(--primary); }
-.code-token-bool { color: var(--info); }
-.code-token-number { color: var(--warn); }
-.code-token-flag { color: var(--accent); }
-.diff-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
-.diff-block > h3 { grid-column: 1 / -1; }
-.diff-side { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--surface-shadow); overflow: hidden; }
-.diff-side + .diff-side { margin-left: -1px; }
-.diff-side h3 { margin: 0; padding: 10px 12px; background: var(--soft); font-size: var(--font-sm); }
-.diff-code { overflow: auto; background: var(--code); font: 12.5px/1.6 var(--mono); }
-.diff-line { display: grid; grid-template-columns: 42px 24px minmax(max-content, 1fr); min-width: 100%; }
-.diff-line-number { padding-right: 10px; color: var(--faint); text-align: right; user-select: none; border-right: 1px solid var(--border); }
-.diff-line-marker { color: var(--faint); text-align: center; user-select: none; }
-.diff-line-content { padding-right: 14px; white-space: pre; }
-.line-highlight { background: color-mix(in srgb, var(--primary-soft) 68%, transparent); }
-.line-add { color: var(--ok); }
-.line-remove { color: var(--danger); }
-.line-warning { color: var(--warn); }
-.line-context { color: var(--text); }
-.participants, .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.participant-card, .value-card, .action-card { padding: 14px 16px; }
-.action-card { padding: 20px; }
-.participant-card p, .value-card p, .action-card p { margin: 0; color: var(--muted); }
-.source-refs, .files, .acceptance-criteria { padding-left: 22px; }
-.open-questions-block { position: relative; padding: 0; overflow: hidden; border-left: 3px solid var(--warn); }
-.open-questions-block::before { content: "?"; position: absolute; right: 18px; top: 12px; color: var(--warn-soft); font: 800 58px/1 var(--mono); pointer-events: none; }
-.open-questions-header { position: relative; display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 15px 18px 13px; border-bottom: 1px solid var(--border); background: var(--warn-soft); }
-.open-questions-kicker { display: block; margin-bottom: 5px; color: var(--warn); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions-title { margin: 0; font-size: var(--font-md); line-height: var(--line-tight); }
-.open-questions-count { flex: 0 0 auto; margin-top: 2px; color: var(--muted); font: 700 11px/1 var(--mono); text-transform: uppercase; }
-.open-questions { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
-.open-question { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px 18px; }
-.open-question + .open-question { border-top: 1px solid var(--border); }
-.open-question-marker { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--soft); color: var(--warn); font: 700 11px/1 var(--mono); }
-.open-question-text { min-width: 0; }
-.prompt-block { margin-top: 20px; }
-.prompt-block .code-header { padding: 12px 14px; }
-.prompt-block .code-pre { padding: 18px 0; font-size: var(--font-sm); line-height: var(--line-loose); }
-.prompt-block .code-line { grid-template-columns: 46px minmax(0, 1fr); }
-.prompt-block .code-line-number { padding-right: 12px; }
-.prompt-block .code-line-content { padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
-.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.media-frame { margin: 0; overflow: hidden; }
-.media-frame img { display: block; width: 100%; min-height: 120px; max-height: 220px; object-fit: cover; background: var(--soft); }
-.media-frame figcaption { display: flex; gap: 8px; align-items: baseline; padding: 10px 12px; color: var(--muted); font-size: var(--font-sm); }
-.media-kind { color: var(--primary); font: 700 11px/1 var(--mono); }
-.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 34px; align-items: start; border: 0; background: transparent; }
-.column { min-width: 0; }
-.column h3 { margin-top: 0; }
-.column p:first-child { margin-top: 0; }
-.column p:last-child { margin-bottom: 0; }
-.column > .code-shell, .column > table { margin-top: 12px; }
-.toggle-view { padding: 14px; }
-.toggle-toolbar { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--soft); }
-.toggle-button { border: 0; background: transparent; color: var(--muted); }
-.toggle-button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-.toggle-panel[data-view-active="false"] { display: none; }
-.toggle-panel > :first-child { margin-top: 0; }
-.toggle-panel > :last-child { margin-bottom: 0; }
-.slider-control { padding: 16px; }
-.slider-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.slider-header label { font-weight: 700; }
-.slider-value { color: var(--primary); font: 700 12.5px/1 var(--mono); }
-.slider-range { display: block; width: 100%; accent-color: var(--primary); }
-.slider-demo { margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--soft); color: var(--text); transition: opacity var(--motion-base) var(--motion-ease); }
-.doc-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: var(--font-sm); text-align: center; }
-.lightbox { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 32px; background: rgba(8, 13, 20, .82); }
-.lightbox.open { display: flex; }
-.lightbox-panel { position: relative; width: min(1120px, 96vw); height: min(760px, 88vh); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
-.lightbox-body { width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; cursor: grab; }
-.lightbox-body svg { max-width: 92%; max-height: 82%; transform-origin: center; }
-.lightbox-toolbar { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
-.lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
-@media (max-width: 760px) {
-  body { display: flex; flex-direction: column; }
-  .topbar { position: sticky; top: 0; left: 0; right: auto; padding: 12px 18px; height: auto; flex-wrap: wrap; order: 1; }
-  .brand-logo, .brand-logo-image { width: 30px; height: 30px; }
-  .sidebar { position: static; inset: auto; width: auto; padding: 16px 18px; border-bottom: 1px solid var(--border); order: 2; }
-  .doc { margin-left: 0; max-width: none; padding: 32px 20px 56px; order: 3; }
-  .doc-header h1 { font-size: var(--font-xl); }
-  .diff-block { grid-template-columns: 1fr; }
-  .set-pagination { grid-template-columns: 1fr; }
-  .set-pagination-next { text-align: left; }
-  .code-line { grid-template-columns: 34px minmax(max-content, 1fr); }
-  .diff-line { grid-template-columns: 34px 22px minmax(max-content, 1fr); }
-}
-@media print {
-  .sidebar, .topbar, .diagram-toolbar, .lightbox { display: none !important; }
-  .doc { margin-left: 0; max-width: none; padding: 0; }
-}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jsonita Spec · 07 菜单栏 & 快捷键</title>
+<link rel="stylesheet" href="../assets/style.css">
 </head>
-<body>
+<body data-section="spec" data-chapter="07">
 
-<script type="application/json" id="cast-doc-source" data-renderer-owned="true">
-{
-  "metadata": {
-    "language": "zh-CN",
-    "owner": "Jin Huang",
-    "logo": {
-      "src": ".cast-docs/assets/jsonita-logo.png",
-      "alt": {
-        "zh-CN": "Jsonita 标志",
-        "en": "Jsonita logo"
-      },
-      "href": "../index.html"
-    },
-    "title": {
-      "zh-CN": "菜单栏与快捷键",
-      "en": "Menu Bar And Shortcuts"
-    },
-    "description": {
-      "zh-CN": "菜单栏生命周期、全局快捷键、权限、冲突处理和窗口内快捷键。",
-      "en": "Menu-bar lifecycle, global shortcuts, permissions, conflict handling, and in-window shortcuts."
-    },
-    "schemaVersion": "1.0",
-    "locales": [
-      "zh-CN",
-      "en"
-    ],
-    "status": "review",
-    "audience": [
-      "engineering",
-      "product"
-    ],
-    "updatedAt": "2026-06-03",
-    "showMeta": true,
-    "shellLinks": [
-      {
-        "label": {
-          "zh-CN": "首页",
-          "en": "Home"
-        },
-        "href": "../index.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "TODO",
-          "en": "TODO"
-        },
-        "href": "../todo.html",
-        "placement": "topbar"
-      },
-      {
-        "label": {
-          "zh-CN": "Changelist",
-          "en": "Changelist"
-        },
-        "href": "../changelist.html",
-        "placement": "topbar"
-      }
-    ]
-  },
-  "manifest": {
-    "documentType": "engineering-spec",
-    "scenario": "none",
-    "sections": [
-      "overview",
-      "summary",
-      "shortcut-classes",
-      "invariants",
-      "testing-plan",
-      "open-questions"
-    ],
-    "components": {
-      "required": [
-        "summary-block",
-        "metadata-block",
-        "toc",
-        "section",
-        "paragraph"
-      ],
-      "optional": [
-        "table",
-        "callout",
-        "values-grid",
-        "acceptance-criteria",
-        "open-questions",
-        "source-refs",
-        "diagram",
-        "code-block"
-      ],
-      "omitted": [
-        "media-grid",
-        "diff-block",
-        "toggle-view",
-        "slider-control"
-      ]
-    }
-  },
-  "sections": [
-    {
-      "id": "overview",
-      "title": {
-        "zh-CN": "概览",
-        "en": "Overview"
-      },
-      "blocks": [
-        {
-          "type": "summary",
-          "items": [
-            {
-              "label": {
-                "zh-CN": "入口",
-                "en": "Entry"
-              },
-              "body": {
-                "zh-CN": "菜单栏图标提供 show、settings、quit 等动作。",
-                "en": "Menu-bar icon provides show, settings, quit, and related actions."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "全局快捷键",
-                "en": "Global Shortcuts"
-              },
-              "body": {
-                "zh-CN": "Cmd+Shift+J 和 Cmd+Shift+L 可配置。",
-                "en": "Cmd+Shift+J and Cmd+Shift+L are configurable."
-              }
-            },
-            {
-              "label": {
-                "zh-CN": "权限",
-                "en": "Permission"
-              },
-              "body": {
-                "zh-CN": "macOS Accessibility 权限由 modal 引导。",
-                "en": "macOS Accessibility permission is guided by a modal."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "summary",
-      "title": {
-        "zh-CN": "摘要",
-        "en": "Summary"
-      },
-      "blocks": [
-        {
-          "type": "paragraph",
-          "text": {
-            "zh-CN": "本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。",
-            "en": "This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST."
-          }
-        }
-      ]
-    },
-    {
-      "id": "shortcut-classes",
-      "title": {
-        "zh-CN": "Shortcut Classes",
-        "en": "Shortcut Classes"
-      },
-      "blocks": [
-        {
-          "type": "table",
-          "tableType": "data",
-          "headers": [
-            {
-              "zh-CN": "类型",
-              "en": "Class"
-            },
-            {
-              "zh-CN": "示例",
-              "en": "Example"
-            },
-            {
-              "zh-CN": "处理",
-              "en": "Handling"
-            }
-          ],
-          "rows": [
-            [
-              {
-                "zh-CN": "Global",
-                "en": "Global"
-              },
-              {
-                "zh-CN": "Cmd+Shift+J / Cmd+Shift+L",
-                "en": "Cmd+Shift+J / Cmd+Shift+L"
-              },
-              {
-                "zh-CN": "Rust 注册，冲突检测。",
-                "en": "Registered by Rust with conflict detection."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Window",
-                "en": "Window"
-              },
-              {
-                "zh-CN": "Cmd+K / Cmd+\\",
-                "en": "Cmd+K / Cmd+\\"
-              },
-              {
-                "zh-CN": "前端捕获，不注册系统全局。",
-                "en": "Captured by frontend, not registered globally."
-              }
-            ],
-            [
-              {
-                "zh-CN": "Native close",
-                "en": "Native close"
-              },
-              {
-                "zh-CN": "Esc / Cmd+W",
-                "en": "Esc / Cmd+W"
-              },
-              {
-                "zh-CN": "隐藏浮窗。",
-                "en": "Hide floating window."
-              }
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "id": "invariants",
-      "title": {
-        "zh-CN": "不变量",
-        "en": "Invariants"
-      },
-      "blocks": [
-        {
-          "type": "list",
-          "items": [
-            {
-              "zh-CN": "快捷键冲突必须给用户二次确认。",
-              "en": "Shortcut conflicts must require user confirmation."
-            },
-            {
-              "zh-CN": "无权限时不能静默失败。",
-              "en": "Missing permission must not fail silently."
-            },
-            {
-              "zh-CN": "Windows 正式快捷键体验是后续分发验收项。",
-              "en": "Formal Windows shortcut experience is a later distribution acceptance item."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "testing-plan",
-      "title": {
-        "zh-CN": "测试计划",
-        "en": "Testing Plan"
-      },
-      "blocks": [
-        {
-          "type": "acceptance-criteria",
-          "items": [
-            {
-              "zh-CN": "修改快捷键后重启 app 验证注册。",
-              "en": "After changing shortcuts, restart app and verify registration."
-            },
-            {
-              "zh-CN": "权限缺失状态手动 smoke。",
-              "en": "Manual smoke missing-permission state."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "open-questions",
-      "title": {
-        "zh-CN": "开放问题",
-        "en": "Open Questions"
-      },
-      "blocks": [
-        {
-          "type": "open-questions",
-          "questions": [
-            {
-              "zh-CN": "未明确的行为必须先进入 TODO，而不是在实现里静默猜测。",
-              "en": "Unclear behavior must enter TODO first instead of being silently guessed in implementation."
-            }
-          ]
-        }
-      ]
-    }
-  ]
+<aside class="sidebar" id="sidebar"></aside>
+<header class="topbar" id="topbar"></header>
+
+<main class="doc-main">
+  <article class="doc-article">
+
+    <div class="doc-header">
+      <span class="doc-tag">SPEC · 章节 07</span>
+      <h1 class="doc-title">菜单栏 & 快捷键</h1>
+      <p class="doc-subtitle">tray icon · 全局快捷键注册 / 冲突检测 / 权限引导 · 平台差异。</p>
+    </div>
+
+    <h2><span class="h2-num">1</span>菜单栏 tray</h2>
+
+    <h3><span class="h3-num">1.1</span>结构</h3>
+
+    <p>常驻菜单栏图标，单击左键 → toggle 浮窗；右键 → 弹下拉菜单。完整下拉菜单视觉：见 <a href="01_mockups.html#4">12 § 4 菜单栏 tray</a>。</p>
+
+    <p>菜单项序：</p>
+
+    <table>
+      <thead><tr><th>order</th><th>label</th><th>accelerator</th><th>action</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Toggle Jsonita</td><td>—</td><td>emit tray:toggle</td></tr>
+        <tr><td>2</td><td>Settings…</td><td><kbd>⌘,</kbd></td><td>show window + emit tray:open-settings</td></tr>
+        <tr><td>—</td><td>(separator)</td><td>—</td><td>—</td></tr>
+        <tr><td>3</td><td>Quit Jsonita</td><td><kbd>⌘Q</kbd></td><td>app.exit(0)</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="h3-num">1.2</span>实现</h3>
+
+    <pre><code>// src-tauri/src/system/tray.rs
+use tauri::{
+    AppHandle, Manager,
+    image::Image,
+    menu::{Menu, MenuItem, PredefinedMenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+};
+
+pub const TRAY_ICON_PATH: &amp;str = "icons/menubar/jsonita-menubar-template-22@2x.png";
+
+pub fn build(app: &amp;AppHandle) -&gt; tauri::Result&lt;()&gt; {
+    let menu = build_menu(app)?;
+
+    let icon = Image::from_path(
+        app.path().resolve(TRAY_ICON_PATH, tauri::path::BaseDirectory::Resource)?
+    )?;
+
+    let tray = TrayIconBuilder::with_id("main")
+        .icon(icon)
+        .icon_as_template(cfg!(target_os = "macos"))    // macOS template
+        .menu(&amp;menu)
+        .menu_on_left_click(false)                       // 左键交给 on_event
+        .show_menu_on_left_click(false)
+        .on_tray_icon_event(handle_tray_event)
+        .on_menu_event(handle_menu_event)
+        .build(app)?;
+
+    app.manage(tray);                                    // 防止 drop 后 tray 消失
+    Ok(())
 }
-</script>
 
-<article class="doc">
-<header class="doc-header"><h1><span data-locale="zh-CN" data-locale-active="true">菜单栏与快捷键</span><span data-locale="en" data-locale-active="false">Menu Bar And Shortcuts</span></h1><div class="doc-meta"><span data-i18n-key="metadata.owner">负责人</span> Jin Huang · <span data-i18n-key="metadata.updated">更新于</span> 2026-06-03</div></header>
-<main>
-<section class="doc-section" id="overview">
-<h2><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></h2>
-<section class="doc-summary"><ul><li><strong><span data-locale="zh-CN" data-locale-active="true">入口</span><span data-locale="en" data-locale-active="false">Entry</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">菜单栏图标提供 show、settings、quit 等动作。</span><span data-locale="en" data-locale-active="false">Menu-bar icon provides show, settings, quit, and related actions.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">全局快捷键</span><span data-locale="en" data-locale-active="false">Global Shortcuts</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">Cmd+Shift+J 和 Cmd+Shift+L 可配置。</span><span data-locale="en" data-locale-active="false">Cmd+Shift+J and Cmd+Shift+L are configurable.</span></li><li><strong><span data-locale="zh-CN" data-locale-active="true">权限</span><span data-locale="en" data-locale-active="false">Permission</span>:</strong> <span data-locale="zh-CN" data-locale-active="true">macOS Accessibility 权限由 modal 引导。</span><span data-locale="en" data-locale-active="false">macOS Accessibility permission is guided by a modal.</span></li></ul></section>
-</section>
+fn build_menu(app: &amp;AppHandle) -&gt; tauri::Result&lt;Menu&lt;tauri::Wry&gt;&gt; {
+    let toggle   = MenuItem::with_id(app, "toggle",   "Toggle Jsonita", true, None::&lt;&amp;str&gt;)?;
+    let settings = MenuItem::with_id(app, "settings", "Settings…",      true, Some("CmdOrCtrl+,"))?;
+    let quit     = MenuItem::with_id(app, "quit",     "Quit Jsonita",   true, Some("CmdOrCtrl+Q"))?;
+    let sep      = PredefinedMenuItem::separator(app)?;
 
-<section class="doc-section" id="summary">
-<h2><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></h2>
-<p><span data-locale="zh-CN" data-locale-active="true">本规格页记录当前实现应遵守的技术契约。若实现发生变化，需要同步更新本页和相关 plan/TODO/CHANGELIST。</span><span data-locale="en" data-locale-active="false">This spec records the technical contract the current implementation should follow. If implementation changes, update this page and related plan/TODO/CHANGELIST.</span></p>
-</section>
+    Menu::with_items(app, &amp;[&amp;toggle, &amp;settings, &amp;sep, &amp;quit])
+}
 
-<section class="doc-section" id="shortcut-classes">
-<h2><span data-locale="zh-CN" data-locale-active="true">Shortcut Classes</span><span data-locale="en" data-locale-active="false">Shortcut Classes</span></h2>
-<table>
-<tr><th><span data-locale="zh-CN" data-locale-active="true">类型</span><span data-locale="en" data-locale-active="false">Class</span></th><th><span data-locale="zh-CN" data-locale-active="true">示例</span><span data-locale="en" data-locale-active="false">Example</span></th><th><span data-locale="zh-CN" data-locale-active="true">处理</span><span data-locale="en" data-locale-active="false">Handling</span></th></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Global</span><span data-locale="en" data-locale-active="false">Global</span></td><td><span data-locale="zh-CN" data-locale-active="true">Cmd+Shift+J / Cmd+Shift+L</span><span data-locale="en" data-locale-active="false">Cmd+Shift+J / Cmd+Shift+L</span></td><td><span data-locale="zh-CN" data-locale-active="true">Rust 注册，冲突检测。</span><span data-locale="en" data-locale-active="false">Registered by Rust with conflict detection.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Window</span><span data-locale="en" data-locale-active="false">Window</span></td><td><span data-locale="zh-CN" data-locale-active="true">Cmd+K / Cmd+\</span><span data-locale="en" data-locale-active="false">Cmd+K / Cmd+\</span></td><td><span data-locale="zh-CN" data-locale-active="true">前端捕获，不注册系统全局。</span><span data-locale="en" data-locale-active="false">Captured by frontend, not registered globally.</span></td></tr>
-<tr><td><span data-locale="zh-CN" data-locale-active="true">Native close</span><span data-locale="en" data-locale-active="false">Native close</span></td><td><span data-locale="zh-CN" data-locale-active="true">Esc / Cmd+W</span><span data-locale="en" data-locale-active="false">Esc / Cmd+W</span></td><td><span data-locale="zh-CN" data-locale-active="true">隐藏浮窗。</span><span data-locale="en" data-locale-active="false">Hide floating window.</span></td></tr>
-</table>
-</section>
+fn handle_tray_event(tray: &amp;tauri::tray::TrayIcon, event: TrayIconEvent) {
+    if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+        let app = tray.app_handle();
+        let _ = commands::window::window_toggle(app.clone());
+    }
+}
 
-<section class="doc-section" id="invariants">
-<h2><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></h2>
-<ul><li><span data-locale="zh-CN" data-locale-active="true">快捷键冲突必须给用户二次确认。</span><span data-locale="en" data-locale-active="false">Shortcut conflicts must require user confirmation.</span></li><li><span data-locale="zh-CN" data-locale-active="true">无权限时不能静默失败。</span><span data-locale="en" data-locale-active="false">Missing permission must not fail silently.</span></li><li><span data-locale="zh-CN" data-locale-active="true">Windows 正式快捷键体验是后续分发验收项。</span><span data-locale="en" data-locale-active="false">Formal Windows shortcut experience is a later distribution acceptance item.</span></li></ul>
-</section>
+fn handle_menu_event(app: &amp;AppHandle, event: tauri::menu::MenuEvent) {
+    match event.id.as_ref() {
+        "toggle"       =&gt; { let _ = app.emit("tray:toggle", ()); }
+        "settings"     =&gt; {
+            let _ = crate::window::toggle_show_only(app);
+            let _ = app.emit("tray:open-settings", ());
+        }
+        "quit"         =&gt; { app.exit(0); }
+        _ =&gt; {}
+    }
+}</code></pre>
 
-<section class="doc-section" id="testing-plan">
-<h2><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></h2>
-<ol class="acceptance-criteria"><li><span data-locale="zh-CN" data-locale-active="true">修改快捷键后重启 app 验证注册。</span><span data-locale="en" data-locale-active="false">After changing shortcuts, restart app and verify registration.</span></li><li><span data-locale="zh-CN" data-locale-active="true">权限缺失状态手动 smoke。</span><span data-locale="en" data-locale-active="false">Manual smoke missing-permission state.</span></li></ol>
-</section>
+    <h3><span class="h3-num">1.3</span>动态图标</h3>
 
-<section class="doc-section" id="open-questions">
-<h2><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></h2>
-<section class="open-questions-block"><header class="open-questions-header"><div class="open-questions-heading"><span class="open-questions-kicker"><span data-i18n-key="openQuestions.kicker">待决议</span></span><h3 class="open-questions-title"><span data-i18n-key="openQuestions.title">开放问题</span></h3></div><span class="open-questions-count">1 <span data-i18n-key="openQuestions.count">个问题</span></span></header><ul class="open-questions"><li class="open-question"><span class="open-question-marker">Q1</span><span class="open-question-text"><span data-locale="zh-CN" data-locale-active="true">未明确的行为必须先进入 TODO，而不是在实现里静默猜测。</span><span data-locale="en" data-locale-active="false">Unclear behavior must enter TODO first instead of being silently guessed in implementation.</span></span></li></ul></section>
-</section>
+    <p>v1 不做。<br>v2 可扩展：检测到剪贴板含 JSON 时 tray 图标加红点，提示 user "have something to format"。</p>
+
+    <h3><span class="h3-num">1.4</span>"在菜单栏显示图标" 开关（reserved / future）</h3>
+
+    <p>当前 <code>settings.show_in_menubar</code> 字段存在，但运行时未消费；tray 始终创建。未来接入该开关时：</p>
+
+    <ul>
+      <li>调 <code>tray.remove()</code></li>
+      <li>用户只能通过快捷键呼出（保留对快捷键的依赖）</li>
+      <li>Dock 图标也跟随：菜单栏关 + dock 关 → 应用就完全 headless（必须留 Quit 入口 → 不允许同时关）</li>
+    </ul>
+
+    <h2><span class="h2-num">2</span>全局快捷键</h2>
+
+    <h3><span class="h3-num">2.1</span>默认绑定</h3>
+
+    <table>
+      <thead><tr><th>action</th><th>默认 accelerator</th><th>是否可自定义</th></tr></thead>
+      <tbody>
+        <tr><td>toggle_window</td><td><kbd>CmdOrCtrl+Shift+J</kbd></td><td>是（全局）</td></tr>
+        <tr><td>restore_last</td><td><kbd>CmdOrCtrl+Shift+L</kbd></td><td>是（全局）</td></tr>
+        <tr><td>split_toggle（单窗 / 双栏）</td><td><kbd>CmdOrCtrl+\</kbd></td><td>是（窗口内；阶段 1 已实现）</td></tr>
+      </tbody>
+    </table>
+
+    <p>其他 in-app 快捷键（<kbd>Tab</kbd> / <kbd>⇧Tab</kbd> / <kbd>⌘K</kbd> / <kbd>⌘⇧L</kbd> / <kbd>Esc</kbd> / <kbd>⌘W</kbd>）由 React 端处理，不走 global-shortcut（不抢系统）。<code>split_toggle</code>（<kbd>⌘\</kbd> 切换单窗 / 双栏，阶段 1 已实现）也属窗口内快捷键，但可在设置「快捷键 → 可自定义」改键，与 <code>toggle_window</code> / <code>restore_last</code> 并列；其状态栏控件与 <kbd>⌘Y</kbd> History 一样，平时只显文字、hover / 键盘聚焦才浮现键位（见 <a href="01_mockups.html#2">01 § 2</a>）。</p>
+
+    <h3><span class="h3-num">2.2</span>注册</h3>
+
+    <pre><code>// src-tauri/src/system/shortcuts.rs
+use tauri::{AppHandle, Manager};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+
+#[derive(Copy, Clone)]
+pub enum ShortcutAction { ToggleWindow, RestoreLast }
+
+pub fn register_defaults(app: &amp;AppHandle) -&gt; Result&lt;(), JsonitaError&gt; {
+    let settings = app.state::&lt;SettingsStore&gt;().get();
+    register(app, ShortcutAction::ToggleWindow, &amp;settings.shortcut_toggle)?;
+    register(app, ShortcutAction::RestoreLast,  &amp;settings.shortcut_restore_last)?;
+    Ok(())
+}
+
+pub fn register(
+    app: &amp;AppHandle,
+    action: ShortcutAction,
+    accelerator: &amp;str,
+) -&gt; Result&lt;(), JsonitaError&gt; {
+    let shortcut = parse_accelerator(accelerator)?;
+    let app_clone = app.clone();
+
+    app.global_shortcut().on_shortcut(shortcut, move |_app, _sc, event| {
+        if event.state() != ShortcutState::Pressed { return; }
+        match action {
+            ShortcutAction::ToggleWindow =&gt; {
+                let _ = commands::window::window_toggle(app_clone.clone());
+            }
+            ShortcutAction::RestoreLast =&gt; {
+                let _ = crate::window::toggle_show_only(&amp;app_clone);
+                let _ = app_clone.emit("shortcut:restore_last", ());
+            }
+        }
+    })?;
+    Ok(())
+}
+
+fn parse_accelerator(s: &amp;str) -&gt; Result&lt;Shortcut, JsonitaError&gt; {
+    // 解析 "CmdOrCtrl+Shift+J" 风格字符串
+    let mut mods = Modifiers::empty();
+    let mut code: Option&lt;Code&gt; = None;
+    for part in s.split('+') {
+        match part.to_lowercase().as_str() {
+            "cmd" | "command" | "meta" =&gt; mods |= Modifiers::META,
+            "cmdorctrl" =&gt; {
+                #[cfg(target_os = "macos")]   { mods |= Modifiers::META; }
+                #[cfg(not(target_os = "macos"))] { mods |= Modifiers::CONTROL; }
+            }
+            "ctrl" | "control" =&gt; mods |= Modifiers::CONTROL,
+            "alt"  | "option"  =&gt; mods |= Modifiers::ALT,
+            "shift"            =&gt; mods |= Modifiers::SHIFT,
+            other =&gt; code = Some(Code::from_str(&amp;other.to_uppercase())
+                                    .ok_or_else(|| JsonitaError::Io(format!("unknown key {}", other)))?),
+        }
+    }
+    let code = code.ok_or_else(|| JsonitaError::Io("missing key".into()))?;
+    Ok(Shortcut::new(Some(mods), code))
+}</code></pre>
+
+    <h3><span class="h3-num">2.3</span>冲突检测</h3>
+
+    <p>用户改快捷键时调 <code>shortcut_register</code> command：</p>
+
+    <pre><code>#[tauri::command]
+pub async fn shortcut_register(
+    app: tauri::AppHandle,
+    req: ShortcutRegisterReq,
+) -&gt; Result&lt;ShortcutRegisterResp, JsonitaError&gt; {
+    // 1. 解析合法性
+    let shortcut = parse_accelerator(&amp;req.accelerator)?;
+
+    // 2. 先 unregister 旧的
+    let _ = app.global_shortcut().unregister(shortcut.clone());
+
+    // 3. 尝试注册新的
+    match app.global_shortcut().register(shortcut.clone()) {
+        Ok(()) =&gt; {
+            // 4. 把回调挂上
+            install_handler(&amp;app, req.action, shortcut)?;
+            // 5. 写入 settings
+            app.state::&lt;SettingsStore&gt;().set_shortcut(req.action, req.accelerator)?;
+            Ok(ShortcutRegisterResp::Ok)
+        }
+        Err(e) =&gt; {
+            // tauri-plugin-global-shortcut 在底层 platform 调用失败时返回 Err
+            // 解读不到具体冲突 App（OS API 不暴露）→ 返回 Conflict { with_app: None }
+            Ok(ShortcutRegisterResp::Conflict { with_app: None })
+        }
+    }
+}</code></pre>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">WARN</span>
+      <div class="callout-body">
+        <p>macOS / Windows 的全局快捷键 API <b>不直接</b>暴露"被哪个 App 占用"。我们只能知道注册成功与否。<code>with_app: None</code> 时 UI 显示 "Already used by system or another app"。</p>
+      </div>
+    </div>
+
+    <h3><span class="h3-num">2.4</span>系统级保留快捷键拒绝清单</h3>
+
+    <p>注册前在 Rust 端先 reject 这些"绝不可改"的组合，避免给用户挖坑：</p>
+
+    <pre><code>// 用户不能绑定的组合（系统级或会破坏 OS 体验）
+const RESERVED: &amp;[&amp;str] = &amp;[
+    "CmdOrCtrl+Q",          // Quit App
+    "CmdOrCtrl+W",          // Close Window
+    "CmdOrCtrl+Tab",        // 应用切换
+    "CmdOrCtrl+Space",      // Spotlight
+    "CmdOrCtrl+H",          // Hide App
+    "F11", "F12",           // 系统功能（Mission Control / 屏幕截图）
+    "Escape",
+];
+
+fn check_reserved(acc: &amp;str) -&gt; Result&lt;(), JsonitaError&gt; {
+    if RESERVED.iter().any(|r| acc.eq_ignore_ascii_case(r)) {
+        return Err(JsonitaError::Io(format!("{} is reserved by system", acc)));
+    }
+    Ok(())
+}</code></pre>
+
+    <h2><span class="h2-num">3</span>macOS Accessibility 权限</h2>
+
+    <p>tauri-plugin-global-shortcut 在 macOS 不需要 Accessibility 权限 ── 它走 <code>CGEventTap</code> 的 <b>Annotated event tap</b>（监听键盘组合，不需要事件注入权限）。<b>v1 默认不要求</b>。</p>
+
+    <p>但 macOS 13+ 在某些情况下仍会弹出 "Input Monitoring" 请求 ── 这种情况下：</p>
+
+    <h3><span class="h3-num">3.1</span>检测 + 引导</h3>
+
+    <pre><code>// src-tauri/src/system/permissions.rs
+#[cfg(target_os = "macos")]
+pub fn check_input_monitoring() -&gt; bool {
+    // 通过尝试注册一个 dummy global shortcut 来 ping 系统
+    // 失败 → 大概率是 input monitoring 没授权
+    // 实际实现：调 IOHIDCheckAccess(kIOHIDRequestTypeListenEvent)
+    unsafe {
+        let access_type = 1;   // listen event
+        let granted = ::core_foundation::base::TCFType::from_void(
+            crate::ffi::IOHIDCheckAccess(access_type)
+        );
+        granted == 0   // kIOHIDAccessTypeGranted
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub fn request_input_monitoring() {
+    unsafe { let _ = crate::ffi::IOHIDRequestAccess(1); }
+}</code></pre>
+
+    <h3><span class="h3-num">3.2</span>用户引导 UI</h3>
+
+    <p>首次启动失败 → 弹 Accessibility Modal。视觉与文案：见 <a href="01_mockups.html#10">12 § 10 macOS 权限引导 Modal</a>。当前实现打开 <code>Privacy_Accessibility</code> 设置页。</p>
+
+    <p><b>触发条件</b>：</p>
+    <ul>
+      <li>启动时 <code>register_defaults()</code> 失败</li>
+      <li>用户在设置面板录入新快捷键 → <code>shortcut_register()</code> 返回 <code>Conflict</code></li>
+    </ul>
+
+    <pre><code>// 打开系统设置 → Privacy → Accessibility
+fn open_accessibility_settings() {
+    use std::process::Command;
+    let _ = Command::new("open")
+        .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+        .spawn();
+}</code></pre>
+
+    <h2><span class="h2-num">4</span>In-app 快捷键</h2>
+
+    <p>仅在浮窗 focus 时响应，<b>不</b>走 global-shortcut：</p>
+
+    <table>
+      <thead><tr><th>action</th><th>combo</th><th>实现</th></tr></thead>
+      <tbody>
+        <tr><td>切换功能 Tab</td><td><kbd>Tab</kbd> / <kbd>⇧Tab</kbd></td><td>window keydown capture；仅非编辑态拦截</td></tr>
+        <tr><td>退出 editing</td><td><kbd>Esc</kbd>（焦点在 CodeMirror / 表单输入内）</td><td>window keydown capture → activeElement.blur()</td></tr>
+        <tr><td>关闭浮窗</td><td><kbd>Esc</kbd> ×2（非编辑态） / <kbd>⌘W</kbd></td><td>连续两次 Esc 才调用 window_hide；单次 Esc 只进入待关闭窗口</td></tr>
+        <tr><td>错误 JSON 直接执行 AI Fix</td><td><kbd>⌘Enter</kbd></td><td>当 parse error 且 AI Fix 可用时优先拦截；单双栏一致，切到 <code>AiFixPane</code> 并自动请求；单窗右下角提示显示 Run AI Fix 而不是 Run Format</td></tr>
+        <tr><td>接受 AI Fix 结果</td><td><kbd>⌘Enter</kbd></td><td><code>awaiting-decision</code> 时优先拦截；替换输入、写 history、回到 Format</td></tr>
+        <tr><td>取消 AI Fix 结果</td><td><kbd>Esc</kbd></td><td><code>awaiting-decision</code> / <code>error</code> 时优先拦截；reset AI store、回到 Format，不隐藏窗口</td></tr>
+        <tr><td>打开 / 关闭 History</td><td><kbd>⌘Y</kbd></td><td>window keydown capture；即使编辑器聚焦也响应；Settings 打开时不拦截</td></tr>
+        <tr><td>打开 Settings</td><td><kbd>⌘,</kbd></td><td>window keydown capture；与 macOS menu accelerator 一致；History 打开时不拦截</td></tr>
+        <tr><td>单窗模式应用当前功能</td><td><kbd>⌘Enter</kbd></td><td>window keydown capture；仅 <code>singlePaneMode=true</code> 时拦截并写回 input</td></tr>
+        <tr><td>编辑器 / Tree 字体放大</td><td><kbd>⌘+</kbd></td><td>window keydown capture；每次 +2px，更新 UI store 字号并触发动态窗口缩放</td></tr>
+        <tr><td>编辑器 / Tree 字体缩小</td><td><kbd>⌘-</kbd></td><td>window keydown capture；每次 -2px</td></tr>
+        <tr><td>重置编辑器 / Tree 字号</td><td><kbd>⌘0</kbd></td><td>window keydown capture；回到 13px</td></tr>
+        <tr><td>清空输入（不污染上次会话）</td><td><kbd>⌘K</kbd></td><td>React useHotkeys + session_clear_last</td></tr>
+        <tr><td>恢复上次会话</td><td><kbd>⌘⇧L</kbd></td><td>React useHotkeys + session_load_last</td></tr>
+        <tr><td>CodeMirror 内置</td><td><kbd>⌘F</kbd> / <kbd>⌘D</kbd> / <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd></td><td>CodeMirror 6 默认 keymap</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code>// src/shell/FloatingWindow.tsx (节选)
+import { useHotkeys } from 'react-hotkeys-hook';
+
+window.addEventListener('keydown', handleTabCycle, true);
+window.addEventListener('keydown', handleEscapeBlurOrHide, true);
+window.addEventListener('keydown', handleSinglePaneApply, true);
+window.addEventListener('keydown', handleEditorFontZoom, true);
+useHotkeys('meta+w', handleClose);
+useHotkeys('meta+k', handleClearInput);
+useHotkeys('meta+shift+l', handleRestoreLast);</code></pre>
+
+    <h2><span class="h2-num">5</span>Windows 平台差异</h2>
+
+    <table>
+      <thead><tr><th>差异</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>accelerator 字符串</td><td>用 <code>CmdOrCtrl</code> 占位符；Windows 解析为 Ctrl</td></tr>
+        <tr><td>系统托盘</td><td>tauri tray 自动对应 Windows shell notification area</td></tr>
+        <tr><td>权限</td><td>无需 Input Monitoring；全局快捷键直接可用</td></tr>
+        <tr><td>菜单栏图标尺寸</td><td>Windows 用 16×16 ICO；template 概念 N/A，直接 light 主题黑 icon</td></tr>
+      </tbody>
+    </table>
+
+    <nav class="pagination" id="pagination"></nav>
+
+  </article>
 </main>
-<footer class="doc-footer"><a href="https://github.com/CAST-docs/cast-a-doc" target="_blank" rel="noopener noreferrer">CAST Docs</a></footer>
-</article>
 
-<aside class="sidebar"><p class="nav-title"><span data-i18n-key="chrome.contents">目录</span></p><nav class="toc" aria-label="目录"><ol><li><a href="#overview"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">概览</span><span data-locale="en" data-locale-active="false">Overview</span></a></li><li><a href="#summary"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">摘要</span><span data-locale="en" data-locale-active="false">Summary</span></a></li><li><a href="#shortcut-classes"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">Shortcut Classes</span><span data-locale="en" data-locale-active="false">Shortcut Classes</span></a></li><li><a href="#invariants"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">不变量</span><span data-locale="en" data-locale-active="false">Invariants</span></a></li><li><a href="#testing-plan"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">测试计划</span><span data-locale="en" data-locale-active="false">Testing Plan</span></a></li><li><a href="#open-questions"><span class="toc-marker">-</span><span data-locale="zh-CN" data-locale-active="true">开放问题</span><span data-locale="en" data-locale-active="false">Open Questions</span></a></li></ol></nav></aside>
-<header class="topbar"><a class="brand-logo" href="../index.html" aria-label="Jsonita 标志"><img class="brand-logo-image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAABAKADAAQAAAABAAABAAAAAABn6hpJAAA3X0lEQVR4Ae19CZglRZVuLnep6qrurqYXNh0E6VFAWVw/lgbRwe0hg+/ZwLAJ7oDwRud94/h886ZmxvH7BnluLT1My+iICAzI4obMKJ8tq/vyRp6igitLdzXd1dW13C0z339OZOTNzJt5t7pLdeWJqpuxR5z4I86JJSMiDUOUICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCAgCAgCgoAgIAgIAoKAICAICAKCgCCwCATMRcTdL6N6htHXMiNxZKGUzivspv2Gofv0UPm9ZjRRuGb+w6Bd8uwPAtQYMqOe/649z5kpFo61a46Zc92CZdoWWrrnuI5nmDYzru06lpMvuK4HNyjLNUzXUkxtOYZl2HB0HMbMydme7cLNM1x2sGzTqjm2axuuaxoORI2Xc+1C2a5OH1j65b0/2PaSKocb0IMY+W9f/OTozRc98OzZ8fkjZ9eUDx6fHjl8Zt1ssZKvFMyaVQQAoBKK6DUM1zO9nG3k82t2r9z2h4sv/s6ASJVshoRAbkj5DjxbYoaDi7kzd0+MbDEq87Ch6BZxM5RHOvM7dJip/yPd026wRpQFW0h2euB/isPx8ogHO7shXK5omFXvCWNu47GItDuSTJ8snzC84oc/dePL1q6eO7s8cscrXMs5wrW9MTB5fmF1GeUGXV7e8Aqu4TLNsJNQo/KC/d2CbczNV+6F7bsoVRoIfaJekh0kApkRAARqzgEbuOiETWrp+DnEuMzJxL113JnxyU5t36Sw9I9RAgcJBaxHUYNqJ+QHowemcsBwnlMdH2FOC0XovfFWSLJ3feFTZ79/ZOtVNat6ole0weWgvUIFRQ+P7t2oEo0Y3dCoBX0/3En61emu1AyjhsGLtwIGUcsdgUwJAG7w1DOzAkNysyceYEbQTMAOfpi6F8kBVjqYbw2i0rQ67EfhWXggH5OGBDpCX/SNn7rlqLds2Pp3lWLlT9GL5w1iX2JmypiG+YaRhw7GJ6nExNSHMcq9TjxItTxMbUQtewSyJQB0Hx4wPDGtVppBmVlg0Xbtr7lbu1NUbQ7CxNzIH+E803Kr+0J5hcMvzowczA3/tm3zH1bt/Jhjewejc6+ix6f1B+rZSSkiqVguhgM0+vF0GX0m5xGPCsxPm6IK/4cQWbbGTAkALOahJ0bD5uE899hgjrDO9awYJlLl2ilgeuJq7YiQbMQjECi+H4XHj8ca45EUe2HxjElrzRcOfPf86tLVWHYsgvmRLy1uMEHU8xOZNAIhncSfTxeTRWbX9ydC64pteqRUdxbT8kMgUwIAK/oW8SMUpACP6ckGRiBe0GP8Oo9QQFbsTabALzDUneDNDBbmJRII9aCcVo8eSNWcuH3DWxbGqx8B82PljvNRmZPACQ/rSS6wAKAycpFBKaSCSesAXG6SivBQ0ZlkmigMXGkBqutCE6Ddya79mF4utA7VXI+nEY4f92ue0nLyzZQACCqO27lf6dSElD3wZgM3LeIXny84HAVkj2jYVBsnjCiuZ2E5LjVYFx4H3fDp00tj+z6GxDXzR1MJD1CIaB4FqOGPz/TsymXnV4Hh6CDVHswUoHL9+hMMo/qPyB2vU9cQlXiFuqYGzFwLIgrIQVtDghs6jeAmKigNyrNmtFZb/3ej75q6L0y5Ns9uW398wapejSRQGKx+emtsJO4gcYqL3wSWQVcjdaqXCSRt4T0w2oQ3YdZq5uSKy/Y8qNNaznr2BECUMVTdEmv6vBpUNtvx0H5sJ0tMkXvEWUegcNz1Uk9r4uUDpxCL3ZV104fuXv/D1Y9tAeuPGbXUzKP5MdMQDcRjxGzETD6tNE1oUIOZAmC1Ymwkb5xBoonJAUm0VAEO5beVOaJMUweSaHcGlYDe4DqmeXUD2b6DW8utzI/WzmD+p6LoNLC6qZoAHJAGIUA/ehIJlG7VyX2UnTLwyJQA4M05VKlU47pBkD1sJjsp1SqUOXhSQGYW3WaUj5pbsyccoFMYf6jKrQ2TD+K3HihkbB3w3N+9pzpmHG1UG9IkGqJKTwXAT2oUQL0cb1IAiUxjY1fP/TCzXjStPthqrjVdc405F4IAyRPnK2lEQpOnIcrqZ824gzzTqYJPPWtPGklW3t5brXkL8B9FJJYoVCzF/AmVoeoQmRoVw7Gn0tJdbu6Nlb/cShguD1cy8abvSM3Jr/hwMA6gw2idA3Bj5EYYCU/dlVK+7jM/uVGLwxTAMGb9IIvTjrz+c0fMryq9nfcwNE9K0Vnv3YnxKQaoJVZgRfWvzeTgxyHjYBYBcrmROZBV0XkTc+NP09VIG+glRwSq5qpmKqh2LTeDdEuqQH4kiudH1qXm/ODuKwtxqo5r7dMOy13PlABQ/aVuEqhaagzEvCEn5ehXe7j5BS0h5KgaUyRKEMzvyFSL4wZd9+rSBDLN6fHSW72R/DrMlFul4pcuJIzCMepMpl2VYKCZNn6uyZuHtF/f9FqtNIdyzSFXopeU1pUNT5Jb+JF74IdZfbkwXpkJAsUMjjtXAnNXbMRQ/5EAJAdY1CBdThkosRse1ZVjpblI6GVsyZQAQLvGX9CGUK1hM9WytpNE0Gatkz+JCvILK/LXYbRO/r67yZ2ZNVZdGfYMJ9C2+Yz3fX/V/IqFs41aG5v0aHhPZSXuqRNNNEByYDMQ+RWxbbnAs8AyyMU2ZW8a/tOYhO/FkQBsYey/Gl/rzoOUeZI76r8xTyKVflqx3TAX9hkjJe0W18fMUaK/TOmGlYJDubAXtQm/Viks/Of2lsZTRxbhtJaDOVtrACTt64rqX/Ur2o1ah98q4KX8dU+uVpMRMgigY/k6u5M/NSdYdDjSTWNfJOtY1DatP3/+f57g5tyNsYW/cOx6+eotnQgIu9MmIVpe31GctbabVfsbnpP7vwXXmbaMPG1cNor4W/+LFTsQrB4vnEsvzXumyoY9sUAvHdScv3XiqkDe9MpnTBzqSFGj1gJWCWfVMkc9jC9I1K4Icg6N/yhd+O9bXXJTBUs9peVhypQAMHCcz1dU11DUvlVzYiu7+l7kqbzV08pjbx16zNYqSICD0nsmd3Z0sWsAIMJas6q0yRvBaZ1y6qFCopWUpkHr5EYjAgz8zbxVNa5fOT9+9c5z3vY4uSOQjkfhWO3Uhn7r78Cm5esxl0+ZqSRlzyMAz5y57eGPYO3gnKQgxm13v7R69qu/ntiTQzYyLkgnEJOcJrl6GAHNvA1ycDIx3eXmmC0BEO3vUZeqxoNKZVbXvAA/bibgD7zEt2rVHxlu9Xt4WZRDW0Ug/GPMqBoTEqaDNjTa56k5/Hj1HU8rhxdP9q7iqE0r0otQk4ZjucfXm2xKUkQ+0x3xJ3prhg3lGB+YP/NKfj/eGCwSZyAWgql8/QF7wzT7RUguCVEFwrG2ue+c2zZTmER1zm23etXXrJkPpxsOSAzvR2YND14aRbrT5uTfIOhkOPiyNWdKAOQc3uROlUn1HapUblEhJ/LTw3iY7YIxPlf9910fXfUBFTcUNWSkVMgaS5zb6yOhcN0Y3/mOv7Ede8uz/R1/8SQ437pwIPrjBTSt/IJxzexZV4H5r1Lh46kMyQ5qp8F+yF2RxdQ3o4UEr+HRK8Bm5cC7TnNGoRANFvT80SkhiQBCLfXVYjOS9le/TAmA6Lv4cKOAmVsdN8JQ+6MRovLA+yF6T022cMTEem8nTGLEJo7fPeSuMSfnrDK8hHVbetWnF/18giNJ5WwzV/J+fvzPXvQP/aAtklc3Fs/clQArA5+WHDyxaNli3uCZYOZYdbHsCFKlPEjSq5EcDIASsx86vZkNldCalm/BLZPWeam69S9eVmos5KeVNuPMjGm2sfSu4/VeP2Bqw2q7Zq+u9/J+HiyjmBGIWF2fmnAVCCtsxVLxxgfed0rinLj31HaSIiZPlgsB0JlCTT3TKgZkYuL7/JBIUMbQuyG8AM3UCEA3mFZYLgt/bIADY1Cds9BXZQq1hgTmJ0ZiZsJm8ihTDRiRYtXIoV9qHLHxZBa0qeUsKk2UTtjMcm1ubHb8bhgjpR1wEVKzA/UdCybcxtZCAECwGMZeylRB05g9wCCs+HoY7YuFgBbp6pDLQ8+UAEDzpwonhbr3eYHnntwOyFn7c6D6g3fN0CH5paHiLZrnrkx6I/10/Zfh/erI753w66VBfAIVNWuvro4E30Qnx7FSNwHpCDgdHe7NVYXjCZCoonVlE2aMG23YrLk0HcmOypQA4PsAfL5XVcz1HqrtuJ0D64YT9wzFG5CR5vnEKSy02swTw/98qbDrm1uPXrLvtq28uzu1m/aLSTJP/UPHiaCaZ7a8XxHrNjNhweKnwQgSikiaV/4BJ3cNtGHb8uzEaUObaO93wTIlABwLr8KYjbnuqbJCTK07hHAd1r1rVn0TQTjEoMyWXUDzJFWnSdlbP3F1MV5BmsEmiNYxBhvCc+x98Z3NzKx+iYkalnn0thVudH+paVkth+pY85mlHT+AjJ9huQkUifnZW5cWm58d10w/YKTDLSc9UwIAlRtmArQB3cKI+YmxyM5u2oPs5IHWwnfpkXE4Km1jLjXt9hSXo72ggw1Vreb3EfNFGJRqBL9w6chOPyzRV5xyoeUUoObaM6ETDZQU/ZCCkqKALiIEkHbJqbWeWgwWnf7mlikBkHPpuiyqf/UItABjbhtoJOFmpzyH/V7IzVVAXGyUovq1gPp0A5c53XvIPuh29xHzNZFlQYWwEMDhIbswywt8zUivYrMQhvVcdQQeM3wMRJ0nI+QZC7aRfsKwWV77q1+mBAAOuPlXQISri3v/ENMHTOa7KebBC8ShcpE/BQgYgUtA3JCmdMsG2Z4VXIWcFnqo7rncKB8J9gsXLWPUxu850XGXRsbclnN1y7IXgBCP+jgZmuvXe38yKWcE8i9AminlFlqOLIYKVo8zz5YAMLErN5mP0QSImXT7YM7y3XzE1U26PYa/w+Rou3HC6KQhlfqmIHghCl2xs4TViF2h14D76OgulHqyEZaQG5WCDleCb+eM2oqWW6tddV9AGRCogQN0SpbTQSJkwY/B8fOZe6a8dskulvqQ9FTLlADgtwCqQYVA1A7EIy12loViLWnjkPcsdIzNKmMBk/E5vxdmjoyLLN+uh2d7jcePSlsVCbL3h/NlLUSgUyXzTz+gk7j0RYM5feSVv6TLSTKjMiUALNwzyTI/sXpZEGhpkBBiuKsAVhWzWd7b0oTEBKq5vDY3+kTfpeH4hwrKthDu+32mDcgje8gNB3a+2bJC8JXHMkDjS0F0QmB44n3OSqcHqcKgwmM33DoFWCe9X+qZEgC8UzbetbRdbcPdH8535FI/ld48qWFz4267SEskoHkOtuA42LXnU68ZM4E8Os5MkoA267Qsa9UawyjBo5uBOLBOHhjy6z+/KZA3cCVgvZZ7CxJo2q+dMiUA1IdBuqsvnAboLmKvYhWbJqSJ41bcENIf4Da4LyEHzzJ3EUPG5TMVLOJGJTRpi2/r6drep9wyOJtuHCK5qTBST94ARCkx32scPPNpOLUcWejgy0HPlADAp7xz4XFkZxVILW+Jqnor1s1b6Zpc3kGoLUtTByfOBme1YiSieJHy4J1Gy1eAlMT3Hnkp3ZxCrwJZiPg16MsDxfyB0IGnZWFHYsZU4+GSZQwAXgl3Ld3x/mCoEsB1aB9AndMj1aQW/epMQqv+NFTmrpM+ikEsEGWiSPyY5fJX7DwIm+Lfjd5zxDLsEXS2uNYIl4jRl4TwwQ58VByv4/iLGvy+AUbGBvjWEAd5oV9xjWs++eD6J2NJp1rdGm5NKzaCrEEnHiYAqBSW5aGnbq3UpSAH0D2HhBwnFUaQ0oQXZQrSPbvm2By2dcrLJ0SmBAA3zG7rjhfguo28+HhuZJ9cKD3duyshQN/6o9ZODZrYxe87ebhMDEANvqXaYKyfnvKmXp2zR16qA4P/wdpqIkT8jpuO8F0NdT5K3auhZatp5KyiUXJnHkXcf9bxm+t0JHhiLwktXRwiNsSszLwqDeTmWO0yKkSfN5/DbW50jyLLwxAhsFOtBtMA2NtNN5TK/m3M1BQgeiFIhxWnW2aH0foenBhftWzF3EQnm/Dwd7rDpaN6ntxulsAWtxDtNRwjqLrznuOUHMejzw7TF0gdjKUq7Ef+Du7QdJyyW3PLDn5euTZLrPWGzZtvbfsEpWmbO0HuTsitJ8D6TyOBpzDkIP1puO1QP/MplGqHZ+TCp/yaQgzuRhqc7pPYEYT4SIPdjB3we4r8kcAOfJzkSVz6OLCrEJsSPUDPTI0AXEzyGrqBdsEe8kYgfLlOMXi79Op+DZ0fTQLajabDObXaHUbOfT+YcR0PI/hENA0p/H8dUOngK3Sm4GAap3t067hhbjrwyVNOgPf3o0GTbfnq6KfnFgpfMAqmN1/2zBXQOSSe8xVK1TDIbX7OM9c7JADa4VXTm9t3/Adqxp4P4hyIO8Z3OiE9pK/T4zzwmK1a3oHWBNLNzEeBuOjZEgCLGAJg+NtRL6obVm91MHIjK2sX0pWZ+ZRz5obeDQ3Xffvg37z7lB134ibBt6O3T0mHsoOXGmlQrmozH8bumAasctzKpQjQlgAw3/kkXfGdfs13N4VAnDXv+TEN6zM3tG8XriXQqNsldfHhcrieNyEVn4FYw8O3xgJi2SvZIxauX1arhkEwT0MayADjBfxJ9Uk/7cCBufPuijD3JvTmdPg2KTYJI5r4E1303UHkWw/n4uQ1Mj/7XSc9vSEpsrgtDQQyJQDUPgDiiTATqeFguPE2Vg0NgpfAgZqk/p8Kg29eg2ZaC6hzoCqEb+98CkDRZ3Olb+MNwk9sM/F7CCR4VL4qr8iTBIBl2ofgveurIx5iWVIIZEoAYAXAL2+YT7TZ7yxDvVi9puDHE+G6y6BNbo6XyCO9rE+DHgGQToXQBdI6BUsa+fjR07V/3X44DsaYnzdN3ktMUkT916OE86i7skl5QeiePzmZdJVxLLhYh4JApgRAHWHiE6202V900s4xffj7ANDbei0ZSXFdfUrApTAdugdhMlai9qxFy7rNcRfoM2GUqvpvLyovBmJu8Iqpe3cd32YUCTZgBLIlAPhW4CSESQg0DJ9DAdG5GugGh6jq9wH4AqvZqD4+FVAjg66o/8h9a3+P5L5sW4WE+Iwb3LUQjQahGYtlFUYxe7og6iO2pYJApgSAhQ3naoQMLVBk1r/AMWZAU6ZdcENUCwfsMz2bhJRPe6yXTycNAweTdkBOpgdp4YNjtTe5eMsf5B2E17j5NAXuykBvBWmPAMTDGy475bdrYt5iXQIIZEoAYKlMd58p0LN3cnfWxbv0lEy6cn7syN+P1PJuUZego0SCcncUKwjsrVr3EHr5H9r4RqKvkjHSvr6ONUKeV9lG7rmWN3pGzFusSwCBTAkA9FMob1rbDdyTu7MhV1ZtpLoRN+GOYWKtKNF6G3ThNmQ6FBMUsI0okSBbvmbSpRqfJfgwFkLO7SdFkycLH0iFdtGkMZmp9hYBcYlaMlUhaMRoucTfTXmcWneohfvGIe4EJKLnV5Rf7oGPWBHzq841RKfyaniiqKZrPgOtddiGyHUHTANud93SU7wawgd+6n6tTI5bRhDvlTs2XfaCVmHFf7AIZEoAuOpUXArCgWAgXgnxC7mTGt4SwDmXPzJWyzlnGDX/84R6UY8W+1qNBOA/Us7THnpdEFWcDp8fu389pUGLgRjWEz5pAiUmZ+hYEk4QWmZ+heWZmzvMVoL3GYFMCQAcYUPrjDXQRICpfes2rsMP56II5G5+89SHz6wWnGNxDkdTqwjkF3M8zaaRufaL6li7M2vmL6KO3dlwOOdGbAvGvmBegSQaElTUGQcE+MQdbQwC9G96x4sfW50QSZyGhEC2BEDHIDOfKc5yW76D7zj1diKc9JF71syOz/81ttXRuY0ULodP0pQAfGrVjIWVe8Z/gpKkx22HEIRxSr/7NhL5fvIrweREaMqgFL0SzD3fHl0pOwOToRqKqwiA1nyhWvAiV9K7qV1069ZPj/jVNe4K62icuaVeXnNTY3LUKcenBLT25lmPnvbgC3/bGKFzl20/eEkVe5FuaPNsAY1JfKFDZNORAcT0vAv9KUTnBEiMniOQKQGgZvFxHorbkzEe9AqAZ9xqj3312r8tr3AuNcq0iI+ulEfemql8OpVbneiw3baNQiV39w2fO653p+zy3hfxbh/n6HlfVMqogpzB8GqtgCgio1vjS3rN067atPuoOsFiGiYCmRIAln94LQp4uA2HzdFQ/hA75th7KygwX3Dtzc9e+aVdN2Dh739xzx/NJiqx1KiAFgO1gFChac9TuTo98dSaG2FqUrBo4q1sW7dvoIsz78RBHwRNG5EwiXiwTkmCOnqNgvGIaa/Gt33Pa5WP+A8GgUwJAFwKQePQJsg28evjFADcCcI8+9gP33r42tv/+b8/9pyd91XG3fP9KwwbmTdtwa9eMs/I54xiOX/Hb674+aN15x6ZPPMzOOuPz26lNZ84yUpQkBCg+79B/jnv+5PdshjYo+pYTDK0sJQdxWcB4kwetyfDgaae1tqTIzRxPfLKu4t7T3vqT8EK47mKkT+gWDvcyW19UTVXO96x3fUctRxMOqhnj87/6wt+RHxiAcxy7emVc6s/bBqTQUJNSOrIa90Z6344de/Ohy2z8Er1jj8eXZNEgoBJBO/TnIAWUmlqYD1vvuS8Hp43x2OKfbAI9KxRD5bs7nKz6UKQ1r1nYuLYQtAzrMbXlkf3ju/70OwBpX+Znth33dxE9X2lcfcMn/mJVaKqU5rzObNYKnzoyfMv/Xk0od7YJiextQivBFOwDFFPzE/F0U40U8FsANMH3Cx88SQWOXtDkaTSLQKZqgBaR0/uL9uBr3dQzYxUQYk7a1Twbpx4hHT6EZ80UshdaIRCNY0h96jCjhujmDdGZu2vfnDbGduinr21meboV3BJ6BPq7WR62pBdPP7n3QAIRucDXOxMBvGnPXPq1HHpMcVnEAj0rlUPgtpF5uHZFkbd3SWC5YOeDaXdEu6p9sxCRBh10svrhb/48D9vW2al9vXRmfG3XPW1jbT/tm9qy/0rpzA3+QJ2+MXzCAkmSDMWVvSMLL6gKkZGPce8KB5Z7INFIFMCoGbRdrS4CkuEsDkWrodnAcaMKh2OwTI684rKNMIfsbxbW2tGIW/YVWt7fr544Y6LL27nytzWqbYIAUhuwCvBEpg7JSS7J3h6poNRAHYJn/We1+w9ICWyOA8AgUwJAHzlBpASv4UZXbfPsFsj8ljE0gEbPTt0sYorfKYnUjBC7qT3j+eF1X7qXItz5kdf/t1nvXH2v142EOYnMtbfv+7HGOF/y+RNinHCyB7HlOzKzfNqLtYCDq/Ol2gxUNSQEMiWAPBc3r0SGjmHWijxdxqPs3uaZ3dVpw/0aL3TVGxUXR7f5qkaP5qYXn3uzFlX/MX2yTcO9PrrSfqQpun9q7ocuKEAwDYMmYaa3XhlwLJsbAw0LvCXCRoSEIf+I5ApAYDOB62PGyI9dIvUev/R9nOwR8aQp58t9f7Jw/90urDJx3LNnx6wc/ySt9392hN3nHfpnbpgAyuEn9GcvXAP7v15LHpUIYl0Ynz6sR/NGizsJYBmbrriJFkMHHS96fwyJQD4Yk9qfzzkZgPxDbXKFor7qJ4tAhp7qaPmU3xpzE/0pNOlyjAxv7Jy7Bdf/p3ntiC+r964OXgaS3y3qsVATTLr2hLLn5wDL1oMHMMCqywGxlAalDVTAgCdj1qvatY+U5Dv6ZeBeA9cMPEPuCElaxIS3G0G/ojqWt6zSuPOe3es3/3gxF3X/s/XfeLuYuA/YINj5G6puaX59J2BqQTxK0H4nv0O2RmYClI/PbIlABhJzf265yfmCoYEqVirC0VTvTv34A92tuZ9Zv5AVoSywaYGo1QB5e7EworaB791xON3HXX95w8LhRiYcev9a/4TJfkmbgBulWdUkCE07gmgrUGH5yqV17aKLP69RyBbAoD383MbxIMYn5kfqBIjaoGQAnLqleIp4Zs4O7QPIHne3xhLMX+6pCB/HBWurTBe+9uDd3/lBdfeMfCTdigMgfpZ+ihoc9WIMSZXuOoAyrUukDsDm6PXD99sCQB9rRc1V70Ix6hSw0znMQqCL9y0at2cUjuP0ZkKcCcimJBWUZoTpmKbdGS4Nmq+4PHDnrjt8CGMBFZ45j3Y4fdowsagoHwoLcRVZDjD6yo4IERer3zm1MtlZ2CA1mAMmRIANTtHu0/A68RT6lFn/ObMCN/eLQKuRPb8odJ2eDuhIcTXBHQQEgJj5jFPH7xry+bJW1uOx3W0XuhXP7h+H/rym5ttDUZpaUcwAY0fa1QJ6P7x1RWrOOa63oW9oEXSaB+BTAkAy6niclsCJzwUDcx+o4yDRw0VyvK3ECjbop5zI7wRyMIdWSod2syDPfz4pnZ76aqtwMlhS1XssHVe942j9rwdlHcpYZKTbulqVW/FYuBsk8VAOvbMckClxfwPI+2F4gHWf3vPibIzsCXOPQzQZovrYY5DTYqYOM4TYTv3Tj6FPuPr8M2YrsMyPTJTnFkxU3jb2O78mSt3j5+9cvfI5YV93nV2yfq5aUMYYINPUxUZRSeGdOZXlv56/S3bNib69slx632H/Axofi39zkBa+qgzfZgM9TXh/GE1u/KasLuY+4tApu4DwNe9/PIS04cZPMz4GnBy06MDMrbmOh2zpT55em2PYWyPh7vwyl+u/MapD7x+dmT+L6uj5glGNenoAmghHkpXxGUFbyR34KxXfo9nTF7RjzsBUrP3jM84Xu1N8G9KZFJ82lEImC+cNLx/m6RdhqL6jkCmRgC8EagBUi0Iwh7kxsxP3EY/EgAdN+hwinEzpRj/fX7Lxpkdmy+95VX3H3fa6HThH0wTd/rS1V51hZ0MEXvdJ2oyjUrVcG33zw751BHPi3r111Yp1b7lubWfNFsLSKMA3x8Eyt7JO0964ti0MOLeWwQyJQCwSIVehRiIGNxn7OBVIANLPEl++kd2spATeQxEfenqU/ZNv+md/3t8evS9lmdjvz1l2+EIhPYJFHOrFybmzoVJlWEA1G/7wSG0Iejz6QeE0omAbDNtM7fatIvnp4cSn14ikCkBoBbymY/xID1gKmIQ/NiP3EMYK97B0bWevQYMJZ5qRK7urvO+vnV0X+EaI4c1AYyOUwOneTiOURmpvfrSS3490F2CjunegavC9mAEk0ZZirvCGpelnPPWE38vx4RTUOqlc6c11Mu8h5MW87zf0JiCYGgPBtNrAdo/wnMDx8o0bnP+5JE//nu75N1v5PmVgSZMy64IgQ2A1hzDsWpHff30r/9Rg18fHf7pgQMfR2d+j212LndoMRDnAw5bkRs9q48kStI+AgNv1MNEHtzjlzfgGzjxVMB3IGFAPEbWIAyTbHuph977WqTbJk+fHZ9Z9SHMRGqRgTytBbRal0ARPNucmF1ZOw5GKtjAFN5x3oCNQQmrmK1IIKJxY6DnnD8pdwa2AmvR/pkSAI6FRTVSEd4Or8Vp5idd/ziG4ZhJtwkpv34/z3v4lG/aFfOHPBWgzGgUQ792FgQLOWKjgX+V13bmv+W61R/7HxDpACLTqLkVKt3Ldp2445gOIkrQLhDIlABgfIhpiLeVhbgo9CPRoKcBOozSsRgfxIr69N/2iS0bcWN47t5g4xCXoV1ysEt4pHoIQqNsg1MfffjZC6Zl32Q33hnYkggqHm5vWu3a1rktA0uARSGQKQFg4SvVUT7g3h8A6lEAYUnmRoVL7Ia2ZwIEuSsWCg+b1W5ejYPvXWOCJFtjqfrrYnv27TWvvKvzUQBoBbWm553756/YM9FfKrOdeqYEgPo8OPEB8wI9dK9I/KHNKS1iuFAVS9ZjOPo729awP1wClMp2cQPxEATAxx844HdA9e76KKAFxCG6aWuwbeWPrDnOmSFnMfYYgeG26h4XplVybuRdPg/9/SgsEJpGV98VbBqkr55H/OL5lVwFNwC2JrWRjvb5rjHuIl0807oB3w/wX6F2SDy/RnQvmpTFwEXWQnr0TAkArC6jBVIjZI6AgYf7vk5u9Gs1EkgHs58+q6aKdA9gd1moxcKhiAFrfO0D2N77I5sHIZ2RT3cGoj5OnT5pSnYGdgZd26EzJQAab/XRDBXW9bpA2xgOJGDVpsMIeD+mSe081+5jdp5XEGPL18wyMr4xuimoXVmEM9NmcaRqmXJMOEC0t4ZMCQAsAepVtBAzkJF7/hCy2rvdhhqK2iejhW3yoLNLgjhal3EXXyAzZ9+OnYE7okKgvXRdj0YB7psuO2V6TXsxJFQnCGRKANByuFKawZOg4ikAMYvPMEpz9R6ipCiDcKNNdWkXgbTK34ueKGoVvNf+W7av/QNOMf1HfRrQDP9o7vQ5cSwGHpYzXLkzMApNT2wZEwDNiqt5PngN6LdSpTWL2ZOaaJGI6/gv/32x1CJ4yBusp4hvn+tCsXtlxLfQsBiIvcmJcxhdKF0H8VwtSOPaRZDJQy1DnKrlYB92ux4ohjgL6JdXNzTd8JgM3bh8R9K0E5loD8GwlR7BdEIH3bZDRwP1iKaTuL0L+/SeHfdhn//3LCtpOwXhHMU7nDOmD2Q99bJNO18Ydhfz4hFYAo168YVoPwVioPSGVmf4oKehwKxoBU6bh6P7H/uty6ThkNFlrrc9cgxuQjVvUd9nTEpEF0zr0TB0Z6DlWrIYGIVl0baMCQA9AKDFtOB1X4yxqQHyHgG4B4IAl2vgOpH9VxHtyZw1wDJ5bv6umlN6pvnOwGSYsZcAJXBkMbDH9ZUpAeDiOzSMH7MC8wQexORaGASND25hdx43DPQ+gHg9W3YBxHVdXVTioHDxtAdlv/ahNb8F1l+u7wwM50zk0Y9IbVQ0jcEtQ4fbRvV1jb7i0i0CXbeobjMcZrxoYXVDI+bXPT3vmIFHwCsUiC0IpSMMpwg8A+j2NSCTPlz6fdQAIxYDqwmLgUReUxJxnaiNyvAumZSdgT1rg1Ge6FmySzOhYA2QyWOmR4sLmB2u2hxpjNwqPQubcIao3FyFNjJ3WV9cLl24IZbCMDZMr3sQl3/+MHkU0Jw0x6Wd0OZpO0965sXNQ4pvuwh02aDaTX5phQMn6/IyU+vOvd7z8FQAjJLAK/7sYWmVqG1qqEB+mduO05eAk4+YFaCMOwN1VXSSDSSglS9Ylke3DovqAQLd1EIPsh1OEmh4PmcTL/APds30TJPPJAm8Yg53Mw1u+FSgJcimVmhirNNFrFapdu/vWtU78AGRqeaLgcnp43wA3Rf0RjkmnIxPp64ZEwAubtfUzE08oX8EGwmCgE8CQwAoDqcH5qEYsAjQ7U7AodCbnunW+w79PW4OvjNtGgA5nYA1SW+4YzEQNwdvrNacN6TnID7tIpApAVAHhdoX9/x1J8X88EhoexTKU0fqQhGGY9Tyq5PcXV6+SClYJwn1LizQvCn5zsCAzMCgctWDM6wCYDEQnxOmD4hktP32rh4yBSCGwlh95naFR7h9hc3U0PRbgd4BvfiUMAXwumvwmG9ToboRHYsnOy2F8elvu66LY8L4JmJEqcuAIk6+RRXAw8VOFUDhnTR18u6Bfwo9ia792S1TAoAvBAlGlyGe4DmyHhFoAbG0qtV18BaAVFhWtU3iEhm9hOjd8rWNZbwSvFl/QISG9yiaXzouKj9i7nDDpmxMAzCFGMfGoPNCSYqxCwQyJQAaPw3mtzc+Zc/mUAP0jRpUbp/aMkRdiYEOCEA5lsr0JUa16eXoAyK7+fvg+BYgllkI9BDwvPmCChCJifD4kjgJAe/cy075rRwTjqDTmSVTAgDbeUO7+ahR+dykNBoHkMlvcHpE0BmgfQ4d5YT0zKLh+PsBk+mhh+RDOwPxLcAvqQ+IYHrDXw4OT7+4Ymj+ompI04l6ovVQyyxstM2x/6KdRe8cgWwJgODbgASUz+tk1OyiX5exXTtSAKj9GCmUdMlSj1vabsCrPXyvQa9TcCXEpgOK//ktANUFxv948GIB3grgO4JhoUEBRLWLwJJtGO0WoJNwuBAI5SXG9plf83jQvthD2ThhCqADdZJT78MWsQ8AhGkR1SqDUBnAWnyX4NERt1YJDMrfXrXuITD2j8OLgShkCq1RZ3x4hGrntHefumPgHz4ZFD79zidbAsChfQBQwUJgCF4a/mv24nbGj4D78SJtuFuBnSoI6mIxDx8IxeQ6v83YvCTrmu4MxGfEPucXDXgT5MlvAgiAUI0hpEd7Albg+2cXh93F3D4CS7JRtE9+FyGpCTGjB/ykmDzStOLpcrtU4eJeg7SDxo6JcDyvlncO/eRffXV8kKR2kpdjle+sueWn1Bpg04qIJYtTBfhim+e6b7riVTNrY55ibQOBjAkAv7i8KEasxIyt+32y+q1PN0LmOJ564g2CGj20AWq/gmDg4mjKUvJIlg+2uXHq6J1L9mpttTPQuydnFVsUL15qLAWC+1How4zywuvjvmJvjUCmBAAmAOoYatpIuqH5+fyE8I5t0IdFkxmsNc6LDuGOORWcSPSvBUpNLl4CohcTADs/t6r0ZliWbH3jTexNxMyqZDxHA7kt4aYAeMnJFfrmzZtvHbqQTq2ZJeqxZBtEP/BCV5HcqIhtgramLb4DWdEu8QKxClPOM16chw/0hp+d4EbhyH3ROD+5fudeJ+d0+mkwJRCwyF4uljevumvryf3AtRdpHpjbgA+IOD8x1UDLVfuCmqVMAzOuUGBLcsM8+aCnN8kx4WaQJfgl3dCYEGx5OOFFExhC8URQIpoA6KE/OLXhiABEg4fOt5w3Nq/9H7PHEZOTRIDu8hZb/tqQ5WFs7lgm3jKgmzbhRkf3yebZuIrUcXY8b1fpLx799Pp9Qb4dGi778tlz7z3hk9NVuhgotJuhrWSoYzWNQrVQ+8yR19100S/fdf63gQKVdsmoye1m6YpTpm4EXSeAry3VqTcnD/0+VyYK4uXM/IjjGbQY+N3mscQ3jECMG8Jey8uMRmIeetXed0+tLn7CcKgzJwZgHqCHWgdIQsP39Swbi9W0b50CgaFolMojT+gqjPKje0PIz8KBFer47ZxhVuaefs6U+8JfbFu1C4G6UpTiqruu/ZfyKu8So8z0d5qOY+Rs2gq1M18y/+rPdpx447Z3vqSrhDrNuN3wV5y05zDPrHwXsG5oHYdAJwVZi6GAaeGWAM97wnG9F1330EE7lZ88WyGQqREAGDXM4mRWvT+Zwj4aNWZsDsabTw23BAvtENSNjwKyv45R13GRP1tcQOwZ9HmbxSovX8k9XPYql3SZEFYx8ErQMjeUi96nbnjWg5eu/PLWuw6YGv+xuTf/+G+eN7XbGLXdNVM5e884tumP7p43Tp+kdY+BKdoZePnJO/4DNwBf6F8FnpI3Vwz8uB5oHIDbHvl8wKGWZdAHRG5IiSjOMQQWPTeNpbekraHCEhMrLtb8q2yat8nmi4uIByxsV8wdkRrsRA/89NCAAlP4xV8nhES98dk1DxgVZ05tmgtB7Rcl5JJudGiEAoryxqbymPd/njp49zeeft6O7xcs9zuFUuWhuZULPyjkvJ+s2XnoqxGMC5WeWO99wMA31hcD09LXZNV1lgIYccHl4s2bPVkMTIMu5h7iiZjPMrTyaUAqV51hiDtVM6+/DCQGoZalWxcHwUOFDZ7krSwqbGT3GjzIDxnxlKAeEI5dq8/esP4X+ar9EIby0TRY3kSdUm0UllbaSBCU6aptj07hrMWyxhEg90jQ/Fwjn3uOXfOGcshmnb3hW3i3/9PQzsAA5NQyKQ8MzRysvxibDnpy90tbhBVvH4FsCQCevKPkddbWXEyNTK8DEPsz9/rPOp+rUH4CzPA6JRXeBzXQKKVOmDOImGw4ffvptYndK683a2DeuKoLtbhPcztRrkqIxQpzhM0kHDDpYZ8BP2gxECThmDDfAAxjErQRN7IgGAlbfEjQtApYdT13wGTvt9llSgCotwBUV8S3tHjE9cYWmFS/r57axgF8gaBFBAfl+Nw6dc+vk1FROA8WJHA38WHy/IzKTXt3qb/ooRd8JV+2HjYKCcs33QkBHwWWVPVCxAYZXZLbVTTPKNxKHxBBZJ8e0pIUkU74Q1eC1sLHRKkGz3rHK55clxRD3KIIZEoA+CxOjYZ+NG1sVOGpQNxXC4fAnROg1gcXLQjI02+UHB7e/KpwVRBrMYYvb3vJ/JrdaybNKj6VwwfoQql1P9qgAkTRwEvOUMoDNf7TAxOPg5p/V18TTiJDkxvWEYNeu8AJr2uOKDq5MwdK9H6aWbYEgJ4CcGXpxhPUXJT1yaZdlIkamD9qoLjU1Jjp/YTYTTnrJLWTtvdI/90lF35jZC73UczVKUWWZugBSe9GJVOJl2rdJNa7ONbNqmjhFFuRhCrCKgBVEo5AXCCLgWHsks2ZEgA1vhCE2zseujGR3f8phq+zPgXRQoDwI0HA0ZUl2mnq9MiPVBAwmobyXNQTKbtnPXzy39tzzu1YEFQZ8fmGRSVbj0xFoTn1EJWX87ZjOP+oFdwZyASl0cQUg2ba7AnlYF3TPOmgp+UDIq2qMFMCIOfSS3lSzDN4hIftdQ/fRMyumEs9QzxN8RocOZp6kB+nrdcZQn69MX7umuPmXvzT5749V/K+YozkMfjV9PQmfepJe5NSd6ls3b5hFkP52/AhEBLVhGMCPSykyLu+oMO1hpsG7eIKSIMLuss9O7EyJQDQhMAl1I7oRwzDTKMN0Nnu135gVgZ+6odmDp2WHyXeRnV+0PmrVjpYj/QH3n/mnhfu3XhBcdr6rJGDbMv51dn9dMCnjPpR2sY4XOVYxk2OszDDr1IxEgtqJKCSDXBmSY0HfW6IPzlk8teEDecNV7zsD3JMuEk1Dr2Sm9DWcy9TXwgSYXSdDTMzNyblzVNJ7enrFIa4XOvUJHWzDJv94KSpxXVrrNqfRbXvXPj6mZk3XvbWlbtGLrer9hMGdiwT93a1JqCmOxTZwHuLobeNrfet+xlk5z34KjB/loXlKUPLAwIIBC2IGWj28R+YC+AmFMP8I7eYl68Jh5GJmYdeyTF6+mrl14B4vxxVYQZmHzgws/KKMlw0ZyudeZ/cqENSlmh6ZPPdKQZ3pKYxl+fhKjn0XIERnF3nvf26jY/90abVu1ZsydXsKbwmxPEfjAranxpgn7A6Vkelc4e+CKhgwnaEm8HuNTryC7IU5rgHxAeRpB2M+scmJbn5QBEOcHjGJbIYmN7k/DlxeoDl5ONYFhoSSoRRYrDGFemYSR5qpqaAfoMjE/E7O4VGopG4FCis/PjcbPFt+x7tAwjnEDYjN8+48qxfg/o/f+HVd378ycN3nl3JO2c6Oe8Yx3bXszAgWrAzkafTAe2IQRt/aHSUh3Ckjh+jCNfGwYEloOZd695R03u8YI//Mb4khE3VTJaFwz+oDtV/cXnqtGIcg/KwP20mqr1qwxNPnQzv++pBxKQRyIwAoKZ/TMn5Ym2m/GgRt0+gGbnlvOfkYMY6ukWnXuh+GRzex0wBt8yhfbEbdsqiFTE3E2jYQ4sDdTm3ZnsuxdV+NqWJ9SqKb/BBIIYWphp1/Qtj1UNnNOj91EGoa/zlGx9Dnh/5geF94s0fv+3gZyYWjnHy5SMrI86BWB5fXygX19qOjbv08Mkg/loSKHLNHKQiRv4otu15o3vt3/WTznbT/vSD6/dduWnqGizwv9ZxazhhBUCJ810Xh6/VgSvay0zFDisSFBaucLCsom3Y+UPCfmKuIxA07LqTmJYzAuAUdJue9f+gH02jBl/9it0N48g6J9Wic2wdUnRBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBDIMAL/H98wjHENdaHfAAAAAElFTkSuQmCC" alt="Jsonita 标志" width="44" height="44" loading="eager"></a><span class="topbar-title"><span class="topbar-breadcrumb"><span class="topbar-org">Jin Huang</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-project">Jsonita</span><span class="topbar-separator" aria-hidden="true">/</span><span class="topbar-doc"><span data-locale="zh-CN" data-locale-active="true">菜单栏与快捷键</span><span data-locale="en" data-locale-active="false">Menu Bar And Shortcuts</span></span></span></span><nav class="topbar-links" data-slot="topbar-links" aria-label="文档链接"><a class="topbar-link" href="../index.html"><span data-locale="zh-CN" data-locale-active="true">首页</span><span data-locale="en" data-locale-active="false">Home</span></a><a class="topbar-link" href="../todo.html"><span data-locale="zh-CN" data-locale-active="true">TODO</span><span data-locale="en" data-locale-active="false">TODO</span></a><a class="topbar-link" href="../changelist.html"><span data-locale="zh-CN" data-locale-active="true">Changelist</span><span data-locale="en" data-locale-active="false">Changelist</span></a></nav><span class="topbar-spacer"></span><div class="locale-switcher" data-renderer-owned="true" role="group" aria-label="语言"><button class="locale-button" type="button" data-locale-target="zh-CN" aria-pressed="true">中文</button><button class="locale-button" type="button" data-locale-target="en" aria-pressed="false">EN</button></div></header>
-
-
-<script data-renderer-owned="true" data-interaction="i18n">window.CAST_DOCS_I18N = {"activeLocale": "zh-CN", "locales": ["zh-CN", "en"], "strings": {"zh-CN": {"chrome.contents": "目录", "chrome.documentLinksAria": "文档链接", "chrome.defaultLanguagePrompt": "是否将{language}设置为 CAST Docs 的默认语言？", "chrome.languageAria": "语言", "chrome.languageName": "中文", "chrome.tocAria": "目录", "diagram.close": "关闭", "code.copied": "已复制", "code.copy": "复制", "code.jsonInvalid": "JSON 无效", "code.jsonValid": "JSON 有效", "code.text": "文本", "diagram.erAria": "实体关系图", "diagram.flowAria": "流程图", "diagram.open": "打开", "diagram.png": "PNG", "diagram.reset": "重置", "diagram.sequenceAria": "时序图", "diagram.svg": "SVG", "diagram.unsupported": "不支持的图表", "diagram.viewerAria": "图表查看器", "diagram.zoomIn": "放大", "diagram.zoomOut": "缩小", "metadata.owner": "负责人", "metadata.updated": "更新于", "openQuestions.count": "个问题", "openQuestions.kicker": "待决议", "openQuestions.title": "开放问题", "state.noContent": "暂无内容。", "state.unsupportedBlock": "不支持的内容块", "state.untitled": "未命名"}, "en": {"chrome.contents": "Contents", "chrome.documentLinksAria": "Document links", "chrome.defaultLanguagePrompt": "Set {language} as the default language for CAST Docs?", "chrome.languageAria": "Language", "chrome.languageName": "English", "chrome.tocAria": "Table of contents", "diagram.close": "Close", "code.copied": "Copied", "code.copy": "Copy", "code.jsonInvalid": "Invalid JSON", "code.jsonValid": "Valid JSON", "code.text": "Text", "diagram.erAria": "Entity relationship diagram", "diagram.flowAria": "Flow diagram", "diagram.open": "Open", "diagram.png": "PNG", "diagram.reset": "Reset", "diagram.sequenceAria": "Sequence diagram", "diagram.svg": "SVG", "diagram.unsupported": "Unsupported diagram", "diagram.viewerAria": "Diagram viewer", "diagram.zoomIn": "Zoom +", "diagram.zoomOut": "Zoom -", "metadata.owner": "Owner", "metadata.updated": "Updated", "openQuestions.count": "questions", "openQuestions.kicker": "Unresolved", "openQuestions.title": "Open questions", "state.noContent": "No content.", "state.unsupportedBlock": "Unsupported block", "state.untitled": "Untitled"}}};</script><script data-renderer-owned="true" data-interaction="i18n">(() => {
-  const config = window.CAST_DOCS_I18N;
-  if (!config || !Array.isArray(config.locales) || config.locales.length < 2) return;
-  const MEMORY_KEY = 'cast-docs:global-memory';
-  const root = document.documentElement;
-  const stringsFor = (locale) => (config.strings && config.strings[locale]) || {};
-  const label = (locale, key, fallback) => stringsFor(locale)[key] || stringsFor(config.activeLocale)[key] || fallback;
-  const displayName = (locale) => label(locale, 'chrome.languageName', locale);
-  function readMemory() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(MEMORY_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) {
-      return {};
-    }
-  }
-  function writeMemory(memory) {
-    try {
-      window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-  function rememberDefaultLocale(locale) {
-    if (!config.locales.includes(locale)) return false;
-    const memory = readMemory();
-    const preferences = memory.preferences && typeof memory.preferences === 'object' ? memory.preferences : {};
-    memory.version = 1;
-    memory.preferences = {
-      ...preferences,
-      defaultLocale: locale,
-      defaultLocaleUpdatedAt: new Date().toISOString(),
-    };
-    return writeMemory(memory);
-  }
-  function defaultLocaleFromMemory() {
-    const locale = readMemory().preferences?.defaultLocale;
-    return config.locales.includes(locale) ? locale : null;
-  }
-  function apply(locale) {
-    if (!config.locales.includes(locale)) return;
-    root.lang = locale;
-    root.setAttribute('data-active-locale', locale);
-    config.activeLocale = locale;
-    document.querySelectorAll('[data-locale]').forEach((node) => {
-      const active = node.getAttribute('data-locale') === locale;
-      node.setAttribute('data-locale-active', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-locale-target]').forEach((button) => {
-      const active = button.getAttribute('data-locale-target') === locale;
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    document.querySelectorAll('[data-i18n-key]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-key');
-      if (key) node.textContent = label(locale, key, node.textContent);
-    });
-  }
-  function maybeSetDefaultLocale(locale) {
-    if (!config.locales.includes(locale) || defaultLocaleFromMemory() === locale) return;
-    const message = label(
-      locale,
-      'chrome.defaultLanguagePrompt',
-      `Set ${displayName(locale)} as the default language for CAST Docs?`
-    ).replace('{language}', displayName(locale));
-    if (window.confirm(message)) {
-      rememberDefaultLocale(locale);
-    }
-  }
-  document.querySelectorAll('[data-locale-target]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const locale = button.getAttribute('data-locale-target');
-      if (!config.locales.includes(locale) || locale === config.activeLocale) return;
-      apply(locale);
-      maybeSetDefaultLocale(locale);
-    });
-  });
-  apply(defaultLocaleFromMemory() || config.activeLocale);
-})();
-</script>
+<script src="../assets/nav.js"></script>
 </body>
 </html>
