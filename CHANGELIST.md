@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### docs · 删除旧设计探索目录
+
+旧视觉探索稿中的稳定决策已迁入 `plan/` 与 `spec/` 权威文档，本次清理残留引用并删除旧设计目录，避免后续实现继续依赖历史稿。
+
+- `plan/00` 明确后续实现只看 `plan/`、`spec/`、`site/*.json` 与渲染站点页面。
+- `spec/01` 保持玻璃 mockup 视觉权威；材质、颜色、op-chip、动效和禁动 blur 规则归口到 `spec/03`；窗口原生 vibrancy 机制归口到 `spec/06`。
+- `plan/01`、`spec/01`、`spec/03`、`spec/06`、`src/styles/tokens.css` 的历史来源引用改为权威章节引用。
+- `site/changelist.json` 记录本次迁移完成状态，并重新渲染 `changelist.html`。
+
 ### docs · repair CAST strict structure
 
 按最新版 `$cast-a-start` 修复 Jsonita 文档结构，让当前发布入口、TODO、Changelist、agent workflow 和图表发布面可验证。
@@ -18,11 +27,11 @@
 
 ### docs · design 核心决策迁入 plan/spec
 
-按 `$cast-a-start` 的 Existing Repository Rewrite Mode 做 full alignment：保留 `design/*.html` 为历史探索材料，把已经稳定的核心产品 / 交互 / 技术决策迁入现有 `plan/` 与 `spec/` 权威文档。
+按 `$cast-a-start` 的 Existing Repository Rewrite Mode 做 full alignment：把旧视觉探索稿中已经稳定的核心产品 / 交互 / 技术决策迁入现有 `plan/` 与 `spec/` 权威文档。
 
-- `plan/00` 新增文档权威边界：实现任务以 `plan/` + `spec/` + `site/*.json` 为准，`design/*.html` 只做探索追溯。
-- `jsonita-settings-detail.html` 的设置交互拆入 `plan/01`、`plan/02`、`spec/01`、`spec/04`、`spec/13`；以当前 `SettingsModal.tsx` 的 6 分组真实实现为准。
-- `jsonita-motion-demo.html`、`jsonita-glass-mockups.html`、`jsonita-singlepane-statusbar-demo.html` 的动效、视觉和状态栏结论回填到设计 token 与 mockup 规格。
+- `plan/00` 新增文档权威边界：实现任务以 `plan/` + `spec/` + `site/*.json` 为准。
+- 设置交互拆入 `plan/01`、`plan/02`、`spec/01`、`spec/04`、`spec/13`；以当前 `SettingsModal.tsx` 的 6 分组真实实现为准。
+- 动效、视觉和状态栏结论回填到设计 token 与 mockup 规格。
 - `README.md` 的项目文档表格补齐 `TODO.md` / `todo.html`、`site/*.json` 与 `.cast-docs/project.json` 入口。
 
 ### fix · system 主题不跟随 OS（light→system 不变 dark 的根因）
@@ -76,9 +85,9 @@
 
 ### fix · 玻璃视觉纠偏：减薄叠层，露出原生 vibrancy
 
-- 主浮窗按 `design/jsonita-glass-mockups.html` 重新校准层级：主窗保留单层 `--glass-bg` tint，TabBar / StatusBar 改用轻量 `--chrome-bg`，不再整条覆盖 `--bg-card`。
+- 主浮窗按已选定的玻璃 mockup 方向重新校准层级：主窗保留单层 `--glass-bg` tint，TabBar / StatusBar 改用轻量 `--chrome-bg`，不再整条覆盖 `--bg-card`。
 - CodeMirror 编辑区和 gutter 降为近透明叠层，当前行高亮同步减弱，避免 dark 模式看起来像旧 flat 深色编辑器。
-- 按 `design/jsonita-singlepane-statusbar-demo.html` 移除旧右下角 temporary keymap HUD；默认主窗只保留状态栏 hover/focus 快捷键 badge 与单窗 Run hint。
+- 按单窗状态栏最终交互移除旧右下角 temporary keymap HUD；默认主窗只保留状态栏 hover/focus 快捷键 badge 与单窗 Run hint。
 - Tauri 建窗配置增加 `backgroundColor: [0,0,0,0]`，启动时再调用 `WebviewWindow::set_background_color(Color(0,0,0,0))`，补齐 WKWebView `drawsBackground=false` / under-page clear 的透明链路。
 - active tab / 设置齿轮回到玻璃 mockup 的轻量 pill / ghost icon 表达。
 - macOS NSPanel promote 后显式设置 `setOpaque(false)` + `NSColor.clearColor`，确保 styleMask 变更后不会恢复不透明 NSWindow/titlebar 背景。
@@ -122,9 +131,9 @@
 
 ### design · 玻璃视觉重设计方向定稿 + 单窗交互 + 动画规范（仅设计 / 文档，未改 `src/` 实现）
 
-经多轮设计探索 + 用户逐屏确认，选定**原生玻璃（macOS vibrancy）**为视觉方向，并新增单窗模式快捷键交互与一套偏 macOS 手感的动画。本次只落设计与文档，代码实现按 `design/HANDOFF.md` §7 的阶段在后续 session 做。
+经多轮设计探索 + 用户逐屏确认，选定**原生玻璃（macOS vibrancy）**为视觉方向，并新增单窗模式快捷键交互与一套偏 macOS 手感的动画。本次只落设计与文档，代码实现按当时交接文档中的阶段在后续 session 做。
 
-- 新增 `design/` 目录：6 个玻璃 mockup / 动画 demo（`*.html`，浏览器直接打开）+ `design/HANDOFF.md`（交接说明，含全部材质 / 调色 / 动画曲线 / 单窗交互数值 + 实现阶段，供新 session 自洽看懂）。
+- 新增旧设计探索目录：6 个玻璃 mockup / 动画 demo + 交接说明，含全部材质 / 调色 / 动画曲线 / 单窗交互数值 + 实现阶段，供新 session 自洽看懂。
 - `TODO.md` 加「玻璃视觉重设计」backlog：阶段 1 单窗快捷键 + 状态栏 / 阶段 2 动画 / 阶段 3 玻璃重绘 + 原生 vibrancy。
 - 视觉决策：系统蓝唯一强调 + 绿 valid + op-chip 四色（蓝 / 青 / 绿 / 琥珀）；AI Fix 标签与 Diff Accept = 琥珀强调（出错→修复的视觉重量）；图标全 SVG（去 emoji `📋` `⚙`）；设置面板去 reserved 行。
 - 新交互：单窗模式由 `⌘\`（`CmdOrCtrl+\`，默认内置但可自定义）触发；状态栏 `Switch to [Single/Split] Panel` 控件与 History 均「平时只文字、hover / 键盘聚焦才浮现快捷键」；切单窗顺势 smart-resize 缩窄窗口；去掉左侧状态栏 "single-pane" 冗余。

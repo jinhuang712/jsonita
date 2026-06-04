@@ -255,7 +255,7 @@
 
     <h2><span class="h2-num">F7</span>设置面板</h2>
 
-    <p><b>结构</b>：设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。左侧 nav 切换分组，右侧显示当前分组；所有设置改动即时生效并落盘，底部 Done 只关闭 Modal，Reset all 恢复默认值。交互来源已从 <code>design/jsonita-settings-detail.html</code> 迁入本章与 <a href="../spec/04_components.html">spec/04</a>，设计稿不再作为规格权威。</p>
+    <p><b>结构</b>：设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。左侧 nav 切换分组，右侧显示当前分组；所有设置改动即时生效并落盘，底部 Done 只关闭 Modal，Reset all 恢复默认值。设置交互权威已迁入本章与 <a href="../spec/04_components.html">spec/04</a>。</p>
 
     <h3><span class="h3-num">F7.1</span>General</h3>
     <ul>
@@ -334,7 +334,7 @@
 
     <ul>
       <li><b>适用场景</b>：屏幕小、希望只保留输入区域</li>
-      <li><b>开关</b>：F7.1 General「☐ 单窗模式」（默认<b>关</b>）；另可由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 即时切换（阶段 1 已实现）。切换只改布局、不自动改窗口尺寸（「顺势缩窄」实测 clunky 已移除；窗口尺寸仍随内容智能缩放）；该状态栏控件与 History 一样平时只显文字、hover / 键盘聚焦才浮现键位（详见 <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</li>
+      <li><b>开关</b>：F7.1 General「☐ 单窗模式」（默认<b>关</b>）；另可由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 即时切换（阶段 1 已实现）。切换只改布局、不自动改窗口尺寸（「顺势缩窄」实测 clunky 已移除；窗口尺寸仍随内容智能缩放）；该状态栏控件与 History 一样平时只显文字、hover / 键盘聚焦才浮现键位（详见 <a href="../spec/01_mockups.html">spec/01 § 2</a> 与 <a href="../spec/07_menubar.html">spec/07 § 2</a>）</li>
       <li><b>执行</b>：非 Tree 功能右下角固定提示 <kbd>⌘↵</kbd> Run {pane}；运行中 / 成功 / 失败在同一位置短暂反馈</li>
       <li><b>Tree</b>：切到 Tree 后主区域始终是 Tree 面板；合法 JSON 显示 <code>TreeView</code>，空白 / 非法 JSON 显示明确状态，不再静默退回编辑器</li>
       <li><b>回滚</b>：因为结果写回同一个 CodeMirror 文档，<kbd>⌘Z</kbd> 可以撤销本次应用</li>

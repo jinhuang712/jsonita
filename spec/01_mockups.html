@@ -24,7 +24,7 @@
 
     <p>其他章节（04 组件库 / 06 窗口 / 07 菜单栏 / 08 编辑器）若需引用界面外观，均链到此章对应 § 节。<b>不允许</b>在别处重复画 UI。</p>
 
-    <p class="callout callout-ok">阶段 3 已落地：本章已从 flat 重绘为<b>原生玻璃（macOS vibrancy）</b>视觉权威；材质 / 调色 / 动效出处仍见 <a href="../design/HANDOFF.md">design/HANDOFF.md</a> 与 <code>design/*.html</code>。当前实现使用 Tauri 透明窗口 + macOS window effects；CSS mockup 用 <code>backdrop-filter</code> 仅模拟文档预览。实现层必须保持主窗单层玻璃 tint，TabBar / StatusBar / editor 只用轻量叠层，避免叠成旧 flat 深色面板。</p>
+    <p class="callout callout-ok">阶段 3 已落地：本章已从 flat 重绘为<b>原生玻璃（macOS vibrancy）</b>视觉权威；材质、调色与动效决策已迁入 <a href="03_design_tokens.html">spec/03</a>，窗口原生效果见 <a href="06_window.html">spec/06</a>。当前实现使用 Tauri 透明窗口 + macOS window effects；CSS mockup 用 <code>backdrop-filter</code> 仅模拟文档预览。实现层必须保持主窗单层玻璃 tint，TabBar / StatusBar / editor 只用轻量叠层，避免叠成旧 flat 深色面板。</p>
 
     <h2><span class="h2-num">1</span>主浮窗 ── 6 种状态</h2>
 
@@ -441,7 +441,7 @@
       </tbody>
     </table>
 
-    <p><b>状态栏右侧交互（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：右侧两个控件<b>对称</b> —— <code>Switch to [Single / Split] Panel</code>（切换单窗 / 双栏，纯文字无图标）与 <code>History</code>。两者平时只显文字，hover / 键盘聚焦才<b>滑出</b>各自快捷键（<kbd>⌘\</kbd> / <kbd>⌘Y</kbd>；max-width + opacity + translateX，~150 ms <code>--ease-native</code>）。点 <code>Switch…</code> 或按 <kbd>⌘\</kbd> <b>即时切换布局</b>（不改窗口尺寸，避免 toggle 抖动）；单窗下左侧不再显示 "single-pane"（与右侧控件文字重复）。</p>
+    <p><b>状态栏右侧交互（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="03_design_tokens.html">03 § 9</a>）</b>：右侧两个控件<b>对称</b> —— <code>Switch to [Single / Split] Panel</code>（切换单窗 / 双栏，纯文字无图标）与 <code>History</code>。两者平时只显文字，hover / 键盘聚焦才<b>滑出</b>各自快捷键（<kbd>⌘\</kbd> / <kbd>⌘Y</kbd>；max-width + opacity + translateX，~150 ms <code>--ease-native</code>）。点 <code>Switch…</code> 或按 <kbd>⌘\</kbd> <b>即时切换布局</b>（不改窗口尺寸，避免 toggle 抖动）；单窗下左侧不再显示 "single-pane"（与右侧控件文字重复）。</p>
 
     <h2><span class="h2-num">3</span>菜单栏 tray + 下拉菜单</h2>
 
@@ -488,7 +488,7 @@
 
     <h2 id="4"><span class="h2-num">4</span>设置 Modal</h2>
 
-    <p>当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。详版交互已从 <code>design/jsonita-settings-detail.html</code> 迁入本节和 <a href="04_components.html">04 § 4.6-4.8</a>。</p>
+    <p>当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动<b>即时生效</b>，Done 仅关闭，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。设置详版交互权威见本节和 <a href="04_components.html">04 § 4.6-4.8</a>。</p>
 
     <div class="mock-row">
       <div>
