@@ -298,7 +298,7 @@
 
     <h2><span class="h2-num">9</span>动效</h2>
 
-    <p>动效基线来自 <code>design/jsonita-motion-demo.html</code>，已沉淀为下列 token 与动画清单。设计稿中的 Material / spring / instant 只作为评审对照；真实实现默认使用偏 macOS 的 <code>--ease-native</code>，并尊重 reduced motion。</p>
+    <p>动效基线已沉淀为下列 token 与动画清单。Material / spring / instant 只作为评审对照；真实实现默认使用偏 macOS 的 <code>--ease-native</code>，并尊重 reduced motion。</p>
 
     <h3><span class="h3-num">9.1</span>时长 + 缓动</h3>
 
@@ -342,21 +342,21 @@
     <div class="callout callout-info">
       <span class="callout-icon">INFO</span>
       <div class="callout-body">
-        <p><b>玻璃方向动画（阶段 2 已实现 → <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 4）</b>：主力缓动为 <code>--ease-native</code>。浮窗呼出 scale 起点为 <code>0.96</code>、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + <code>--ease-native</code>；切 Tab / 单窗为<b>即时布局切换</b>（不 remount 面板、不淡入 —— remount 会拆掉 CodeMirror、丢输入光标、手感 clunky）；AI Fix 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。</b></p>
+        <p><b>玻璃方向动画（阶段 2 已实现）</b>：主力缓动为 <code>--ease-native</code>。浮窗呼出 scale 起点为 <code>0.96</code>、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + <code>--ease-native</code>；切 Tab / 单窗为<b>即时布局切换</b>（不 remount 面板、不淡入 —— remount 会拆掉 CodeMirror、丢输入光标、手感 clunky）；AI Fix 从右滑入 + 一次性琥珀微光（<b>不循环</b>）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。<b>硬约束：绝不动 <code>backdrop-filter</code> / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。</b></p>
       </div>
     </div>
 
-    <h3><span class="h3-num">9.3</span>设计稿到 token 的承接</h3>
+    <h3><span class="h3-num">9.3</span>已迁入的设计决策索引</h3>
 
     <table>
-      <thead><tr><th>设计稿</th><th>沉淀内容</th><th>权威位置</th></tr></thead>
+      <thead><tr><th>决策主题</th><th>沉淀内容</th><th>权威位置</th></tr></thead>
       <tbody>
-        <tr><td><code>jsonita-design-explorations.html</code></td><td>选定原生玻璃 / vibrancy 方向，淘汰其他风格分支</td><td>本章 § 1、§ 4</td></tr>
-        <tr><td><code>jsonita-glass-hero-light-dark.html</code></td><td>主窗单层玻璃 tint、系统蓝作为唯一主交互色、valid 绿状态</td><td>§ 4.2、§ 4.3</td></tr>
-        <tr><td><code>jsonita-glass-mockups.html</code></td><td>AI Fix 琥珀强调、History op-chip 四色、Toast 4 variant reserved、SVG 描边图标方向</td><td>§ 4.3、§ 4.5、04 § 4.3、05 图标章节</td></tr>
-        <tr><td><code>jsonita-motion-demo.html</code></td><td>150ms summon、140ms dismiss、180ms theme fade、native easing、禁动 blur</td><td>§ 9.1、§ 9.2</td></tr>
-        <tr><td><code>jsonita-singlepane-statusbar-demo.html</code></td><td>状态栏右侧 hover/focus 才滑出快捷键，单双栏切换不改窗口尺寸</td><td>01 § 2、04 § 4.2</td></tr>
-        <tr><td><code>jsonita-settings-detail.html</code></td><td>设置分组、checkbox 视觉、API key 行内反馈、About 路径展示</td><td>01 § 4、04 § 4.6-4.8、13 § 3.3</td></tr>
+        <tr><td>视觉方向</td><td>选定原生玻璃 / vibrancy 方向，淘汰石墨极简与暖调编辑等探索分支</td><td>本章 § 1、§ 4</td></tr>
+        <tr><td>主窗材质</td><td>主窗单层玻璃 tint、系统蓝作为唯一主交互色、valid 绿状态</td><td>§ 4.2、§ 4.3</td></tr>
+        <tr><td>操作强调</td><td>AI Fix 琥珀强调、History op-chip 四色、Toast 4 variant reserved、SVG 描边图标方向</td><td>§ 4.3、§ 4.5、04 § 4.3、05 图标章节</td></tr>
+        <tr><td>动效基线</td><td>150ms summon、140ms dismiss、180ms theme fade、native easing、禁动 blur</td><td>§ 9.1、§ 9.2</td></tr>
+        <tr><td>单窗状态栏</td><td>状态栏右侧 hover/focus 才滑出快捷键，单双栏切换不改窗口尺寸</td><td>01 § 2、04 § 4.2</td></tr>
+        <tr><td>设置体验</td><td>设置分组、checkbox 视觉、API key 行内反馈、About 路径展示</td><td>01 § 4、04 § 4.6-4.8、13 § 3.3</td></tr>
       </tbody>
     </table>
 
