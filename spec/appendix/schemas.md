@@ -70,7 +70,7 @@
 | `hideOnBlur` | `bool` | `true` | General。 |
 | `singlePaneMode` | `bool` | `false` | General。 |
 | `theme` | `ThemeMode` | `system` | General。 |
-| `locale` | `'en-US' | 'zh-CN'` | auto | General；v1 UI 只开放英文。 |
+| `locale` | `'en-US'` / `'zh-CN'` | auto | General；v1 UI 只开放英文。 |
 | `restoreWindow` | `RestoreWindow` | `min-5` | 保留；当前不自动恢复。 |
 | `initialWidth` | `InitialWidth` | `w-920` | 保留；当前默认 860 px。 |
 | `smartWidth` | `bool` | `true` | General。 |
@@ -97,7 +97,7 @@
 | `ContentMetrics` | `softWrapOn` | `bool` | soft-wrap 状态。 |
 | `ContentMetrics` | `fontSize` | `f64` | 当前编辑器字号。 |
 | `WindowResizedPayload` | `width` / `height` | `u32` | 窗口尺寸。 |
-| `WindowResizedPayload` | `source` | `user | auto` | 用户拖动或自动缩放。 |
+| `WindowResizedPayload` | `source` | `user` / `auto` | 用户拖动或自动缩放。 |
 
 ## AI payload
 
@@ -119,7 +119,7 @@
 | 文件 | 字段 |
 | --- | --- |
 | `settings.json` | settings schema 全量字段。 |
-| `window.json` | `width`、`height`、`userDragged`、`lastAutoWidth`、`lastAutoHeight`。 |
+| `window.json` | `width`、`height`、`userDragged`。 |
 | `secrets.json` | `accounts.deepseek_api_key.value`、`createdAt`、`updatedAt`。 |
 
 ## 类型同步规则

@@ -1,4 +1,4 @@
-//! JSON ↔ String 互转 ── plan/01 F3.2 + spec/09 § 7。
+//! JSON ↔ String 互转 ── 见 spec/06_json_engine.md。
 //!
 //! - `json_to_string`: JSON → 转义 quote 包裹字面量（适合嵌入 JS / SQL / YAML）
 //! - `string_to_json`: 去外层 quote + 反转义 + 美化输出（4 层嵌套互逆）
@@ -63,7 +63,7 @@ pub fn string_to_json(text: &str) -> Result<String, JsonitaError> {
     serde_json::to_string_pretty(&value).map_err(|e| JsonitaError::Io(e.to_string()))
 }
 
-/// 字符串反转义 ── spec/09 § 7.3 核心 ~15 行。
+/// 字符串反转义。
 fn unescape(s: &str) -> Result<String, JsonitaError> {
     let mut out = String::with_capacity(s.len());
     let mut chars = s.chars();

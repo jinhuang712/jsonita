@@ -1,6 +1,6 @@
 //! SQLite store — connection pool + migration + 业务模块。
 //!
-//! Spec ref: spec/10_storage.md · spec/13 § 4 SQLite schema
+//! Spec ref: spec/07_storage_session.md 与 spec/appendix/storage-details.md。
 //! M1-N6 完成 history；M1-N7 加 session；M2 加 settings。
 
 pub mod db;

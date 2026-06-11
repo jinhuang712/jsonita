@@ -1,7 +1,7 @@
 //! 数据模型 ── 8 个 enum + IPC payload structs。
 //!
-//! Spec ref: `spec/13_schemas.md` § 2 枚举 / § 3 IPC payload structs
-//! 所有 enum 用 `kebab-case`；所有 struct 用 `camelCase`（spec/13 § 7 命名规范）。
+//! Spec ref: `spec/appendix/schemas.md` 枚举与 IPC payload structs。
+//! 所有 enum 用 `kebab-case`；所有 struct 用 `camelCase`。
 
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +59,7 @@ pub enum RestoreWindow {
     Hour1,
 }
 
-/// spec/13 § 2 conformance；M2-N5 接快捷键用 String 而非 enum，留作 future。
+/// Shortcut action conformance；M2-N5 接快捷键用 String 而非 enum，留作 future。
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -177,7 +177,7 @@ pub struct ClipboardSniff {
     pub looks_like_json: bool,
 }
 
-/// spec/13 § 3.5 ContentMetrics ── line_count + bytes 字段为 TS mirror 保留
+/// ContentMetrics ── line_count + bytes 字段为 TS mirror 保留
 /// （前端计算后传过来；后端 4 层逻辑消费结构宽度、行数和字号）。
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
@@ -201,7 +201,7 @@ pub struct WindowResizedPayload {
 
 // ──────────── § 3.3 设置（M2-N1 真实化前 default） ────────────
 
-/// Settings 全字段权威定义 ── spec/13 § 3.3。
+/// Settings 全字段权威定义见 spec/appendix/schemas.md。
 /// M1-N8 仅以 default 形态注入 SettingsStore；M2-N1 起从 settings.json 加载 + patch + 落盘。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

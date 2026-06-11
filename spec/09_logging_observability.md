@@ -1,46 +1,121 @@
 # 日志与可观测性
 
-Jsonita 的日志用于本地诊断和 support，不是远程 telemetry。它应该帮助开发者定位生命周期、命令、存储、AI、窗口、设置等问题，同时严格避免记录用户 JSON 和 API key。
+Jsonita 的日志不是 telemetry。它不远程上报，不记录用户 JSON，不记录 API key。它只服务两个场景：开发者定位本地问题，用户在 support 流程里主动导出诊断材料。
 
-## 读完这篇你应该知道
+## 事件从哪里来
 
-- 哪些事件值得记录。
-- 日志为什么必须本地、滚动、可导出。
-- 前端日志如何进入 Rust writer。
-- 日志失败不能影响哪些主流程。
+```mermaid
+flowchart TD
+  Rust["Rust services"] --> Writer["tracing subscriber"]
+  Frontend["Frontend logger"] --> Console["console output today"]
+  Frontend -. "future IPC" .-> IPC["logging/system command"]
+  IPC -. "future writer merge" .-> Writer
+  Writer --> Redact["redaction layer"]
+  Redact --> File["local rolling JSONL files"]
+  File --> Support["open/export logs"]
+```
 
-## 日志边界
+Rust 是当前 durable writer。前端 logger 现在只保留 API shape 并输出 console；未来如果接入 IPC，也只能上报薄层诊断事件，不能直接写文件。写入前后都要遵守脱敏边界。
 
-日志记录的是系统行为，不是用户数据。允许记录 command 名、耗时、成功/失败、错误 kind、状态码、文件路径类别、窗口尺寸来源、settings key 名称等；不允许记录 JSON 文档全文、API key、DeepSeek prompt 中的用户文本、剪贴板全文。
+## JSONL 字段契约
 
-日志文件保存在本地，按大小或时间滚动。用户可以打开日志目录或导出日志用于 support。
+核心日志字段必须稳定，便于 support 和开发者 grep：
 
-## 事件分类
+| 字段 | 含义 | 是否必需 | 例子 |
+| --- | --- | --- | --- |
+| `ts` | 时间戳 | 是 | app start、command error 都需要。 |
+| `level` | `INFO`、`WARN`、`ERROR` | 是 | 失败使用 warn/error。 |
+| `event` | 事件名 | 是 | `app.start`、`command.error`、`ai.http_error`。 |
+| `requestId` | 请求关联 ID | 有 request 时 | AI Fix、长命令。 |
+| `durationMs` | 耗时 | 命令/网络/导出 | 性能诊断。 |
+| `kind` | `JsonitaError.kind` | 错误时 | `Parse`、`RateLimit`、`Secrets`。 |
+| `status` | HTTP 或 action 状态 | 相关事件 | DeepSeek status、export status。 |
+| `source` | 前端/Rust/模块来源 | 建议 | `frontend`、`rust`、`ai`、`store`。 |
+| `fields` | allow-list 扩展字段 | 可选 | line/col、retryAfterSec、window size source。 |
 
-| 分类 | 例子 | 目的 |
+完整字段表在 [appendix/logging-details.md](appendix/logging-details.md)。核心 spec 点名这些字段，是因为它们影响错误定位和隐私边界。
+
+## 事件分类和诊断目标
+
+| 分类 | 事件例子 | support 价值 | 禁止字段 |
+| --- | --- | --- | --- |
+| lifecycle | `app.start`、`window.show`、`window.hide`、`app.quit` | 启动、隐藏、退出问题 | editor content。 |
+| command | `command.start`、`command.success`、`command.error` | IPC 成功率和耗时 | command payload 中的 JSON 文本。 |
+| storage | `db.open`、`db.migration`、`settings.write`、`secrets.write` | 本地数据问题 | row content、API key。 |
+| ai | `ai.request_start`、`ai.http_error`、`ai.invalid_json` | AI 修复问题 | prompt、raw output、key。 |
+| window | `resize.auto`、`resize.user`、`theme.applied` | 浮窗尺寸和主题问题 | JSON 内容。 |
+| logging | `log.open`、`log.export`、`log.write_error` | support workflow 自身 | 导出包外的敏感材料。 |
+| shortcut | `shortcut.registered`、`shortcut.register_failed` | 权限和冲突问题 | 当前前台 app 的敏感上下文。 |
+
+## Redaction Policy
+
+```mermaid
+flowchart TD
+  Event["incoming event fields"] --> Allow{"字段在 allow-list？"}
+  Allow -->|"是"| Write["写入日志"]
+  Allow -->|"否"| Deny{"字段命中 deny-list？"}
+  Deny -->|"是"| Drop["丢弃字段"]
+  Deny -->|"否"| Review["按最小必要字段保留或丢弃"]
+```
+
+deny-list 类别在 [05_security_privacy.md](05_security_privacy.md) 定义。日志系统必须做二次脱敏，即使前端已经声称 payload 是安全的。
+
+字段策略：
+
+| 类型 | 允许 | 禁止 |
 | --- | --- | --- |
-| lifecycle | app_start、window_show、window_hide、app_quit | 定位启动和窗口问题。 |
-| command | command_start、command_success、command_error | 定位 IPC 和耗时。 |
-| storage | db_migration、settings_write、secrets_write | 定位本地数据问题。 |
-| ai | ai_request_start、ai_http_error、ai_invalid_json | 定位 AI 修复问题，不记录 prompt 文本。 |
-| window | resize_auto、resize_user、theme_applied | 定位浮窗和主题问题。 |
-| logging | log_open、log_export、log_write_error | 诊断 support workflow。 |
+| JSON parse | `line`、`col`、`kind` | `input`、`output`、`content`。 |
+| AI | `requestId`、`status`、`retryAfterSec`、`durationMs` | prompt、raw output、API key。 |
+| storage | action、table/category、kind | row content、history body。 |
+| settings | changed key names | secret values、完整 settings dump。 |
+| window | width/height/source | editor text。 |
 
-## 前端日志
+## Rolling Files 与 Support Flow
 
-WebView 可以通过 logging command 上报必要的前端事件，例如 UI 捕获到的异常、AI pane 状态、Diff 决策。Rust 仍是 durable writer，前端不能直接写文件。
+日志保存在本地 rolling files。当前实现按天滚动，并清理超过 `7 days` 的旧日志；文件权限通过 POSIX umask 和既有文件权限修正收敛到当前用户可读写。这样可以避免日志无限增长，同时保留最近问题上下文。
 
-前端上报前要先避免把 editor content 塞进 payload；Rust writer 仍要做二次脱敏。
+```mermaid
+flowchart TD
+  Run["Jsonita runtime"] --> Current["current log file"]
+  Current -->|"日期变化"| Rotate["daily rotate"]
+  Rotate --> Keep["保留最近 7 days"]
+  Keep --> Open["open_log_dir"]
+  Keep --> Export["support export"]
+```
 
-## Support Flow
+support flow：
 
-用户遇到问题时，可以从 About 或菜单项打开日志目录。导出日志只打包允许字段和本地日志文件，不附带 SQLite、settings、secrets 或 JSON 文档。
+1. 用户从 About 或系统命令打开日志目录。
+2. 用户主动选择是否分享日志。
+3. 导出或分享只包含允许字段和日志文件。
+4. 不自动附带 SQLite、settings、secrets 或 JSON 文档。
 
-## 失败语义
+## 日志失败矩阵
 
-日志写失败不应让 JSON 主流程崩溃。日志目录打开失败是 support action failure，要有反馈。脱敏失败时宁可丢字段，也不能写出敏感内容。
+| 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
+| --- | --- | --- | --- | --- | --- |
+| writer 初始化失败 | app start | JSON 主流程不因日志失败而写敏感替代物 | support 能力下降 | 继续或退出，视启动策略 | 不能把日志写到未审计位置。 |
+| 写日志失败 | runtime event | JSON transform 不回滚 | 通常用户无感，support action 可提示 | 继续编辑 | 不能把失败 payload dump 到 stderr 造成泄漏。 |
+| 打开日志目录失败 | `open_log_dir` | 不影响 editor | support action failure | 重试或手动定位 | 可显示错误摘要。 |
+| 导出失败 | support export | 不附带未脱敏材料 | export failure | 重试 | 不创建半脱敏包。 |
+| redaction 不确定 | 处理字段时 | 敏感数据不写入 | 字段缺失但主流程继续 | 修复字段 allow-list | 宁可丢字段。 |
 
-## 附录
+## FAQ
 
-- JSONL 字段、事件表、脱敏 allow/deny list 见 [appendix/logging-details.md](appendix/logging-details.md)。
-- logging command 细节见 [appendix/ipc-api.md](appendix/ipc-api.md)。
+**为什么日志不是 telemetry？**
+Jsonita 是本地工具，用户数据默认留在本机。远程 telemetry 会改变隐私承诺，也不是 v1 beta 需要的能力。
+
+**不记录 JSON 内容还能排查 parse 问题吗？**
+能。`Parse` 的 line/col/msg、command、duration、版本号通常足够定位实现问题；需要具体输入时应由用户主动提供最小复现。
+
+**日志写失败是否影响 JSON 变换？**
+不应该。日志是诊断附属能力，不能让 format/minify/Tree/AI Diff 因为日志文件失败而崩溃。
+
+**AI raw output 能否为了 debug 写日志？**
+默认不能。raw output 很可能包含用户 JSON。除非未来有明确、用户主动、脱敏可验证的 debug export 机制，否则不写。
+
+## 相关文档
+
+- 错误字段边界见 [04_error_model.md](04_error_model.md)。
+- 隐私 deny-list 见 [05_security_privacy.md](05_security_privacy.md)。
+- logging command 明细和事件 catalog 见 [appendix/logging-details.md](appendix/logging-details.md) 与 [appendix/ipc-api.md](appendix/ipc-api.md)。

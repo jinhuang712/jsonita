@@ -1,6 +1,6 @@
 //! Prompt 构造 — 纯函数（无 IO）。
 //!
-//! Spec ref: spec/11_ai_client.md § 4 prompt 设计 + 5 条规则
+//! Spec ref: spec/08_ai_repair.md prompt 边界。
 
 use std::fmt::Write;
 

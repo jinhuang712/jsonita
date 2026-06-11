@@ -7,25 +7,25 @@
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `ts` | ISO string | 事件时间。 |
-| `level` | `debug | info | warn | error` | 日志等级。 |
+| `level` | `debug` / `info` / `warn` / `error` | 日志等级。 |
 | `event` | string | 事件名。 |
 | `requestId` | string? | command/AI request 关联。 |
 | `durationMs` | number? | 耗时。 |
 | `kind` | string? | `JsonitaError.kind`。 |
 | `status` | number? | HTTP status。 |
-| `source` | `rust | webview` | 来源。 |
+| `source` | `rust` / `webview` | 来源。 |
 | `fields` | object | 已脱敏扩展字段。 |
 
 ## Event catalog
 
 | 分类 | events |
 | --- | --- |
-| lifecycle | `app_start`、`app_ready`、`window_show`、`window_hide`、`app_quit` |
-| command | `command_start`、`command_success`、`command_error` |
-| storage | `db_open`、`db_migrate`、`settings_write`、`secrets_write` |
-| ai | `ai_request_start`、`ai_http_error`、`ai_invalid_json`、`ai_request_success` |
-| window | `resize_auto`、`resize_user`、`theme_applied` |
-| support | `log_open_dir`、`log_export`、`log_write_error` |
+| lifecycle | `app.start`、`app.ready`、`window.show`、`window.hide`、`app.quit` |
+| command | `command.start`、`command.success`、`command.error` |
+| storage | `db.open`、`db.migration`、`settings.write`、`secrets.write` |
+| ai | `ai.request_start`、`ai.http_error`、`ai.invalid_json`、`ai.request_success` |
+| window | `resize.auto`、`resize.user`、`theme.applied` |
+| support | `log.open_dir`、`log.export`、`log.write_error` |
 
 ## Redaction deny list
 
@@ -52,7 +52,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 单文件上限 | 5 MB。 |
-| 保留文件数 | 5。 |
+| 滚动方式 | 按天滚动。 |
+| 保留窗口 | 7 天。 |
+| 文件权限 | 当前用户可读写；Unix 下通过 `0600` 收敛。 |
 | 格式 | JSONL。 |
 | 导出 | 打包日志文件，不附带 DB/settings/secrets。 |

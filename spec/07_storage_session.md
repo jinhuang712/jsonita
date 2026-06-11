@@ -1,53 +1,138 @@
 # 存储与会话
 
-Jsonita 有多种本地数据，但它们不是一类东西。history 是历史记录，last_session 是显式恢复目标，settings 是配置，window.json 是窗口运行状态，secrets.json 是 API key。把这些数据混在一起会直接造成恢复错乱、隐私风险和调试困难。
+Jsonita 的本地数据不是一个“配置文件夹”能概括的东西。history 是账本，last_session 是恢复指针，settings 是用户偏好，window state 是运行时记忆，secrets 是凭证，logs 是诊断材料。它们混在一起会导致恢复错乱、隐私泄漏和难以排查的状态漂移。
 
-## 读完这篇你应该知道
+## 数据主权地图
 
-- SQLite 和 JSON 文件各自负责什么。
-- history 与 last_session 为什么分开。
-- settings/window/secrets 的数据主权在哪里。
-- 存储失败时如何避免损坏当前编辑状态。
+```mermaid
+flowchart TD
+  Rust["Rust Store Layer"] --> SQLite["SQLite"]
+  Rust --> Settings["settings.json"]
+  Rust --> Window["window.json"]
+  Rust --> Secrets["secrets.json"]
+  Rust --> Logs["rolling logs"]
+  SQLite --> History["history"]
+  SQLite --> Last["last_session"]
+  SQLite --> Meta["app_meta"]
+  SQLite --> Version["schema_version"]
+  Web["React WebView"] -->|"IPC only"| Rust
+```
 
-## 数据介质
+WebView 可以请求读写，但不拥有这些数据。Rust store 是唯一写入者。
 
-| 介质 | 存什么 | 为什么 |
+## 数据账本
+
+| 数据 | 介质 | 关键名字 | 写入时机 | 恢复时机 | 失败后保持什么 |
+| --- | --- | --- | --- | --- | --- |
+| History | SQLite `history` | `contentHash`、`opType`、`pinned`、`starred`、created timestamp | 合法操作完成并明确加入历史 | 用户打开 history 或 search | 当前 editor 内存态保持。 |
+| Last Session | SQLite `last_session` | `content`、`opType`、`savedAt` | 合法 transform 成功或显式 save | restore last command | 旧 last_session 保持。 |
+| App meta | SQLite `app_meta` | key/value metadata | 迁移或内部状态 | 启动/迁移 | 不影响当前编辑。 |
+| Schema version | SQLite `schema_version` | migration version | migration 成功 | DB open | migration 失败阻断相关 store。 |
+| Settings | `settings.json` | `singlePaneMode`、`editorSoftWrap`、`aiEnabled` 等 | `settings_set` / reset 成功 | 启动和 `settings_get_all` | durable old value 保持。 |
+| Window state | `window.json` | size、smart resize lock、theme effective state | resize/theme/window command | 启动和 resize | 默认尺寸或旧值。 |
+| Secrets | `secrets.json` | `accounts.deepseek_api_key.value` | `ai_set_api_key` 成功 | AI command 需要 key 时 | 旧 key 或无 key 保持。 |
+| Logs | rolling files | `ts`、`event`、`kind`、`requestId` | runtime event | support export/open | 主流程继续。 |
+
+完整 DDL、PRAGMA 和 schema 展开见 [appendix/storage-details.md](appendix/storage-details.md) 与 [appendix/schemas.md](appendix/schemas.md)。
+
+## History 与 Last Session 为什么分开
+
+```mermaid
+stateDiagram-v2
+  [*] --> NoRecoverableSession
+  NoRecoverableSession --> RecoverableSession: legal transform success
+  RecoverableSession --> RecoverableSession: later legal transform success
+  RecoverableSession --> NoRecoverableSession: Cmd+K clear
+  RecoverableSession --> RecoverableSession: hide / close / quit
+  RecoverableSession --> RecoverableSession: parse failure
+```
+
+history 回答“我以前处理过什么”，last_session 回答“我现在按恢复应该拿回什么”。这两个问题相似但不相同：
+
+| 场景 | history | last_session |
 | --- | --- | --- |
-| SQLite | history、last_session、schema version | 需要查询、裁剪、事务和迁移。 |
-| settings.json | 用户设置 | 扁平配置，启动时加载、修改时 patch。 |
-| window.json | 尺寸、智能缩放记忆 | 与窗口 runtime 绑定，不属于产品数据。 |
-| secrets.json | DeepSeek API key | 本地文件、受限权限、独立于 settings。 |
-| logs | 本地诊断事件 | support 用，不承载用户 JSON。 |
+| format 成功 | 可追加或去重 | 可更新为当前内容和 opType。 |
+| parse 失败 | 不写 | 不写。 |
+| hide/close | 不写 | 不写。 |
+| quit | 不写 | 不写。 |
+| `Cmd+K` 清空 | 不一定清 history | 清 last_session。 |
+| pin/star 历史 | 改 history metadata | 不影响 last_session。 |
 
-## History 与 Last Session
+如果关闭窗口会覆盖 last_session，用户就可能恢复到一个无意义的空白或半编辑状态；如果 history 和 last_session 共用同一条记录，清空恢复目标可能误删历史。
 
-history 是可查询的操作历史，记录合法转换结果、opType、摘要、hash、pinned/starred 等信息。last_session 是一个单行恢复目标，服务于 `Cmd+Shift+L`。
+## Settings Patch 协议
 
-合法 transform 成功可以覆盖 last_session；关闭窗口不会覆盖 last_session；`Cmd+K` 主动清空会同时清理 editor 和 last_session，避免恢复出空白。
+```mermaid
+sequenceDiagram
+  participant UI as Settings UI
+  participant Cmd as settings_set
+  participant Store as SettingsStore
+  participant File as settings.json
+  participant Event as settings:changed
 
-这两个概念分开后，用户既能保留历史，又不会因为关闭或清空动作污染“找回上次”的语义。
+  UI->>Cmd: patch
+  Cmd->>Store: merge with current settings
+  Store->>File: write durable settings
+  alt success
+    Cmd-->>UI: full Settings snapshot
+    Cmd-->>Event: broadcast settings:changed
+  else failure
+    Cmd-->>UI: JsonitaError::Io
+  end
+```
 
-## Settings
+前端不能在多个地方自造默认值。旧 settings 缺字段时，由 Rust store 补默认值，并返回完整 snapshot。patch 失败时，UI 应回到 durable old value 或明确显示失败。
 
-settings.json 是 Rust store 的职责。前端启动时读取 settings snapshot，后续 patch 通过 command 写入 Rust，Rust 成功后 emit `settings:changed`。前端收到事件后更新 UI。
+## Window State 与 Secrets 的隔离
 
-旧 settings 缺字段时，Rust 默认值负责补齐；前端不应该在多个地方自造默认值。
+window state 是运行时记忆，不是产品数据。它可以记录用户尺寸和智能缩放状态，但不持久化屏幕绝对位置，因为多屏环境变化会让窗口恢复到不可见区域。窗口默认定位以当前鼠标所在屏为准。
 
-## Window State
+secrets 是凭证，不是 settings。settings 可以显示“是否存在 key”的状态，但不能返回明文 key。`ai_test_connection` 使用输入框当前 key，不依赖保存值；`ai_set_api_key` 成功后才更新已保存状态。
 
-window.json 只记录窗口运行状态，例如用户拖拽后的尺寸、智能缩放锁定状态。位置不持久化，因为多屏用户拔掉外接屏后，记忆位置容易让浮窗出现在不可见区域。
+## SQLite 可靠性策略
 
-窗口默认定位以当前鼠标所在屏为准，大小可以记忆。
+SQLite 用于 history、last_session、app_meta 和 schema_version，是因为这些数据需要查询、去重、事务和迁移。可靠性策略包括：
 
-## Secrets
+| 策略 | 用途 |
+| --- | --- |
+| migration 顺序执行 | 保证老版本 DB 可升级。 |
+| `schema_version` | 记录已应用版本。 |
+| WAL | 降低读写互相阻塞。 |
+| `busy_timeout` | 避免短暂锁冲突直接失败。 |
+| connection pool | 支撑多个 command 访问 store。 |
+| `contentHash` | 支持历史去重和快速识别内容。 |
 
-secrets.json 只由 Rust secrets store 读写。settings payload 不能包含明文 key。测试连接时直接使用输入框当前 key，不依赖已保存 key；保存动作成功后才更新“已有 key”的 UI 状态。
+这些细节的具体值和 DDL 放在 [appendix/storage-details.md](appendix/storage-details.md)。核心 spec 只要求实现遵守这些策略名和语义。
 
-## 失败语义
+## 存储失败矩阵
 
-SQLite 写失败不能清空 editor 内存。settings 写失败时 durable settings 保持旧值，前端要展示失败而不是假装切换成功。secrets 写失败必须阻止 AI key 保存成功态。window.json 写失败不应该阻塞 JSON 主流程，但需要记录脱敏日志。
+| 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
+| --- | --- | --- | --- | --- | --- |
+| DB open 失败 | 启动 setup | JSON 临时编辑仍可工作 | history/session 后续不可用或失败 | 继续做无持久化变换 | 记录 path category 和错误摘要，不写内容。 |
+| migration 失败 | SQLite 初始化 | 不使用半迁移数据 | storage 功能失败 | 查看日志、备份 DB、重启 | 记录 migration version 和错误。 |
+| history 写失败 | `history_add` | editor input/output 不回滚 | 历史保存失败 | 继续编辑，稍后重试 | 不写 JSON 内容。 |
+| last_session 写失败 | preview/transform 成功后的 save | 当前编辑内存态不丢 | 恢复能力不承诺成功 | 继续编辑 | 记录 `Sqlite` 和 action。 |
+| settings 写失败 | `settings_set` | durable old settings 保持 | 控件失败反馈或回滚 | 重试 | 不写 secrets 或 JSON。 |
+| window.json 写失败 | resize/theme | JSON 主流程不阻塞 | resize 可能不记忆 | 继续编辑 | 只写尺寸来源和 kind。 |
+| secrets 写失败 | `ai_set_api_key` | key 不泄漏，不显示保存成功 | 保存失败 | 修复权限、重试 | 不写 key。 |
 
-## 附录
+## FAQ
 
-- SQLite DDL、PRAGMA、迁移策略见 [appendix/storage-details.md](appendix/storage-details.md)。
-- settings/window/secrets schema 和 IPC payload 字段见 [appendix/schemas.md](appendix/schemas.md)。
+**关闭窗口为什么不写 last_session？**
+关闭只是隐藏。last_session 是恢复语义，必须来自合法业务动作；窗口生命周期不代表用户想保存这个状态。
+
+**`Cmd+K` 为什么要清 last_session？**
+因为清空是明确用户动作。如果不清，用户之后恢复可能拿回刚刚决定丢掉的内容。
+
+**settings 写失败时 UI 要不要保持新值？**
+不应该。新值没有成为 durable truth，UI 应回到 Rust 返回的真实状态或显示保存失败。
+
+**history 写失败要不要阻止当前 JSON 操作？**
+不阻止当前编辑和结果展示。history 是附加账本，不是 transform 成功的前提；但不能假装历史已保存。
+
+## 相关文档
+
+- 系统数据流见 [00_system_architecture.md](00_system_architecture.md)。
+- 前端保存和清空动作见 [02_frontend_execution.md](02_frontend_execution.md)。
+- 错误分诊见 [04_error_model.md](04_error_model.md)。
+- SQLite DDL、PRAGMA、迁移和字段完整表见 [appendix/storage-details.md](appendix/storage-details.md) 与 [appendix/schemas.md](appendix/schemas.md)。

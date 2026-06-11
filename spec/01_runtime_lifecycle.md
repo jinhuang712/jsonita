@@ -1,51 +1,129 @@
 # 运行时生命周期
 
-Jsonita 的运行时目标是“常驻但不打扰”：菜单栏图标长期存在，浮窗提前预热，用户按 `Cmd+Shift+J` 时快速出现，平时隐藏但不销毁。这个策略服务于工具类应用的核心体验：呼出快、状态不乱、退出明确。
+Jsonita 的运行时体验是“常驻但不打扰”：它像系统工具一样一直在菜单栏里，按 `Cmd+Shift+J` 时立刻出现，用完就藏起来，真正退出必须是用户明确选择。生命周期 spec 关心的不是窗口动画，而是 App 什么时候存在、什么时候可见、什么时候可以恢复，以及失败时用户是否还有路可走。
 
-## 读完这篇你应该知道
+## 用户感知目标
 
-- App 启动后为什么先构建隐藏 WebView。
-- `hide`、`close`、`quit` 的区别。
-- 全局快捷键、菜单栏、窗口焦点如何协作。
-- 生命周期失败时用户会看到什么。
+| 用户动作 | 用户期待 | 系统必须保证 |
+| --- | --- | --- |
+| 打开 App | 菜单栏图标出现，不抢当前工作流 | Rust services 初始化，WebView 预热但默认不可见。 |
+| 按 `Cmd+Shift+J` | 浮窗快速出现 | 全局快捷键到 Rust，再 toggle 已预热窗口。 |
+| 按 `Esc` 或 `Cmd+W` | 工具暂时消失 | 隐藏窗口，不销毁 WebView，不清 editor。 |
+| 再次呼出 | 刚才状态还在 | 复用内存态，并按当前 settings 渲染。 |
+| 选择 Quit | App 真正退出 | 停止常驻、flush 日志、菜单栏图标消失。 |
 
-## 启动阶段
+## 启动链路
 
-启动时 Rust host 先初始化本地能力：日志、settings、window store、SQLite、secrets store、tray、global shortcut。随后创建 WebView window，但默认 `visible: false`。WebView、React、CodeMirror 在后台完成加载，用户第一次呼出时不再现场 build 窗口。
+```mermaid
+sequenceDiagram
+  participant OS as macOS
+  participant Main as Rust main
+  participant Stores as Local Stores
+  participant Window as Window Layer
+  participant Shortcut as Shortcut Service
+  participant Web as WebView
 
-这种预热会占用稳定内存，但换来低延迟呼出。对 Jsonita 这种频繁短用的工具，呼出速度优先于极限省内存。
+  OS->>Main: 启动 Jsonita
+  Main->>Main: logging::init()
+  Main->>Stores: 打开 SQLite、settings.json、window.json
+  Main->>Window: setup(app_handle)
+  Window->>Web: 创建 hidden window
+  Main->>Shortcut: register_defaults(Cmd+Shift+J)
+  Main->>OS: 设置 Accessory activation policy
+```
 
-## 生命周期状态
+启动顺序有意把日志放在最前面，因为启动失败也需要诊断。SQLite 打不开不会直接阻塞 UI，因为用户仍可能只做临时 JSON 变换；窗口创建失败才是启动阻塞，因为没有可交互界面。
 
-| 状态 | 进入方式 | 系统行为 | 用户可见结果 |
+Tauri 配置中的 `visible: false` 是生命周期关键字段，不是视觉细节。默认窗口尺寸是 `860 x 560`，最小尺寸是 `440 x 340`；这些值影响预热、智能缩放和恢复策略，完整配置见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+
+## Window State Machine
+
+```mermaid
+stateDiagram-v2
+  [*] --> Starting
+  Starting --> WarmHidden: services ready + hidden WebView ready
+  WarmHidden --> Showing: Cmd+Shift+J or tray toggle
+  Showing --> Active: window:shown
+  Active --> Hiding: Esc / Cmd+W / close / blur
+  Hiding --> WarmHidden: window:will-hide then hide()
+  Active --> Quitting: Cmd+Q or tray Quit
+  WarmHidden --> Quitting: tray Quit
+  Quitting --> [*]: flush logs and exit
+```
+
+状态名是行为合约：
+
+| 状态 | Rust 侧行为 | WebView 侧行为 | 用户看到什么 |
 | --- | --- | --- | --- |
-| Starting | App 进程启动 | 初始化 Rust services 和隐藏 WebView | 菜单栏图标准备出现。 |
-| WarmHidden | WebView 已加载但隐藏 | 监听快捷键和 tray 事件 | 用户看不到窗口，但再次呼出很快。 |
-| Showing | `Cmd+Shift+J` 或 tray toggle | 定位到当前鼠标屏幕，显示并聚焦 | 浮窗出现在屏幕中央偏上。 |
-| Active | 用户编辑或操作 | WebView 管理 editor/pane 状态 | 用户正常处理 JSON。 |
-| Hiding | `Esc`、`Cmd+W`、失焦或 close | 播放隐藏过渡后 `window.hide()` | 浮窗消失，进程继续常驻。 |
-| Quitting | `Cmd+Q` 或 tray Quit | 停止监听、flush 日志、退出进程 | 菜单栏图标消失。 |
+| `Starting` | 初始化日志、store、tray、window、shortcut | 未必可交互 | 可能只看到菜单栏图标出现。 |
+| `WarmHidden` | 监听 tray 和快捷键 | React/CodeMirror 已经加载，窗口隐藏 | 没有浮窗，但下一次呼出快。 |
+| `Showing` | 定位屏幕、show、focus 或保持非激活策略 | 收到 `window:shown` 后进入 shown motion | 浮窗出现。 |
+| `Active` | 允许 resize/theme/window command | editor、pane、preview 正常工作 | 用户处理 JSON。 |
+| `Hiding` | emit `window:will-hide`，再 `window.hide()` | 播放 hiding motion，保留内存态 | 浮窗消失。 |
+| `Quitting` | 停止常驻，flush 日志，退出进程 | 不再承诺保存 UI 内存态 | 菜单栏图标消失。 |
 
-## 关闭不是退出
+## 入口动作仲裁
 
-红色 traffic light、非编辑态 `Esc`、`Cmd+W`、失焦隐藏都映射为隐藏窗口，不销毁 WebView。这样可以保留当前 editor 内存状态，并让下一次呼出仍然走热路径。
+| 入口动作 | 当前状态 | 结果 | 是否写 last_session | 说明 |
+| --- | --- | --- | --- | --- |
+| `Cmd+Shift+J` | `WarmHidden` | 进入 `Showing` | 否 | 全局快捷键只负责 toggle，不碰 editor 内容。 |
+| `Cmd+Shift+J` | `Active` | 进入 `Hiding` 或 toggle hide | 否 | toggle 是窗口动作，不是 session 动作。 |
+| Tray toggle | `WarmHidden` / `Active` | show 或 hide | 否 | 与快捷键等价。 |
+| `Esc` | editor 正在编辑特殊状态 | 先退出局部状态 | 否 | 例如关闭搜索或退出局部交互。 |
+| `Esc` | 普通 active | hide | 否 | 隐藏不是退出。 |
+| `Cmd+W` 或 close | `Active` | hide | 否 | 关闭窗口不销毁 WebView。 |
+| `Cmd+Q` | 任意常驻状态 | quit | 否 | 退出本身不制造新恢复目标。 |
+| 合法 transform 成功 | `Active` | UI 显示结果 | 是，可更新 | last_session 由业务成功决定，不由窗口动作决定。 |
+| `Cmd+K` 清空 | `Active` | 清空 editor | 是，清理 | 避免之后恢复出空白 session。 |
 
-真正退出只由 `Cmd+Q` 或 tray Quit 触发。退出不自动制造新的 last_session；last_session 只由合法 transform 或显式 session command 更新，详见 [07_storage_session.md](07_storage_session.md)。
+## 快捷键、托盘和焦点
 
-## 焦点与快捷键
+全局 `Cmd+Shift+J` 属于 Rust shortcut service。窗口内快捷键属于 React，例如 pane 切换、single-pane apply、清空、Diff accept/cancel。两个世界不能抢同一个职责：全局快捷键只决定窗口显示，窗口内快捷键只决定当前 UI 操作。
 
-全局 `Cmd+Shift+J` 由 Rust 注册，负责从系统任意位置唤起 Jsonita。窗口内快捷键由 React 处理，例如 Tab 切 pane、`Cmd+Enter` apply、`Cmd+K` 清空、`Esc` 退出编辑态或隐藏窗口。
+菜单栏是用户的备用入口。快捷键注册失败时，App 不能因此不可用；用户仍可通过 tray 打开，并通过权限提示或 settings 重新注册。`shortcut_status`、`shortcut_retry`、`shortcut_register` 和 `open_accessibility_settings` 是这个恢复路径的关键命令。
 
-焦点策略是：用户能点击浮窗并编辑，但 Jsonita 不应该破坏用户正在使用的其他 App。macOS 上通过 NSPanel-like 行为、always-on-top 和非激活面板策略实现这个体验。视觉和交互细节由 `design/06_window.md` 与 `design/07_menubar.md` 维护。
+macOS 焦点策略由 NSPanel-like 行为、Accessory activation policy、always-on-top、blur hide 等组合完成。交互细节在 `design/06_window.md` 和 `design/07_menubar.md`，本 spec 只定义生命周期语义。
 
-## 失败语义
+## hide、close、quit 的不变量
 
-快捷键注册失败时，App 仍可通过菜单栏打开，但需要提示用户检查 Accessibility 或冲突快捷键。窗口创建失败是启动阻塞错误。隐藏失败不能导致进程退出；退出失败必须尽量 flush 日志并结束进程。
+| 动作 | 销毁 WebView？ | 清空 editor？ | 停止进程？ | 用户下次看到什么 |
+| --- | --- | --- | --- | --- |
+| hide | 否 | 否 | 否 | 同一个内存态。 |
+| close traffic light | 否 | 否 | 否 | 等价 hide。 |
+| `Cmd+W` | 否 | 否 | 否 | 等价 hide。 |
+| blur hide | 否 | 否 | 否 | 等价 hide。 |
+| quit | 是，随进程退出 | 内存态消失 | 是 | 下次启动按 durable state 恢复。 |
 
-任何生命周期错误都不能写入 JSON 内容到日志，也不能修改 last_session。
+这个不变量解释了为什么关闭不是退出：Jsonita 是一个频繁短用工具，隐藏后的热启动体验比传统窗口生命周期更重要。
 
-## 附录
+## 生命周期失败矩阵
 
-- 窗口、快捷键、系统 command 的完整签名见 [appendix/ipc-api.md](appendix/ipc-api.md)。
-- window.json 字段见 [appendix/schemas.md](appendix/schemas.md)。
-- Tauri window 配置见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+| 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
+| --- | --- | --- | --- | --- | --- |
+| 快捷键注册失败 | 启动或重新绑定快捷键 | App 仍可通过 tray 打开 | 显示权限或冲突提示 | 打开 Accessibility 设置、改快捷键、重试 | 只写 action、错误摘要、冲突状态，不写用户内容。 |
+| 窗口 show 失败 | `window_show` / toggle | editor 内存态不被清空 | toggle 失败反馈或日志可查 | 通过 tray 重试或重启 | 写 `Io` 或 Tauri error 摘要。 |
+| 隐藏失败 | `Esc`、`Cmd+W`、blur | 不能把隐藏失败升级成清空或退出 | 可能保持可见 | 再次执行 hide 或 quit | 写窗口错误，不写 editor 内容。 |
+| SQLite 打不开 | setup 阶段 | JSON 临时变换仍可工作 | history/session 功能不可用或后续失败 | 继续编辑，查看日志 | 记录路径类别和错误，不写 JSON。 |
+| settings/window.json 读取失败 | setup 阶段 | 使用默认值启动 | UI 用默认设置 | 修改设置后重写 | 写 `Io` 摘要，不写 secrets。 |
+| 日志初始化失败 | `logging::init()` | 不应为写日志牺牲 JSON 主流程 | support 能力下降 | 继续启动或退出时尽量 flush | 不能改写到不受控位置。 |
+
+## FAQ
+
+**为什么启动时先创建隐藏 WebView？**
+因为 Jsonita 的核心体验是快速呼出。提前加载 React 和 CodeMirror 能减少第一次 `Cmd+Shift+J` 的等待。
+
+**快捷键注册失败还能用吗？**
+能。菜单栏 toggle 是备用入口。快捷键失败是可恢复配置问题，不是启动 blocker。
+
+**隐藏窗口会保存当前内容吗？**
+不会因为隐藏而保存。保存 last_session 的语义来自合法 transform 或明确 session command，不来自窗口生命周期。
+
+**退出前需要自动保存吗？**
+不自动制造新的 last_session。退出只 flush 日志和结束进程；恢复目标必须来自之前已经明确成功的业务动作。
+
+## 相关文档
+
+- 系统分层见 [00_system_architecture.md](00_system_architecture.md)。
+- 前端快捷键和 pane 行为见 [02_frontend_execution.md](02_frontend_execution.md)。
+- window command/event 完整表见 [appendix/ipc-api.md](appendix/ipc-api.md)。
+- window state schema 和 Tauri window 配置见 [appendix/schemas.md](appendix/schemas.md) 与 [appendix/packaging-details.md](appendix/packaging-details.md)。

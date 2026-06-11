@@ -1,6 +1,6 @@
 //! format + minify + sort_keys ── serde_json::Value 中转 + PrettyFormatter。
 //!
-//! Spec ref: `spec/09_json_engine.md` § 4 format 与 sort_keys
+//! Spec ref: `spec/06_json_engine.md` format 与 sort_keys。
 //! preserve_order feature 必开（保留用户输入 key 顺序）。
 
 use serde::Serialize;
@@ -36,7 +36,7 @@ pub fn minify(text: &str) -> Result<String, JsonitaError> {
     serde_json::to_string(&value).map_err(|e| JsonitaError::Io(e.to_string()))
 }
 
-/// 递归字典序排 ── spec/09 § 4.2 核心 ~12 行。
+/// 递归字典序排序 object key；array 顺序保持。
 fn sort_keys_recursive(v: &mut Value) {
     match v {
         Value::Object(map) => {

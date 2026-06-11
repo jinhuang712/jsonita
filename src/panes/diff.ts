@@ -1,5 +1,5 @@
 /**
- * Diff 计算 — 走 npm `diff` 的 diffLines（spec/11 § 8.2 行级 diff）。
+ * Diff 计算 — 走 npm `diff` 的 diffLines。
  *
  * 字符级 diff 留 v1.1（M3-N6 README 不展示）。
  */

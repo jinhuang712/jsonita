@@ -1,7 +1,7 @@
 /**
  * 8 个枚举 — Rust 端 `#[serde(rename_all = "kebab-case")]` 跨 IPC 镜像。
  *
- * Spec ref: spec/13_schemas.md § 2 枚举集合
+ * Spec ref: spec/appendix/schemas.md 枚举集合。
  */
 
 export type IndentMode = 'spaces2' | 'spaces4' | 'tab';

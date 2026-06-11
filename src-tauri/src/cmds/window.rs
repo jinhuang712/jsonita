@@ -1,6 +1,6 @@
 //! window 分组 ── show/hide/toggle 接 M0-N3 模块；resize/reset 接 M1-N9 智能缩放。
 //!
-//! Spec ref: design/06 § 7 智能缩放 4 层逻辑 · spec/02 § 6.1.6
+//! Spec ref: design/06_window.md 智能缩放与 spec/01_runtime_lifecycle.md。
 
 use tauri::{Manager, State};
 

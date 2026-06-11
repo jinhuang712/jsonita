@@ -1,8 +1,7 @@
 /**
  * JsonitaError — Rust 端 `#[serde(tag = "kind", content = "data")]` 跨 IPC 镜像。
  *
- * Spec ref: spec/13_schemas.md § 1.1 错误类型表
- * 调用方错误契约: spec/02_ipc.md § 8
+ * Spec ref: spec/04_error_model.md 与 spec/appendix/schemas.md。
  */
 
 export type JsonitaError =

@@ -1,6 +1,6 @@
 //! tracing 日志初始化。
 //!
-//! Spec ref: `spec/15_logging.md` § 4 4 级策略 / § 5 路径 / § 6 滚动 + 保留 7 天
+//! Spec ref: `spec/09_logging_observability.md` 与 `spec/appendix/logging-details.md`。
 //! M0 范围：daily rolling + 0600 (umask) + 7 天 purge + RedactLayer 占位
 //! 不含：5 MB 单文件分片（M1 补）/ WebView IPC log_write 合流（M1）/ 导出 zip（D-N5）
 
@@ -19,9 +19,9 @@ const FILE_SUFFIX: &str = "log";
 const RETAIN_DAYS: u64 = 7;
 
 /// 启动期调一次。返回 `WorkerGuard` 必须 bind 在 main 局部变量上 ──
-/// drop 时触发 tracing-appender flush（spec/15 § 2.5 注意点）。
+/// drop 时触发 tracing-appender flush。
 pub fn init() -> Option<WorkerGuard> {
-    // POSIX umask 强制新文件 0600（spec/15 § 6 权限要求）── 设在任何 file open 之前
+    // POSIX umask 强制新文件 0600，设在任何 file open 之前。
     #[cfg(unix)]
     unsafe {
         libc::umask(0o077);

@@ -1,6 +1,6 @@
 //! serde_json::Error → `JsonitaError::Parse` 映射。
 //!
-//! Spec ref: `spec/09_json_engine.md` § 5 错误位置定位
+//! Spec ref: `spec/06_json_engine.md` 与 `spec/04_error_model.md`。
 //! 关键：1-indexed line/col 与用户视角一致 ── CodeMirror linter 喂数据靠这个。
 
 use crate::error::JsonitaError;
@@ -16,7 +16,7 @@ pub fn map(e: serde_json::Error) -> JsonitaError {
     }
 }
 
-/// 给用户视角的常见错误文案润色（spec/09 § 5.3）。
+/// 给用户视角的常见错误文案润色。
 fn polish(raw: String) -> String {
     // M1-N2 简化：5 类已知 case → 友好文案；其余原样
     let lower = raw.to_ascii_lowercase();

@@ -15,7 +15,7 @@ use tauri::{
     AppHandle, Manager, WebviewWindow,
 };
 
-// 主题模式单一权威：crate::types::ThemeMode（serde kebab-case，spec/13 § 数据模型）。
+// 主题模式单一权威：crate::types::ThemeMode（serde kebab-case）。
 use crate::types::ThemeMode;
 
 pub const MAIN_LABEL: &str = "main";

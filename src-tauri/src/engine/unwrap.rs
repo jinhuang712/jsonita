@@ -1,6 +1,6 @@
 //! 嵌套 stringified JSON 全量解开。
 //!
-//! Spec ref: `spec/09_json_engine.md` § 6 ── 200 ms 超时是终极兜底。
+//! Spec ref: `spec/06_json_engine.md` unwrap 边界。
 //! 关键决策（§ 6.2）：
 //! - 只解 object/array 开头的 string（"123" "true" 保留）
 //! - 走 walk 递归（无层数硬限，可选 max_depth）
@@ -22,7 +22,7 @@ pub fn unwrap(text: &str, opts: UnwrapOpts) -> Result<String, JsonitaError> {
     serde_json::to_string_pretty(&v).map_err(|e| JsonitaError::Io(e.to_string()))
 }
 
-/// 核心 ~20 行 ── spec/09 § 6.3。
+/// 递归遍历并保守解开 object/array 字符串。
 fn walk(
     v: &mut Value,
     deadline: Instant,

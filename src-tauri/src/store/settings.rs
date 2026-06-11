@@ -1,6 +1,6 @@
 //! SettingsStore ── M1-N8 default 占位起步；M2-N1 加 load(settings.json) + patch + persist。
 //!
-//! Spec ref: spec/10 § 7 / spec/13 § 3.3
+//! Spec ref: spec/07_storage_session.md 与 spec/appendix/schemas.md。
 //! 路径：~/Library/Application Support/Jsonita/settings.json
 
 use std::path::PathBuf;

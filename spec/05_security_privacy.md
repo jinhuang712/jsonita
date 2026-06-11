@@ -1,54 +1,139 @@
 # 安全与隐私
 
-Jsonita 的默认安全模型是 local-first。用户 JSON、历史、设置、窗口状态、API key、日志都默认留在本机。唯一主动离开本机的数据，是用户启用并触发 AI Fix 时发送给 DeepSeek 的当前修复请求。
+Jsonita 的安全模型很朴素：默认本地，外发必须有用户动作，日志不能变成用户数据副本。它处理的 JSON 往往来自生产接口、日志、配置或业务数据，所以安全边界要比一个普通小工具更严格。
 
-## 读完这篇你应该知道
+## Threat Model
 
-- WebView 为什么不能直接访问本地资源。
-- API key 为什么存 `secrets.json`，不是 Keychain。
-- AI 外发的边界是什么。
-- 日志和 support 流程不能记录哪些东西。
+```mermaid
+flowchart TD
+  WebView["WebView 交互层"] -->|"只能 invoke"| Rust["Rust 权限边界"]
+  Rust --> LocalData["本地数据：SQLite/settings/window/secrets/logs"]
+  Rust --> System["macOS 系统能力"]
+  Rust -->|"仅 AI Fix 明确触发"| DeepSeek["DeepSeek API"]
+  WebView -. "不能直接访问" .-> LocalData
+  WebView -. "不能直接外发" .-> DeepSeek
+```
 
-## 本地数据边界
+WebView 被当作不可信 UI 环境处理。它可以展示、编辑、复制、触发命令，但不能直接读写 filesystem、SQLite、secrets、网络或日志文件。Rust 是权限边界，也是审计边界。
 
-| 数据 | 存放位置 | 规则 |
+## 数据资产清单
+
+| 数据资产 | 存放位置 | 谁能读取 | 是否可外发 | 是否可入日志 | 关键规则 |
+| --- | --- | --- | --- | --- | --- |
+| 当前 editor input | WebView 内存 | WebView，Rust command 临时接收 | 只有用户触发 AI Fix 时可发送当前请求文本 | 否 | preview、parse、Tree 不能把它写入日志。 |
+| `history` | SQLite | Rust store | 否 | 否 | 记录合法操作历史，不作为 AI 上下文。 |
+| `last_session` | SQLite | Rust store | 否 | 否 | 用于恢复，不因 hide/quit 自动更新。 |
+| `settings.json` | app data 文件 | Rust settings store，前端只拿 snapshot | 否 | 只可记录 key 名，不记录敏感值 | 默认值由 Rust 补齐。 |
+| `window.json` | app data 文件 | Rust window store | 否 | 可记录尺寸来源，不记录内容 | 只存窗口运行状态。 |
+| `secrets.json` | app data 文件，受限权限 | Rust secrets store | 仅作为 Authorization secret 使用，不作为 payload 外发 | 否 | 不进入 settings/event/log。 |
+| logs | 本地 rolling JSONL | 用户和 Rust logging | 用户主动导出时可离开本机 | 本身是日志 | 必须脱敏，不包含 JSON 文档和 API key。 |
+| DeepSeek request | 网络请求 | Rust AI client | 是，用户触发 AI Fix | 否 | 只包含当前待修复文本和 parse context。 |
+
+## Secrets 生命周期
+
+`secrets.json` 是 v1 beta 的 API key 存储路径。项目明确不把 Keychain 作为产品存储路径，因为 Keychain 会把当前 beta 绑定到 codesign identity、系统弹窗、迁移和调试不稳定性上。
+
+```mermaid
+sequenceDiagram
+  participant UI as Settings UI
+  participant Cmd as ai_set_api_key
+  participant Store as secrets store
+  participant File as secrets.json
+
+  UI->>Cmd: apiKey from input
+  Cmd->>Store: save deepseek key
+  Store->>File: write restricted file
+  alt success
+    Cmd-->>UI: ok
+    UI->>UI: 显示已保存
+  else failure
+    Cmd-->>UI: JsonitaError::Secrets
+    UI->>UI: 不显示已保存
+  end
+```
+
+核心语义只点名到 `accounts.deepseek_api_key.value` 级别：它是 DeepSeek key 的本地存储位置。完整 JSON 结构在 [appendix/schemas.md](appendix/schemas.md)。
+
+测试连接走 `ai_test_connection(apiKey, modelId)`，直接使用输入框当前值，不依赖、也不覆盖已保存 key。这样用户可以测试新 key，而不会在测试失败时污染已保存 secret。
+
+## AI 外发白名单
+
+AI 默认关闭。即使前端误显示入口，Rust `ai_fix` 仍必须检查 `aiEnabled` 和 API key。
+
+允许进入 DeepSeek request 的只有：
+
+| 字段 | 来源 | 为什么需要 |
 | --- | --- | --- |
-| 当前编辑文本 | WebView 内存 | 默认不持久化，除非合法 transform 更新 last_session/history。 |
-| History / last_session | SQLite | Rust 侧唯一读写。 |
-| Settings | settings.json | Rust store 负责默认值、patch 和事件通知。 |
-| Window state | window.json | 记录尺寸和智能缩放相关状态。 |
-| API key | secrets.json | 限当前用户权限，不能进 settings、日志或 event payload。 |
-| Logs | 本地 rolling files | 只记录诊断字段，不记录 JSON 文档内容或 API key。 |
+| 当前 editor text | 用户当前请求 | 模型要修复的唯一内容。 |
+| `errorLine` / `errorCol` | `Parse` payload | 帮模型定位错误。 |
+| `errorMsg` | `Parse` payload | 给模型最小错误上下文。 |
+| request model 和默认参数 | settings / AI client | 控制请求行为。 |
 
-## WebView 权限边界
+明确禁止进入 prompt 或 HTTP payload 的内容：
 
-WebView 被当作不可信 UI 环境处理。它可以展示和编辑文本，但不能直接读写 filesystem、SQLite、secrets、clipboard、global shortcut 或网络。需要这些能力时必须通过 [03_ipc_boundary.md](03_ipc_boundary.md)。
+- history 记录。
+- settings 全量配置。
+- `secrets.json` 内容。
+- 本地日志。
+- window state。
+- 剪贴板全文，除非它就是当前 editor input 且用户触发 AI Fix。
 
-这样做的结果是：即使前端组件出现 bug，持久化和外发能力仍集中在 Rust 侧，便于审计、测试和脱敏。
+AI wire protocol 和 prompt 模板见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
 
-## Secrets 策略
+## 日志 deny list
 
-API key 存在 app data 目录下的 `secrets.json`，并设置受限文件权限。这个项目明确不把 Keychain 作为 API key 存储路径，因为 Keychain 会引入 codesign identity、弹窗、迁移和调试上的不稳定成本，不适合当前小工具的 v1 beta。
+日志是本地 support 工具，不是 telemetry。日志字段的默认策略是 allow-list，以下类别一律不能写入：
 
-Settings UI 可以显示“是否已有 key”和 mask 状态，但不能通过 settings payload 返回明文 key。
+| 禁止类别 | 例子 |
+| --- | --- |
+| JSON 内容 | `content`、`input`、`output`、`before`、`after`、history row body。 |
+| secrets | `apiKey`、`token`、Authorization header、`deepseek_api_key.value`。 |
+| prompt | `prompt`、`rawPrompt`、包含用户 JSON 的 system/user message。 |
+| 剪贴板全文 | `clipboardText`、完整 paste preview。 |
+| AI raw output | `raw`、未脱敏模型原文。 |
 
-## AI 外发边界
+如果脱敏失败，宁可丢字段，也不能写出敏感内容。完整日志字段和 allow/deny list 见 [appendix/logging-details.md](appendix/logging-details.md)。
 
-AI 默认关闭。关闭时，前端隐藏或禁用入口，Rust command 仍必须拒绝请求。开启后，只有用户当前要修复的文本、parse line/column/message 这类上下文可以进入 AI 请求。
+## 权限和能力边界
 
-History、settings、logs、secrets、window state 不会被自动上传。测试连接使用输入框当前值，不依赖也不消耗已保存 key。
+| 能力 | 为什么放 Rust | 安全约束 |
+| --- | --- | --- |
+| 文件读写 | settings、window、secrets、logs 都需要权限和脱敏 | WebView 不直接接触路径和文件句柄。 |
+| SQLite | history/session 需要事务、迁移、裁剪 | 前端不能直接打开 DB。 |
+| DeepSeek HTTP | 需要 API key、timeout、错误映射 | WebView 不持有 key。 |
+| 全局快捷键 | macOS 权限和冲突处理 | 失败可恢复，不阻塞 tray。 |
+| 打开日志/DB 路径 | 系统动作 | 必须是用户触发。 |
 
-## 日志边界
+Tauri capabilities 和 entitlements 只开放实际需要的 command 能力，完整配置见 [appendix/packaging-details.md](appendix/packaging-details.md)。
 
-日志用于本地诊断，不是 telemetry。日志可以记录 command 名、耗时、错误 kind、状态码、文件路径类别，但不能记录 JSON 文档内容、API key、DeepSeek raw prompt 中的用户 JSON、剪贴板全文。
+## 隐私失败矩阵
 
-## 失败语义
+| 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
+| --- | --- | --- | --- | --- | --- |
+| `Secrets` 写失败 | 保存 API key | settings 不含明文 key，UI 不显示保存成功 | API key 保存失败 | 修复权限或重试 | 只写 operation 和 kind，不写 key。 |
+| AI disabled | `ai_fix` 被调用 | 不发 HTTP | AI 入口禁用或错误提示 | 用户可在 settings 启用 | 写 `AiDisabled`，不写 prompt。 |
+| AI key 缺失 | `ai_fix` 读 key | 不发 HTTP | 提示配置 key | 输入并保存 key | 不写 key/path 明细。 |
+| 日志脱敏失败 | logging writer 处理字段 | 不写敏感字段 | 主流程继续，support 能力降低 | 查看基础错误 | 丢弃字段优先。 |
+| WebView 组件误传敏感字段 | frontend logger payload | Rust 二次脱敏 | 不应泄漏到文件 | 修复前端事件 | writer deny list 兜底。 |
+| 用户导出日志 | support action | 不附带 DB/settings/secrets/JSON | 生成可分享日志包或失败提示 | 用户决定是否发送 | 只包含允许字段。 |
 
-Secrets 写失败必须阻止“保存成功”的 UI。AI disabled 必须阻止网络请求。日志失败不能退化成把敏感 payload 写到其他地方。权限失败需要给用户明确入口，而不是静默失败。
+## FAQ
 
-## 附录
+**为什么不用 Keychain？**
+当前 v1 beta 更需要可调试、可迁移、可验证的本地文件存储。Keychain 会引入 codesign identity、系统授权弹窗和迁移成本，不适合当前产品阶段。
 
-- secrets/settings/window schema 见 [appendix/schemas.md](appendix/schemas.md)。
-- DeepSeek request/response 明细见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
-- 日志字段和脱敏规则见 [appendix/logging-details.md](appendix/logging-details.md)。
-- Tauri capabilities 和 entitlements 见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+**AI 会不会读取 history 或 settings？**
+不会。AI Fix 只发送当前待修复文本和最小 parse context。history/settings/logs/window/secrets 都不是 prompt 上下文。
+
+**测试连接会保存 key 吗？**
+不会。`ai_test_connection` 使用输入框里的临时 key，只有 `ai_set_api_key` 成功才写 `secrets.json`。
+
+**日志为什么不能记录 JSON？没有内容怎么排查？**
+大多数问题可以用 command、kind、line/col、duration、status、requestId 定位。记录 JSON 内容会把 support 日志变成隐私风险。
+
+## 相关文档
+
+- 数据所有权见 [07_storage_session.md](07_storage_session.md)。
+- AI 修复外发流程见 [08_ai_repair.md](08_ai_repair.md)。
+- 日志脱敏见 [09_logging_observability.md](09_logging_observability.md)。
+- secrets/settings schema 见 [appendix/schemas.md](appendix/schemas.md)。
