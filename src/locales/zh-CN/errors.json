@@ -1,7 +1,7 @@
 {
-  "accessibilityRequired": {
-    "title": "需要辅助功能权限",
-    "body": "全局快捷键 {{key}} 需要 Input Monitoring 权限以便在任何前台 App 下生效。请在 系统设置 → 隐私与安全 → 辅助功能 中添加 Jsonita。"
+  "shortcutPermissionRequired": {
+    "title": "需要处理快捷键权限",
+    "body": "如果全局快捷键 {{key}} 无法在其他 App 前台唤起 Jsonita，请在系统设置 → 隐私与安全中允许 Jsonita。"
   },
   "parse": {
     "title": "JSON 解析错误",

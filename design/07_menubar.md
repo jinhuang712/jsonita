@@ -232,11 +232,11 @@ fn check_reserved(acc: &str) -> Result<(), JsonitaError> {
 }
 ```
 
-## 3 macOS Accessibility 权限
+## 3 macOS 快捷键权限恢复
 
-tauri-plugin-global-shortcut 在 macOS 不需要 Accessibility 权限 ── 它走 `CGEventTap` 的 Annotated event tap （监听键盘组合，不需要事件注入权限）。 v1 默认不要求。
+tauri-plugin-global-shortcut 在 macOS 通常不需要 Accessibility 权限。v1 不把 Accessibility 授权作为首次启动前置条件；快捷键注册失败时，用户仍可通过菜单栏打开 Jsonita。
 
-但 macOS 13+ 在某些情况下仍会弹出 "Input Monitoring" 请求 ── 这种情况下：
+macOS 13+ 在某些环境下可能弹出 "Input Monitoring" 请求，或者系统返回快捷键注册失败 / 保留组合冲突。此时走同一条恢复路径：
 
 ### 3.1 检测 + 引导
 
@@ -264,16 +264,16 @@ pub fn request_input_monitoring() {
 
 ### 3.2 用户引导 UI
 
-首次启动失败 → 弹 Accessibility Modal。视觉与文案：见 [12 § 10 macOS 权限引导 Modal](../design/01_mockups.md#10-empty-states)。当前实现打开 `Privacy_Accessibility` 设置页。
+快捷键注册失败 → 弹快捷键权限 / 冲突 Modal。视觉与文案：见 [01 § 10 macOS 权限引导 Modal](01_mockups.md#10-empty-states)。当前 IPC 名称仍为 `open_accessibility_settings`，但用户语义是“打开 macOS 隐私设置以处理快捷键权限”。
 
 触发条件：
 
 启动时 `register_defaults()` 失败
 
-用户在设置面板录入新快捷键 → `shortcut_register()` 返回 `Conflict`
+用户在设置面板录入新快捷键 → `shortcut_register()` 返回 `Conflict` 或权限相关失败
 
 ```
-// 打开系统设置 → Privacy → Accessibility
+// 打开系统设置 → Privacy & Security 权限入口
 fn open_accessibility_settings() {
     use std::process::Command;
     let _ = Command::new("open")

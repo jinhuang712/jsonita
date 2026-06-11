@@ -1,6 +1,6 @@
 # Jsonita · 单窗切换 + 状态栏 hover · v2
 
-右侧两个控件现在 对称:平时只有文字「Switch to Single Panel」和「History」, hover / 键盘聚焦才滑出快捷键 (`⌘\` /`⌘Y`)。点 Switch 或按 `⌘\`:双栏合成单栏 + 窗口顺势收窄 + Run hint 滑入。无图标、无冗余文字。
+右侧两个控件现在 对称:平时只有文字「Switch to Single Panel」和「History」, hover / 键盘聚焦才滑出快捷键 (`⌘\` /`⌘Y`)。点 Switch 或按 `⌘\`:双栏合成单栏 + Run hint 滑入；窗口尺寸不因 toggle 主动变化。无图标、无冗余文字。
 
 切换 Split / Single 把鼠标移到右下角 Switch… 或 History 上 → 看快捷键滑出 模拟「减弱动态效果」
 
@@ -95,7 +95,7 @@ Valid JSON ·3 lines ·26 bytes ⌘\ Switch to Single Panel ⌘Y History
 ```html
 <header class="head">
   <h1>Jsonita · 单窗切换 + 状态栏 hover · v2</h1>
-  <p>右侧两个控件现在<b>对称</b>:平时只有文字「Switch to Single Panel」和「History」,<b>hover / 键盘聚焦才滑出快捷键</b>(<code>⌘\</code> / <code>⌘Y</code>)。点 Switch 或按 <code>⌘\</code>:双栏合成单栏 + 窗口顺势收窄 + Run hint 滑入。无图标、无冗余文字。</p>
+  <p>右侧两个控件现在<b>对称</b>:平时只有文字「Switch to Single Panel」和「History」,<b>hover / 键盘聚焦才滑出快捷键</b>(<code>⌘\</code> / <code>⌘Y</code>)。点 Switch 或按 <code>⌘\</code>:双栏合成单栏 + Run hint 滑入;窗口尺寸不因 toggle 主动变化。无图标、无冗余文字。</p>
 </header>
 
 <div class="wrap">

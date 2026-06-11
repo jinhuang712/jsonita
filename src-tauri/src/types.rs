@@ -1,6 +1,6 @@
 //! 数据模型 ── 8 个 enum + IPC payload structs。
 //!
-//! Spec ref: `spec/appendix/schemas.md` 枚举与 IPC payload structs。
+//! Spec ref: `spec/appendix/A00-schemas.md` 枚举与 IPC payload structs。
 //! 所有 enum 用 `kebab-case`；所有 struct 用 `camelCase`。
 
 use serde::{Deserialize, Serialize};
@@ -201,7 +201,7 @@ pub struct WindowResizedPayload {
 
 // ──────────── § 3.3 设置（M2-N1 真实化前 default） ────────────
 
-/// Settings 全字段权威定义见 spec/appendix/schemas.md。
+/// Settings 全字段权威定义见 spec/appendix/A00-schemas.md。
 /// M1-N8 仅以 default 形态注入 SettingsStore；M2-N1 起从 settings.json 加载 + patch + 落盘。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

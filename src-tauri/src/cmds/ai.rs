@@ -1,6 +1,6 @@
 //! AI 分组 ── DeepSeek HTTP + 本地 secrets.json 存 key。
 //!
-//! Spec ref: spec/08_ai_repair.md 与 spec/03_ipc_boundary.md。
+//! Spec ref: spec/M02-ai-repair.md 与 spec/S02-ipc-boundary.md。
 
 use tauri::State;
 

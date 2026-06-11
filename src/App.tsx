@@ -5,7 +5,7 @@ import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { useLocaleSync } from './i18n/useLocaleSync';
 import { HistoryModal } from './history/HistoryModal';
 import { settings as settingsApi } from './ipc/commands';
-import { AccessibilityModal } from './permissions/AccessibilityModal';
+import { ShortcutPermissionModal } from './permissions/ShortcutPermissionModal';
 import { SettingsModal } from './settings/SettingsModal';
 import { FloatingWindow } from './shell/FloatingWindow';
 import { useSettingsStore } from './store/settings';
@@ -71,7 +71,7 @@ export function App() {
       <FloatingWindow />
       <HistoryModal />
       <SettingsModal />
-      {modalOpen && <AccessibilityModal onClose={() => setModalOpen(false)} />}
+      {modalOpen && <ShortcutPermissionModal onClose={() => setModalOpen(false)} />}
     </>
   );
 }

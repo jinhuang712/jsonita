@@ -70,7 +70,7 @@
 | `hideOnBlur` | `bool` | `true` | General。 |
 | `singlePaneMode` | `bool` | `false` | General。 |
 | `theme` | `ThemeMode` | `system` | General。 |
-| `locale` | `'en-US'` / `'zh-CN'` | auto | General；v1 UI 只开放英文。 |
+| `locale` | `'en-US'` / `'zh-CN'` | `en-US` | General；v1 beta 可在 English / 简体中文之间切换。 |
 | `restoreWindow` | `RestoreWindow` | `min-5` | 保留；当前不自动恢复。 |
 | `initialWidth` | `InitialWidth` | `w-920` | 保留；当前默认 860 px。 |
 | `smartWidth` | `bool` | `true` | General。 |
@@ -119,7 +119,7 @@
 | 文件 | 字段 |
 | --- | --- |
 | `settings.json` | settings schema 全量字段。 |
-| `window.json` | `width`、`height`、`userDragged`。 |
+| `window.json` | `width`、`height`、`userDragged`；只记录尺寸和手动拖动锁，主题 effective state 不写入此文件。 |
 | `secrets.json` | `accounts.deepseek_api_key.value`、`createdAt`、`updatedAt`。 |
 
 ## 类型同步规则

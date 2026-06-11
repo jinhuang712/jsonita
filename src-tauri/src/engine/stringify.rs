@@ -1,4 +1,4 @@
-//! JSON ↔ String 互转 ── 见 spec/06_json_engine.md。
+//! JSON ↔ String 互转 ── 见 spec/M01-json-engine.md。
 //!
 //! - `json_to_string`: JSON → 转义 quote 包裹字面量（适合嵌入 JS / SQL / YAML）
 //! - `string_to_json`: 去外层 quote + 反转义 + 美化输出（4 层嵌套互逆）

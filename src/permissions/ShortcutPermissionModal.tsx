@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 
 /**
- * macOS Accessibility / Input Monitoring 权限引导 Modal。
+ * macOS shortcut permission recovery modal.
  *
  * 视觉锚：design/01_mockups.md § 9 macOS 权限引导 Modal。
  * 触发：App.tsx 检测 shortcut_status === false / 收到 `permission:accessibility_missing` event。
@@ -13,7 +13,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function AccessibilityModal({ onClose }: Props) {
+export function ShortcutPermissionModal({ onClose }: Props) {
   const { t } = useTranslation('errors');
   const { t: tc } = useTranslation('common');
 
@@ -21,7 +21,7 @@ export function AccessibilityModal({ onClose }: Props) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="accessibility-modal-title"
+        aria-labelledby="shortcut-permission-modal-title"
       style={{
         position: 'fixed',
         inset: 0,
@@ -45,8 +45,8 @@ export function AccessibilityModal({ onClose }: Props) {
         }}
       >
         <div style={{ fontSize: 30, marginBottom: 8 }}>⌨️</div>
-        <div id="accessibility-modal-title" style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
-          {t('accessibilityRequired.title')}
+        <div id="shortcut-permission-modal-title" style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
+          {t('shortcutPermissionRequired.title')}
         </div>
         <div
           style={{
@@ -56,7 +56,7 @@ export function AccessibilityModal({ onClose }: Props) {
             marginBottom: 16,
           }}
         >
-          {t('accessibilityRequired.body', { key: '⌘⇧J' })}
+          {t('shortcutPermissionRequired.body', { key: '⌘⇧J' })}
         </div>
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
           <button onClick={onClose} style={btnGhost}>

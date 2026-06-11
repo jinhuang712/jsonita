@@ -1,4 +1,4 @@
-//! json_ops 分组 ── 纯计算无状态，见 spec/06_json_engine.md 与 spec/03_ipc_boundary.md。
+//! json_ops 分组 ── 纯计算无状态，见 spec/M01-json-engine.md 与 spec/S02-ipc-boundary.md。
 //!
 //! M1-N2 起接入 `engine::*` 真实实现；CPU 密集走 `spawn_blocking` 不阻塞 main 进程
 //! 避免阻塞 Tauri 主运行时。

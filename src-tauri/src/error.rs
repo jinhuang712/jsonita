@@ -1,8 +1,8 @@
 //! `JsonitaError` — 全局单一错误枚举。
 //!
-//! Spec ref: `spec/04_error_model.md` 与 `spec/appendix/schemas.md`
+//! Spec ref: `spec/S03-error-model.md` 与 `spec/appendix/A00-schemas.md`
 //! 跨 IPC 序列化为 `{"kind": "...", "data": ...}` (tag/content)
-//! 调用方错误契约见 `spec/03_ipc_boundary.md`
+//! 调用方错误契约见 `spec/S02-ipc-boundary.md`
 
 use serde::Serialize;
 use thiserror::Error;

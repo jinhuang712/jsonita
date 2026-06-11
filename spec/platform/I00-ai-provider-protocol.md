@@ -39,9 +39,9 @@ DeepSeek never becomes a source of truth. It can propose a repaired document, bu
 
 | 方向 | 允许内容 | 禁止内容 |
 | --- | --- | --- |
-| UI -> Rust | 当前 editor text、parse line/column/message、model id。 | history、settings 全量、logs、window state、raw secrets。 |
+| UI -> Rust | 当前 editor text、parse line/column/message。`ai_test_connection` 可额外携带输入框当前 model id。 | history、settings 全量、logs、window state、raw secrets。 |
 | Rust -> DeepSeek | 当前 repair request 所需文本和最小错误上下文。 | 任何非当前请求的数据。 |
-| DeepSeek -> Rust | Candidate JSON text。 | 解释性 markdown 不可信；只能被抽取和校验。 |
+| DeepSeek -> Rust | Candidate JSON object/array text。 | 解释性 markdown 不可信；只能被抽取和校验；repair failed sentinel 不能视为修复结果。 |
 | Rust -> UI | verified fixed JSON 或 `JsonitaError`。 | 未校验 raw output 不能进入 Diff accept path。 |
 
 ## 失败语义
@@ -61,6 +61,7 @@ DeepSeek never becomes a source of truth. It can propose a repaired document, bu
 | Provider 不可用 | JSON format/minify/Tree 继续可用。 | 用户稍后重试或关闭 AI。 |
 | Key 保存失败 | Settings 不显示保存成功。 | 修复权限后重新保存。 |
 | 模型返回解释文字 | Rust 只尝试抽取 JSON；抽取失败则报 `AiInvalidJson`。 | 用户重试或手动修。 |
+| 模型返回 repair failed sentinel | Rust 视为不可用结果。 | 用户重试或手动修。 |
 | 输出合法但不满意 | DiffView 允许 Reject。 | 用户保留原文继续编辑。 |
 
 ## FAQ

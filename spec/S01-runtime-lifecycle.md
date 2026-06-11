@@ -80,7 +80,7 @@ stateDiagram-v2
 
 全局 `Cmd+Shift+J` 属于 Rust shortcut service。窗口内快捷键属于 React，例如 pane 切换、single-pane apply、清空、Diff accept/cancel。两个世界不能抢同一个职责：全局快捷键只决定窗口显示，窗口内快捷键只决定当前 UI 操作。
 
-菜单栏是用户的备用入口。快捷键注册失败时，App 不能因此不可用；用户仍可通过 tray 打开，并通过权限提示或 settings 重新注册。`shortcut_status`、`shortcut_retry`、`shortcut_register` 和 `open_accessibility_settings` 是这个恢复路径的关键命令。
+菜单栏是用户的备用入口。快捷键注册失败时，App 不能因此不可用；用户仍可通过 tray 打开，并通过权限提示或 settings 重新注册。`shortcut_status`、`shortcut_retry`、`shortcut_register` 和 `open_accessibility_settings` 是这个恢复路径的关键命令；其中 `open_accessibility_settings` 是现有 IPC 名称，用户语义是“打开 macOS 隐私设置以处理快捷键权限”，不表示 v1 首启必须拿到 Accessibility 授权。
 
 macOS 焦点策略由 NSPanel-like 行为、Accessory activation policy、always-on-top、blur hide 等组合完成。交互细节在 `design/06_window.md` 和 `design/07_menubar.md`，本 spec 只定义生命周期语义。
 
@@ -100,7 +100,7 @@ macOS 焦点策略由 NSPanel-like 行为、Accessory activation policy、always
 
 | 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
 | --- | --- | --- | --- | --- | --- |
-| 快捷键注册失败 | 启动或重新绑定快捷键 | App 仍可通过 tray 打开 | 显示权限或冲突提示 | 打开 Accessibility 设置、改快捷键、重试 | 只写 action、错误摘要、冲突状态，不写用户内容。 |
+| 快捷键注册失败 | 启动或重新绑定快捷键 | App 仍可通过 tray 打开 | 显示权限或冲突提示 | 打开 macOS 隐私设置、改快捷键、重试 | 只写 action、错误摘要、冲突状态，不写用户内容。 |
 | 窗口 show 失败 | `window_show` / toggle | editor 内存态不被清空 | toggle 失败反馈或日志可查 | 通过 tray 重试或重启 | 写 `Io` 或 Tauri error 摘要。 |
 | 隐藏失败 | `Esc`、`Cmd+W`、blur | 不能把隐藏失败升级成清空或退出 | 可能保持可见 | 再次执行 hide 或 quit | 写窗口错误，不写 editor 内容。 |
 | SQLite 打不开 | setup 阶段 | JSON 临时变换仍可工作 | history/session 功能不可用或后续失败 | 继续编辑，查看日志 | 记录路径类别和错误，不写 JSON。 |

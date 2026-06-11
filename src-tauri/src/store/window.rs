@@ -1,6 +1,6 @@
 //! window.json 持久化 ── width / height / userDragged。
 //!
-//! Spec ref: design/06_window.md 与 spec/07_storage_session.md。
+//! Spec ref: design/06_window.md 与 spec/S05-storage-session.md。
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};

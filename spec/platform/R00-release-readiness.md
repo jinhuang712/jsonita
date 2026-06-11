@@ -38,7 +38,7 @@ stateDiagram-v2
 | 门禁 | 必须满足 | 失败收场 |
 | --- | --- | --- |
 | 版本一致 | `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`、About panel 显示一致。 | 阻断 release；只允许回到版本同步修改。 |
-| 产物可解释 | `.dmg`、`.app`、Windows NSIS `.exe` 输出到约定目录，文件名能对应当前版本。 | 阻断 release；不能用旧产物顶替。 |
+| 产物可解释 | 当前 release scope 的产物输出到约定目录，文件名能对应当前版本。v1 beta scope 要求 macOS `.dmg`，`.app` 可用于本地 smoke test；Windows NSIS 是脚本预留，不阻断当前 beta。 | 阻断 release；不能用旧产物顶替。 |
 | 签名状态明确 | 对外 release 需要 Developer ID 签名和 notarization；小范围 beta 可以明确标注 unsigned。 | 对外 release 阻断；内部 beta 必须在 release notes 明说。 |
 | 隐私边界保留 | 打包配置只开放 DeepSeek 网络例外和必要 Tauri capabilities。 | 阻断 release；不能以“先发包”为理由扩大权限。 |
 | 验证记录完整 | 本次改动范围对应的 build/test/doc checks 已跑，并把失败项留在 TODO 或修掉。 | 阻断 release；不能把未跑验证写成通过。 |
@@ -59,4 +59,3 @@ stateDiagram-v2
 | 为什么命令还在 appendix？ | 命令和变量是查表信息；读者理解 release 契约时不需要先背它们。 |
 | unsigned beta 能不能发？ | 可以小范围发，但必须在 release notes 和项目记录中明示，不得伪装成正式签名版本。 |
 | Homebrew、updater、npm wrapper 算不算 release readiness？ | 当前 v1 beta 不算。它们是 v1.1+ 分发能力，只有真实产物 URL 和 sha256 存在后才进入门禁。 |
-

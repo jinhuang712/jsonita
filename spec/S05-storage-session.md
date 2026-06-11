@@ -29,7 +29,7 @@ WebView 可以请求读写，但不拥有这些数据。Rust store 是唯一写�
 | App meta | SQLite `app_meta` | key/value metadata | 迁移或内部状态 | 启动/迁移 | 不影响当前编辑。 |
 | Schema version | SQLite `schema_version` | migration version | migration 成功 | DB open | migration 失败阻断相关 store。 |
 | Settings | `settings.json` | `singlePaneMode`、`editorSoftWrap`、`aiEnabled` 等 | `settings_set` / reset 成功 | 启动和 `settings_get_all` | durable old value 保持。 |
-| Window state | `window.json` | size、smart resize lock、theme effective state | resize/theme/window command | 启动和 resize | 默认尺寸或旧值。 |
+| Window state | `window.json` | size、userDragged smart resize lock | resize/window command | 启动和 resize | 默认尺寸或旧值。主题 effective state 由 settings 和原生 appearance 解析，不写入 `window.json`。 |
 | Secrets | `secrets.json` | `accounts.deepseek_api_key.value` | `ai_set_api_key` 成功 | AI command 需要 key 时 | 旧 key 或无 key 保持。 |
 | Logs | rolling files | `ts`、`event`、`kind`、`requestId` | runtime event | support export/open | 主流程继续。 |
 

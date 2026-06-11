@@ -1,4 +1,4 @@
-//! DeepSeek HTTP 客户端 ── spec/08_ai_repair.md 请求流程与默认参数。
+//! DeepSeek HTTP 客户端 ── spec/M02-ai-repair.md 请求流程与默认参数。
 //!
 //! M2-N3 minimal：fix() 主流程 + 状态码分支 + extract+二次验证；
 //! 心跳进度推送 / 重试 / 复杂错误透传留 polish。
@@ -58,19 +58,12 @@ struct ChatRequest<'a> {
     temperature: f32,
     max_tokens: u32,
     stream: bool,
-    response_format: ResponseFormat,
 }
 
 #[derive(Serialize)]
 struct ChatMessage<'a> {
     role: &'a str,
     content: String,
-}
-
-#[derive(Serialize)]
-struct ResponseFormat {
-    #[serde(rename = "type")]
-    fmt_type: &'static str,
 }
 
 #[derive(Deserialize)]
@@ -132,9 +125,6 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         temperature: 0.0,
         max_tokens,
         stream: false,
-        response_format: ResponseFormat {
-            fmt_type: "json_object",
-        },
     };
 
     let client = reqwest::Client::builder()
@@ -190,9 +180,12 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
             raw: content.clone(),
         })?;
 
-    // 二次验证：必须是合法 JSON
-    serde_json::from_str::<serde_json::Value>(&extracted)
-        .map_err(|_| JsonitaError::AiInvalidJson { raw: content })?;
+    // 二次验证：必须是合法 JSON，且不能是 repair-failed sentinel。
+    let value = serde_json::from_str::<serde_json::Value>(&extracted)
+        .map_err(|_| JsonitaError::AiInvalidJson { raw: content.clone() })?;
+    if validate::is_repair_failed_sentinel(&value) {
+        return Err(JsonitaError::AiInvalidJson { raw: content });
+    }
 
     let elapsed_ms = started.elapsed().as_millis() as u64;
     let usage = parsed.usage.unwrap_or(Usage {

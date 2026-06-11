@@ -1,4 +1,4 @@
-//! history 分组 ── SQLite history 表，见 spec/07_storage_session.md。
+//! history 分组 ── SQLite history 表，见 spec/S05-storage-session.md。
 //!
 //! M1-N6：真实实现走 `crate::store::history`；M2 起接 settings.history_limit。
 

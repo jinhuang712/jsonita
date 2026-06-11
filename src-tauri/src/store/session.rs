@@ -1,6 +1,6 @@
 //! last_session 表 CRUD ── M1-N7 起完整接入。
 //!
-//! Spec ref: spec/07_storage_session.md 与 spec/appendix/storage-details.md。
+//! Spec ref: spec/S05-storage-session.md 与 spec/appendix/A01-storage-details.md。
 
 use rusqlite::params;
 

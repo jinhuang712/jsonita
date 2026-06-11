@@ -1,6 +1,6 @@
 //! Global shortcuts ── M0-N4 默认 + M2-N5 自定义 + 冲突检测。
 //!
-//! Spec ref: design/07_menubar.md § 2-4 / § 3 macOS Accessibility 权限
+//! Spec ref: design/07_menubar.md § 2-4 / § 3 macOS shortcut permission recovery
 
 use std::str::FromStr;
 
@@ -163,7 +163,7 @@ pub enum ShortcutRegisterResp {
 }
 
 /// 设置面板 ShortcutInput 调 → 验证 + 写 SettingsStore + 重新注册。
-/// design/07_menubar.md / spec/03_ipc_boundary.md
+/// design/07_menubar.md / spec/S02-ipc-boundary.md
 #[tauri::command]
 pub async fn shortcut_register(app: AppHandle, req: ShortcutRegisterReq) -> ShortcutRegisterResp {
     if !req.force_override && is_reserved(&req.accelerator) {

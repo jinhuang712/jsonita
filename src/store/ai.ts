@@ -1,7 +1,7 @@
 /**
  * AI Fix store slice — 状态机 idle/requesting/awaiting-decision/error。
  *
- * Spec ref: spec/08_ai_repair.md 与 spec/02_frontend_execution.md。
+ * Spec ref: spec/M02-ai-repair.md 与 spec/M00-frontend-execution.md。
  */
 
 import { create } from 'zustand';

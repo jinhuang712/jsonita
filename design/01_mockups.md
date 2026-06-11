@@ -609,21 +609,21 @@ Cancel `⌘↵` Accept
 
 light
 
-INPUT MONITORING
+SHORTCUT PERMISSION
 
-需要键盘事件权限
+需要处理系统隐私权限
 
-全局快捷键 `⌘⇧J` 需要 Input Monitoring。
+如果 `⌘⇧J` 无法在其他 App 前台唤起 Jsonita，请在 macOS 隐私设置中允许 Jsonita。
 
 稍后 打开系统设置
 
 dark
 
-INPUT MONITORING
+SHORTCUT PERMISSION
 
-需要键盘事件权限
+需要处理系统隐私权限
 
-全局快捷键 `⌘⇧J` 需要 Input Monitoring。
+如果 `⌘⇧J` 无法在其他 App 前台唤起 Jsonita，请在 macOS 隐私设置中允许 Jsonita。
 
 稍后 打开系统设置
 

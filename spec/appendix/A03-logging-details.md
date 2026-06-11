@@ -7,7 +7,7 @@
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `ts` | ISO string | 事件时间。 |
-| `level` | `debug` / `info` / `warn` / `error` | 日志等级。 |
+| `level` | `INFO` / `WARN` / `ERROR` | 日志等级；文件里统一使用大写，debug 只允许本地开发 console，不进入 durable JSONL。 |
 | `event` | string | 事件名。 |
 | `requestId` | string? | command/AI request 关联。 |
 | `durationMs` | number? | 耗时。 |
@@ -25,7 +25,7 @@
 | storage | `db.open`、`db.migration`、`settings.write`、`secrets.write` |
 | ai | `ai.request_start`、`ai.http_error`、`ai.invalid_json`、`ai.request_success` |
 | window | `resize.auto`、`resize.user`、`theme.applied` |
-| support | `log.open_dir`、`log.export`、`log.write_error` |
+| support | `log.open`、`log.export`、`log.write_error` |
 
 ## Redaction deny list
 

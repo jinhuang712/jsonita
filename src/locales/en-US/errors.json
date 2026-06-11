@@ -1,7 +1,7 @@
 {
-  "accessibilityRequired": {
-    "title": "Accessibility permission needed",
-    "body": "Global shortcut {{key}} needs Input Monitoring permission to work in any frontmost app. Add Jsonita in System Settings → Privacy & Security → Accessibility."
+  "shortcutPermissionRequired": {
+    "title": "Shortcut permission needs attention",
+    "body": "If global shortcut {{key}} cannot open Jsonita while another app is frontmost, allow Jsonita in System Settings → Privacy & Security."
   },
   "parse": {
     "title": "JSON parse error",

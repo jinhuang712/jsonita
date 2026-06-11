@@ -1,6 +1,6 @@
 //! tracing 日志初始化。
 //!
-//! Spec ref: `spec/09_logging_observability.md` 与 `spec/appendix/logging-details.md`。
+//! Spec ref: `spec/S06-logging-observability.md` 与 `spec/appendix/A03-logging-details.md`。
 //! M0 范围：daily rolling + 0600 (umask) + 7 天 purge + RedactLayer 占位
 //! 不含：5 MB 单文件分片（M1 补）/ WebView IPC log_write 合流（M1）/ 导出 zip（D-N5）
 

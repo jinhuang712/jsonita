@@ -1,6 +1,6 @@
 //! RedactLayer — 隐私字段脱敏 layer 占位。
 //!
-//! Spec ref: `spec/09_logging_observability.md` 与 `spec/appendix/logging-details.md`。
+//! Spec ref: `spec/S06-logging-observability.md` 与 `spec/appendix/A03-logging-details.md`。
 //! M0 阶段为 placeholder：规则表为空，仅在 subscriber chain 中占位。
 //! M2-N3 接 API key 时填入黑名单（`api_key` / `access_token` / `password` 等
 //! → 完全拒绝；`content` / `text` / `body` / `raw` → 改记 `len + sha256[:8]`）。
