@@ -1,7 +1,7 @@
 /**
  * 浮窗内 hotkeys ── Tab 切功能 / 双击 Esc 隐藏 / ⌘K 清空 / ⌘⇧L 恢复上次会话 / ⌘W 关。
  *
- * Spec ref: spec/07 § 4 In-app 快捷键。
+ * Spec ref: design/07 § 4 In-app 快捷键。
  */
 
 import { useEffect, useRef } from 'react';
@@ -401,7 +401,7 @@ export function useGlobalHotkeys() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setContent]);
 
-  // ⌘W 关闭浮窗（spec/06 § 5.1 路由）
+  // ⌘W 关闭浮窗（design/06 § 5.1 路由）
   useHotkeys(`${primaryHotkeyPrefix()}+w`, () => {
     win.hide().catch(() => {});
   });

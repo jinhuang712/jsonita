@@ -1,6 +1,6 @@
 //! Global shortcuts ── M0-N4 默认 + M2-N5 自定义 + 冲突检测。
 //!
-//! Spec ref: spec/07_menubar.html § 2-4 / § 3 macOS Accessibility 权限
+//! Spec ref: design/07_menubar.md § 2-4 / § 3 macOS Accessibility 权限
 
 use std::str::FromStr;
 
@@ -14,7 +14,7 @@ use crate::store::SettingsStore;
 use crate::types::Settings;
 use crate::window;
 
-/// 系统级保留快捷键 ── spec/07 § 2.4
+/// 系统级保留快捷键 ── design/07 § 2.4
 const RESERVED: &[&str] = &[
     "CmdOrCtrl+Q",
     "CmdOrCtrl+W",
@@ -30,7 +30,7 @@ fn is_reserved(acc: &str) -> bool {
     RESERVED.iter().any(|r| acc.eq_ignore_ascii_case(r))
 }
 
-/// 解析 "CmdOrCtrl+Shift+J" 风格字符串为 Shortcut。spec/07 § 2.2
+/// 解析 "CmdOrCtrl+Shift+J" 风格字符串为 Shortcut。design/07 § 2.2
 pub fn parse_accelerator(s: &str) -> Result<Shortcut, String> {
     let mut mods = Modifiers::empty();
     let mut code: Option<Code> = None;
@@ -130,7 +130,7 @@ pub fn shortcut_retry(app: AppHandle) -> bool {
     register_defaults(&app).is_ok()
 }
 
-/// macOS Accessibility 设置页直跳（spec/07 § 3.2 命令）。
+/// macOS Accessibility 设置页直跳（design/07 § 3.2 命令）。
 #[tauri::command]
 pub fn open_accessibility_settings() {
     #[cfg(target_os = "macos")]
@@ -163,7 +163,7 @@ pub enum ShortcutRegisterResp {
 }
 
 /// 设置面板 ShortcutInput 调 → 验证 + 写 SettingsStore + 重新注册。
-/// spec/07 § 2.3 / spec/02 § 6.1.7
+/// design/07 § 2.3 / spec/02 § 6.1.7
 #[tauri::command]
 pub async fn shortcut_register(app: AppHandle, req: ShortcutRegisterReq) -> ShortcutRegisterResp {
     if !req.force_override && is_reserved(&req.accelerator) {

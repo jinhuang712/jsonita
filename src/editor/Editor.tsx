@@ -1,5 +1,5 @@
 /**
- * Editor 组件 — CodeMirror 6 React 包装（spec/08 § 1.4）。
+ * Editor 组件 — CodeMirror 6 React 包装（design/08 § 1.4）。
  *
  * - useRef 单次 init（React 18 strict mode double-mount 兼容）
  * - theme 变化时重建 instance（M3-N1 polish 引入 Compartment 实现热切）

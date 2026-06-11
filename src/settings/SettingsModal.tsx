@@ -11,8 +11,8 @@ import { ShortcutInput } from './ShortcutInput';
 /**
  * 设置 Modal — 6 分组 nav + 字段。
  *
- * 视觉锚：spec/01_mockups.html § 4 设置 Modal
- * Spec ref: spec/04 § 4.6 SettingsModal
+ * 视觉锚：design/01_mockups.md § 4 设置 Modal
+ * Spec ref: design/04 § 4.6 SettingsModal
  * M2-N1 minimal：General + AI + JSON Transform + History 4 组（Shortcuts M2-N5；About M3）；
  * 字段：launchAtLogin / hideOnBlur / autoUnwrap / aiEnabled / historyLimit / smartWidth / editorSoftWrap。
  * 即时生效：onChange 立即 settings_set。

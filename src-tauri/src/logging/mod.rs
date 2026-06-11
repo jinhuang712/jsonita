@@ -1,6 +1,6 @@
 //! tracing 日志初始化。
 //!
-//! Spec ref: `spec/15_logging.html` § 4 4 级策略 / § 5 路径 / § 6 滚动 + 保留 7 天
+//! Spec ref: `spec/15_logging.md` § 4 4 级策略 / § 5 路径 / § 6 滚动 + 保留 7 天
 //! M0 范围：daily rolling + 0600 (umask) + 7 天 purge + RedactLayer 占位
 //! 不含：5 MB 单文件分片（M1 补）/ WebView IPC log_write 合流（M1）/ 导出 zip（D-N5）
 

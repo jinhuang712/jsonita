@@ -1,7 +1,7 @@
 /**
  * TypeScript 类型增强 ── 让 `t('key.subkey')` 有 IDE 自动补全 + 编译期 key 校验。
  *
- * Spec ref: spec/14_i18n_a11y.html § 5 namespace 拆分。
+ * Spec ref: design/14_i18n_a11y.md § 5 namespace 拆分。
  * 基于 en-US 资源推 key 类型；zh-CN 文件结构必须严格对齐。
  */
 

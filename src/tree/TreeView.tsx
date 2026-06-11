@@ -5,8 +5,8 @@ import { nodeCopyText, pathToString } from './jsonpath';
 /**
  * JSON 树视图 — 自渲染递归节点，避免第三方默认样式破坏主题。
  *
- * 视觉锚：spec/01_mockups.html § 1.3 Tree Tab + § 12 Hover 复制
- * Spec ref: spec/08 § 4 JSON 树
+ * 视觉锚：design/01_mockups.md § 1.3 Tree Tab + § 12 Hover 复制
+ * Spec ref: design/08 § 4 JSON 树
  */
 
 interface Props {

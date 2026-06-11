@@ -1,8 +1,8 @@
 /**
  * Editor onChange → debounce 300 ms → Rust engine 调用 → 更新 store output / error。
  *
- * Spec ref: spec/00 § 6 数据流 / spec/08 § 3 状态栏联动。
- * 大文件 > 5 MB 直接标 `large` 不调 engine（spec/08 § 3.1）。
+ * Spec ref: spec/00 § 6 数据流 / design/08 § 3 状态栏联动。
+ * 大文件 > 5 MB 直接标 `large` 不调 engine（design/08 § 3.1）。
  */
 
 import { useEffect, useRef } from 'react';

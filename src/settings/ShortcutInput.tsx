@@ -6,7 +6,7 @@ import { formatAccelerator } from '../keyboard/accelerators';
 /**
  * ShortcutInput — 录入快捷键，调 shortcut_register 验 + 注册。
  *
- * Spec ref: spec/04 § 4.7 · spec/07 § 2.3 / § 2.4
+ * Spec ref: design/04 § 4.7 · design/07 § 2.3 / § 2.4
  * 行为：
  *   - 未聚焦：显当前值
  *   - 聚焦：listen keydown → 格式化组合 → 调 shortcut_register
@@ -99,7 +99,7 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
   };
 
   const overrideReserved = async () => {
-    // 二次确认（spec/07 § 2.3 override Modal；M2-N5 minimal 用 window.confirm）
+    // 二次确认（design/07 § 2.3 override Modal；M2-N5 minimal 用 window.confirm）
     if (!msg?.acc) return;
     const acc = msg.acc;
     const ok = window.confirm(t('shortcuts.overrideConfirm', { accelerator: formatAccelerator(acc) }));

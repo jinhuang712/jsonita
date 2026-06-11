@@ -1,5 +1,5 @@
 /**
- * 自定义 JSON 语法高亮风格 — 走 design tokens（spec/03 § 4.4 + spec/08 § 1.7）。
+ * 自定义 JSON 语法高亮风格 — 走 design tokens（design/03 § 4.4 + design/08 § 1.7）。
  *
  * 6 类 tag → CSS variables，data-theme 切换自动应用 light/dark。
  */

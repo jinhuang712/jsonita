@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### docs · Markdown-first documentation migration
+
+- UI、设计、交互、原型图、设计 token、图标、窗口、菜单栏、编辑器、i18n 与 a11y 内容统一迁移到 `design/`；`design/README.md` 作为 coding agent 的设计阅读入口。
+- `plan/*.html`、`spec/*.html`、`todo.html`、`changelist.html`、`index.html` 等文档发布面迁移为 Markdown 源；旧文档 HTML 删除，运行时 `src/index.html` 保留为应用文件。
+- `.cast-docs/`、`site/` 与 CAST 文档渲染 / 检查脚本删除；原 `.cast-docs/assets/jsonita-logo.png` 迁移到 `assets/docs/jsonita-logo.png`。
+- 旧文档站运行时资源 `assets/nav.js`、`assets/style.css` 删除；源码注释改指向 Markdown 文档。
+- `AGENTS.md` 与 `CLAUDE.md` 瘦身为入口文件，统一依赖根目录 `WORKFLOW.md`；`package.json` 删除已失效的 docs render/check scripts。
+- 每页迁移前完成可见文本 parity 校验；最终校验覆盖 Markdown links、旧 HTML 文档残留、CAST 残留、压扁图表残留、`git diff --check` 与 `pnpm tsc --noEmit`。
+
 ### docs · repair CAST strict structure
 
 按最新版 `$cast-a-start` 修复 Jsonita 文档结构，让当前发布入口、TODO、Changelist、agent workflow 和图表发布面可验证。
@@ -302,7 +311,7 @@
 
 留用户：录 3 段演示 GIF（kap / licecap，每段 ≤ 5s ≤ 500KB）+ 截图 light/dark 各 1 张 + 跑 M0/M1/M2/M3 全验收 → `git tag 1.0.0` → `gh release create v1.0.0`。
 
-#### fix(spec/00) · § 2.1 mermaid stateDiagram syntax
+#### fix(spec/00) · § 2.1 Mermaid 状态图语法
 
 label 内裸用 `:` `/` `()` 导致 mermaid 11.4 解析失败（用户截图 "Syntax error in text"）。按 `mermaid-safe-syntax` memory：
 
@@ -1009,7 +1018,7 @@ TS 端（8 个新文件）：
 - spec：02 IPC 加 `window_resize_for_content` + `window:resized` event；06 § 9 智能宽度完整算法；08 § 4.5 Tree hover 复制实现
 - spec/01_mockups 大重写：每个 mock 左右 light/dark **双版** + § 11 智能宽度示例 + § 12 Hover 复制示例
 - spec/04 图标章节真实展示所有 PNG/ICO/menubar 资源（含 light/dark 反色对照）
-- 全局清理 ASCII box-drawing：组件/菜单栏改成指向 01 mockups 链接；状态机改用 mermaid stateDiagram
+- 全局清理 ASCII box-drawing：组件/菜单栏改成指向 01 mockups 链接；状态机改用 Mermaid 状态图
 - 新建项目级 `CLAUDE.md` 写定硬规则（不 cd · 先 TaskCreate+AskUserQuestion · mockups 唯一权威 · 代码密度规则）
 
 #### Design-first 重写（4 章 spec，2202 → 1635 行，-26%）
@@ -1023,13 +1032,13 @@ TS 端（8 个新文件）：
 
 #### Design-first v2 — 补 graphs + 拆 code（用户二次反馈：缺图 + 代码太多）
 - 强化 memory `spec-design-first-code-last`：加入两条新硬规则 ── (a) 讲系统 / 模块 / 状态 / 流程的章节<b>必须 ≥ 1 张 mermaid 图</b>（目录树代码块 / flow-steps 卡片不能替代）；(b) 代码块严格 ≤ 20 行，必须是不可替代的核心算法或接口签名
-- **00 架构**（414 → 476 行，+15%）**新增 8 张 mermaid 图** ── 双进程拓扑 graph TB / 进程生命周期 stateDiagram-v2 / 启动时序 sequenceDiagram / 呼出时序 sequenceDiagram / format 数据流 sequenceDiagram / 错误传播 graph LR / Rust 模块依赖 graph TD / TypeScript 模块结构 graph TD；删完整 src-tauri/src 目录树 + 完整 src/ 目录树 + JsonitaError Rust enum + TS type 镜像（13 § 1 已唯一权威）+ 完整项目根目录树
-- **03 design tokens**（624 → 559 行，-10%）将原 § 2.2 / 2.3 light + dark `:root { ... }` 60+ 行 CSS 块拆为 token 取值表（4 列：token / light / dark / 设计意图）；字号 / 字重 / 行高 / 圆角 / 边框 / 阴影 / 时长 / 缓动 / Z-index 均改表；新增主题切换 graph TB（4 数据源 + 3 处订阅 + 1 FOUC 避免）；Tailwind 完整 config 70 行压为映射规则表 + ~18 行核心 extend；保留 4 个 ≤ 20 行 `<pre>`（resolve+apply / FOUC inline / Rust theme watch / Tailwind 骨架）
-- **06 窗口**（534 → 428 行，-20%）cocoa NSPanel 完整 unsafe 实现压为标志位表（styleMask × 3 / collectionBehavior × 3 / 其他 × 2 + 调用骨架 ≤ 15 行）；tauri.conf.json 完整 30 行压为关键字段表（含每个字段的"原因"列）；locate_window 完整 40 行 → 算法步骤表 + 核心循环 ≤ 10 行；**新增 4 张 graph** ── 多屏定位决策 graph TD / 关闭事件路由 graph TD（6 来源 → hide vs close 决策）/ 智能宽度 4 层 graph TD / 窗口生命周期 stateDiagram；保留 4 个 ≤ 20 行 `<pre>`（NSPanel 调用骨架 / locate 核心循环 / close interceptor / blur hide）
+- **00 架构**（414 → 476 行，+15%）**新增 8 张 mermaid 图** ── 双进程拓扑图 / 进程生命周期状态图 / 启动时序图 / 呼出时序图 / format 数据流时序图 / 错误传播流程图 / Rust 模块依赖图 / TypeScript 模块结构图；删完整 src-tauri/src 目录树 + 完整 src/ 目录树 + JsonitaError Rust enum + TS type 镜像（13 § 1 已唯一权威）+ 完整项目根目录树
+- **03 design tokens**（624 → 559 行，-10%）将原 § 2.2 / 2.3 light + dark `:root { ... }` 60+ 行 CSS 块拆为 token 取值表（4 列：token / light / dark / 设计意图）；字号 / 字重 / 行高 / 圆角 / 边框 / 阴影 / 时长 / 缓动 / Z-index 均改表；新增主题切换拓扑图（4 数据源 + 3 处订阅 + 1 FOUC 避免）；Tailwind 完整 config 70 行压为映射规则表 + ~18 行核心 extend；保留 4 个 ≤ 20 行 `<pre>`（resolve+apply / FOUC inline / Rust theme watch / Tailwind 骨架）
+- **06 窗口**（534 → 428 行，-20%）cocoa NSPanel 完整 unsafe 实现压为标志位表（styleMask × 3 / collectionBehavior × 3 / 其他 × 2 + 调用骨架 ≤ 15 行）；tauri.conf.json 完整 30 行压为关键字段表（含每个字段的"原因"列）；locate_window 完整 40 行 → 算法步骤表 + 核心循环 ≤ 10 行；**新增 4 张流程/状态图** ── 多屏定位决策图 / 关闭事件路由图（6 来源 → hide vs close 决策）/ 智能宽度 4 层图 / 窗口生命周期状态图；保留 4 个 ≤ 20 行 `<pre>`（NSPanel 调用骨架 / locate 核心循环 / close interceptor / blur hide）
 
 #### Spec 完整性补 — 新增 2 章（NFR 锁定但散落）
 - **新章 14 国际化 & 无障碍**（357 行 / 3 张 mermaid / 4 个 ≤ 20 行 `<pre>`）── 为 NFR § 3 "M3 中文 UI" 做架构准备 + a11y 清单。设计部分：lib 选型 react-i18next（vs lingui / react-intl / 自写 4 行对比表）/ 资源按章节模块 namespace 拆（shell / panes / settings / history / errors / about / common 7 组）/ locale 检测 3 层 fallback / Rust 错误不翻译策略 / mono 字体 CJK 字符回退；机制部分：3 张 mermaid（locale 检测决策 / 加载与切换流程 / 字体回退决策树）；契约部分：资源目录组织 + JSON 示例 + initI18n / useTranslation API + settings.locale 字段补充；a11y 部分：10 项强制要求 + 3 条 screen reader 关键流
-- **新章 15 日志 & 可观测性**（367 行 / 2 张 mermaid / 3 个 ≤ 20 行 `<pre>`）── 为 NFR § 6 "本地滚动日志 + 不上报 + 不记 JSON 内容" 做完整 spec。设计部分：5 条硬约束（不上报 / 不记敏感 / 双进程合流 / 用户可审计 / 资源可控）/ Rust 日志框架选型 tracing+tracing-appender（vs log+env_logger / slog 对比表）/ 双进程合流策略（Rust 唯一写者，WebView 经 log_write IPC 转发）/ 4 级策略（DEBUG 默认关）/ 隐私脱敏字段黑白名单；机制部分：2 张 mermaid（日志写入路径 graph LR / 隐私脱敏决策树 graph TD）+ 关键事件 catalog 19 个 event（含每个 event 的级别 / 触发 / 字段，明确"哪些可记 / 哪些禁记"）；契约部分：JSON Lines 格式 + 必填字段表 + 文件路径 / 滚动策略 / 保留 7 天 / 权限 0600 + 黑白名单表 + RedactLayer 核心 ~20 行 + WebView 端 logger.ts 薄层 ~20 行 + 新 IPC <code>log_write</code> 命令；测试部分：12 条 checklist 含 "API key 不入日志 / JSON 内容不入日志 / 用户名不入日志" 三项审计专项
+- **新章 15 日志 & 可观测性**（367 行 / 2 张 mermaid / 3 个 ≤ 20 行 `<pre>`）── 为 NFR § 6 "本地滚动日志 + 不上报 + 不记 JSON 内容" 做完整 spec。设计部分：5 条硬约束（不上报 / 不记敏感 / 双进程合流 / 用户可审计 / 资源可控）/ Rust 日志框架选型 tracing+tracing-appender（vs log+env_logger / slog 对比表）/ 双进程合流策略（Rust 唯一写者，WebView 经 log_write IPC 转发）/ 4 级策略（DEBUG 默认关）/ 隐私脱敏字段黑白名单；机制部分：2 张 mermaid（日志写入路径流程图 / 隐私脱敏决策树）+ 关键事件 catalog 19 个 event（含每个 event 的级别 / 触发 / 字段，明确"哪些可记 / 哪些禁记"）；契约部分：JSON Lines 格式 + 必填字段表 + 文件路径 / 滚动策略 / 保留 7 天 / 权限 0600 + 黑白名单表 + RedactLayer 核心 ~20 行 + WebView 端 logger.ts 薄层 ~20 行 + 新 IPC <code>log_write</code> 命令；测试部分：12 条 checklist 含 "API key 不入日志 / JSON 内容不入日志 / 用户名不入日志" 三项审计专项
 - 同步：<code>assets/nav.js</code> 加 14 / 15 章节项；<code>index.html</code> Spec 列加 14 / 15 链接（spec 总数 14 → 16 章）
 
 #### 工作流规则
@@ -1041,7 +1050,7 @@ TS 端（8 个新文件）：
 - 删 spec/12 § 10 发布 checklist（cargo test / git tag / pnpm build 等过程性 runbook 不归 spec）+ § 12 "承上启下 ── 此章是 Spec 终点"（事实错误，13/14/15 在后面）
 - 删除 5 章末尾的"承上启下"小作文段：00 § 11 / 05 § 8 / 07 § 7 / 08 § 9 / 12 § 12（已被 13 § 9 / 14 § 10 / 15 § 12 等"对接表"覆盖，不需小尾巴）
 - 修 mermaid syntax error：spec/14 § 4 字体回退图（节点 label 含 `→` `/` 没引号包裹，渲染失败）；批量加引号修复 7 个高风险节点（00 § 1 / § 7 / 03 § 11 / 15 § 2.4 / 15 § 3 中含 `/` `:` `*` 在 label 里的）
-- 新 memory `mermaid-safe-syntax`：节点 label 强制 `["..."]` 引号包裹；edge label 禁 `→` `/` `*` `（）`；stateDiagram-v2 transition label 用 `<br/>` 换行不用 `→`
+- 新 memory `mermaid-safe-syntax`：节点 label 强制 `["..."]` 引号包裹；edge label 禁 `→` `/` `*` `（）`；Mermaid 状态图 transition label 用 `<br/>` 换行不用 `→`
 
 #### Index 渲染单源化（删内嵌副本，改 fetch + fallback）
 - 用户反馈"双轨副本会出问题" ── 之前 index.html 内嵌 `<script type="text/markdown" id="src-readme/src-todo/src-changelist">` 三段 ~290 行镜像 .md 内容，每次改 .md 都得手动同步内嵌，多次漏改
@@ -1077,7 +1086,7 @@ TS 端（8 个新文件）：
   - 11 打包、签名、验收（tauri.conf 全文 · entitlements · CI workflow · 9 类验收用例对齐 plan NFR）
   - 12 原型图 & 交互细节（主浮窗 6 态 + 单窗模式 + 状态栏 4 态 + 菜单栏 tray + 设置 Modal + 历史 Modal + RestoreBar + Toast 四 variant + AI Fix DiffView + 权限引导 + Empty States + light vs dark 对照）
 - 04 图标章节真实展示所有图片资源：source masters / 多尺寸 PNG / macOS iconset / Windows ICO / menubar template 全套（含暗背景反色对照）
-- 全局清理 ASCII box-drawing 原型图：组件 / 菜单栏改成指向 12 章 mockups；状态机改用 mermaid stateDiagram
+- 全局清理 ASCII box-drawing 原型图：组件 / 菜单栏改成指向 12 章 mockups；状态机改用 Mermaid 状态图
 
 ---
 

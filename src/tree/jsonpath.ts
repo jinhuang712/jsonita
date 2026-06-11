@@ -1,5 +1,5 @@
 /**
- * JSON Path 工具 — 把"对象路径数组"转 spec/08 § 4.3 用户友好格式
+ * JSON Path 工具 — 把"对象路径数组"转 design/08 § 4.3 用户友好格式
  * `$.user.items[0].name`（不用 RFC 6901 pointer）。
  */
 
@@ -22,7 +22,7 @@ export function pathToString(path: (string | number)[]): string {
 
 /**
  * 计算 node 的 raw text （leaf 带引号 / object/array 走 pretty）。
- * spec/01 § 12 复制内容规则表。
+ * design/01 § 12 复制内容规则表。
  */
 export function nodeCopyText(value: unknown): string {
   if (typeof value === 'string') return JSON.stringify(value); // 带引号 raw

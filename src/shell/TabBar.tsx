@@ -10,8 +10,8 @@ import { GearIcon } from '../components/icons';
 /**
  * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
  *
- * 视觉锚：spec/01_mockups.html § 1.1-1.5
- * Spec ref: spec/04_components.html § 4.1 TabBar
+ * 视觉锚：design/01_mockups.md § 1.1-1.5
+ * Spec ref: design/04_components.md § 4.1 TabBar
  */
 
 const TABS: { id: Pane; key: string }[] = [

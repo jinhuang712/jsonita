@@ -1,7 +1,7 @@
 /**
  * AI Fix store slice — 状态机 idle/requesting/awaiting-decision/error。
  *
- * Spec ref: spec/11_ai_client.html § 8.1 前端状态机
+ * Spec ref: spec/11_ai_client.md § 8.1 前端状态机
  */
 
 import { create } from 'zustand';

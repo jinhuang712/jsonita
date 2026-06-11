@@ -1,7 +1,7 @@
 /**
  * Effective theme 计算 + DOM data-theme 同步 + system 主题变更订阅。
  *
- * Spec ref: spec/03_design_tokens.html § 11 主题切换流程。
+ * Spec ref: design/03_design_tokens.md § 11 主题切换流程。
  * 权威数据源：**原生** `window_set_theme(mode)` → 读 `NSApp.effectiveAppearance` 解析 light|dark 回传。
  *   ── 不再用 webview 的 `matchMedia` 取值：NSWindow.appearance 被 pin 后会污染 webview 的
  *      prefers-color-scheme（旧 bug：light→system 不变 dark）。matchMedia 仅在 system 模式下
