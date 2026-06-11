@@ -12,5 +12,33 @@
     "strToJson": "→JSON",
     "aiFix": "AI Fix",
     "aiFixDisabledTooltip": "AI Fix is disabled. Enable it in Settings → AI."
+  },
+  "search": {
+    "label": {
+      "find": "Find",
+      "replace": "Replace"
+    },
+    "field": {
+      "find": "Find",
+      "replace": "Replace"
+    },
+    "actions": {
+      "previous": "Previous match",
+      "next": "Next match",
+      "matchCase": "Match case",
+      "regexp": "Regular expression",
+      "wordChip": "word",
+      "wholeWord": "Whole word",
+      "all": "All",
+      "selectAll": "Select all matches",
+      "replace": "Replace",
+      "replaceCurrent": "Replace current match",
+      "replaceAll": "Replace all matches",
+      "close": "Close search"
+    },
+    "status": {
+      "noQuery": "No query",
+      "noMatches": "No matches"
+    }
   }
 }

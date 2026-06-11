@@ -32,7 +32,8 @@ CodeMirror 6 集成 · JSON 树渲染 · 错误标注 · 状态栏联动 · ligh
 | bracketMatching | @codemirror/language | 光标在 { [ 时高亮配对的 } ] |
 | closeBrackets | @codemirror/autocomplete | 自动补 { → } / [ → ] |
 | history | @codemirror/commands | `⌘Z` /`⌘⇧Z` undo / redo |
-| search | @codemirror/search | `⌘F` 搜索面板 |
+| search | @codemirror/search | `⌘F` 搜索面板；使用 Jsonita 自定义 docked panel |
+| search line markers | @codemirror/view lineNumberMarkers | 搜索命中行在行号 gutter 内显示低饱和提示 |
 | drawSelection | @codemirror/view | 多光标选区绘制 |
 | EditorState.allowMultipleSelections | @codemirror/state | `⌘D` 多光标 |
 | EditorView.lineWrapping | @codemirror/view | 软换行（不出水平滚动） |
@@ -51,7 +52,7 @@ import { foldGutter, codeFolding, bracketMatching, defaultHighlightStyle,
          syntaxHighlighting } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
 import { history, defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { keymap } from '@codemirror/view';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
@@ -59,6 +60,8 @@ import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { jsonitaLightTheme, jsonitaDarkTheme } from './theme';
 import { jsonitaJsonHighlight } from './highlight';
 import { externalLinter, supplementalJsonLinter } from './lint';
+import { createJsonitaSearchPanel } from './searchPanel';
+import { jsonitaSearchGutter } from './searchGutter';
 
 export interface EditorConfig {
   theme: 'light' | 'dark';
@@ -82,7 +85,9 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     closeBrackets(),
     history(),
     drawSelection(),
+    search({ top: true, createPanel: createJsonitaSearchPanel }),
     highlightSelectionMatches(),
+    jsonitaSearchGutter,
     indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),
     EditorState.allowMultipleSelections.of(true),
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
@@ -105,6 +110,26 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
   ];
 }
 ```
+
+### 1.3.1 搜索面板契约
+
+`⌘F` 打开的搜索 UI 不使用 CodeMirror 默认底部表单。Jsonita 使用 `search({ top: true, createPanel })` 提供自定义面板，面板 dock 在 TabBar 下方、编辑正文上方，参与布局，不覆盖任何 JSON 文本。
+
+结构：
+
+| 区域 | 内容 | 交互 |
+| --- | --- | --- |
+| Find row | `Find` label、搜索输入、`x / n` 计数、上一个/下一个、`Aa`、`.*`、`word`、`All`、关闭 | `Enter` 下一项，`Shift+Enter` 上一项，`Esc` 关闭。 |
+| Replace row | `Replace` label、替换输入、Replace、All | 保留 CodeMirror replace 能力；不弹额外 modal。 |
+| Match highlight | 文本内 match 背景 | 使用低透明 `--primary`，不使用高饱和黄/青/紫。 |
+| Gutter hint | 行号 gutter 内弱竖线 | 普通命中弱提示，当前命中稍强；不能替换行号数字。 |
+
+视觉边界：
+
+- 搜索面板只用 `--chrome-bg-strong`、`--bg-code`、`--border`、`--text-muted`、`--primary-soft` 等 token。
+- 不使用大面积蓝色块，不使用高对比文字按钮；上一项/下一项用 `↑` / `↓`。
+- 搜索关闭后，文本 match 和 gutter hint 一起消失。
+- 搜索 gutter 只表达“本行有搜索命中”，不能和 parse error 的 `--danger` marker 混淆。
 
 ### 1.4 React 封装
 
@@ -239,10 +264,10 @@ export const jsonitaLightTheme = EditorView.theme({
     outline:         '1px solid var(--primary-edge)',
   },
   '.cm-searchMatch': {
-    backgroundColor: 'rgba(168,176,189,0.14)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 14%, transparent)',
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: 'rgba(168,176,189,0.28)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 24%, transparent)',
   },
   '.cm-lintRange-error': {
     backgroundImage:
@@ -264,6 +289,8 @@ export const jsonitaDarkTheme = EditorView.theme({ /* same selectors */ }, { dar
 实现简化： 所有选择器只取 CSS variables，不写死 hex。 `data-theme` 切换时整个 token table 跟着变 ── 编辑器主题不需要"内部双套"。但 CM 的 `dark: true/false` flag 影响默认 highlightStyle 选择，必须切，所以我们仍需要两个 instance。
 
 对齐契约： `.cm-line`、 `.cm-gutters`、 `.cm-gutterElement` 必须共用 `--fs-editor` 与 `--lh-code`。当前行正文背景与 `.cm-activeLineGutter` 在 y / height 上必须一致；任何字号缩放都不能只作用于正文而漏掉 line number gutter。
+
+搜索 gutter 契约：`.cm-lineNumbers .cm-gutterElement.jsonita-search-line-number::before` 只画低饱和细竖线；`jsonita-search-line-number-active` 可略强，但仍不得超过 parse error marker 的视觉强度。行号数字必须保留。
 
 ### 1.7 自定义 JSON 高亮风格
 

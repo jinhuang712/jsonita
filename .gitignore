@@ -66,6 +66,8 @@ pnpm-debug.log*
 .cursor/
 .continue/
 .windsurf/
+.superpowers/
+.playwright-cli/
 .aider*
 
 # ===== Project local =====

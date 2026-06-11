@@ -82,8 +82,10 @@ object / array 节点（含 root）递归复制完整子树为 pretty-printed JS
 | 括号匹配 | 光标停在 `{` / `[` 时，对应 `}` / `]` 高亮蓝框；由 CodeMirror `bracketMatching` extension 承载 |
 | 缩进引导 | 每层缩进显示浅色 vertical guide line；由 `indentationMarkers` extension 承载 |
 | 折叠 | 大数组 / 大对象超过阈值时自动折叠为 `[ ... ]` / `{ ... }`；点击展开 / 收起 |
-| 编辑器内置能力 | 行号、当前行高亮、`⌘F` 搜索、`⌘D` 多光标、`⌘Z` undo 走 CodeMirror 6 |
+| 编辑器内置能力 | 行号、当前行高亮、`⌘F` 搜索、`⌘D` 多光标、`⌘Z` undo 走 CodeMirror 6；搜索面板使用 Jsonita docked UI |
 | 行号对齐 | line number gutter 与正文行共用编辑器字号和 code 行高；当前行 gutter 高亮与正文当前行背景在 y / height 上保持一致 |
+
+`⌘F` 搜索打开时，搜索条插入在顶部 TabBar 下方，不覆盖 JSON 文本。命中结果在正文中以低透明 primary tint 标出；左侧行号 gutter 只显示低饱和细竖线提示本行有命中，当前命中行略强，但不能接近错误 marker 的强度。关闭搜索后，正文 match 和 gutter hint 同时消失。
 
 ### 1.1 Tab 切换
 

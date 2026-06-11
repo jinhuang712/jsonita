@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+### feat · Jsonita 风格 docked 搜索面板
+
+- `⌘F` 不再展示 CodeMirror 默认底部搜索表单，改为 TabBar 下方的 Jsonita docked 搜索条；搜索条参与布局，不覆盖 JSON 文本。
+- 保留 CodeMirror 搜索状态、match highlight、replace、`Enter` / `Shift+Enter`、`Cmd+G` 等内置行为。
+- 搜索命中行在行号 gutter 内显示低饱和细竖线；当前命中略强，但不使用高饱和、高对比色，也不替换行号数字。
+- 搜索 UI 文案接入 `panes.search.*` i18n，并同步 `design/` 与 `plan/` 契约。
+
 ### docs · 重写核心 spec 叙事与失败语义
 
 - `spec/00_system_architecture.md` 到 `spec/10_packaging_distribution.md` 从统一模板改为按主题定制骨架，核心文档直接说明系统契约、技术路径、职责边界、状态流和用户可见结果。

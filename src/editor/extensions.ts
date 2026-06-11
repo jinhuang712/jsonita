@@ -13,7 +13,7 @@ import {
   syntaxHighlighting,
 } from '@codemirror/language';
 import { lintGutter, linter } from '@codemirror/lint';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
+import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
@@ -28,6 +28,8 @@ import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 
 import { jsonitaJsonHighlight } from './highlight';
 import { externalLinter, supplementalJsonLinter, type ExternalEditorError } from './lint';
+import { jsonitaSearchGutter } from './searchGutter';
+import { createJsonitaSearchPanel } from './searchPanel';
 import { jsonitaDarkTheme, jsonitaLightTheme } from './theme';
 
 export interface EditorConfig {
@@ -52,7 +54,9 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     closeBrackets(),
     history(),
     drawSelection(),
+    search({ top: true, createPanel: createJsonitaSearchPanel }),
     highlightSelectionMatches(),
+    jsonitaSearchGutter,
     indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),
     EditorState.allowMultipleSelections.of(true),
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
