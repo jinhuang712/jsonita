@@ -96,9 +96,22 @@ support flow：
 | --- | --- | --- | --- | --- | --- |
 | writer 初始化失败 | app start | JSON 主流程不因日志失败而写敏感替代物 | support 能力下降 | 继续或退出，视启动策略 | 不能把日志写到未审计位置。 |
 | 写日志失败 | runtime event | JSON transform 不回滚 | 通常用户无感，support action 可提示 | 继续编辑 | 不能把失败 payload dump 到 stderr 造成泄漏。 |
+| 存储恢复事件 | SQLite/settings/window load 或恢复 | 当前 editor 和敏感数据不进入日志 | 用户可能看到恢复、重置或无持久化提示 | 继续编辑，按 S05 恢复 | 只写 category、action、fallback、kind 和 path category。 |
 | 打开日志目录失败 | `open_log_dir` | 不影响 editor | support action failure | 重试或手动定位 | 可显示错误摘要。 |
 | 导出失败 | support export | 不附带未脱敏材料 | export failure | 重试 | 不创建半脱敏包。 |
 | redaction 不确定 | 处理字段时 | 敏感数据不写入 | 字段缺失但主流程继续 | 修复字段 allow-list | 宁可丢字段。 |
+
+## 存储恢复日志事件
+
+存储恢复事件需要足够定位“哪个本地账本坏了、系统用了什么 fallback”，但不能把损坏文件内容写入日志。
+
+| event | category | action | fallback | 允许字段 | 禁止字段 |
+| --- | --- | --- | --- | --- | --- |
+| `storage.recovery` | `sqlite` | `integrity-check-failed` / `migration-failed` / `open-failed` | `disabled` / `new-empty-db` / `user-action-required` | `kind`、`schemaVersion`、path category、error summary | history row、last_session content、raw SQL dump。 |
+| `storage.recovery` | `settings` | `parse-failed` / `schema-failed` | `defaults` | `kind`、changed key names if known、path category | 完整 settings JSON、secret-like value。 |
+| `storage.recovery` | `window` | `parse-failed` / `schema-failed` / `size-clamped` | `defaults` / `clamped` | width/height、source、path category | editor text、screen contents。 |
+
+path category 只能写 `app-data/sqlite`、`app-data/settings`、`app-data/window` 这类类别，不写用户 home 下的完整绝对路径。错误摘要需要截断，并通过 redaction layer 二次过滤。
 
 ## FAQ
 

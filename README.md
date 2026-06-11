@@ -110,8 +110,8 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 |---|---|---|
 | M0 Skeleton | 7/7 | ✅ agent-side 完成（待用户验收 M0-A1..A13） |
 | M1 Core JSON | 9/9 | ✅ agent-side 完成（待用户验收 M1-A1..A22） |
-| M2 AI + Settings | 5/6 | ✅ N1..N5 完成 · N6 macOS 签名 / 公证待整理 |
-| M3 Polish | 3/6 | ✅ N1..N3 完成 · N4 多版本回归 / N6 release 待整理；Windows 不阻塞 v1 |
+| M2 AI + Settings | 6/6 | ✅ agent-side 完成；v1 beta 使用 `secrets.json`，Settings 与 AI key 流程已闭环 |
+| M3 Polish | 6/6 | ✅ agent-side 完成；Settings/search/window polish、文档契约、beta release 链路已闭环 |
 | v1.1+ Distribution | 0/5 | 后置（brew / npm / updater / Win EV / 日志导出） |
 
 ## 卸载

@@ -76,7 +76,7 @@ GitHub
 
 Version
 
-1.0.0-beta.1
+1.0.0-beta.2
 
 License
 
@@ -168,7 +168,7 @@ GitHub
 
 Version
 
-1.0.0-beta.1
+1.0.0-beta.2
 
 License
 
@@ -186,7 +186,7 @@ Data & logs
 
 全部重置 完成
 
-字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除;模型为内部默认值不单独暴露)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.1 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
+字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除;模型为内部默认值不单独暴露)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.2 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
 
 ## Preserved prototype CSS
 
@@ -374,7 +374,7 @@ Data & logs
           </div>
           <div class="panel" data-g="about" data-title="关于">
             <div class="ab-head"><div><div class="ab-title">Jsonita</div><div class="ab-sub">Tiny menu-bar JSON toolkit</div></div><button class="btn ab-gh">GitHub</button></div>
-            <div class="ab-meta"><div><div class="ab-l">Version</div><div class="ab-v">1.0.0-beta.1</div></div><div><div class="ab-l">License</div><div class="ab-v">MIT</div></div><div><div class="ab-l">Author</div><div class="ab-v">Jin Huang</div></div></div>
+            <div class="ab-meta"><div><div class="ab-l">Version</div><div class="ab-v">1.0.0-beta.2</div></div><div><div class="ab-l">License</div><div class="ab-v">MIT</div></div><div><div class="ab-l">Author</div><div class="ab-v">Jin Huang</div></div></div>
             <div class="ab-paths"><div class="seclabel">Data &amp; logs</div><div class="ab-path">~/Library/Application Support/Jsonita/</div><div class="ab-path">~/Library/Logs/Jsonita/</div></div>
           </div>
         </div>
@@ -441,7 +441,7 @@ Data & logs
           </div>
           <div class="panel" data-g="about" data-title="关于">
             <div class="ab-head"><div><div class="ab-title">Jsonita</div><div class="ab-sub">Tiny menu-bar JSON toolkit</div></div><button class="btn ab-gh">GitHub</button></div>
-            <div class="ab-meta"><div><div class="ab-l">Version</div><div class="ab-v">1.0.0-beta.1</div></div><div><div class="ab-l">License</div><div class="ab-v">MIT</div></div><div><div class="ab-l">Author</div><div class="ab-v">Jin Huang</div></div></div>
+            <div class="ab-meta"><div><div class="ab-l">Version</div><div class="ab-v">1.0.0-beta.2</div></div><div><div class="ab-l">License</div><div class="ab-v">MIT</div></div><div><div class="ab-l">Author</div><div class="ab-v">Jin Huang</div></div></div>
             <div class="ab-paths"><div class="seclabel">Data &amp; logs</div><div class="ab-path">~/Library/Application Support/Jsonita/</div><div class="ab-path">~/Library/Logs/Jsonita/</div></div>
           </div>
         </div>
@@ -452,7 +452,7 @@ Data & logs
 </div>
 
 <footer>
-  字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除;模型为内部默认值不单独暴露)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.1 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
+  字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除;模型为内部默认值不单独暴露)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.2 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
 </footer>
 
 <script>

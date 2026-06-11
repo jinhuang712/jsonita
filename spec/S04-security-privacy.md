@@ -106,6 +106,19 @@ AI provider 接入边界见 [platform/I00-ai-provider-protocol.md](platform/I00-
 
 Tauri capabilities 和 entitlements 只开放实际需要的 command 能力，完整配置见 [appendix/A04-packaging-details.md](appendix/A04-packaging-details.md)，release 门禁见 [platform/R00-release-readiness.md](platform/R00-release-readiness.md)。
 
+## 发布前安全清单
+
+安全清单按发布范围执行。内部 beta 的未签名/未公证不是隐形债务，必须在 release notes 中明示；公开 release、App Store、企业分发或自动更新通道必须先关闭完整清单。
+
+| 检查项 | 当前 v1 beta 结论 | 公开分发要求 |
+| --- | --- | --- |
+| 本地数据路径 | SQLite/settings/window/secrets/logs 路径已定义。 | 文档和 support 入口必须可查。 |
+| secrets 存储 | 使用 `secrets.json`，不使用 Keychain。 | 复核文件权限和日志脱敏。 |
+| 网络外发 | 只有用户主动 AI Fix 发送当前文本到 DeepSeek。 | 隐私说明必须同步到公开渠道。 |
+| 日志 | rolling JSONL，7 days，禁止 JSON/API key/prompt/raw output。 | export/support 流程必须维持脱敏边界。 |
+| entitlements | DeepSeek network client true；Apple Events/JIT/unsigned memory/library validation false。 | 任一权限扩大都需要 spec 和 release gate 记录。 |
+| signing / notarization | 内部 beta 可 unsigned/未公证。 | Developer ID signing + notarization + staple。 |
+
 ## 隐私失败矩阵
 
 | 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |

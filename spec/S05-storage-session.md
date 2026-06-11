@@ -109,12 +109,46 @@ SQLite 用于 history、last_session、app_meta 和 schema_version，是因为�
 | 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
 | --- | --- | --- | --- | --- | --- |
 | DB open 失败 | 启动 setup | JSON 临时编辑仍可工作 | history/session 后续不可用或失败 | 继续做无持久化变换 | 记录 path category 和错误摘要，不写内容。 |
+| SQLite 损坏或完整性检查失败 | DB open / migration / `PRAGMA integrity_check` | 不覆盖当前 editor，不读取可疑 history/session | history/session 不可用；用户看到本地数据需要恢复或重建的提示 | 先保留原 DB 文件，创建新空 DB 或进入无持久化模式；需要用户确认时再删除旧文件 | 记录 `storage.recovery`、category=`sqlite`、action、fallback，不写 row content。 |
 | migration 失败 | SQLite 初始化 | 不使用半迁移数据 | storage 功能失败 | 查看日志、备份 DB、重启 | 记录 migration version 和错误。 |
 | history 写失败 | `history_add` | editor input/output 不回滚 | 历史保存失败 | 继续编辑，稍后重试 | 不写 JSON 内容。 |
 | last_session 写失败 | preview/transform 成功后的 save | 当前编辑内存态不丢 | 恢复能力不承诺成功 | 继续编辑 | 记录 `Sqlite` 和 action。 |
+| settings.json parse / schema 失败 | 启动或 `settings_get_all` | 不采用半解析 settings；secrets 不并入 settings | 使用默认 settings，并提示设置文件已被忽略或需要重置 | 用户可继续编辑；设置页可 reset 或重写 settings | 记录 `storage.recovery`、category=`settings`、fallback=`defaults`，不写完整 settings dump。 |
 | settings 写失败 | `settings_set` | durable old settings 保持 | 控件失败反馈或回滚 | 重试 | 不写 secrets 或 JSON。 |
+| window.json parse / schema 失败 | 启动和 resize store load | 不恢复不可解释尺寸，不把窗口放到不可见区域 | 使用默认窗口尺寸和居中定位 | 用户可继续编辑，后续 resize 可重写 window.json | 记录 `storage.recovery`、category=`window`、fallback=`defaults`，只写尺寸来源。 |
 | window.json 写失败 | resize/theme | JSON 主流程不阻塞 | resize 可能不记忆 | 继续编辑 | 只写尺寸来源和 kind。 |
 | secrets 写失败 | `ai_set_api_key` | key 不泄漏，不显示保存成功 | 保存失败 | 修复权限、重试 | 不写 key。 |
+
+## 损坏检测与恢复策略
+
+损坏恢复的目标不是自动“修好一切”，而是在不丢当前编辑内容、不泄漏用户数据、不制造假成功的前提下，让 Jsonita 停在可解释状态。
+
+```mermaid
+flowchart TD
+  Load["启动读取本地数据"] --> Classify{"数据类别"}
+  Classify --> SQLite["SQLite history/session"]
+  Classify --> Settings["settings.json"]
+  Classify --> Window["window.json"]
+  SQLite --> Check["open + migrate + integrity check"]
+  Check -->|ok| Ready["持久化能力可用"]
+  Check -->|fail| Quarantine["保留原 DB，禁用或重建持久化账本"]
+  Settings --> ParseSettings{"parse + schema ok?"}
+  ParseSettings -->|yes| ApplySettings["应用 settings"]
+  ParseSettings -->|no| DefaultSettings["使用默认 settings"]
+  Window --> ParseWindow{"parse + schema ok?"}
+  ParseWindow -->|yes| ApplyWindow["应用安全尺寸"]
+  ParseWindow -->|no| DefaultWindow["默认尺寸 + 当前屏定位"]
+```
+
+恢复规则：
+
+| 数据 | 检测 | 恢复 | 必须避免 |
+| --- | --- | --- | --- |
+| SQLite | open、migration、`schema_version` 和完整性检查失败 | 保留原文件，进入无 history/session 模式或创建新空 DB；旧文件是否删除必须由用户确认或 support 流程处理。 | 用半损坏 DB 继续写入，或把 history body 写进日志。 |
+| settings.json | JSON parse 失败、字段类型不合法、schema 无法反序列化 | 内存中使用 `Settings::default()`；设置页显示默认值并允许用户 reset 后重写文件。 | 悄悄采用部分未知配置，或显示“已保存”。 |
+| window.json | JSON parse 失败、尺寸低于硬下限、字段类型不合法 | 使用默认尺寸和当前屏定位；后续用户 resize 成功时覆盖旧文件。 | 恢复到屏幕外、过小窗口或不可 resize 状态。 |
+
+当前实现已经对 settings/window 的 parse 失败采用默认值，对 window size 做下限收敛；SQLite 损坏的隔离/重建 UX 仍应以这里的矩阵为目标，不能把损坏文件当成正常 history/session 继续写。
 
 ## FAQ
 

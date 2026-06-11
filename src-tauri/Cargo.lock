@@ -1791,7 +1791,7 @@ dependencies = [
 
 [[package]]
 name = "jsonita"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "cocoa",
  "dirs 5.0.1",

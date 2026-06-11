@@ -76,6 +76,20 @@ flowchart TD
 
 capabilities 和 entitlements 保持最小化。DeepSeek 网络例外只服务 AI Fix，不代表 WebView 可以任意外发。
 
+## 安全合规发布清单
+
+这张清单是 release gate，不是 TODO backlog。v1 小范围 beta 可以明确标注 unsigned/未公证后发出；任何公开分发、App Store、企业部署或自动更新通道必须先满足对应项。
+
+| 项目 | 内部 beta | 公开 release / 企业分发 | 失败收场 |
+| --- | --- | --- | --- |
+| Developer ID signing | 可跳过，但 release notes 明示 unsigned。 | 必须通过，并记录 signing identity。 | 阻断公开发布。 |
+| Notarization | 可跳过，但 release notes 明示未公证。 | 必须 notarize + staple，并保留验证记录。 | 阻断公开发布。 |
+| Hardened Runtime / entitlements | 必须保持最小权限。 | 必须复核网络、Apple Events、JIT、unsigned memory、library validation。 | 权限扩大必须有 spec 变更和审计理由。 |
+| Privacy disclosure | 必须说明本地优先、AI Fix 主动外发、日志不含 JSON/API key。 | 必须进入 release notes / app listing / support 文档。 | 阻断公开发布。 |
+| Data retention | 必须说明 SQLite/settings/window/secrets/logs 的本地路径和 7-day log retention。 | 必须说明卸载、日志导出和数据删除路径。 | 阻断公开发布或回写文档。 |
+| Secrets handling | 必须使用 `secrets.json` 受限权限，不回退 Keychain。 | 必须完成权限和日志脱敏复核。 | 阻断发布。 |
+| Distribution channel | GitHub prerelease 可用。 | Homebrew/updater/App Store/企业分发需要稳定 URL、sha256、签名策略和回滚策略。 | 留在 v1.1+，不得假装已支持。 |
+
 ## Release Blocker Matrix
 
 | Blocker | 触发点 | 为什么阻断 | 允许的修复 |
