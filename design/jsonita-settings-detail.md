@@ -1,8 +1,8 @@
 # Jsonita · 设置详版
 
-6 个面板按真实字段铺全(取自 `src/store/settings.ts` + `SettingsView.tsx` + zh-CN 文案)。Settings 是主 Jsonita 卡片内的整页状态,不是遮罩上的浮层 modal。控件按真实实现:开关用 方形勾选框、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。`aiModelId` 是内部默认值,不单独暴露编辑控件。点左侧 nav 可切换面板 (light 默认「通用」,dark 默认「快捷键」)。
+6 个分组按真实字段铺全(取自 `src/store/settings.ts` + `SettingsView.tsx` + zh-CN 文案)。Settings 是主 Jsonita 卡片内的整页状态,不是遮罩上的浮层 modal。右侧是从 General 到 About 的连续滚动配置页,左侧 nav 保留为目录索引;点击目录滚动到对应 section,滚动时 active 高亮跟随。控件按真实实现:开关用 方形勾选框、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。`aiModelId` 是内部默认值,不单独暴露编辑控件。
 
-Light · 点 nav 切换
+Light · 左侧目录滚动定位
 
 设置
 
@@ -94,7 +94,7 @@ Data & logs
 
 全部重置 完成
 
-Dark · 点 nav 切换
+Dark · 左侧目录滚动定位
 
 设置
 
@@ -213,9 +213,11 @@ Data & logs
 
   .win{position:relative;z-index:1;width:100%;max-width:540px;border-radius:14px;overflow:hidden;}
   .mbar{padding:11px 15px;font-weight:600;font-size:13px;}
-  .sgrid{display:grid;grid-template-columns:132px 1fr;min-height:264px;}
+  .sgrid{display:grid;grid-template-columns:132px 1fr;height:264px;min-height:264px;}
   .snav{display:block;width:100%;text-align:left;padding:6px 13px;font:400 11.5px/1.5 var(--ui);border:none;border-left:2px solid transparent;background:transparent;cursor:pointer;}
-  .spanel{padding:13px 16px;font-size:12px;overflow:auto;}
+  .spanel{padding:13px 16px;font-size:12px;overflow:auto;scroll-behavior:smooth;}
+  .panel{padding:0 0 18px;scroll-margin-top:8px;}
+  .panel::before{content:attr(data-title);display:block;margin:0 0 7px;color:inherit;font:600 12.5px/1.25 var(--ui);}
   .srow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;gap:14px;}
   .seclabel{font:500 10.5px/1 var(--ui);letter-spacing:.4px;margin:2px 0 2px;}
   .sel,.num{padding:3px 8px;border-radius:6px;font:11.5px/1 var(--ui);display:inline-flex;align-items:center;gap:6px;border:1px solid;white-space:nowrap;}
@@ -310,12 +312,12 @@ Data & logs
 
 <header class="head">
   <h1>Jsonita · 设置详版</h1>
-  <p>6 个面板按真实字段铺全(取自 <code>src/store/settings.ts</code> + <code>SettingsView.tsx</code> + zh-CN 文案)。Settings 是主 Jsonita 卡片内的整页状态,不是遮罩上的浮层 modal。控件按真实实现:开关用<b>方形勾选框</b>、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。<code>aiModelId</code> 是内部默认值,不单独暴露编辑控件。<b>点左侧 nav 可切换面板</b>(light 默认「通用」,dark 默认「快捷键」)。</p>
+  <p>6 个分组按真实字段铺全(取自 <code>src/store/settings.ts</code> + <code>SettingsView.tsx</code> + zh-CN 文案)。Settings 是主 Jsonita 卡片内的整页状态,不是遮罩上的浮层 modal。右侧是从 General 到 About 的连续滚动配置页,左侧 nav 保留为目录索引;点击目录滚动到对应 section,滚动时 active 高亮跟随。控件按真实实现:开关用<b>方形勾选框</b>、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。<code>aiModelId</code> 是内部默认值,不单独暴露编辑控件。</p>
 </header>
 
 <div class="grid2">
   <div>
-    <p class="cap">Light · 点 nav 切换</p>
+    <p class="cap">Light · 左侧目录滚动定位</p>
     <div class="stage stage-l"><div class="win win-l settings">
       <div class="mbar">设置</div>
       <div class="sgrid">
@@ -328,7 +330,7 @@ Data & logs
           <button class="snav" data-g="about">关于</button>
         </nav>
         <div class="spanel">
-          <div class="panel" data-g="general">
+          <div class="panel" data-g="general" data-title="通用">
             <div class="srow"><span>语言</span><span class="sel">简体中文 <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
             <div class="srow"><span>主题</span><span class="sel">System <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
             <div class="srow"><span>开机自启动</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
@@ -337,7 +339,7 @@ Data & logs
             <div class="srow"><span>单窗模式</span><span class="cbx off"></span></div>
             <div class="srow last"><span>自动粘贴剪贴板</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
           </div>
-          <div class="panel" data-g="shortcuts" hidden>
+          <div class="panel" data-g="shortcuts" data-title="快捷键">
             <div class="seclabel">可自定义</div>
             <div class="krow"><span>呼出浮窗</span><span class="kchip">⌘⇧J</span></div>
             <div class="krow"><span>恢复上次会话</span><span class="kchip">⌘⇧L</span></div>
@@ -354,23 +356,23 @@ Data & logs
             <div class="krow"><span>调整字体大小</span><span class="kc"><span class="kbd">⌘+</span><span class="kbd">⌘-</span><span class="kbd">⌘0</span></span></div>
             <div class="hint">点「可自定义」快捷键后按目标组合键。系统保留组合(⌘Q / ⌘W / ⌘⇥ 等)默认阻塞;如需强制绑定走 Override。</div>
           </div>
-          <div class="panel" data-g="ai" hidden>
+          <div class="panel" data-g="ai" data-title="AI">
             <div class="srow last"><span>启用 AI Fix</span><span class="cbx off"></span></div>
             <div style="margin-top:10px"><div class="seclabel" style="margin-bottom:6px">DeepSeek API Key</div>
               <span class="inp">••••••••（已保存，可输入新 key 覆盖）</span>
               <div class="aibtns"><button class="btn">测试</button><button class="btn">保存</button><button class="btn">移除</button><span class="okpill">已保存</span></div>
             </div>
           </div>
-          <div class="panel" data-g="history" hidden>
+          <div class="panel" data-g="history" data-title="历史">
             <div class="srow last"><span>历史上限</span><span class="sel">100 <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
             <div class="muted-line">可选 10 / 50 / 100 / 200;超出按 pinned → starred → 时间排序淘汰。</div>
           </div>
-          <div class="panel" data-g="jsonTransform" hidden>
+          <div class="panel" data-g="jsonTransform" data-title="JSON 变换">
             <div class="srow"><span>自动解嵌套</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
             <div class="srow"><span>Unwrap 超时 (ms)</span><span class="num">200</span></div>
             <div class="srow last"><span>编辑器软换行</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
           </div>
-          <div class="panel" data-g="about" hidden>
+          <div class="panel" data-g="about" data-title="关于">
             <div class="ab-head"><div><div class="ab-title">Jsonita</div><div class="ab-sub">Tiny menu-bar JSON toolkit</div></div><button class="btn ab-gh">GitHub</button></div>
             <div class="ab-meta"><div><div class="ab-l">Version</div><div class="ab-v">1.0.0-beta.1</div></div><div><div class="ab-l">License</div><div class="ab-v">MIT</div></div><div><div class="ab-l">Author</div><div class="ab-v">Jin Huang</div></div></div>
             <div class="ab-paths"><div class="seclabel">Data &amp; logs</div><div class="ab-path">~/Library/Application Support/Jsonita/</div><div class="ab-path">~/Library/Logs/Jsonita/</div></div>
@@ -382,7 +384,7 @@ Data & logs
   </div>
 
   <div>
-    <p class="cap">Dark · 点 nav 切换</p>
+    <p class="cap">Dark · 左侧目录滚动定位</p>
     <div class="stage stage-d"><div class="win win-d settings">
       <div class="mbar">设置</div>
       <div class="sgrid">
@@ -395,7 +397,7 @@ Data & logs
           <button class="snav" data-g="about">关于</button>
         </nav>
         <div class="spanel">
-          <div class="panel" data-g="general" hidden>
+          <div class="panel" data-g="general" data-title="通用">
             <div class="srow"><span>语言</span><span class="sel">简体中文 <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
             <div class="srow"><span>主题</span><span class="sel">System <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
             <div class="srow"><span>开机自启动</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
@@ -404,7 +406,7 @@ Data & logs
             <div class="srow"><span>单窗模式</span><span class="cbx off"></span></div>
             <div class="srow last"><span>自动粘贴剪贴板</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
           </div>
-          <div class="panel" data-g="shortcuts">
+          <div class="panel" data-g="shortcuts" data-title="快捷键">
             <div class="seclabel">可自定义</div>
             <div class="krow"><span>呼出浮窗</span><span class="kchip">⌘⇧J</span></div>
             <div class="krow"><span>恢复上次会话</span><span class="kchip">⌘⇧L</span></div>
@@ -421,23 +423,23 @@ Data & logs
             <div class="krow"><span>调整字体大小</span><span class="kc"><span class="kbd">⌘+</span><span class="kbd">⌘-</span><span class="kbd">⌘0</span></span></div>
             <div class="hint">点「可自定义」快捷键后按目标组合键。系统保留组合(⌘Q / ⌘W / ⌘⇥ 等)默认阻塞;如需强制绑定走 Override。</div>
           </div>
-          <div class="panel" data-g="ai" hidden>
+          <div class="panel" data-g="ai" data-title="AI">
             <div class="srow last"><span>启用 AI Fix</span><span class="cbx off"></span></div>
             <div style="margin-top:10px"><div class="seclabel" style="margin-bottom:6px">DeepSeek API Key</div>
               <span class="inp">••••••••（已保存，可输入新 key 覆盖）</span>
               <div class="aibtns"><button class="btn">测试</button><button class="btn">保存</button><button class="btn">移除</button><span class="okpill">已保存</span></div>
             </div>
           </div>
-          <div class="panel" data-g="history" hidden>
+          <div class="panel" data-g="history" data-title="历史">
             <div class="srow last"><span>历史上限</span><span class="sel">100 <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
             <div class="muted-line">可选 10 / 50 / 100 / 200;超出按 pinned → starred → 时间排序淘汰。</div>
           </div>
-          <div class="panel" data-g="jsonTransform" hidden>
+          <div class="panel" data-g="jsonTransform" data-title="JSON 变换">
             <div class="srow"><span>自动解嵌套</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
             <div class="srow"><span>Unwrap 超时 (ms)</span><span class="num">200</span></div>
             <div class="srow last"><span>编辑器软换行</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
           </div>
-          <div class="panel" data-g="about" hidden>
+          <div class="panel" data-g="about" data-title="关于">
             <div class="ab-head"><div><div class="ab-title">Jsonita</div><div class="ab-sub">Tiny menu-bar JSON toolkit</div></div><button class="btn ab-gh">GitHub</button></div>
             <div class="ab-meta"><div><div class="ab-l">Version</div><div class="ab-v">1.0.0-beta.1</div></div><div><div class="ab-l">License</div><div class="ab-v">MIT</div></div><div><div class="ab-l">Author</div><div class="ab-v">Jin Huang</div></div></div>
             <div class="ab-paths"><div class="seclabel">Data &amp; logs</div><div class="ab-path">~/Library/Application Support/Jsonita/</div><div class="ab-path">~/Library/Logs/Jsonita/</div></div>
@@ -455,12 +457,18 @@ Data & logs
 
 <script>
   document.querySelectorAll('.settings').forEach(function(m){
-    var navs=m.querySelectorAll('.snav'), panels=m.querySelectorAll('.panel');
+    var navs=m.querySelectorAll('.snav'), panels=m.querySelectorAll('.panel'), scroller=m.querySelector('.spanel');
+    function setActive(g){ navs.forEach(function(n){ n.classList.toggle('active', n.dataset.g===g); }); }
     navs.forEach(function(b){ b.addEventListener('click',function(){
-      var g=b.dataset.g;
-      navs.forEach(function(n){ n.classList.toggle('active', n===b); });
-      panels.forEach(function(p){ p.hidden=(p.dataset.g!==g); });
+      var panel=m.querySelector('.panel[data-g="'+b.dataset.g+'"]');
+      if(panel){ scroller.scrollTo({top:panel.offsetTop-8,behavior:'smooth'}); setActive(b.dataset.g); }
     });});
+    scroller.addEventListener('scroll',function(){
+      var next=panels[0].dataset.g;
+      if(scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-8){ next=panels[panels.length-1].dataset.g; }
+      else{ panels.forEach(function(p){ if(p.offsetTop<=scroller.scrollTop+22){ next=p.dataset.g; } }); }
+      setActive(next);
+    },{passive:true});
   });
 </script>
 ```

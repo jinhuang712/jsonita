@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { settings as settingsApi, system as systemApi } from '../ipc/commands';
 import { on } from '../ipc/events';
@@ -9,7 +9,7 @@ import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
 
 /**
- * 设置页 — 6 分组 nav + 字段。
+ * 设置页 — 左侧目录索引 + 右侧连续滚动配置文档。
  *
  * 视觉锚：design/jsonita-settings-detail.md
  * Spec ref: design/04 § 4.6 SettingsView
@@ -29,6 +29,15 @@ export function SettingsView() {
   const settings = useSettingsStore((s) => s.settings);
   const setSettings = useSettingsStore((s) => s.setSettings);
   const [activeGroup, setActiveGroup] = useState<Group>('general');
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const sectionRefs = useRef<Record<Group, HTMLElement | null>>({
+    general: null,
+    shortcuts: null,
+    ai: null,
+    history: null,
+    jsonTransform: null,
+    about: null,
+  });
 
   // 启动 + Modal 打开时拉 settings
   useEffect(() => {
@@ -60,6 +69,47 @@ export function SettingsView() {
       /* ignore */
     }
   };
+
+  const scrollToGroup = (group: Group) => {
+    const scrollEl = scrollRef.current;
+    const target = sectionRefs.current[group];
+    if (!scrollEl || !target) return;
+    const scrollRect = scrollEl.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    scrollEl.scrollTo({
+      top: Math.max(0, scrollEl.scrollTop + targetRect.top - scrollRect.top - 8),
+      behavior: 'smooth',
+    });
+    setActiveGroup(group);
+  };
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    const updateActiveGroup = () => {
+      if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 8) {
+        setActiveGroup((current) =>
+          current === GROUPS[GROUPS.length - 1] ? current : GROUPS[GROUPS.length - 1],
+        );
+        return;
+      }
+
+      const top = scrollEl.scrollTop + 24;
+      let next = GROUPS[0];
+      for (const group of GROUPS) {
+        const section = sectionRefs.current[group];
+        if (section && section.offsetTop <= top) {
+          next = group;
+        }
+      }
+      setActiveGroup((current) => (current === next ? current : next));
+    };
+
+    updateActiveGroup();
+    scrollEl.addEventListener('scroll', updateActiveGroup, { passive: true });
+    return () => scrollEl.removeEventListener('scroll', updateActiveGroup);
+  }, []);
 
   return (
     <div
@@ -106,7 +156,8 @@ export function SettingsView() {
             {GROUPS.map((g) => (
               <button
                 key={g}
-                onClick={() => setActiveGroup(g)}
+                onClick={() => scrollToGroup(g)}
+                aria-current={activeGroup === g ? 'page' : undefined}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -130,23 +181,60 @@ export function SettingsView() {
               </button>
             ))}
           </nav>
-          <div style={{ flex: 1, padding: 'var(--sp-5)', overflow: 'auto', fontSize: 'var(--fs-sm)' }}>
-            {activeGroup === 'general' && (
+          <div
+            className="jsonita-settings-scroll"
+            ref={scrollRef}
+            style={{
+              flex: 1,
+              padding: 'var(--sp-5)',
+              overflow: 'auto',
+              fontSize: 'var(--fs-sm)',
+              position: 'relative',
+              scrollBehavior: 'smooth',
+            }}
+          >
+            <SettingsSection
+              group="general"
+              title={t('groups.general')}
+              sectionRefs={sectionRefs}
+            >
               <GroupGeneral settings={settings} patch={patch} />
-            )}
-            {activeGroup === 'ai' && (
-              <GroupAi settings={settings} patch={patch} />
-            )}
-            {activeGroup === 'history' && (
-              <GroupHistory settings={settings} patch={patch} />
-            )}
-            {activeGroup === 'jsonTransform' && (
-              <GroupJsonTransform settings={settings} patch={patch} />
-            )}
-            {activeGroup === 'shortcuts' && (
+            </SettingsSection>
+            <SettingsSection
+              group="shortcuts"
+              title={t('groups.shortcuts')}
+              sectionRefs={sectionRefs}
+            >
               <GroupShortcuts settings={settings} patch={patch} />
-            )}
-            {activeGroup === 'about' && <GroupAbout />}
+            </SettingsSection>
+            <SettingsSection
+              group="ai"
+              title={t('groups.ai')}
+              sectionRefs={sectionRefs}
+            >
+              <GroupAi settings={settings} patch={patch} />
+            </SettingsSection>
+            <SettingsSection
+              group="history"
+              title={t('groups.history')}
+              sectionRefs={sectionRefs}
+            >
+              <GroupHistory settings={settings} patch={patch} />
+            </SettingsSection>
+            <SettingsSection
+              group="jsonTransform"
+              title={t('groups.jsonTransform')}
+              sectionRefs={sectionRefs}
+            >
+              <GroupJsonTransform settings={settings} patch={patch} />
+            </SettingsSection>
+            <SettingsSection
+              group="about"
+              title={t('groups.about')}
+              sectionRefs={sectionRefs}
+            >
+              <GroupAbout />
+            </SettingsSection>
           </div>
         </div>
         <div
@@ -179,6 +267,35 @@ export function SettingsView() {
 interface GroupProps {
   settings: Settings;
   patch: (p: Partial<Settings>) => void | Promise<void>;
+}
+
+function SettingsSection({
+  group,
+  title,
+  sectionRefs,
+  children,
+}: {
+  group: Group;
+  title: string;
+  sectionRefs: React.MutableRefObject<Record<Group, HTMLElement | null>>;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className="jsonita-settings-section"
+      data-settings-group={group}
+      ref={(node) => {
+        sectionRefs.current[group] = node;
+      }}
+      style={settingsSectionStyle}
+      aria-labelledby={`settings-section-${group}`}
+    >
+      <h2 id={`settings-section-${group}`} style={settingsSectionTitleStyle}>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
 }
 
 function GroupShortcuts({ settings, patch }: GroupProps) {
@@ -535,6 +652,19 @@ const sectionLabelStyle: React.CSSProperties = {
   fontSize: 'var(--fs-xs)',
   fontWeight: 600,
   textTransform: 'uppercase',
+  letterSpacing: 0,
+};
+
+const settingsSectionStyle: React.CSSProperties = {
+  padding: '0 0 28px',
+  scrollMarginTop: 8,
+};
+
+const settingsSectionTitleStyle: React.CSSProperties = {
+  margin: '0 0 10px',
+  color: 'var(--text)',
+  fontSize: 'var(--fs-md)',
+  fontWeight: 700,
   letterSpacing: 0,
 };
 

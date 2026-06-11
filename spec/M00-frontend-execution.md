@@ -32,7 +32,7 @@ stateDiagram-v2
   HistoryModal --> EditorWorkspace: Esc / CmdOrCtrl+Y / backdrop
 ```
 
-Settings 不使用遮罩、不压暗编辑器、不在主卡片上再套一张卡片。它替换 TabBar、编辑区、状态栏所在内容区域，但保留同一个窗口边界、圆角、阴影和 resize handles。History 和快捷键权限恢复仍是 modal overlay，因为它们是临时任务，不是长期工作区。
+Settings 不使用遮罩、不压暗编辑器、不在主卡片上再套一张卡片。它替换 TabBar、编辑区、状态栏所在内容区域，但保留同一个窗口边界、圆角、阴影和 resize handles。Settings 内部保留左侧目录索引，右侧只有一个滚动容器，所有配置 section 顺序渲染；目录点击只改变 scroll position，不卸载其他 section。History 和快捷键权限恢复仍是 modal overlay，因为它们是临时任务，不是长期工作区。
 
 ## 一次 preview 如何避免旧结果闪回
 
