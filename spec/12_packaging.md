@@ -4,10 +4,9 @@ SPEC · 章节 12
 
 tauri.conf.json 全配置 · release scripts · dmg/app/Windows exe 打包 · 签名 + notarization。
 
-## 1tauri.conf.json 全文
+## 1 tauri.conf.json 全文
 
 ```
-
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Jsonita",
@@ -92,13 +91,11 @@ tauri.conf.json 全配置 · release scripts · dmg/app/Windows exe 打包 · �
     "global-shortcut": {}
   }
 }
-
 ```
 
-## 2capabilities
+## 2 capabilities
 
 ```
-
 // src-tauri/capabilities/default.json
 {
   "$schema": "../gen/schemas/desktop-schema.json",
@@ -112,13 +109,11 @@ tauri.conf.json 全配置 · release scripts · dmg/app/Windows exe 打包 · �
     "global-shortcut:default"
   ]
 }
-
 ```
 
-## 3entitlements.plist (macOS)
+## 3 entitlements.plist (macOS)
 
 ```
-
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -140,37 +135,28 @@ tauri.conf.json 全配置 · release scripts · dmg/app/Windows exe 打包 · �
   <false/>
 </dict>
 </plist>
-
 ```
 
-## 4构建命令
+## 4 构建命令
 
-### 4.1本地开发
+### 4.1 本地开发
 
 ```
-
 pnpm install
 pnpm tauri dev                       # 起 vite dev + tauri host
 pnpm icons regen                     # 重新生成图标派生
-
 ```
 
-### 4.2自动发布脚本
+### 4.2 自动发布脚本
 
 | 命令 | 脚本 | 运行环境 | 产物目录 |
-
 | --- | --- | --- | --- |
-
 | `pnpm release:macos:dmg` | `scripts/release-macos-dmg.sh` | macOS | `release-artifacts/macos-dmg/` |
-
 | `pnpm release:macos:app` | `scripts/release-macos-app.sh` | macOS | `release-artifacts/macos-app/` |
-
 | `pnpm release:windows:exe` | `scripts/release-windows-exe.sh` | Windows Git Bash/MSYS + MSVC | `release-artifacts/windows-exe/` |
-
 | `pnpm release:all` | `scripts/release-all.sh` | 当前平台原生产物 | `release-artifacts/` |
 
 ```
-
 # macOS dmg（默认 universal-apple-darwin；可用 TAURI_MAC_TARGET 覆盖）
 pnpm release:macos:dmg
 
@@ -184,15 +170,13 @@ pnpm release:windows:exe
 # - macOS：dmg + app，并提示 Windows exe 需 Windows runner
 # - Windows：NSIS exe，并提示 macOS 产物需 macOS runner
 pnpm release:all
-
 ```
 
 脚本公共逻辑在 `scripts/lib/release-common.sh`：统一检查运行平台、执行 `pnpm tauri build`、清空并收集本次产物到 `release-artifacts/`。本地临时无签名构建可加 `TAURI_NO_SIGN=1`；CI 非交互构建可加 `TAURI_CI=1` 或使用标准 `CI=true`。
 
-### 4.3底层 Tauri 构建命令
+### 4.3 底层 Tauri 构建命令
 
 ```
-
 # dmg
 pnpm tauri build --target universal-apple-darwin --bundles dmg
 
@@ -201,14 +185,13 @@ pnpm tauri build --target universal-apple-darwin --bundles app
 
 # Windows installer .exe（NSIS；需 Windows/MSVC 环境）
 pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis
-
 ```
 
-## 5macOS 签名 + notarization
+## 5 macOS 签名 + notarization
 
 当前发布节奏：v1 先用 `.dmg` + GitHub Releases 做小范围内测；内测包可先未签名或使用本机签名环境构建。扩大测试范围或公开发布前，再补 Developer ID 签名与 notarization，避免 Gatekeeper 警告。
 
-### 5.1前置
+### 5.1 前置
 
 Apple Developer Program 账号（$99/yr）
 
@@ -216,22 +199,19 @@ Developer ID Application 证书（Keychain Access → Certificate Assistant）
 
 App-specific password（appleid.apple.com → App-Specific Passwords）
 
-### 5.2环境变量
+### 5.2 环境变量
 
 ```
-
 # .env.local（git ignore）
 export TAURI_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 export APPLE_ID="you@example.com"
 export APPLE_PASSWORD="app-specific-password"
 export APPLE_TEAM_ID="TEAMID"
-
 ```
 
-### 5.3签名 + notarize 一条命令
+### 5.3 签名 + notarize 一条命令
 
 ```
-
 pnpm tauri build --target universal-apple-darwin \
                  --bundles dmg
 
@@ -242,13 +222,11 @@ pnpm tauri build --target universal-apple-darwin \
 #  4. stapler staple .dmg / .app
 #
 # 完成后产物即可双击打开，无 Gatekeeper 警告
-
 ```
 
-### 5.4手动 notarize（调试）
+### 5.4 手动 notarize（调试）
 
 ```
-
 # 1. 签名
 codesign --deep --force --options runtime \
          --entitlements src-tauri/entitlements.plist \
@@ -274,12 +252,11 @@ xcrun notarytool submit Jsonita.zip \
 # 5. 装订
 xcrun stapler staple "src-tauri/target/release/bundle/macos/Jsonita.app"
 xcrun stapler staple "src-tauri/target/release/bundle/dmg/Jsonita_1.0.0-beta.1_universal.dmg"
-
 ```
 
-## 6Windows 签名（v1.1+）
+## 6 Windows 签名（v1.1+）
 
-### 6.1EV cert 必要性
+### 6.1 EV cert 必要性
 
 OV cert：用户首次安装仍触发 Windows SmartScreen "Unknown publisher" 警告，要逐步累积 reputation。
 EV cert：立即解除 SmartScreen 警告（白名单），但贵 5x（~$300+/yr）。
@@ -288,10 +265,9 @@ WARN
 
 EV cert 必须存在 USB HSM token 中 ── 不能放 CI 环境变量。Windows 签名只能在本地有 token 的机器上做（或租 SignPath 这类托管服务）。
 
-### 6.2签名命令
+### 6.2 签名命令
 
 ```
-
 # tauri.conf.json 设
 "windows": {
   "certificateThumbprint": "<thumbprint>",
@@ -300,15 +276,13 @@ EV cert 必须存在 USB HSM token 中 ── 不能放 CI 环境变量。Window
 }
 
 pnpm release:windows:exe
-
 ```
 
 Windows 对外分发的 `.exe` 指 NSIS installer exe。构建目录里的裸 `Jsonita.exe` 只适合开发或内部 smoke test，不作为正式发布物。
 
-## 7CI（GitHub Actions）
+## 7 CI（GitHub Actions）
 
 ```
-
 # .github/workflows/release.yml
 name: release
 on:
@@ -350,15 +324,13 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-
 ```
 
-## 8自动更新（v1.1+）
+## 8 自动更新（v1.1+）
 
 v1 不做。v1.1+ 用 `tauri-plugin-updater`：
 
 ```
-
 // tauri.conf.json
 "plugins": {
   "updater": {
@@ -370,21 +342,15 @@ v1 不做。v1.1+ 用 `tauri-plugin-updater`：
     "pubkey": "<tauri update signing public key>"
   }
 }
-
 ```
 
 signing key：每个 release 用 `tauri signer sign` 生成签名，updater 客户端用公钥验证。
 
-## 9分发渠道（plan/04 § 7 锁定）
+## 9 分发渠道（plan/04 § 7 锁定）
 
 | 版本 | macOS | Windows |
-
 | --- | --- | --- |
-
 | v0.5.0 (v1) | GitHub Releases .dmg（universal arm64+x64，签名 + notarized） | — |
-
 | v1.1+ | + `brew install jsonita` （homebrew tap cask） | .exe (NSIS) + 可选 .msi · EV 签名 |
-
 | v1.2+ | 同上 | winget 收录 |
-
 | v1.x | + `npx jsonita` npm 启动器 | 同上 |

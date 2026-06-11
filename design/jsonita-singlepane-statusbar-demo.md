@@ -9,12 +9,10 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 ⌘↵ Run Format
@@ -22,12 +20,10 @@ Input
 Output · 2 spaces
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 Valid JSON ·3 lines ·26 bytes ⌘\ Switch to Single Panel ⌘Y History

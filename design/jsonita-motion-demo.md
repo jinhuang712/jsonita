@@ -23,20 +23,16 @@ Settings
 Input
 
 ```
-
 {"name":"alice","age":30}
-
 ```
 
 Output · 2 spaces
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 Valid JSON · 3 lines · 26 bytes ⌘Y History

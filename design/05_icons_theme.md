@@ -4,11 +4,11 @@ SPEC · 章节 05
 
 manifest.json 全景 · 各资源的用法与路径 · 主题切换时的图标选择策略。
 
-## 1资源全景
+## 1 资源全景
 
 所有图标在 `assets/icons/`，源头 master 在 `assets/` 根。一张 `manifest.json` 锁定所有路径、尺寸与调色板， 所有代码引用必须经过 manifest，不允许硬编码字面量。
 
-### 1.1四张 source master（设计源）
+### 1.1 四张 source master（设计源）
 
 ![icon.png](../assets/icon.png)
 
@@ -34,7 +34,7 @@ icon-mark-transparent
 
 2048² · RGBA · 透明
 
-### 1.2目录结构
+### 1.2 目录结构
 
 | 路径 | 说明 |
 | --- | --- |
@@ -60,7 +60,7 @@ icon-mark-transparent
 | `assets/icons/menubar/jsonita-menubar-light-{18,22}{,@2x,@3x}.png` | 亮菜单栏专用（黑色 mask） |
 | `assets/icons/menubar/jsonita-menubar-dark-{18,22}{,@2x,@3x}.png` | 暗菜单栏专用（白色 mask） |
 
-## 2调色板（与图标同源）
+## 2 调色板（与图标同源）
 
 下面 4 个品牌色出自 `manifest.json` 的 `palette` 字段 ── 它们既是图标里实际使用的色块，也直接映射成设计 token（详见 [02 设计令牌](03_design_tokens.md) ）：
 
@@ -80,23 +80,18 @@ INFO
 
 图标设计风格按 manifest 锁定为 flat source-derived export; no shadow, no gradient, no rounded corners ── 圆角由 macOS / Windows 系统在生成预览时自行处理（macOS 自动套 squircle）。
 
-## 3资源类别详表
+## 3 资源类别详表
 
-### 3.1Source masters（设计源）
+### 3.1 Source masters（设计源）
 
 | 文件 | 尺寸 | 背景 | 用途 |
-
 | --- | --- | --- | --- |
-
 | `icon.png` | 1254² RGB | 白 | 设计稿源；不直接进 bundle |
-
 | `icon-light-2048.png` | 2048² RGBA | 白 | 派生 macOS Light icns / Windows light ico |
-
 | `icon-dark-2048.png` | 2048² RGBA | 黑 | 派生 macOS Dark icns / Windows dark ico |
-
 | `icon-mark-transparent-2048.png` | 2048² RGBA | 透明 | 派生菜单栏 template/light/dark；文档 favicon |
 
-### 3.2派生多尺寸 PNG（icons/light|dark/png/）
+### 3.2 派生多尺寸 PNG（icons/light|dark/png/）
 
 派生尺寸： 16 / 24 / 32 / 48 / 64 / 128 / 256 / 512 / 1024 / 2048 （manifest.json `pngSizes` ）。下面用 light 派生展示 5 档典型尺寸，所有图片按 px-perfect 渲染：
 
@@ -131,35 +126,26 @@ About · GitHub README
 高 DPI 分享卡片
 
 | 使用场景 | 尺寸 |
-
 | --- | --- |
-
 | App / docs favicon asset | 32 |
-
 | HTML 内 logo（设置 About） | 64 / 128 |
-
 | 分享卡片 / GitHub Social Preview | 1024 |
 
-### 3.3macOS .icns（Bundle 主图标）
+### 3.3 macOS .icns（Bundle 主图标）
 
 | 文件 | 取自 | 用途 |
-
 | --- | --- | --- |
-
 | `Jsonita-Light.icns` | icon-light-2048.png 经 iconset → iconutil | Light Bundle |
-
 | `Jsonita-Dark.icns` | icon-dark-2048.png 同上 | Dark Bundle（v1 不上 App Store，仅本地切换用） |
 
 iconset 内尺寸 （macOS HIG 要求齐全）：
 
 ```
-
 icon_16x16.png         icon_16x16@2x.png
 icon_32x32.png         icon_32x32@2x.png
 icon_128x128.png       icon_128x128@2x.png
 icon_256x256.png       icon_256x256@2x.png
 icon_512x512.png       icon_512x512@2x.png
-
 ```
 
 下面是 `Jsonita-Light.iconset/` 的 5 个典型尺寸（@1x），按实际像素渲染，可直观对比小尺寸 → 大尺寸的清晰度：
@@ -191,15 +177,13 @@ Dark bundle iconset
 合成命令 （提交前一次性 generate）：
 
 ```
-
 iconutil -c icns assets/icons/macos/Jsonita-Light.iconset \
                  -o assets/icons/macos/Jsonita-Light.icns
 iconutil -c icns assets/icons/macos/Jsonita-Dark.iconset \
                  -o assets/icons/macos/Jsonita-Dark.icns
-
 ```
 
-### 3.4Windows .ico
+### 3.4 Windows .ico
 
 multi-resolution ICO，内含 16 / 24 / 32 / 48 / 64 / 128 / 256 七档（manifest `windows.sizes` ）。展示 light / dark 两套 .ico 实际渲染（浏览器自动取最大可用档）：
 
@@ -232,41 +216,31 @@ jsonita-dark.ico
 ![256](../assets/icons/light/png/icon-256.png) 256 → 128
 
 ```
-
 # ImageMagick / magick CLI
 magick assets/icons/light/png/icon-16.png \
        assets/icons/light/png/icon-24.png \
        ... \
        assets/icons/light/png/icon-256.png \
        assets/icons/windows/jsonita-light.ico
-
 ```
 
-### 3.5菜单栏 tray 图标（macOS 关键）
+### 3.5 菜单栏 tray 图标（macOS 关键）
 
 菜单栏对图标有严格要求： 必须是 alpha mask （黑/白单色），由系统按 menu bar 背景自适应反色。三种 variant：
 
 | variant | 颜色 | 用途 |
-
 | --- | --- | --- |
-
 | `template` | 黑色 alpha mask（macOS NSImage template） | v1 默认 ── 让 macOS 自动反色（最佳实践） |
-
 | `light` | 黑色 alpha mask | menubar 背景为亮色时手动用（兜底，正常不该需要） |
-
 | `dark` | 白色 alpha mask | menubar 背景为暗色时手动用 |
-
 | logical size | 对应 macOS | scales |
-
 | --- | --- | --- |
-
 | 18 pt | 普通 menu bar（旧 macOS / 紧凑模式） | @1 (18×18) · @2 (36×36) · @3 (54×54) |
-
 | 22 pt | 较大 menu bar（macOS Big Sur+ 默认） | @1 (22×22) · @2 (44×44) · @3 (66×66) |
 
 实际 18 个文件预览 ── 上排模拟亮色 menubar 背景，下排模拟暗色 menubar 背景：
 
-#### 22 pt × 三 variant × 三 scale（亮色背景）
+#### 2 2 pt × 三 variant × 三 scale（亮色背景）
 
 ![light 22](../assets/icons/menubar/jsonita-menubar-light-22.png) light @1x
 
@@ -280,7 +254,7 @@ magick assets/icons/light/png/icon-16.png \
 
 ![template 22@3x](../assets/icons/menubar/jsonita-menubar-template-22@3x.png) template @3x
 
-#### 22 pt × 三 variant × 三 scale（暗色背景 ── dark variant 白色 mask 显形）
+#### 2 2 pt × 三 variant × 三 scale（暗色背景 ── dark variant 白色 mask 显形）
 
 ![dark 22](../assets/icons/menubar/jsonita-menubar-dark-22.png) dark @1x
 
@@ -294,7 +268,7 @@ magick assets/icons/light/png/icon-16.png \
 
 ![template 22@3x](../assets/icons/menubar/jsonita-menubar-template-22@3x.png) template @3x（系统反色）
 
-#### 18 pt（旧 macOS · 紧凑模式）
+#### 1 8 pt（旧 macOS · 紧凑模式）
 
 ![light 18](../assets/icons/menubar/jsonita-menubar-light-18.png) light @1x
 
@@ -312,12 +286,11 @@ OK
 
 用 template variant 一招吃遍：把 `jsonita-menubar-template-{18,22}{,@2x,@3x}.png` 设为 NSImage `template = true`，macOS 会自动按 menubar 当前色（含点击高亮）反色。 不要 手动判断亮 / 暗。
 
-## 4资源在代码中的使用映射
+## 4 资源在代码中的使用映射
 
-### 4.1Tauri bundler（tauri.conf.json）
+### 4.1 Tauri bundler（tauri.conf.json）
 
 ```
-
 {
   "bundle": {
     "icon": [
@@ -333,15 +306,13 @@ OK
     ...
   }
 }
-
 ```
 
 Tauri 按平台从此列表挑：macOS 用 `.icns`；Windows 用 `.ico`；Linux（v1 不打）用 png。
 
-### 4.2Tray icon（菜单栏）
+### 4.2 Tray icon（菜单栏）
 
 ```
-
 // src-tauri/src/system/tray.rs
 use tauri::{tray::TrayIconBuilder, image::Image, AppHandle};
 use std::path::PathBuf;
@@ -367,7 +338,6 @@ pub fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         .build(app)?;
     Ok(())
 }
-
 ```
 
 注意：tauri-rs `Image` 当前不直接支持 @2x/@3x 多尺寸自动选择。需要：
@@ -376,12 +346,11 @@ pub fn build_tray(app: &AppHandle) -> tauri::Result<()> {
 
 选项 B（v1.1+）：实现 multi-scale NSImage（需要直接调 cocoa crate）
 
-### 4.3Dock 图标 / About / 设置面板 logo
+### 4.3 Dock 图标 / About / 设置面板 logo
 
 React 端通过 Vite 静态资源 import：
 
 ```
-
 // src/settings/About.tsx
 import logoLight from '/assets/icons/light/png/icon-128.png';
 import logoDark  from '/assets/icons/dark/png/icon-128.png';
@@ -393,15 +362,13 @@ export function AboutLogo() {
               width={64} height={64} alt="Jsonita"
               className="rounded-lg shadow-md" />;
 }
-
 ```
 
-### 4.4App / docs favicon asset
+### 4.4 App / docs favicon asset
 
 `src/index.html` 与文档素材引用同一套 favicon asset：`assets/icons/light/png/icon-32.png` + `icon-32@2x.png`。
 
 ```
-
 <!-- src/index.html head -->
 <link rel="icon" type="image/png" sizes="32x32"
       href="../assets/icons/light/png/icon-32.png">
@@ -410,12 +377,11 @@ export function AboutLogo() {
 <!-- dark 用浏览器 prefers-color-scheme（可选） -->
 <link rel="icon" media="(prefers-color-scheme: dark)"
       href="../assets/icons/dark/png/icon-32.png">
-
 ```
 
-## 5主题与图标的耦合
+## 5 主题与图标的耦合
 
-### 5.1哪些图标随主题变？
+### 5.1 哪些图标随主题变？
 
 同一图标 light / dark 直接对比，能瞬间看出 master 的选择策略：
 
@@ -444,43 +410,30 @@ Menubar template
 macOS 自动反色 · 无需切
 
 | 资源 | 随主题切换 | 策略 |
-
 | --- | --- | --- |
-
 | Bundle 图标（Dock / Finder） | 由 macOS / Windows 决定 | v1 只打 Light 一套（最常见），Dark 留备份；切 dark 时 Dock 仍是 Light 图标 ── macOS 也是这种行为（Safari / Finder 都不换） |
-
 | 菜单栏 tray | 系统自适应 | template variant → macOS 自动反色，无需 React 干预 |
-
 | About / 设置 logo | 跟 effective theme | React 切换 light/dark png（见 § 4.3） |
-
 | HTML 文档 favicon | 不切 | 浏览器自行处理 prefers-color-scheme |
-
 | 启动 splash | — | 不做（见 [03 § 7](04_components.md) ） |
 
-### 5.2JSON 类型颜色与图标同源
+### 5.2 JSON 类型颜色与图标同源
 
 JSON 树 / 编辑器的类型染色直接复用 manifest 调色板， 视觉上和 logo 是一套：
 
 | JSON 类型 | light | dark | 同源 |
-
 | --- | --- | --- | --- |
-
 | key | `#245BDB` | `#8AADFF` | primary 蓝 |
-
 | string | `#15803D` | `#67C288` | logo 绿（深化） |
-
 | number | `#245BDB` | `#A9C1FF` | 蓝色派生 |
-
 | boolean | `#6F4FD8` | `#B7A4FF` | 冷紫，区分布尔值 |
-
 | null | `#8F959E` | `#646A73` | 中性 |
 
-## 6资源生成 / 校验脚本
+## 6 资源生成 / 校验脚本
 
 提供一个 `scripts/icons.ts` 工具脚本：
 
 ```
-
 // scripts/icons.ts（pnpm tsx scripts/icons.ts）
 //
 // 命令：
@@ -526,7 +479,6 @@ async function check() {
   // 遍历 manifest 所有路径，确认文件存在且尺寸正确
   // 失败则 process.exit(1)
 }
-
 ```
 
 CI 集成：
@@ -535,7 +487,7 @@ CI 集成：
 
 `master 改了但派生没更新` → hook 失败，提示运行 `pnpm icons regen`
 
-## 7不变量
+## 7 不变量
 
 I-1 ：任何代码引用图标必须用 manifest.json 中的路径常量， 不写字面量
 

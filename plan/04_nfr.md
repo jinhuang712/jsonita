@@ -4,33 +4,22 @@ PLAN · 章节 04
 
 性能、隐私、可用性、兼容性，每项都有可测量的目标。
 
-## 1性能
+## 1 性能
 
 | 指标 | 目标 | 测量方式 |
-
 | --- | --- | --- |
-
 | 冷启动（首次菜单栏点击 → 浮窗可交互） | < 800ms（首次）/ < 500ms（已驻留） | 手动秒表 + performance API |
-
 | 呼出（快捷键 → 浮窗可交互） | < 500ms（P95） | performance.mark |
-
 | 稳态内存 | < 80MB（编辑器空闲时） | Activity Monitor |
-
 | 峰值内存（处理 1MB JSON） | < 200MB | Activity Monitor |
-
 | 安装包体积（.dmg） | < 15MB | Finder |
-
 | 10KB JSON 格式化 | < 20ms | Rust 后端 benchmark |
-
 | 100KB JSON 格式化 | < 50ms | 同上 |
-
 | 1MB JSON 树状渲染 | < 800ms（初次渲染完成） | 前端 performance.mark |
-
 | 历史记录搜索（100 条） | < 30ms | SQLite 内置 timing |
-
 | AI Fix 响应（DeepSeek） | P50 < 3s / P95 < 8s | 客户端日志 |
 
-## 2隐私
+## 2 隐私
 
 本地处理 ：JSON 内容完全本地（Rust + WebView），除 AI Auto Fix 用户主动触发外不联网
 
@@ -50,7 +39,7 @@ PLAN · 章节 04
 
 卸载清理 ： `rm -rf ~/Library/Application Support/Jsonita` 一句清空（历史 + 设置 + secrets.json）； `rm -rf ~/Library/Logs/Jsonita` 清日志
 
-## 3可用性
+## 3 可用性
 
 失焦行为可控 ：默认失焦隐藏，设置可关闭
 
@@ -62,21 +51,16 @@ PLAN · 章节 04
 
 Empty State ：所有面板（无 JSON / 无历史 / 无 API key）都有清晰的引导提示
 
-## 4兼容性
+## 4 兼容性
 
 | 平台 | 支持版本 | 说明 |
-
 | --- | --- | --- |
-
 | macOS | 11 (Big Sur) 及以上 | Tauri 2.x 最低要求 |
-
 | 架构 | Apple Silicon (arm64) + Intel (x64) universal | .dmg 内含 universal binary |
-
 | Windows | 10 / 11（M3 阶段评估） | 同一份代码，Tauri 自动构建 |
-
 | Linux | v1 不支持 | 受众小 + GTK / WebKitGTK 适配成本 |
 
-## 5可靠性
+## 5 可靠性
 
 崩溃容忍 ：前端崩溃不影响菜单栏（Rust 端独立）；可一键 reload 浮窗
 
@@ -86,7 +70,7 @@ Empty State ：所有面板（无 JSON / 无历史 / 无 API key）都有清晰�
 
 网络容错 ：DeepSeek 调用失败时清晰报错 + 重试按钮；不重试到死
 
-## 6可观察性
+## 6 可观察性
 
 v1 不做任何上报，仅在本地写按天滚动日志： `~/Library/Logs/Jsonita/jsonita.YYYY-MM-DD.log`
 
@@ -94,9 +78,9 @@ v1 不做任何上报，仅在本地写按天滚动日志： `~/Library/Logs/Jso
 
 `open_log_dir` IPC 已实现；设置面板「打开日志目录」按钮为保留 UI
 
-## 7分发
+## 7 分发
 
-### 7.1v1（仅 macOS）
+### 7.1 v1（仅 macOS）
 
 格式 ： `.dmg` （universal arm64 + x64）
 
@@ -106,45 +90,33 @@ v1 不做任何上报，仅在本地写按天滚动日志： `~/Library/Logs/Jso
 
 更新 ：v1 用户手动下载新版（About 页提供「打开 GitHub Releases」按钮）
 
-### 7.2v1.1+ 分发扩展
+### 7.2 v1.1+ 分发扩展
 
 | 平台 | 格式 / 命令 | 说明 |
-
 | --- | --- | --- |
-
 | macOS | `.dmg` via GitHub Releases | v1 已有，继续保留 |
-
 | `brew install jsonita` | 建立 homebrew tap（ `klook/homebrew-tap` 或独立 tap），cask 模式拉 .dmg |  |
-
 | Windows 10/11 | `.exe` （NSIS installer） | 推荐主格式：个人用户最熟；带卸载器；菜单栏 / 自启动配置友好 |
-
 | `.msi` （Wix） | 可选：企业批量部署、winget 仓库收录需要 MSI |  |
-
 | 跨平台 CLI 包装 | `npx jsonita` /`npm i -g jsonita` | npm 包是个小启动器，下载对应平台 binary 到本地缓存后启动；面向 Node 生态开发者 |
-
 | Linux | — | v1 / v2 都不做：受众小 + GTK / WebKitGTK 适配成本 |
 
-### 7.3Windows 分发格式选型
+### 7.3 Windows 分发格式选型
 
 | 格式 | 选 / 不选 | 原因 |
-
 | --- | --- | --- |
-
 | `.exe` (NSIS) | ✓ 主 | Tauri 默认；用户体验最接近 macOS .dmg 双击即装；体积小 |
-
 | `.msi` (Wix) | ✓ 备 | 企业 IT 友好；winget 收录要 MSI |
-
 | zip portable | ✗ | 用户要手动解压、放路径、设权限；菜单栏图标 / 全局快捷键依赖安装态；劝退普通用户 |
-
 | Windows Store (MSIX) | ✗（v2 再说） | 沙箱限制 + 上架审核 + 抽成 |
 
-### 7.4签名
+### 7.4 签名
 
 macOS ：Apple Developer ID + notarization（v1 必须）
 
 Windows ：EV Code Signing Certificate（v1.1+ Windows 发布前完成；未签名会触发 SmartScreen 警告劝退用户）
 
-### 7.5自动更新
+### 7.5 自动更新
 
 v1 不做
 

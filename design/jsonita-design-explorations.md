@@ -13,21 +13,17 @@ Format Minify Tree →Str →JSON ⚙
 Input
 
 ```
-
 {"name":"alice","age":30,"items":["a","b","c"]}
-
 ```
 
 Output · 2 spaces
 
 ```
-
 {
   "name": "alice",
   "age": 30,
   "items": ["a", "b", "c"]
 }
-
 ```
 
 Valid JSON ·5 lines ·76 bytes ⌘Y History
@@ -43,21 +39,17 @@ Format Minify Tree →Str →JSON ⚙
 Input
 
 ```
-
 {"name":"alice","age":30,"items":["a","b","c"]}
-
 ```
 
 Output · 2 spaces
 
 ```
-
 {
   "name": "alice",
   "age": 30,
   "items": ["a", "b", "c"]
 }
-
 ```
 
 Valid JSON ·5 lines ·76 bytes ⌘Y History
@@ -73,21 +65,17 @@ Format Minify Tree →Str →JSON ⚙
 Input
 
 ```
-
 {"name":"alice","age":30,"items":["a","b","c"]}
-
 ```
 
 Output · 2 spaces
 
 ```
-
 {
   "name": "alice",
   "age": 30,
   "items": ["a", "b", "c"]
 }
-
 ```
 
 Valid JSON ·5 lines ·76 bytes ⌘Y History
