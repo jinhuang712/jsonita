@@ -87,7 +87,8 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | 路径 | 内容 |
 |---|---|
 | [`PROJECT.md`](PROJECT.md) | 文档导航入口 |
-| [`WORKFLOW.md`](WORKFLOW.md) | 仓库工作流程与 agent 规范 |
+| [`WORKFLOW.md`](WORKFLOW.md) | 项目无关的文档与实现协作流程 |
+| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束、工作流映射和验证规则 |
 | [`plan/`](plan/) | 产品边界、功能、技术栈、NFR |
 | [`spec/`](spec/) | 核心系统契约与 `spec/appendix/` 技术明细 |
 | [`design/`](design/) | UI、视觉设计、交互、原型、设计令牌、图标、窗口、菜单栏、编辑器、i18n、a11y |
@@ -96,7 +97,9 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 
 ## 文档约定
 
-本仓库使用 Markdown 作为最终文档源。后来者在修改产品范围、技术规格、设计契约、TODO、Changelist 或文档入口时，需要先读 [`WORKFLOW.md`](WORKFLOW.md)，再同步更新对应的 Markdown 文件。
+本仓库使用 Markdown 作为最终文档源。后来者在修改产品范围、技术规格、设计契约、TODO、Changelist 或文档入口时，需要先读 [`AGENTS.md`](AGENTS.md) 或 [`CLAUDE.md`](CLAUDE.md)，再读 [`WORKFLOW.md`](WORKFLOW.md)，并同步更新对应的 Markdown 文件。
+
+[`WORKFLOW.md`](WORKFLOW.md) 保持项目无关；Jsonita 专属映射（例如 workflow 中的 `CHANGELOG.md` 在本仓库对应 [`CHANGELIST.md`](CHANGELIST.md)）写在 [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md)。
 
 旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。
 
