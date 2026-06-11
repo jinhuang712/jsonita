@@ -114,9 +114,6 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     borderColor: 'var(--primary-edge)',
     boxShadow: 'var(--shadow-focus)',
   },
-  '.jsonita-search-replace-input': {
-    flexBasis: '220px',
-  },
   '.jsonita-search-count': {
     minWidth: '54px',
     color: 'var(--text-faint)',

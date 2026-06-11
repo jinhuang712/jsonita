@@ -4,8 +4,6 @@ import {
   findNext,
   findPrevious,
   getSearchQuery,
-  replaceAll,
-  replaceNext,
   selectMatches,
   setSearchQuery,
 } from '@codemirror/search';
@@ -24,8 +22,6 @@ class JsonitaSearchPanel implements Panel {
 
   private query: SearchQuery;
   private readonly searchField: HTMLInputElement;
-  private readonly replaceField: HTMLInputElement;
-  private readonly replaceRow: HTMLElement;
   private readonly countLabel: HTMLSpanElement;
   private readonly caseButton: HTMLButtonElement;
   private readonly regexpButton: HTMLButtonElement;
@@ -39,10 +35,6 @@ class JsonitaSearchPanel implements Panel {
     this.searchField.value = this.query.search;
     this.searchField.addEventListener('input', () => this.commit());
 
-    this.replaceField = input(t('field.replace'), 'jsonita-search-input jsonita-search-replace-input');
-    this.replaceField.value = this.query.replace;
-    this.replaceField.addEventListener('input', () => this.commit());
-
     this.countLabel = elt('span', 'jsonita-search-count');
 
     this.caseButton = toggleButton('Aa', t('actions.matchCase'), () => this.toggle('caseSensitive'));
@@ -50,13 +42,6 @@ class JsonitaSearchPanel implements Panel {
     this.wordButton = toggleButton(t('actions.wordChip'), t('actions.wholeWord'), () =>
       this.toggle('wholeWord'),
     );
-
-    this.replaceRow = elt('div', 'jsonita-search-row jsonita-search-replace-row', [
-      elt('span', 'jsonita-search-label', [t('label.replace')]),
-      this.replaceField,
-      iconButton(t('actions.replace'), t('actions.replaceCurrent'), () => replaceNext(this.view)),
-      iconButton(t('actions.all'), t('actions.replaceAll'), () => replaceAll(this.view)),
-    ]);
 
     this.dom = elt('div', 'jsonita-search-panel');
     this.dom.addEventListener('keydown', (event) => this.keydown(event));
@@ -73,7 +58,6 @@ class JsonitaSearchPanel implements Panel {
         iconButton(t('actions.all'), t('actions.selectAll'), () => selectMatches(this.view)),
         iconButton('×', t('actions.close'), () => closeSearchPanel(this.view), 'jsonita-search-close'),
       ]),
-      this.replaceRow,
     );
 
     this.syncDom();
@@ -89,7 +73,6 @@ class JsonitaSearchPanel implements Panel {
     if (queryChanged) {
       this.query = nextQuery;
       this.searchField.value = nextQuery.search;
-      this.replaceField.value = nextQuery.replace;
     }
 
     if (update.docChanged || update.selectionSet || update.viewportChanged || queryChanged) {
@@ -100,7 +83,7 @@ class JsonitaSearchPanel implements Panel {
   private commit() {
     const query = new SearchQuery({
       search: this.searchField.value,
-      replace: this.replaceField.value,
+      replace: this.query.replace,
       caseSensitive: this.query.caseSensitive,
       regexp: this.query.regexp,
       wholeWord: this.query.wholeWord,
@@ -116,7 +99,7 @@ class JsonitaSearchPanel implements Panel {
   private toggle(key: 'caseSensitive' | 'regexp' | 'wholeWord') {
     const query = new SearchQuery({
       search: this.searchField.value,
-      replace: this.replaceField.value,
+      replace: this.query.replace,
       caseSensitive: key === 'caseSensitive' ? !this.query.caseSensitive : this.query.caseSensitive,
       regexp: key === 'regexp' ? !this.query.regexp : this.query.regexp,
       wholeWord: key === 'wholeWord' ? !this.query.wholeWord : this.query.wholeWord,
@@ -139,10 +122,6 @@ class JsonitaSearchPanel implements Panel {
       return;
     }
 
-    if (event.key === 'Enter' && event.target === this.replaceField) {
-      event.preventDefault();
-      replaceNext(this.view);
-    }
   }
 
   private syncDom() {
@@ -153,7 +132,6 @@ class JsonitaSearchPanel implements Panel {
     this.regexpButton.setAttribute('aria-pressed', String(this.query.regexp));
     this.wordButton.setAttribute('aria-pressed', String(this.query.wholeWord));
     this.countLabel.textContent = getMatchCountLabel(this.view, this.query);
-    this.replaceRow.hidden = this.view.state.readOnly;
   }
 }
 

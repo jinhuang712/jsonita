@@ -15,12 +15,10 @@
   },
   "search": {
     "label": {
-      "find": "Find",
-      "replace": "Replace"
+      "find": "Find"
     },
     "field": {
-      "find": "Find",
-      "replace": "Replace"
+      "find": "Find"
     },
     "actions": {
       "previous": "Previous match",
@@ -31,9 +29,6 @@
       "wholeWord": "Whole word",
       "all": "All",
       "selectAll": "Select all matches",
-      "replace": "Replace",
-      "replaceCurrent": "Replace current match",
-      "replaceAll": "Replace all matches",
       "close": "Close search"
     },
     "status": {
