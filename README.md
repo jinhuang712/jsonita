@@ -90,7 +90,7 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | [`WORKFLOW.md`](WORKFLOW.md) | 项目无关的文档与实现协作流程 |
 | [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束、工作流映射和验证规则 |
 | [`plan/`](plan/) | 产品边界、功能、技术栈、NFR |
-| [`spec/`](spec/) | 核心系统契约与 `spec/appendix/` 技术明细 |
+| [`spec/`](spec/) | S/M 核心系统契约、`spec/platform/` I/R 支撑契约与 `spec/appendix/` A/V 明细 |
 | [`design/`](design/) | UI、视觉设计、交互、原型、设计令牌、图标、窗口、菜单栏、编辑器、i18n、a11y |
 | [`TODO.md`](TODO.md) | 项目级开放 backlog |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史 |

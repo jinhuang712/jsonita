@@ -490,7 +490,7 @@ v1 用 [04 § 5](04_components.md) 的 SplitPane 顶部加一个搜索框，clie
 
 ### 4.5 Hover 复制节点（plan F2）
 
-视觉：见 [01 § 1.3 Tree Tab](../design/01_mockups.md#1.3-tree-tab-含-hover-复制-见-12) 的 hover 态。
+视觉：见 [design/01 § 1.3 Tree Tab](01_mockups.md) 的 hover 态。
 
 触发与目标：
 

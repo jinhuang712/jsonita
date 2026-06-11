@@ -42,7 +42,7 @@ WebView 是“可见状态权威”，Rust 是“能力和持久化权威”。�
 | 日志 | Rust writer + thin frontend logger | `logging::*` | `open_log_dir`、前端诊断事件、Rust tracing event |
 | 系统动作 | IPC command 或 Rust setup | `shortcuts::*`、`menubar::*`、`cmds::system` | `shortcut_register`、`shortcut_status`、`clipboard_read`、`quit_app` |
 
-完整 command 签名在 [appendix/ipc-api.md](appendix/ipc-api.md)，但这些名字必须在核心文档中出现，因为它们影响 coding agent 如何定位代码。
+完整 command 签名在 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)，但这些名字必须在核心文档中出现，因为它们影响 coding agent 如何定位代码。
 
 ## 三条主数据流
 
@@ -90,7 +90,7 @@ sequenceDiagram
   V-->>F: Accept 才覆盖 input
 ```
 
-AI 不是自动修复器，而是“外部建议 + 本地校验 + 用户确认”的决策流。它的详细契约在 [08_ai_repair.md](08_ai_repair.md)。
+AI 不是自动修复器，而是“外部建议 + 本地校验 + 用户确认”的决策流。它的详细契约在 [M02-ai-repair.md](M02-ai-repair.md)。
 
 ### 3. 持久化与恢复
 
@@ -132,7 +132,7 @@ flowchart TD
 | `Sqlite` / `Io` | Rust storage 或 filesystem | 当前编辑可继续，保存/恢复动作显示失败 | 不伪造 history/session/settings 成功态。 |
 | Tauri transport failure | IPC 边界 | 通用基础设施失败，建议重试或查看日志 | 前端不能把缺失 response 当成功。 |
 
-完整错误模型见 [04_error_model.md](04_error_model.md)。架构文档只定义原则：失败不丢 input，不假装成功，不跨越权限边界。
+完整错误模型见 [S03-error-model.md](S03-error-model.md)。架构文档只定义原则：失败不丢 input，不假装成功，不跨越权限边界。
 
 ## FAQ
 
@@ -150,7 +150,7 @@ WebView 是交互层，不是权限层。所有文件、SQLite、secrets、DeepS
 
 ## 相关明细
 
-- 完整 IPC command/event 和 payload 字段见 [appendix/ipc-api.md](appendix/ipc-api.md) 与 [appendix/schemas.md](appendix/schemas.md)。
-- JSON engine 细节见 [06_json_engine.md](06_json_engine.md) 和 [appendix/json-engine-details.md](appendix/json-engine-details.md)。
-- 数据所有权见 [07_storage_session.md](07_storage_session.md)。
-- 安全与隐私边界见 [05_security_privacy.md](05_security_privacy.md)。
+- 完整 IPC command/event 和 payload 字段见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md) 与 [appendix/A00-schemas.md](appendix/A00-schemas.md)。
+- JSON engine 细节见 [M01-json-engine.md](M01-json-engine.md) 和 [appendix/A02-json-engine-details.md](appendix/A02-json-engine-details.md)。
+- 数据所有权见 [S05-storage-session.md](S05-storage-session.md)。
+- 安全与隐私边界见 [S04-security-privacy.md](S04-security-privacy.md)。

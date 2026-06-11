@@ -33,7 +33,7 @@ WebView 可以请求读写，但不拥有这些数据。Rust store 是唯一写�
 | Secrets | `secrets.json` | `accounts.deepseek_api_key.value` | `ai_set_api_key` 成功 | AI command 需要 key 时 | 旧 key 或无 key 保持。 |
 | Logs | rolling files | `ts`、`event`、`kind`、`requestId` | runtime event | support export/open | 主流程继续。 |
 
-完整 DDL、PRAGMA 和 schema 展开见 [appendix/storage-details.md](appendix/storage-details.md) 与 [appendix/schemas.md](appendix/schemas.md)。
+完整 DDL、PRAGMA 和 schema 展开见 [appendix/A01-storage-details.md](appendix/A01-storage-details.md) 与 [appendix/A00-schemas.md](appendix/A00-schemas.md)。
 
 ## History 与 Last Session 为什么分开
 
@@ -102,7 +102,7 @@ SQLite 用于 history、last_session、app_meta 和 schema_version，是因为�
 | connection pool | 支撑多个 command 访问 store。 |
 | `contentHash` | 支持历史去重和快速识别内容。 |
 
-这些细节的具体值和 DDL 放在 [appendix/storage-details.md](appendix/storage-details.md)。核心 spec 只要求实现遵守这些策略名和语义。
+这些细节的具体值和 DDL 放在 [appendix/A01-storage-details.md](appendix/A01-storage-details.md)。核心 spec 只要求实现遵守这些策略名和语义。
 
 ## 存储失败矩阵
 
@@ -132,7 +132,7 @@ SQLite 用于 history、last_session、app_meta 和 schema_version，是因为�
 
 ## 相关文档
 
-- 系统数据流见 [00_system_architecture.md](00_system_architecture.md)。
-- 前端保存和清空动作见 [02_frontend_execution.md](02_frontend_execution.md)。
-- 错误分诊见 [04_error_model.md](04_error_model.md)。
-- SQLite DDL、PRAGMA、迁移和字段完整表见 [appendix/storage-details.md](appendix/storage-details.md) 与 [appendix/schemas.md](appendix/schemas.md)。
+- 系统数据流见 [S00-system-architecture.md](S00-system-architecture.md)。
+- 前端保存和清空动作见 [M00-frontend-execution.md](M00-frontend-execution.md)。
+- 错误分诊见 [S03-error-model.md](S03-error-model.md)。
+- SQLite DDL、PRAGMA、迁移和字段完整表见 [appendix/A01-storage-details.md](appendix/A01-storage-details.md) 与 [appendix/A00-schemas.md](appendix/A00-schemas.md)。

@@ -84,7 +84,7 @@ Jsonita search panel 是纯搜索面板，不提供 replace row、replace button
 
 ### 4.1 TabBar
 
-顶部功能区：左侧 5 个基础 Tab（Format / Minify / Tree / →Str / →JSON）+ AI Fix（仅错误态相关）+ 右上设置按钮。视觉见 [01 § 1.1-1.5](../design/01_mockups.md#1.1-format-tab-valid-json-默认呼出后) （默认 / 各 Tab 切换 / AI Fix 出现）。
+顶部功能区：左侧 5 个基础 Tab（Format / Minify / Tree / →Str / →JSON）+ AI Fix（仅错误态相关）+ 右上设置按钮。视觉见 [design/01 § 1.1-1.5](01_mockups.md) （默认 / 各 Tab 切换 / AI Fix 出现）。
 
 ```
 // src/shell/TabBar.tsx
@@ -113,7 +113,7 @@ active 动效 ：active Tab 背后使用独立胶囊层，点击或 `Tab` / `⇧
 
 ### 4.2 StatusBar
 
-底部状态栏。4 态完整视觉见 [01 § 2 状态栏 4 态对照](../design/01_mockups.md#2-状态栏-4-态对照)。
+底部状态栏。4 态完整视觉见 [design/01 § 2 状态栏 4 态对照](01_mockups.md)。
 
 ```
 interface StatusBarProps {
@@ -262,11 +262,11 @@ UX：
 
 Test 中：按钮显示 `...` ；返回后在输入区下方显示 ok / error 文本
 
-Test 不消耗存好的 key：直接输入框的当前值传给 `ai_test_connection` （详见 [AI wire protocol](../spec/appendix/ai-protocol.md) ）
+Test 不消耗存好的 key：直接输入框的当前值传给 `ai_test_connection` （详见 [I00 AI provider protocol](../spec/platform/I00-ai-provider-protocol.md) ）
 
 ### 4.9 TreeView（含 Hover 复制）
 
-JSON 树视图。视觉：见 [01 § 1.3 Tree Tab](../design/01_mockups.md#1.3-tree-tab-含-hover-复制-见-12) + [01 § 12 hover 复制](../design/01_mockups.md#12-tree-节点-hover-复制-plan-f2-design-08-4.5)。实现细节： [08 § 4.5](08_editor.md)。
+JSON 树视图。视觉：见 [design/01 § 1.3 Tree Tab 与 § 12 hover 复制](01_mockups.md)。实现细节： [08 § 4.5](08_editor.md)。
 
 ```
 interface TreeViewProps {
@@ -293,7 +293,7 @@ interface CopyNodeInfo {
 
 ### 4.10 DiffView
 
-AI Fix 应用前的 diff 展示。视觉（双栏 / 行染色 light+dark）见 [01 § 8 AI Fix DiffView](../design/01_mockups.md#8-ai-fix-diffview)；diff 算法实现见 [AI diff reference](../spec/appendix/ai-protocol.md)。
+AI Fix 应用前的 diff 展示。视觉（双栏 / 行染色 light+dark）见 [design/01 § 8 AI Fix DiffView](01_mockups.md)；diff 算法实现见 [I00 AI provider protocol](../spec/platform/I00-ai-provider-protocol.md)。
 
 ```
 interface DiffViewProps {

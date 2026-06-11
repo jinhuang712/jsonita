@@ -52,7 +52,7 @@ sequenceDiagram
 | timeout | `60s` | AI 允许比本地 transform 慢，但不能无限挂起。 |
 | max tokens | 按输入估算 | 避免输出被截断，同时不暴涨请求。 |
 
-完整 wire protocol 见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
+Provider 接入契约见 [platform/I00-ai-provider-protocol.md](platform/I00-ai-provider-protocol.md)，完整 wire protocol 见 [appendix/A05-ai-protocol-details.md](appendix/A05-ai-protocol-details.md)。
 
 ## Prompt 边界
 
@@ -147,7 +147,9 @@ v1 不允许。history 是本地数据，不是 AI 上下文。AI 只处理当�
 
 ## 相关文档
 
-- 前端 AI pane 和 input 覆盖规则见 [02_frontend_execution.md](02_frontend_execution.md)。
-- 安全和外发边界见 [05_security_privacy.md](05_security_privacy.md)。
-- 错误分诊见 [04_error_model.md](04_error_model.md)。
-- Prompt、wire protocol、payload 字段和 Diff props 见 [appendix/ai-protocol.md](appendix/ai-protocol.md) 与 [appendix/schemas.md](appendix/schemas.md)。
+- 前端 AI pane 和 input 覆盖规则见 [M00-frontend-execution.md](M00-frontend-execution.md)。
+- 安全和外发边界见 [S04-security-privacy.md](S04-security-privacy.md)。
+- 错误分诊见 [S03-error-model.md](S03-error-model.md)。
+- Provider 接入契约见 [platform/I00-ai-provider-protocol.md](platform/I00-ai-provider-protocol.md)。
+- Prompt、wire protocol 和 Diff props 见 [appendix/A05-ai-protocol-details.md](appendix/A05-ai-protocol-details.md)。
+- Payload 字段见 [appendix/A00-schemas.md](appendix/A00-schemas.md)。

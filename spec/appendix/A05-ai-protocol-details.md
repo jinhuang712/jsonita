@@ -1,6 +1,6 @@
-# 附录：AI 协议明细
+# A05 · AI Protocol Details
 
-核心语义见 [08_ai_repair.md](../08_ai_repair.md)。本页只列 prompt、wire 参数、响应抽取和 Diff props。
+核心语义见 [../M02-ai-repair.md](../M02-ai-repair.md)，provider integration contract 见 [../platform/I00-ai-provider-protocol.md](../platform/I00-ai-provider-protocol.md)。本页只列 prompt、wire 参数、响应抽取和 Diff props。
 
 ## System prompt
 
@@ -68,3 +68,4 @@ OUTPUT FORMAT: plain JSON text. No prefix, no suffix.
 | `after` | `string` | AI 修复后且已验证合法 JSON 的文本。 |
 | `onAccept` | `() => void` | 覆盖 editor。 |
 | `onReject` | `() => void` | 保留原文。 |
+

@@ -100,7 +100,7 @@ flowchart TD
 | secrets | event、operation、kind | key、token、明文 secrets path 细节。 |
 | release | version、tag、artifact name、sha256、validation result | 本地凭证、签名密码。 |
 
-完整日志字段见 [appendix/logging-details.md](appendix/logging-details.md)。
+完整日志字段见 [appendix/A03-logging-details.md](appendix/A03-logging-details.md)。
 
 ## FAQ
 
@@ -118,6 +118,6 @@ flowchart TD
 
 ## 相关明细
 
-- 完整 `JsonitaError` schema 和 TypeScript mirror 见 [appendix/schemas.md](appendix/schemas.md)。
-- command 到错误分支的明细见 [appendix/ipc-api.md](appendix/ipc-api.md)。
-- AI 上游错误和 prompt/response 细节见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
+- 完整 `JsonitaError` schema 和 TypeScript mirror 见 [appendix/A00-schemas.md](appendix/A00-schemas.md)。
+- command 到错误分支的明细见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)。
+- AI 上游错误接入见 [platform/I00-ai-provider-protocol.md](platform/I00-ai-provider-protocol.md)，prompt/response 细节见 [appendix/A05-ai-protocol-details.md](appendix/A05-ai-protocol-details.md)。

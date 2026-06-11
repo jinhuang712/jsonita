@@ -279,7 +279,7 @@ dark 阴影特殊处理：浮层主要靠边框与背景层级区分，阴影只
 | `jsonita-glass-mockups.md` | AI Fix 琥珀强调、History op-chip 四色、Toast 4 variant reserved、SVG 描边图标方向 | § 4.3、§ 4.5、04 § 4.3、05 图标章节 |
 | `jsonita-motion-demo.md` | 150ms summon、140ms dismiss、180ms theme fade、native easing、禁动 blur | § 9.1、§ 9.2 |
 | `jsonita-singlepane-statusbar-demo.md` | 状态栏右侧 hover/focus 才滑出快捷键，单双栏切换不改窗口尺寸 | 01 § 2、04 § 4.2 |
-| `jsonita-settings-detail.md` | 设置分组、checkbox 视觉、API key 行内反馈、About 路径展示 | 01 § 4、04 § 4.6-4.8、[spec/appendix/schemas](../spec/appendix/schemas.md) |
+| `jsonita-settings-detail.md` | 设置分组、checkbox 视觉、API key 行内反馈、About 路径展示 | 01 § 4、04 § 4.6-4.8、[A00 schemas](../spec/appendix/A00-schemas.md) |
 
 ### 10 Z-index scale
 

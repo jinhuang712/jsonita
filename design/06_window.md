@@ -2,7 +2,7 @@
 
 浮窗的创建、定位、显隐、失焦、动效、生命周期 ── 先讲设计决策，再用决策图与状态机讲机制，最后给契约。
 
-本章描述 窗口 runtime 设计与机制； `ContentMetrics` /`WindowResizedPayload` 等 IPC payload 见 [spec/appendix/schemas](../spec/appendix/schemas.md)； `window.json` 持久化字段见 [spec/appendix/schemas](../spec/appendix/schemas.md)；窗口命令签名见 [spec/appendix/ipc-api](../spec/appendix/ipc-api.md)；视觉效果见 [01 § 11 智能缩放](../design/01_mockups.md)。
+本章描述 窗口 runtime 设计与机制； `ContentMetrics` /`WindowResizedPayload` 等 IPC payload 见 [A00 schemas](../spec/appendix/A00-schemas.md)； `window.json` 持久化字段见 [A00 schemas](../spec/appendix/A00-schemas.md)；窗口命令签名见 [I01 IPC API](../spec/platform/I01-ipc-api.md)；视觉效果见 [01 § 11 智能缩放](../design/01_mockups.md)。
 
 ## 一 · 设计
 
@@ -23,7 +23,7 @@
 
 #### 2.1 WebView 预热：呼出时只 show，不 build
 
-启动时就 `WebViewWindowBuilder.build()` （ `visible: false` ），把 DOM / CodeMirror / React 全部就绪。后续 `⌘⇧J` 只调 `window.show()` + 定位 ── 亚毫秒级。代价是稳态占 ~80 MB 内存，但换来呼出 < 500 ms 体验，对工具类应用是正确取舍（详见 [spec/00](../spec/00_system_architecture.md) ）。
+启动时就 `WebViewWindowBuilder.build()` （ `visible: false` ），把 DOM / CodeMirror / React 全部就绪。后续 `⌘⇧J` 只调 `window.show()` + 定位 ── 亚毫秒级。代价是稳态占 ~80 MB 内存，但换来呼出 < 500 ms 体验，对工具类应用是正确取舍（详见 [S00 system architecture](../spec/S00-system-architecture.md) ）。
 
 #### 2.2 NSPanel 而不是 NSWindow（macOS）
 
@@ -45,7 +45,7 @@ Tauri 默认 `alwaysOnTop: true` 在 macOS 等同 `NSWindow.setLevel(.floating)`
 
 窗体 / 编辑器全透明，靠原生 `NSVisualEffectView` （vibrancy）托底，材质 + NSWindow appearance 必须跟随 effective theme： `window::apply_glass_mode(mode)` 解析后 dark 用 `HudWindow` 暗材质、light 用 `Popover`。light / dark 钉死对应 appearance（ `aqua` /`darkAqua` ）； system 把 appearance 设 `nil` 跟随 OS。
 
-system 的 effective 由原生权威解析：经 `NSApp.effectiveAppearance` 读真实 OS 主题， 不靠 webview 的 `matchMedia` ── 因为 NSWindow.appearance 一旦钉死具体值就会污染 WKWebView 的 `prefers-color-scheme` （曾踩坑：从 light 切到 system 不变 dark），且系统运行时切换主题也无法推送给 webview；设 `nil` 跟随 OS 两个问题都解。 `window_set_theme(mode)` 把解析后的 `"light" | "dark"` 回传前端作权威值（ [spec/appendix/ipc-api](../spec/appendix/ipc-api.md) ）。
+system 的 effective 由原生权威解析：经 `NSApp.effectiveAppearance` 读真实 OS 主题， 不靠 webview 的 `matchMedia` ── 因为 NSWindow.appearance 一旦钉死具体值就会污染 WKWebView 的 `prefers-color-scheme` （曾踩坑：从 light 切到 system 不变 dark），且系统运行时切换主题也无法推送给 webview；设 `nil` 跟随 OS 两个问题都解。 `window_set_theme(mode)` 把解析后的 `"light" | "dark"` 回传前端作权威值（ [I01 IPC API](../spec/platform/I01-ipc-api.md) ）。
 
 启动先按 `system` （跟随 OS）应用，前端 `useEffectiveTheme` 挂载及每次切换调 `window_set_theme(mode)` 用持久化 `settings.theme` 校正并取回 effective。否则深色半透卡片叠在偏亮材质上发灰发糊 ── 曾因材质写死 `Popover` 且只在启动应用而踩坑。
 
@@ -317,7 +317,7 @@ window.hide() ⌘Q / Tray Quit ⌘Q app.exit Setup Hidden Locating Showing Visib
 
 ### 10 命令 / 事件接口
 
-窗口章节涉及的 IPC 接口（完整签名见 [spec/appendix/ipc-api](../spec/appendix/ipc-api.md) 与 [spec/appendix/ipc-events](../spec/appendix/ipc-api.md) ）：
+窗口章节涉及的 IPC 接口（完整签名见 [I01 IPC API](../spec/platform/I01-ipc-api.md) ）：
 
 | 接口 | 类型 | 触发 |
 | --- | --- | --- |

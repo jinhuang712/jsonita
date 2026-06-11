@@ -134,7 +134,7 @@ AI 输出即使是合法 JSON，也可能不是用户想要的修复。Diff 是�
 
 ## 相关文档
 
-- JSON 操作语义见 [06_json_engine.md](06_json_engine.md)。
-- AI 修复完整流程见 [08_ai_repair.md](08_ai_repair.md)。
-- IPC command 和 payload 明细见 [03_ipc_boundary.md](03_ipc_boundary.md)、[appendix/ipc-api.md](appendix/ipc-api.md)、[appendix/schemas.md](appendix/schemas.md)。
+- JSON 操作语义见 [M01-json-engine.md](M01-json-engine.md)。
+- AI 修复完整流程见 [M02-ai-repair.md](M02-ai-repair.md)。
+- IPC command 和 payload 明细见 [S02-ipc-boundary.md](S02-ipc-boundary.md)、[platform/I01-ipc-api.md](platform/I01-ipc-api.md)、[appendix/A00-schemas.md](appendix/A00-schemas.md)。
 - Tree、editor、Diff 的视觉和交互细节见 `design/01_mockups.md`、`design/02_interaction.md`、`design/08_editor.md`。

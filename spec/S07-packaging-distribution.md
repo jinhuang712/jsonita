@@ -64,7 +64,7 @@ flowchart TD
 | network exception | `api.deepseek.com` | AI Fix 允许的外部 API。 |
 | default DMG name | `Jsonita_<version>_universal.dmg` | release asset 和后续 sha256 引用。 |
 
-完整 Tauri 配置、capabilities、entitlements 和 env 变量见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+完整 Tauri 配置、capabilities、entitlements 和 env 变量见 [appendix/A04-packaging-details.md](appendix/A04-packaging-details.md)；release 门禁和失败收场见 [platform/R00-release-readiness.md](platform/R00-release-readiness.md)。
 
 ## 签名、公证和权限边界
 
@@ -120,5 +120,6 @@ metadata 是 support、升级、下载、日志和用户信任的一部分。版
 ## 相关文档
 
 - 版本和发布目标也受 [WORKFLOW.md](../WORKFLOW.md) 约束。
-- 打包命令、Tauri config、capabilities、entitlements、签名变量见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+- release 门禁和失败收场见 [platform/R00-release-readiness.md](platform/R00-release-readiness.md)。
+- 打包命令、Tauri config、capabilities、entitlements、签名变量见 [appendix/A04-packaging-details.md](appendix/A04-packaging-details.md)。
 - release history 应写入 [../CHANGELIST.md](../CHANGELIST.md)，未完成项保留在 [../TODO.md](../TODO.md)。

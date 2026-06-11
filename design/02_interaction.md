@@ -219,7 +219,7 @@ diff 展示修复点 → 接受 / 撤销
 
 ### 5.1 错误呈现矩阵
 
-错误类型的完整 payload 定义见 [spec/appendix/errors](../spec/appendix/schemas.md)，IPC 返回契约见 [spec/04](../spec/04_error_model.md)。
+错误类型的完整 payload 定义见 [A00 schemas](../spec/appendix/A00-schemas.md)，IPC 返回契约见 [S03 Error Model](../spec/S03-error-model.md)。
 
 | 错误 kind | 常见 command | UI 呈现 | 用户操作建议 |
 | --- | --- | --- | --- |

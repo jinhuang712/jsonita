@@ -1,6 +1,6 @@
 # 附录：Schema 与类型明细
 
-核心语义见 [04_error_model.md](../04_error_model.md)、[07_storage_session.md](../07_storage_session.md) 和 [03_ipc_boundary.md](../03_ipc_boundary.md)。本页只列完整字段。
+核心语义见 [S03-error-model.md](../S03-error-model.md)、[S05-storage-session.md](../S05-storage-session.md) 和 [S02-ipc-boundary.md](../S02-ipc-boundary.md)。本页只列完整字段。
 
 ## JsonitaError
 
