@@ -119,6 +119,7 @@ function TreeNode({
   const isCopyVisible = activeCopyKey === key;
   const isSelected = selectedKey === key;
   const isCopied = copiedKey === key;
+  const isRoot = path.length === 0;
 
   const activateCopy = () => {
     setActiveCopyKey(key);
@@ -180,17 +181,24 @@ function TreeNode({
         )}
 
         {label !== undefined ? (
-          <>
-            <button
-              type="button"
-              className={typeof label === 'number' ? 'jsonita-tree-index' : 'jsonita-tree-key'}
-              title={`Copy path ${pathToString(path)}`}
-              onClick={onCopyPath}
-            >
-              {typeof label === 'number' ? `[${label}]` : label}
-            </button>
-            <span className="jsonita-tree-punc">: </span>
-          </>
+          isRoot ? (
+            <>
+              <span className="jsonita-tree-root">root</span>
+              <span className="jsonita-tree-punc"> </span>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className={typeof label === 'number' ? 'jsonita-tree-index' : 'jsonita-tree-key'}
+                title={`Copy path ${pathToString(path)}`}
+                onClick={onCopyPath}
+              >
+                {typeof label === 'number' ? `[${label}]` : label}
+              </button>
+              <span className="jsonita-tree-punc">: </span>
+            </>
+          )
         ) : null}
 
         {isBranch ? (
@@ -206,6 +214,7 @@ function TreeNode({
             isCopyVisible ? 'tree-copy-icon-visible' : '',
             copiedKey === key ? 'tree-copy-icon-copied' : '',
           ].filter(Boolean).join(' ')}
+          tabIndex={isCopyVisible ? 0 : -1}
           title="Copy node value"
           onClick={(event) => {
             event.stopPropagation();
@@ -340,6 +349,7 @@ export function TreeView({ data, initialExpandDepth = 2 }: Props) {
       <TreeNode
         value={data}
         path={[]}
+        label="root"
         expandedKeys={expandedKeys}
         activeCopyKey={activeCopyKey}
         copiedKey={copiedKey}

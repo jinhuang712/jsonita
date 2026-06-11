@@ -58,7 +58,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `StatusBar` | shell/StatusBar.tsx | 底部状态栏（valid / error · lines · bytes · History） |
 | `Toast` | reserved | 未来封装 sonner；当前错误通过状态栏 / AI 面板 / 设置弹窗呈现 |
 | `Editor` | editor/Editor.tsx | CodeMirror 6 包装（见 [07](08_editor.md) ） |
-| `TreeView` | tree/TreeView.tsx | JSON 树 ── 复用 react-json-view-lite 外壳但自定义颜色 |
+| `TreeView` | tree/TreeView.tsx | JSON 树 ── 自渲染递归节点，支持 path / hover 复制 |
 | `DiffView` | panes/DiffView.tsx | AI Fix 接受前的 diff 展示（左原右改） |
 | `HistoryModal` | history/HistoryModal.tsx | 历史列表 Modal：搜索、筛选、载入、Pin / Star / Clear |
 | `HistoryItem` | history/HistoryModal.tsx | 历史单行 UI：op chip、摘要、Pin / Star 操作 |

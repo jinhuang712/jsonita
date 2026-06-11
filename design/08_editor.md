@@ -567,7 +567,7 @@ return singlePaneMode
   : '1fr 1fr';
 ```
 
-关键：当前没有独立 `SinglePaneLayout.tsx`；实现由 `FloatingWindow` 隐藏右栏，并在 `singlePaneMode && activePane === 'tree'` 时把左栏内容替换为 `TreePanel`，在 `activePane === 'ai-fix'` 时替换为 `AiFixPane`。 `TreePanel` 直接解析当前输入，合法时渲染 `TreeView`，非法 / 空白时渲染状态面板。 `SinglePaneHint` 只在非 Tree / 非 AI Fix 功能显示右下角提示； `useGlobalHotkeys` 捕获非 Tree / 非 AI Fix 的 `⌘Enter` 并调用 `runPaneApply`。
+关键：当前没有独立 `SinglePaneLayout.tsx`；实现由 `FloatingWindow` 隐藏右栏，并在 `singlePaneMode && activePane === 'tree'` 时把左栏内容替换为 `TreePanel`，在 `activePane === 'ai-fix'` 时替换为 `AiFixPane`。 `TreePanel` 只在 Tree tab 可见时解析当前输入，合法时渲染 `TreeView`，非法 / 空白时渲染状态面板；非 Tree tab 不做额外 `JSON.parse`。 `SinglePaneHint` 只在非 Tree / 非 AI Fix 功能显示右下角提示； `useGlobalHotkeys` 捕获非 Tree / 非 AI Fix 的 `⌘Enter` 并调用 `runPaneApply`。
 
 ```
 // src/hooks/useGlobalHotkeys.ts (single-pane)
