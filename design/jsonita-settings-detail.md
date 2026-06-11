@@ -1,6 +1,6 @@
 # Jsonita · 设置详版
 
-6 个面板按真实字段铺全(取自 `src/store/settings.ts` + `SettingsModal.tsx` + zh-CN 文案)。控件按真实实现:开关用 方形勾选框、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。`aiModelId` 是内部默认值,不单独暴露编辑控件。 点左侧 nav 可切换面板 (light 默认「通用」,dark 默认「快捷键」)。
+6 个面板按真实字段铺全(取自 `src/store/settings.ts` + `SettingsView.tsx` + zh-CN 文案)。Settings 是主 Jsonita 卡片内的整页状态,不是遮罩上的浮层 modal。控件按真实实现:开关用 方形勾选框、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。`aiModelId` 是内部默认值,不单独暴露编辑控件。点左侧 nav 可切换面板 (light 默认「通用」,dark 默认「快捷键」)。
 
 Light · 点 nav 切换
 
@@ -310,7 +310,7 @@ Data & logs
 
 <header class="head">
   <h1>Jsonita · 设置详版</h1>
-  <p>6 个面板按真实字段铺全(取自 <code>src/store/settings.ts</code> + <code>SettingsModal.tsx</code> + zh-CN 文案)。控件按真实实现:开关用<b>方形勾选框</b>、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。<code>aiModelId</code> 是内部默认值,不单独暴露编辑控件。<b>点左侧 nav 可切换面板</b>(light 默认「通用」,dark 默认「快捷键」)。</p>
+  <p>6 个面板按真实字段铺全(取自 <code>src/store/settings.ts</code> + <code>SettingsView.tsx</code> + zh-CN 文案)。Settings 是主 Jsonita 卡片内的整页状态,不是遮罩上的浮层 modal。控件按真实实现:开关用<b>方形勾选框</b>、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。<code>aiModelId</code> 是内部默认值,不单独暴露编辑控件。<b>点左侧 nav 可切换面板</b>(light 默认「通用」,dark 默认「快捷键」)。</p>
 </header>
 
 <div class="grid2">

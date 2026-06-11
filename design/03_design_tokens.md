@@ -180,7 +180,7 @@ OK
 | `--fs-editor` | 13 | CodeMirror 主编辑器（独立调） |
 | `--fs-tree` | 12 | JSON 树视图 |
 
-浮窗缩放域： `--fs-editor` 是 `⌘+` /`⌘-` /`⌘0` 的源值；浮窗根节点用它派生 `--fs-tree`、 `--fs-xs`、 `--fs-sm`。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（ `--fs-xs` ≤ 12.5px， `--fs-sm` ≤ 14px），避免 chrome 喧宾夺主。Settings Modal / History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。
+浮窗缩放域： `--fs-editor` 是 `⌘+` /`⌘-` /`⌘0` 的源值；浮窗根节点用它派生 `--fs-tree`、 `--fs-xs`、 `--fs-sm`。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（ `--fs-xs` ≤ 12.5px， `--fs-sm` ≤ 14px），避免 chrome 喧宾夺主。SettingsView 作为主壳内页面沿用浮窗 token；History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。
 
 #### 6.3 字重 + 行高
 

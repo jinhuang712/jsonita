@@ -28,7 +28,8 @@ export function TabBar() {
   const active = useUiStore((s) => s.activePane);
   const showAiFix = useUiStore((s) => s.showAiFix);
   const setActive = useUiStore((s) => s.setActivePane);
-  const setSettingsModalOpen = useUiStore((s) => s.setSettingsModalOpen);
+  const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
+  const setSettingsViewOpen = useUiStore((s) => s.setSettingsViewOpen);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
   const editorStatus = useEditorStore((s) => s.status);
   const showAiFixPrompt = showAiFix && editorStatus === 'error' && !aiEnabled;
@@ -166,7 +167,10 @@ export function TabBar() {
       <button
         type="button"
         className="jsonita-chrome-icon-button"
-        onClick={() => setSettingsModalOpen(true)}
+        onClick={() => {
+          setHistoryModalOpen(false);
+          setSettingsViewOpen(true);
+        }}
         aria-label={tShell('actions.openSettings')}
         title={`${tShell('actions.openSettings')} (${formatAccelerator('CmdOrCtrl+,')})`}
       >

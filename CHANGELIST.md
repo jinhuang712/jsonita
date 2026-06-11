@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### feat · Settings 改为主壳内联页面
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | Settings 不再作为遮罩上的 modal 浮层渲染，而是切换为主 Jsonita 卡片内部的整页状态；右上角齿轮、`⌘,` 和 tray Settings 都进入该页，`Esc` / Done / `⌘W` 返回编辑工作区。 |
+| 影响文档 | `src/settings/SettingsView.tsx`、`src/shell/FloatingWindow.tsx`、`src/hooks/useGlobalHotkeys.ts`、`src/App.tsx`、`design/`、`plan/01_features.md`、`spec/M00-frontend-execution.md`。 |
+| 关联 | 用户反馈 Settings 叠在主卡片上形成“卡片套卡片”，希望它直接替换主卡片内容，成为 shell-level page state。 |
+
 ### docs · 修复跨文档契约矛盾
 
 | 字段 | 内容 |

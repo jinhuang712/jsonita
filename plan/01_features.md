@@ -236,7 +236,7 @@ Prompt 策略 ：严格要求「只返回合法 JSON object / array，无解释 
 | 找回上次会话 | `⌘⇧L` | 是（全局可选） |
 | 切换单窗 / 双栏 | `⌘\` | 是（窗口内；与全局快捷键同一录入组件，但不走 global-shortcut） |
 | 清空输入（ 不 写入「上次」） | `⌘K` | 否 |
-| 打开设置 | `⌘,` | 否；右上角设置按钮等效 |
+| 打开设置 | `⌘,` | 否；右上角设置按钮等效；打开后主卡片内容切到 Settings 页 |
 | 非编辑态切换功能 Tab | `Tab` /`⇧Tab` | 否 |
 | 关闭 / 退出编辑 | `Esc` ×2 /`⌘W` | 否；编辑器内第一下 `Esc` 先退出 editing，短时间内第二下才隐藏；AI Fix 决策态单次 `Esc` 仍为 Cancel |
 
@@ -246,7 +246,7 @@ Prompt 策略 ：严格要求「只返回合法 JSON object / array，无解释 
 
 ## F7 设置面板
 
-设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。完整交互权威见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)，组件契约见 [design/04](../design/04_components.md)。
+设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。Settings 是主壳内 page state，不是遮罩 modal：右上角齿轮、`⌘,` 和 tray Settings 会把主卡片内容从编辑工作区切到设置工作区；Done、`Esc` 或 Settings 页内 `⌘W` 返回编辑工作区。完整交互权威见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)，组件契约见 [design/04](../design/04_components.md)。
 
 ### F7.1 General
 

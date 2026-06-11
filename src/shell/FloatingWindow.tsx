@@ -4,6 +4,7 @@ import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
 import { on } from '../ipc/events';
 import { AiFixPane } from '../panes/AiFixPane';
+import { SettingsView } from '../settings/SettingsView';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore } from '../store/ui';
@@ -26,6 +27,7 @@ export function FloatingWindow() {
   const setContent = useEditorStore((s) => s.setContent);
   const editorError = useEditorStore((s) => s.error);
   const activePane = useUiStore((s) => s.activePane);
+  const settingsOpen = useUiStore((s) => s.settingsViewOpen);
   const editorFontSize = useUiStore((s) => s.editorFontSize);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
@@ -93,56 +95,62 @@ export function FloatingWindow() {
         ['--fs-sm' as string]: `${chromeSmFontSize}px`,
       }}
     >
-      <TabBar />
-      <div
-        className="jsonita-pane-transition"
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: singlePaneMode ? '1fr' : '1fr 1fr',
-          minHeight: 0,
-        }}
-      >
-        <div
-          style={{
-            borderRight: singlePaneMode ? 'none' : '1px solid var(--border)',
-            overflow: 'hidden',
-          }}
-        >
-          {singlePaneMode && activePane === 'ai-fix' ? (
-            <AiFixPane />
-          ) : showTreeInSinglePane ? (
-            <TreePanel state={treeState} />
-          ) : (
-            <Editor
-              theme={effectiveTheme}
-              value={content}
-              onChange={setContent}
-              softWrap={editorSoftWrap}
-              error={editorError}
-            />
-          )}
-        </div>
-        {!singlePaneMode && (
-          <div style={{ overflow: 'hidden' }}>
-            {activePane === 'ai-fix' ? (
-              <AiFixPane />
-            ) : activePane === 'tree' ? (
-              <TreePanel state={treeState} />
-            ) : (
-              <Editor
-                theme={effectiveTheme}
-                value={outputText}
-                readOnly={true}
-                softWrap={editorSoftWrap}
-                placeholderText="→ output"
-              />
+      {settingsOpen ? (
+        <SettingsView />
+      ) : (
+        <>
+          <TabBar />
+          <div
+            className="jsonita-pane-transition"
+            style={{
+              flex: 1,
+              display: 'grid',
+              gridTemplateColumns: singlePaneMode ? '1fr' : '1fr 1fr',
+              minHeight: 0,
+            }}
+          >
+            <div
+              style={{
+                borderRight: singlePaneMode ? 'none' : '1px solid var(--border)',
+                overflow: 'hidden',
+              }}
+            >
+              {singlePaneMode && activePane === 'ai-fix' ? (
+                <AiFixPane />
+              ) : showTreeInSinglePane ? (
+                <TreePanel state={treeState} />
+              ) : (
+                <Editor
+                  theme={effectiveTheme}
+                  value={content}
+                  onChange={setContent}
+                  softWrap={editorSoftWrap}
+                  error={editorError}
+                />
+              )}
+            </div>
+            {!singlePaneMode && (
+              <div style={{ overflow: 'hidden' }}>
+                {activePane === 'ai-fix' ? (
+                  <AiFixPane />
+                ) : activePane === 'tree' ? (
+                  <TreePanel state={treeState} />
+                ) : (
+                  <Editor
+                    theme={effectiveTheme}
+                    value={outputText}
+                    readOnly={true}
+                    softWrap={editorSoftWrap}
+                    placeholderText="→ output"
+                  />
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-      <SinglePaneHint />
-      <StatusBar />
+          <SinglePaneHint />
+          <StatusBar />
+        </>
+      )}
       <WindowResizeHandles />
     </div>
   );
