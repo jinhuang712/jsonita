@@ -12,5 +12,33 @@
     "strToJson": "→JSON",
     "aiFix": "AI 修复",
     "aiFixDisabledTooltip": "AI 修复未启用。请到 Settings → AI 开启。"
+  },
+  "search": {
+    "label": {
+      "find": "查找",
+      "replace": "替换"
+    },
+    "field": {
+      "find": "查找",
+      "replace": "替换"
+    },
+    "actions": {
+      "previous": "上一个匹配",
+      "next": "下一个匹配",
+      "matchCase": "区分大小写",
+      "regexp": "正则表达式",
+      "wordChip": "word",
+      "wholeWord": "整词匹配",
+      "all": "全部",
+      "selectAll": "选择全部匹配",
+      "replace": "替换",
+      "replaceCurrent": "替换当前匹配",
+      "replaceAll": "替换全部匹配",
+      "close": "关闭查找"
+    },
+    "status": {
+      "noQuery": "无查询",
+      "noMatches": "无匹配"
+    }
   }
 }

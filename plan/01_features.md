@@ -31,6 +31,8 @@ Output
 
 错误处理：实时高亮 parser 返回的非法位置（行号 + col），并补充常见非法 JSON token；错误时显示「AI Fix」入口（前提 AI 已启用）。
 
+编辑器搜索：`⌘F` 打开 Jsonita docked 搜索条，位置在 TabBar 下方、编辑正文上方，不覆盖 JSON 文本；搜索命中在正文和行号 gutter 中使用低饱和提示，保持与整体低对比设计一致。
+
 非法 JSON、AI Fix、单窗执行与 Diff 决策态的完整交互权威见 [design/02 § 4](../design/02_interaction.md#4-ai-fix-流程-仅错误时) 与 [design/02 § 6.2](../design/02_interaction.md#6.2-single-pane-run-hint)。
 
 编辑器 input 交互权威见 [design/02 § 1.0.2](../design/02_interaction.md#1.0.2-editor-input-interactions)，编辑器技术契约见 [design/08](../design/08_editor.md)。

@@ -54,6 +54,8 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `StatusBar` | shell/StatusBar.tsx | 底部状态栏（valid / error · lines · bytes · History） |
 | `Toast` | reserved | 未来封装 sonner；当前错误通过状态栏 / AI 面板 / 设置弹窗呈现 |
 | `Editor` | editor/Editor.tsx | CodeMirror 6 包装（见 [07](08_editor.md) ） |
+| `EditorSearchPanel` | editor/searchPanel.ts | `⌘F` docked 搜索条；替换 CodeMirror 默认面板但复用搜索状态 |
+| `EditorSearchGutter` | editor/searchGutter.ts | 行号 gutter 内的低饱和搜索命中提示 |
 | `TreeView` | tree/TreeView.tsx | JSON 树 ── 自渲染递归节点，支持 path / hover 复制 |
 | `DiffView` | panes/DiffView.tsx | AI Fix 接受前的 diff 展示（左原右改） |
 | `HistoryModal` | history/HistoryModal.tsx | 历史列表 Modal：搜索、筛选、载入、Pin / Star / Clear |
@@ -63,6 +65,20 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `ApiKeyInput` | settings/ApiKeyInput.tsx | masked 输入 + 测试连接 |
 
 ## 4 关键自定义组件详设
+
+### 4.0 EditorSearchPanel + EditorSearchGutter
+
+`EditorSearchPanel` 是 CodeMirror `search({ createPanel })` 的 DOM panel，不是 React 组件。它 dock 在 TabBar 下方、编辑正文上方，打开时只压缩编辑区高度，不覆盖 JSON 文本。
+
+| 子区 | 规则 |
+| --- | --- |
+| Find row | 搜索输入、match count、上/下一个、`Aa`、`.*`、`word`、`All`、关闭。 |
+| Replace row | 替换输入、Replace、All；保持紧凑，不引入额外弹窗。 |
+| Buttons | 使用低对比 chip/icon button，active 用 `--primary-soft` + `--primary-edge`。 |
+| Count | `x / n`，超过计数上限显示 `1000+`。 |
+| i18n | 文案从 `panes.search.*` 读取；不得 hardcode 英文。 |
+
+`EditorSearchGutter` 使用 CodeMirror `lineNumberMarkers`，在行号 gutter element 上加 class，再由 CSS `::before` 画弱竖线。它不能新增明显的独立列，不能替换行号数字，不能使用高饱和色。
 
 ### 4.1 TabBar
 
