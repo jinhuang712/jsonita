@@ -78,7 +78,7 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 2. 任何前台 App 下按 `⌘⇧J` → 浮窗居中弹出（不抢焦点）
 3. 粘 JSON → 右侧 300 ms 内出现格式化输出 · StatusBar `● Valid JSON`
 4. 切 Tab：Format / Minify / Tree / →Str / →JSON
-5. 粘<b>非法</b> JSON → AI Fix tab 出现 → 点击触发 DeepSeek 修复 → DiffView → Accept
+5. 粘**非法** JSON → AI Fix tab 出现 → 点击触发 DeepSeek 修复 → DiffView → Accept
 6. `⌘K` 清空 / `⌘⇧L` 恢复 / `Esc` / `⌘W` 关闭
 7. `⚙` 打开 Settings → 改语言、主题、快捷键、AI key
 

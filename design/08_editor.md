@@ -4,12 +4,11 @@ SPEC · 章节 08
 
 CodeMirror 6 集成 · JSON 树渲染 · 错误标注 · 状态栏联动 · light/dark theme extension。
 
-## 1编辑器 ── CodeMirror 6
+## 1 编辑器 ── CodeMirror 6
 
-### 1.1包依赖（package.json）
+### 1.1 包依赖（package.json）
 
 ```
-
 {
   "dependencies": {
     "@codemirror/state":       "^6.5.0",
@@ -23,45 +22,29 @@ CodeMirror 6 集成 · JSON 树渲染 · 错误标注 · 状态栏联动 · ligh
     "@replit/codemirror-indentation-markers": "^6.5.3"
   }
 }
-
 ```
 
-### 1.2扩展清单（必装）
+### 1.2 扩展清单（必装）
 
 | 扩展 | 来源 | 用途 |
-
 | --- | --- | --- |
-
 | lineNumbers | @codemirror/view | 行号 gutter |
-
 | highlightActiveLine / highlightActiveLineGutter | @codemirror/view | 当前行高亮 |
-
 | foldGutter / codeFolding | @codemirror/language | 大对象 / 大数组折叠 |
-
 | bracketMatching | @codemirror/language | 光标在 { [ 时高亮配对的 } ] |
-
 | closeBrackets | @codemirror/autocomplete | 自动补 { → } / [ → ] |
-
 | history | @codemirror/commands | `⌘Z` /`⌘⇧Z` undo / redo |
-
 | search | @codemirror/search | `⌘F` 搜索面板 |
-
 | drawSelection | @codemirror/view | 多光标选区绘制 |
-
 | EditorState.allowMultipleSelections | @codemirror/state | `⌘D` 多光标 |
-
 | EditorView.lineWrapping | @codemirror/view | 软换行（不出水平滚动） |
-
 | json (lang-json) | @codemirror/lang-json | JSON 语法高亮 |
-
 | linter（自定义） | @codemirror/lint + serde 错误 | 错误位置标注 |
-
 | indentationMarkers | @replit/codemirror-indentation-markers | 缩进引导竖线 |
 
-### 1.3扩展组装
+### 1.3 扩展组装
 
 ```
-
 // src/editor/extensions.ts
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter,
@@ -123,13 +106,11 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     ]),
   ];
 }
-
 ```
 
-### 1.4React 封装
+### 1.4 React 封装
 
 ```
-
 // src/editor/Editor.tsx
 import { useEffect, useRef } from 'react';
 import { forceLinting, setDiagnostics } from '@codemirror/lint';
@@ -199,15 +180,13 @@ export function Editor({ value, onChange, onErrorChange, theme, ...cfg }: Editor
 
   return <div ref={ref} className="jsonita-editor" />;
 }
-
 ```
 
 生命周期契约： `cfg.error` 是 lint 数据，不是 EditorView 生命周期配置。输入半截 JSON 时 debounce parse 会频繁改变错误位置；这只能触发 `forceLinting(view)` 刷新红线，不能销毁 / 重建 CodeMirror，否则会打断连续输入、焦点、光标和输入法上下文。 `value` /`cfg.error` 变化后需要立即并在下一帧再次 force lint；当 `cfg.error=null` 时先 `setDiagnostics([])`，清掉 CodeMirror 在 doc change 映射阶段保留的旧 diagnostics / lint gutter marker。
 
-### 1.5Light theme extension
+### 1.5 Light theme extension
 
 ```
-
 // src/editor/theme.ts
 import { EditorView } from '@codemirror/view';
 
@@ -275,26 +254,22 @@ export const jsonitaLightTheme = EditorView.theme({
     backgroundSize: '6px 2px',
   },
 }, { dark: false });
-
 ```
 
-### 1.6Dark theme extension
+### 1.6 Dark theme extension
 
 ```
-
 // 同结构，颜色用 dark variant（[data-theme="dark"] 已切换 token 值）
 export const jsonitaDarkTheme = EditorView.theme({ /* same selectors */ }, { dark: true });
-
 ```
 
 实现简化： 所有选择器只取 CSS variables，不写死 hex。 `data-theme` 切换时整个 token table 跟着变 ── 编辑器主题不需要"内部双套"。但 CM 的 `dark: true/false` flag 影响默认 highlightStyle 选择，必须切，所以我们仍需要两个 instance。
 
 对齐契约： `.cm-line`、 `.cm-gutters`、 `.cm-gutterElement` 必须共用 `--fs-editor` 与 `--lh-code`。当前行正文背景与 `.cm-activeLineGutter` 在 y / height 上必须一致；任何字号缩放都不能只作用于正文而漏掉 line number gutter。
 
-### 1.7自定义 JSON 高亮风格
+### 1.7 自定义 JSON 高亮风格
 
 ```
-
 // src/editor/highlight.ts
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
@@ -309,12 +284,11 @@ const style = HighlightStyle.define([
 ]);
 
 export const jsonitaJsonHighlight = syntaxHighlighting(style);
-
 ```
 
-## 2错误标注
+## 2 错误标注
 
-### 2.1三路 lint 源
+### 2.1 三路 lint 源
 
 CodeMirror 自带 `jsonParseLinter()` （来自 @codemirror/lang-json）── 300ms debounce 实时；空白 / 仅空白文档返回空 diagnostic，不显示错误红点
 
@@ -322,12 +296,11 @@ CodeMirror 自带 `jsonParseLinter()` （来自 @codemirror/lang-json）── 3
 
 Rust 后端 通过 IPC 返回的 `JsonitaError::Parse` （更精确，含 line/col）
 
-### 2.2合并策略
+### 2.2 合并策略
 
 前端 linter 实时给 squiggle；辅助检查补充多个常见非法 token；用户提交（debounce 完成）后 Rust 返回更精确的位置并作为额外 diagnostic 合并，不覆盖辅助标注。
 
 ```
-
 // src/editor/lint.ts
 import { Diagnostic, linter } from '@codemirror/lint';
 import { EditorView } from '@codemirror/view';
@@ -361,15 +334,13 @@ export function externalLinter(getError: () => EditorError | null) {
   return linter((view) => externalErrorAsDiagnostic(view.state.doc.toString(), getError()),
                 { delay: 0 });
 }
-
 ```
 
-## 3状态栏联动
+## 3 状态栏联动
 
-### 3.1onChange → store → status
+### 3.1 onChange → store → status
 
 ```
-
 // src/store/editor.ts
 import { create } from 'zustand';
 import { jsonFormat } from '@/ipc/commands';
@@ -415,17 +386,15 @@ export const editorStore = create<EditorStore>((set, get) => {
     },
   };
 });
-
 ```
 
-## 4JSON 树
+## 4 JSON 树
 
-### 4.1渲染实现
+### 4.1 渲染实现
 
 `TreeView` 自渲染递归节点，不依赖第三方 Tree 默认样式。每个 node 行直接持有 `path` 与 `raw value`，用于 key path 复制、hover value/subtree 复制和键盘 `⌘C`。
 
 ```
-
 // src/tree/TreeView.tsx
 interface TreeViewProps {
   data: unknown;
@@ -443,13 +412,11 @@ function TreeNode({ value, path, label }) {
     </div>
   );
 }
-
 ```
 
-### 4.2样式（global.css）
+### 4.2 样式（global.css）
 
 ```
-
 .jsonita-tree-container {
   font-family: var(--font-mono);
   font-size:   var(--fs-tree);
@@ -471,15 +438,13 @@ function TreeNode({ value, path, label }) {
 .jsonita-tree-toggle   { color: var(--text-faint);  cursor: pointer; }
 .jsonita-tree-toggle:hover { color: var(--primary); }
 .jsonita-tree-children { padding-left: 16px;        border-left: 1px solid var(--editor-indent-guide); }
-
 ```
 
-### 4.3JSON Path 复制
+### 4.3 JSON Path 复制
 
 点击 key 时计算从 root 到此 key 的路径，复制到剪贴板。
 
 ```
-
 // src/tree/jsonpath.ts
 //
 // TreeNode 渲染时天然知道 path；点击 key 直接复制。
@@ -490,35 +455,28 @@ function TreeNode({ value, path, label }) {
 >
   {label}
 </button>
-
 ```
 
-### 4.4搜索 / 高亮 key & value
+### 4.4 搜索 / 高亮 key & value
 
 v1 用 [04 § 5](04_components.md) 的 SplitPane 顶部加一个搜索框，client-side filter ── 把 JSON 序列化后 substring match，匹配命中的 path 自动展开（更新 `expandedKeys` ）。
 
-### 4.5Hover 复制节点（plan F2）
+### 4.5 Hover 复制节点（plan F2）
 
-视觉：见 [01 § 1.3 Tree Tab](../design/01_mockups.md#1.3tree-tab含-hover-复制-见-12) 的 hover 态。
+视觉：见 [01 § 1.3 Tree Tab](../design/01_mockups.md#1.3-tree-tab含-hover-复制-见-12) 的 hover 态。
 
 触发与目标：
 
 | node 类型 | 触发 | 复制内容 |
-
 | --- | --- | --- |
-
 | leaf · string | hover 整行 → 行尾出现 `📋` | raw value 含引号： `"alice"` |
-
 | leaf · number / bool / null | 同上 | 字面量： `30` /`true` /`null` |
-
 | object node（含 root） | hover 标签行 → 标签行尾出现 `📋` | 递归 pretty-print 子树 JSON（2 空格） |
-
 | array node | 同上 | 同上 |
 
 实现 ── 每行内置轻量 copy action，但只允许一个 active action：自渲染 `TreeNode` 已持有节点 path 与 raw value，不需要 DOM 注入。React 维护 `activeCopyKey` /`copiedKey`，确保父子节点 hover / focus 不会同时露出两个 copy action；鼠标离开树或切到其他节点时立即清理 copied 反馈。copy action 无边框 / 无背景，hover 时不改变整行 cursor。
 
 ```
-
 // src/tree/TreeView.tsx
 
 interface NodeMeta { path: string; raw: unknown; isLeaf: boolean }
@@ -540,13 +498,11 @@ function computeCopyText(meta: NodeMeta): string {
 >
   copy
 </button>
-
 ```
 
 样式（global.css 新增）：
 
 ```
-
 .jsonita-tree-node {
   position: relative;
 }
@@ -573,7 +529,6 @@ function computeCopyText(meta: NodeMeta): string {
   color: var(--primary);
 }
 .tree-copy-icon:active { color: var(--text); }
-
 ```
 
 键盘可达：聚焦在某节点行（含 `tabindex="0"` ）按 `⌘C` 等同于点 `📋`；Tree 容器内按 `⌘A` 选择 root / 整棵树，随后 `⌘C` 复制 root subtree。键盘焦点环用 `--shadow-focus`。应用 chrome 设置 `user-select: none` 并由全局 hotkey 拦截非编辑区 `⌘A`，避免 TabBar / StatusBar 被 DOM 选中。
@@ -586,67 +541,52 @@ hover 行尾 `📋` 点击 → 按本节规则复制 value / subtree
 
 两者独立 ── key 可点 + 行 hover 可见 icon，不冲突
 
-## 5编辑器 ↔ 树 同步
+## 5 编辑器 ↔ 树 同步
 
 Format / Tree / →Str 各 Tab 共用 input 编辑器；切换 Tab 时只是 切右侧输出面板。
 
 | Tab | 左侧 | 右侧 |
-
 | --- | --- | --- |
-
 | Format | Editor (input) | Editor (output, readOnly) |
-
 | Minify | Editor (input) | Editor (output, readOnly, lineWrapping=false) |
-
 | Tree | Editor (input) | TreeView |
-
 | →Str | Editor (input) | Editor (output, readOnly) |
-
 | →JSON | Editor (input) | Editor (output, readOnly) |
-
 | AI Fix | DiffView 左原 | DiffView 右改 |
 
-### 5.1单窗模式（F9）
+### 5.1 单窗模式（F9）
 
 单窗模式（ [plan/01 F9](../plan/01_features.md) ）下取消右侧面板，主区域只承载一个工作视图。后台 debounce 只以 Format 逻辑校验 JSON 合法性并更新状态栏；Format / Minify / →Str / →JSON 的实际转换由 `⌘Enter` 显式触发，成功后把结果 in-place 写回 input。Tree 是视图，合法 JSON 时直接整栏显示 `TreeView`，非法 / 空白时显示 Tree 状态面板，不显示 `⌘Enter` 提示。AI Fix 也是独立工作视图，进入 tab 后直接渲染 `AiFixPane` 并自动请求。
 
 ```
-
 // src/shell/FloatingWindow.tsx
 const { singlePaneMode } = useSettings();
 
 return singlePaneMode
   ? '1fr'
   : '1fr 1fr';
-
 ```
 
 关键：当前没有独立 `SinglePaneLayout.tsx`；实现由 `FloatingWindow` 隐藏右栏，并在 `singlePaneMode && activePane === 'tree'` 时把左栏内容替换为 `TreePanel`，在 `activePane === 'ai-fix'` 时替换为 `AiFixPane`。 `TreePanel` 直接解析当前输入，合法时渲染 `TreeView`，非法 / 空白时渲染状态面板。 `SinglePaneHint` 只在非 Tree / 非 AI Fix 功能显示右下角提示； `useGlobalHotkeys` 捕获非 Tree / 非 AI Fix 的 `⌘Enter` 并调用 `runPaneApply`。
 
 ```
-
 // src/hooks/useGlobalHotkeys.ts (single-pane)
 if (singlePaneMode && activePane !== 'tree' && event.metaKey && event.key === 'Enter') {
   const result = await runPaneApply(content, activePane, editorError);
   setContent(result);
   session_save_last({ content: result, opType: paneToOpType(activePane) });
 }
-
 ```
 
-## 6编辑器配置项 → 设置面板映射
+## 6 编辑器配置项 → 设置面板映射
 
 | 设置项 | 编辑器影响 |
-
 | --- | --- |
-
 | `settings.theme` | 切换 jsonitaLightTheme / jsonitaDarkTheme |
-
 | F1 缩进选项 | 仅影响 Rust 端 format 输出；编辑器自身不区分 |
-
 | 软换行（F1 编辑器交互） | EditorView.lineWrapping 开关 |
 
-## 7性能
+## 7 性能
 
 大文件优化 ：CodeMirror 6 已是 viewport-based 渲染，1MB JSON 不需特殊处理
 

@@ -95,7 +95,7 @@
 
 ### feat · 玻璃重设计阶段 3：原生 vibrancy + 玻璃视觉权威
 
-- macOS 浮窗在 NSPanel-like promote 后接入 Tauri window effects：<code>Effect::Popover</code> + <code>EffectState::Active</code> + 16px radius，走原生 <code>NSVisualEffectView</code> vibrancy；<code>tauri.conf.json</code> 透明窗口继续作为基础。
+- macOS 浮窗在 NSPanel-like promote 后接入 Tauri window effects：`Effect::Popover` + `EffectState::Active` + 16px radius，走原生 `NSVisualEffectView` vibrancy；`tauri.conf.json` 透明窗口继续作为基础。
 - `src/styles/tokens.css` 切到 handoff 玻璃调色：系统蓝 primary、valid 绿、AI Fix 琥珀、玻璃叠色 / blur / border / highlight、light + dark 双主题。
 - `assets/style.css` 同步 app token，修复文档样式与真实 app 的 `--primary` / `--accent` / `--info` 不一致；`spec/01` mockup 改为玻璃视觉权威。
 - History op-chip 拆为四色 token：format/minify 蓝、tree 青、→str/→json 绿、ai-fix 琥珀；`HistoryModal` 改用独立 `--op-*` token。
@@ -162,7 +162,7 @@
 
 ### fix · 输入中的 invalid JSON 不再打断编辑器
 
-用户反馈：每输入一个字符就检测到 invalid JSON，随后编辑器像被拦截一样无法连续输入。根因不是键盘被拦截，而是 <code>Editor.tsx</code> 把 <code>cfg.error</code> 放进 CodeMirror 初始化 effect 依赖；debounce parse 每次更新错误位置都会销毁并重建 EditorView，导致焦点 / 光标 / 输入法上下文被打断。
+用户反馈：每输入一个字符就检测到 invalid JSON，随后编辑器像被拦截一样无法连续输入。根因不是键盘被拦截，而是 `Editor.tsx` 把 `cfg.error` 放进 CodeMirror 初始化 effect 依赖；debounce parse 每次更新错误位置都会销毁并重建 EditorView，导致焦点 / 光标 / 输入法上下文被打断。
 
 - `src/editor/Editor.tsx` ── 新增 `errorRef` 保存最新 external parse error；初始化 effect 不再依赖 `cfg.error`；error 变化时只调用 `forceLinting(view)` 刷新 lint 标注。
 - `src/editor/extensions.ts` ── `externalLinter` 永久挂载，支持 `getExternalError` 动态读取 ref；不再因 error 是否存在切换 extension 集合。
@@ -253,7 +253,7 @@
 
 ### chore · 删 agent 控制面文件（experiment 不付费）
 
-`1d24bae` 那次"agent control plane refactor"加了一套 SOP + 任务卡 + machine-readable manifest，想把 agent 实施流程做成数据驱动。实际跑 M0-M3 时这套<b>几乎没被引用</b>── 节奏靠 CLAUDE.md + `progress/0N_*.html` + TaskCreate 推就够了，反而维护成本（每完成一个节点要同步 manifest.json 的 status / 写 task 卡）变成负担。删。
+`1d24bae` 那次"agent control plane refactor"加了一套 SOP + 任务卡 + machine-readable manifest，想把 agent 实施流程做成数据驱动。实际跑 M0-M3 时这套**几乎没被引用**── 节奏靠 CLAUDE.md + `progress/0N_*.html` + TaskCreate 推就够了，反而维护成本（每完成一个节点要同步 manifest.json 的 status / 写 task 卡）变成负担。删。
 
 - `AGENT_RUNBOOK.md` (180 行) ── coding agent SOP
 - `AGENTS.md` (205 行) ── Codex-style agent rules（与 CLAUDE.md 大段重复）
@@ -322,9 +322,9 @@ label 内裸用 `:` `/` `()` 导致 mermaid 11.4 解析失败（用户截图 "Sy
 ### Style 修复 · section-divider 提升为大段标题（用户反馈"divider 令人疑惑"）
 
 - `assets/style.css` `.section-divider` ── 删 `border-top` 灰线 + `::before` 蓝色短线装饰；padding 14px 18px → 0；margin 56/8 → 64/24（上下空白拉开）；letter-spacing 0.18 → 0.16em
-- `assets/style.css` `.section-divider b` ── 字号 16px → <b>26px</b>；letter-spacing 0.08 → 0.04em（大字不需要那么宽字距）
-- 新阶梯：H1 doc-title 34px > <b>divider 26px banner</b> > H2 21px 小节 > H3 17px 子节
-- 修复用户反馈：之前 divider b 16px <b>小于</b> H2 21px ── "一级分组比二级小节字号还小"，加上灰线 + 短蓝线装饰让用户读成"装饰横条"而非"分组标题"；本次去装饰 + 提字号让分组语义自显（CSS 顶部注释写下视觉规则避免下次再退回小字号）
+- `assets/style.css` `.section-divider b` ── 字号 16px → **26px**；letter-spacing 0.08 → 0.04em（大字不需要那么宽字距）
+- 新阶梯：H1 doc-title 34px > **divider 26px banner** > H2 21px 小节 > H3 17px 子节
+- 修复用户反馈：之前 divider b 16px **小于** H2 21px ── "一级分组比二级小节字号还小"，加上灰线 + 短蓝线装饰让用户读成"装饰横条"而非"分组标题"；本次去装饰 + 提字号让分组语义自显（CSS 顶部注释写下视觉规则避免下次再退回小字号）
 
 提交：`7cb9022 style(css): section-divider 提升为 26px 净文字大标题（去装饰线）`
 
@@ -348,11 +348,11 @@ Empty State 6 处 spec/01 § 9：组件就位；M3 polish 时挂入 HistoryModal
 
 #### nav 重构：顶部章节 strip + 左侧文档 TOC（H2/H3）+ scrollspy
 
-- `assets/nav.js` `renderTopbar` ── topbar 内拆<b>两行</b>：第 1 行 breadcrumb + "↩ 文档首页"按钮（原样）；第 2 行 <code>.chapter-strip</code> 横向列当前 section 全部章节（plan 5 / spec 16 / progress 5）；当前 .active 蓝软背景；初渲染后 <code>scrollIntoView({inline:'center'})</code> 把当前项滚到 strip 中央
-- `assets/nav.js` `renderSidebar` ── 原章节列表改为<b>当前文档 H2/H3 目录</b>；header subtitle 从 section.label 改为<b>当前章节标题</b>（如 "05 · v1.1+ Distribution"）；底部"导航"段（文档首页 / README / TODO / CHANGELIST）保留
-- 新 helper `ensureHeadingIds()` ── 给 <code>.doc-article h2/h3</code> 注入 id：已有保留（progress 文件 <code>entry-criteria</code> / <code>milestones</code> / <code>d-n1-brew</code> 等）；按 h2-num/h3-num 生成 <code>h2-1</code> / <code>h3-3-1</code>；fallback slugify（中文 unicode 范围保留）
-- 新 helper `buildDocTOC()` ── 扫所有带 id 的 H2/H3 输出 <code>ul.toc.toc-doc</code>；H3 加 .toc-h3 类做 38px 缩进 + 字号小 + 字色淡
-- 新 helper `setupScrollspy()` ── window scroll + rAF 节流；阈值 130px；找<b>最后一个 top ≤ 130 的 H2/H3</b>作 active；TOC 当前项 <code>.active</code> + 偏离 sidebar 可视范围时 <code>scrollIntoView({block:'nearest'})</code>
+- `assets/nav.js` `renderTopbar` ── topbar 内拆**两行**：第 1 行 breadcrumb + "↩ 文档首页"按钮（原样）；第 2 行 `.chapter-strip` 横向列当前 section 全部章节（plan 5 / spec 16 / progress 5）；当前 .active 蓝软背景；初渲染后 `scrollIntoView({inline:'center'})` 把当前项滚到 strip 中央
+- `assets/nav.js` `renderSidebar` ── 原章节列表改为**当前文档 H2/H3 目录**；header subtitle 从 section.label 改为**当前章节标题**（如 "05 · v1.1+ Distribution"）；底部"导航"段（文档首页 / README / TODO / CHANGELIST）保留
+- 新 helper `ensureHeadingIds()` ── 给 `.doc-article h2/h3` 注入 id：已有保留（progress 文件 `entry-criteria` / `milestones` / `d-n1-brew` 等）；按 h2-num/h3-num 生成 `h2-1` / `h3-3-1`；fallback slugify（中文 unicode 范围保留）
+- 新 helper `buildDocTOC()` ── 扫所有带 id 的 H2/H3 输出 `ul.toc.toc-doc`；H3 加 .toc-h3 类做 38px 缩进 + 字号小 + 字色淡
+- 新 helper `setupScrollspy()` ── window scroll + rAF 节流；阈值 130px；找**最后一个 top ≤ 130 的 H2/H3**作 active；TOC 当前项 `.active` + 偏离 sidebar 可视范围时 `scrollIntoView({block:'nearest'})`
 - `renderPagination()` 不动 ── 底部"上一节 / 下一节"按章节顺序保留，与顶部 strip "任意跳"两种体验并存
 
 CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）：
@@ -362,7 +362,7 @@ CSS（已随 m2-n4 commit a5f2615 顺带进 HEAD，本 entry 仅记录效果）�
 - `main.doc-main` padding-top 52→104；新 `scroll-padding-top: 120px` + `scroll-margin-top: 120px` 让锚点跳转不被 topbar 遮挡
 
 关键决策：
-- <b>0 个 HTML 文件改动</b> ── nav 由 nav.js 运行时注入；body 内容不动；用户已为 progress/01-05 加的 H2/H3 <code>id</code> 由 ensureHeadingIds 自动检测保留
+- **0 个 HTML 文件改动** ── nav 由 nav.js 运行时注入；body 内容不动；用户已为 progress/01-05 加的 H2/H3 `id` 由 ensureHeadingIds 自动检测保留
 - scrollspy 用 scroll + rAF 而非 IntersectionObserver ── 边界处理更稳（滚到底也保留 active）；性能 OK（典型 5-30 个 heading）
 - 顶部单层 strip + 三 section 切换走 breadcrumb（用户 AskUserQuestion Q1 Recommended）；左侧 H2+H3+scrollspy（Q2 Recommended）；spec 16 章节横向溢出走滚动条 + 渐变 mask（Q3 Recommended）
 
@@ -685,7 +685,7 @@ TS 端（8 个新文件）：
 - `pnpm install`（首次会同时装 zustand）
 - `cargo check --manifest-path src-tauri/Cargo.toml` 0 错
 - `pnpm tsc --noEmit` 0 错（含跨进程类型 mirror）
-- DevTools console 调任意 stub：<code>invoke('json_format', { text: '{}', opts: { indent: 'spaces2' } })</code> 应回 <code>'{}'</code>
+- DevTools console 调任意 stub：`invoke('json_format', { text: '{}', opts: { indent: 'spaces2' } })` 应回 `'{}'`
 
 进度状态：
 
@@ -722,7 +722,7 @@ TS 端（8 个新文件）：
   8. 全过 → `git tag 0.3.0-m0`（agent 不主动 tag）
   9. `git push` + `git push --tags`（agent 不主动 push）
 
-**为不阻塞 M1 实施 → agent 预切 active_phase=M1**（progress/manifest.json）。用户跑完 M0 验收前可<b>随时</b>回 M0 节点修 bug；M1 工作期间发现 M0 问题须 § 6.4 双向同步回 M0。
+**为不阻塞 M1 实施 → agent 预切 active_phase=M1**（progress/manifest.json）。用户跑完 M0 验收前可**随时**回 M0 节点修 bug；M1 工作期间发现 M0 问题须 § 6.4 双向同步回 M0。
 
 ---
 
@@ -828,7 +828,7 @@ TS 端（8 个新文件）：
 - `src-tauri/src/main.rs` ── 注册 plugin + invoke_handler 3 命令；setup hook 调 `shortcuts::register_defaults` ── 失败不阻塞启动（事件 + 前端 Modal 兜底）
 - `src-tauri/Cargo.toml` ── 加 `tauri-plugin-global-shortcut = "2"`
 - `src-tauri/capabilities/default.json` ── 加 `global-shortcut:default` 权限
-- `src/permissions/AccessibilityModal.tsx` ── macOS 权限引导 Modal：视觉对齐 spec/01 § 9（⌨️ icon + title + 文案 + Later/Open System Settings 二按钮）；文案<b>暂硬编码英文</b>，M0-N6 i18n 接入后改 `t()`
+- `src/permissions/AccessibilityModal.tsx` ── macOS 权限引导 Modal：视觉对齐 spec/01 § 9（⌨️ icon + title + 文案 + Later/Open System Settings 二按钮）；文案**暂硬编码英文**，M0-N6 i18n 接入后改 `t()`
 - `src/App.tsx` ── 三层防护：(a) mount 调 `shortcut_status` 决定要不要弹 Modal；(b) listen `permission:accessibility_missing` event 应对 Rust 启动期的 emit；(c) Modal 打开期间每 2 s 调 `shortcut_retry` 自动检测用户是否已授权 → 成功后自动 close（满足 M0-A10 "授权后无需重启"）
 
 关键决策：
@@ -841,7 +841,7 @@ TS 端（8 个新文件）：
 待用户本机验证：
 
 - M0-A9 ── 系统设置 → 隐私与安全 → 辅助功能 → 移除 Jsonita（如有），启动 Jsonita 看 Modal 自动弹
-- M0-A10 ── 点 "Open System Settings" 跳到正确页 → 添加 Jsonita 授权 → 回 Jsonita，<b>不重启</b>，2s 内 Modal 自动关 + ⌘⇧J 可呼出
+- M0-A10 ── 点 "Open System Settings" 跳到正确页 → 添加 Jsonita 授权 → 回 Jsonita，**不重启**，2s 内 Modal 自动关 + ⌘⇧J 可呼出
 - 测多个前台 App（Safari / 终端 / Finder）下 ⌘⇧J 都能呼出
 
 进度状态：
@@ -854,7 +854,7 @@ TS 端（8 个新文件）：
 新增 / 修改文件：
 
 - `src-tauri/src/window/mod.rs` ── window runtime 入口：`setup()`（启动调一次，promote + 装事件钩子）/ `toggle()`（由 tray:toggle 与 M0-N4 全局快捷键调）；合并 `CloseRequested` + `Focused(false)` 进单 callback（spec/06 § 4-5 状态机）
-- `src-tauri/src/window/nspanel.rs` ── cocoa `unsafe` 升级 NSWindow → NSPanel：styleMask（titled + fullSizeContentView + <b>nonactivatingPanel</b>）/ collectionBehavior（canJoinAllSpaces + stationary + <b>fullScreenAuxiliary</b>）/ level=3（floating）；全 `#[cfg(target_os = "macos")]` 包（spec/06 § 3.1 标志位表对齐）
+- `src-tauri/src/window/nspanel.rs` ── cocoa `unsafe` 升级 NSWindow → NSPanel：styleMask（titled + fullSizeContentView + **nonactivatingPanel**）/ collectionBehavior（canJoinAllSpaces + stationary + **fullScreenAuxiliary**）/ level=3（floating）；全 `#[cfg(target_os = "macos")]` 包（spec/06 § 3.1 标志位表对齐）
 - `src-tauri/src/window/locate.rs` ── 多屏定位：`cursor_position` → 找鼠标所在 monitor → 水平居中 + 垂直上 1/3；fallback primary monitor；统一用 `PhysicalPosition` 避免 scale_factor 错位（spec/06 § 4 算法）
 - `src-tauri/src/main.rs` ── setup hook 串：activation policy → menubar::build → window::setup → `app.listen("tray:toggle", ...)`；M0-N2 emit 的事件这里 close loop
 - `src-tauri/Cargo.toml` ── 加 `[target.'cfg(target_os = "macos")'.dependencies]`：`cocoa = "0.26"` + `objc = "0.2"`（仅 macOS）
@@ -868,7 +868,7 @@ TS 端（8 个新文件）：
 - **cocoa 直接调而非 plugin**：NSPanel 非 Tauri 默认行为，必须 unsafe cocoa 调用；spec/06 § 3.2 决策已锁
 - **合并 close + blur 钩子单 callback**：`on_window_event` 只接收最后一次注册的 callback，必须合并（Tauri 2.x API 行为）
 - **PhysicalPosition 统一**：cursor_position + monitor.position 都是 physical，避开 scale_factor 转换错位
-- **expect 而非 Result<Error>**：tauri::Error enum 变体不稳定，主窗口缺失是 setup bug 不是 runtime → panic 即可
+- **expect 而非 `Result<Error>`**：tauri::Error enum 变体不稳定，主窗口缺失是 setup bug 不是 runtime → panic 即可
 - **`backdrop-filter: blur(20px)`**：macOS Vibrancy 风格的快速实现（M3-N1 主题打磨时换正式 token）
 
 待用户本机验证（M0-A4/A6/A7/A8 4 个用例）：
@@ -911,10 +911,10 @@ TS 端（8 个新文件）：
 
 新增文件：
 
-- `src-tauri/Cargo.toml` ── Tauri 2.x · `tauri` / `tauri-build` v2 · `serde` / `serde_json` v1（scaffold 默认依赖，<b>未引</b> M1+ 业务依赖如 rusqlite / reqwest / CodeMirror）；`profile.release` 锁定 `lto=true` + `codegen-units=1` + `opt-level="s"` + `strip=true`（对齐 plan/04 NFR § 6 dmg &lt; 15 MB 红线）
+- `src-tauri/Cargo.toml` ── Tauri 2.x · `tauri` / `tauri-build` v2 · `serde` / `serde_json` v1（scaffold 默认依赖，**未引** M1+ 业务依赖如 rusqlite / reqwest / CodeMirror）；`profile.release` 锁定 `lto=true` + `codegen-units=1` + `opt-level="s"` + `strip=true`（对齐 plan/04 NFR § 6 dmg &lt; 15 MB 红线）
 - `src-tauri/build.rs` ── 调 `tauri_build::build()`，Tauri 2.x 必需
 - `src-tauri/src/main.rs` ── 最小 builder：`tauri::Builder::default().run(generate_context!())`；不含菜单栏 / 窗口 / 快捷键 / 日志等（属 M0-N2…N5）
-- `src-tauri/tauri.conf.json` ── 关键字段锁死：`identifier=com.jsonita.app`（<b>发版后不可改</b>，macOS bundle id 长期合约）/ `productName=Jsonita` / `version=0.3.0-m0` / `bundle.targets=["dmg","app"]` / `minimumSystemVersion=11.0`；`bundle.icon=[]`（M0-N7 填）
+- `src-tauri/tauri.conf.json` ── 关键字段锁死：`identifier=com.jsonita.app`（**发版后不可改**，macOS bundle id 长期合约）/ `productName=Jsonita` / `version=0.3.0-m0` / `bundle.targets=["dmg","app"]` / `minimumSystemVersion=11.0`；`bundle.icon=[]`（M0-N7 填）
 - `src-tauri/capabilities/default.json` ── Tauri 2.x 必需的最小 capability：仅 `core:default`（M2-N5+ 扩展 shortcut / clipboard 等，spec/12 § 2 完整版）
 - `package.json` ── React 18 + TypeScript 5 + Vite 5 + `@tauri-apps/api` / `@tauri-apps/cli` v2；`engines: node ≥ 20 / pnpm ≥ 9`；`packageManager: pnpm@9.12.0`
 - `tsconfig.json` ── strict + `noUnusedLocals` + `noUnusedParameters` + path alias `@/*` → `./src/*` + `types: ['vite/client']`
@@ -1031,15 +1031,15 @@ TS 端（8 个新文件）：
 - assets/style.css 新增 `.section-divider` 类做"一 · 设计 / 二 · 机制 / 三 · 契约 / 四 · 数字"四段视觉分隔
 
 #### Design-first v2 — 补 graphs + 拆 code（用户二次反馈：缺图 + 代码太多）
-- 强化 memory `spec-design-first-code-last`：加入两条新硬规则 ── (a) 讲系统 / 模块 / 状态 / 流程的章节<b>必须 ≥ 1 张 mermaid 图</b>（目录树代码块 / flow-steps 卡片不能替代）；(b) 代码块严格 ≤ 20 行，必须是不可替代的核心算法或接口签名
+- 强化 memory `spec-design-first-code-last`：加入两条新硬规则 ── (a) 讲系统 / 模块 / 状态 / 流程的章节**必须 ≥ 1 张 mermaid 图**（目录树代码块 / flow-steps 卡片不能替代）；(b) 代码块严格 ≤ 20 行，必须是不可替代的核心算法或接口签名
 - **00 架构**（414 → 476 行，+15%）**新增 8 张 mermaid 图** ── 双进程拓扑图 / 进程生命周期状态图 / 启动时序图 / 呼出时序图 / format 数据流时序图 / 错误传播流程图 / Rust 模块依赖图 / TypeScript 模块结构图；删完整 src-tauri/src 目录树 + 完整 src/ 目录树 + JsonitaError Rust enum + TS type 镜像（13 § 1 已唯一权威）+ 完整项目根目录树
 - **03 design tokens**（624 → 559 行，-10%）将原 § 2.2 / 2.3 light + dark `:root { ... }` 60+ 行 CSS 块拆为 token 取值表（4 列：token / light / dark / 设计意图）；字号 / 字重 / 行高 / 圆角 / 边框 / 阴影 / 时长 / 缓动 / Z-index 均改表；新增主题切换拓扑图（4 数据源 + 3 处订阅 + 1 FOUC 避免）；Tailwind 完整 config 70 行压为映射规则表 + ~18 行核心 extend；保留 4 个 ≤ 20 行 `<pre>`（resolve+apply / FOUC inline / Rust theme watch / Tailwind 骨架）
 - **06 窗口**（534 → 428 行，-20%）cocoa NSPanel 完整 unsafe 实现压为标志位表（styleMask × 3 / collectionBehavior × 3 / 其他 × 2 + 调用骨架 ≤ 15 行）；tauri.conf.json 完整 30 行压为关键字段表（含每个字段的"原因"列）；locate_window 完整 40 行 → 算法步骤表 + 核心循环 ≤ 10 行；**新增 4 张流程/状态图** ── 多屏定位决策图 / 关闭事件路由图（6 来源 → hide vs close 决策）/ 智能宽度 4 层图 / 窗口生命周期状态图；保留 4 个 ≤ 20 行 `<pre>`（NSPanel 调用骨架 / locate 核心循环 / close interceptor / blur hide）
 
 #### Spec 完整性补 — 新增 2 章（NFR 锁定但散落）
 - **新章 14 国际化 & 无障碍**（357 行 / 3 张 mermaid / 4 个 ≤ 20 行 `<pre>`）── 为 NFR § 3 "M3 中文 UI" 做架构准备 + a11y 清单。设计部分：lib 选型 react-i18next（vs lingui / react-intl / 自写 4 行对比表）/ 资源按章节模块 namespace 拆（shell / panes / settings / history / errors / about / common 7 组）/ locale 检测 3 层 fallback / Rust 错误不翻译策略 / mono 字体 CJK 字符回退；机制部分：3 张 mermaid（locale 检测决策 / 加载与切换流程 / 字体回退决策树）；契约部分：资源目录组织 + JSON 示例 + initI18n / useTranslation API + settings.locale 字段补充；a11y 部分：10 项强制要求 + 3 条 screen reader 关键流
-- **新章 15 日志 & 可观测性**（367 行 / 2 张 mermaid / 3 个 ≤ 20 行 `<pre>`）── 为 NFR § 6 "本地滚动日志 + 不上报 + 不记 JSON 内容" 做完整 spec。设计部分：5 条硬约束（不上报 / 不记敏感 / 双进程合流 / 用户可审计 / 资源可控）/ Rust 日志框架选型 tracing+tracing-appender（vs log+env_logger / slog 对比表）/ 双进程合流策略（Rust 唯一写者，WebView 经 log_write IPC 转发）/ 4 级策略（DEBUG 默认关）/ 隐私脱敏字段黑白名单；机制部分：2 张 mermaid（日志写入路径流程图 / 隐私脱敏决策树）+ 关键事件 catalog 19 个 event（含每个 event 的级别 / 触发 / 字段，明确"哪些可记 / 哪些禁记"）；契约部分：JSON Lines 格式 + 必填字段表 + 文件路径 / 滚动策略 / 保留 7 天 / 权限 0600 + 黑白名单表 + RedactLayer 核心 ~20 行 + WebView 端 logger.ts 薄层 ~20 行 + 新 IPC <code>log_write</code> 命令；测试部分：12 条 checklist 含 "API key 不入日志 / JSON 内容不入日志 / 用户名不入日志" 三项审计专项
-- 同步：<code>assets/nav.js</code> 加 14 / 15 章节项；<code>index.html</code> Spec 列加 14 / 15 链接（spec 总数 14 → 16 章）
+- **新章 15 日志 & 可观测性**（367 行 / 2 张 mermaid / 3 个 ≤ 20 行 `<pre>`）── 为 NFR § 6 "本地滚动日志 + 不上报 + 不记 JSON 内容" 做完整 spec。设计部分：5 条硬约束（不上报 / 不记敏感 / 双进程合流 / 用户可审计 / 资源可控）/ Rust 日志框架选型 tracing+tracing-appender（vs log+env_logger / slog 对比表）/ 双进程合流策略（Rust 唯一写者，WebView 经 log_write IPC 转发）/ 4 级策略（DEBUG 默认关）/ 隐私脱敏字段黑白名单；机制部分：2 张 mermaid（日志写入路径流程图 / 隐私脱敏决策树）+ 关键事件 catalog 19 个 event（含每个 event 的级别 / 触发 / 字段，明确"哪些可记 / 哪些禁记"）；契约部分：JSON Lines 格式 + 必填字段表 + 文件路径 / 滚动策略 / 保留 7 天 / 权限 0600 + 黑白名单表 + RedactLayer 核心 ~20 行 + WebView 端 logger.ts 薄层 ~20 行 + 新 IPC `log_write` 命令；测试部分：12 条 checklist 含 "API key 不入日志 / JSON 内容不入日志 / 用户名不入日志" 三项审计专项
+- 同步：`assets/nav.js` 加 14 / 15 章节项；`index.html` Spec 列加 14 / 15 链接（spec 总数 14 → 16 章）
 
 #### 工作流规则
 - CLAUDE.md 升级：§ 1.3 "完成工作必须三轨同步：TODO + CHANGELIST + index.html"（之前只写 TODO，导致漏同步）；§ 5.3 把"必要时"改为强制 4 步；§ 3.1 同步 spec 16 章列表
@@ -1145,8 +1145,8 @@ TS 端（8 个新文件）：
 
 ### Added (more)
 - **F9 单窗模式**：可选 in-place 替换 input 编辑器（取消左右双栏），<kbd>⌘Z</kbd> 用 CodeMirror 6 history extension 回滚；F7.1 General 加 ☐ 开关；AI Fix 单窗下退化为 toast「已修复，⌘Z 撤销」
-- **F1 编辑器交互细节**：补全 CodeMirror 6 标配扩展说明 —— soft-wrap 软换行、括号匹配高亮、缩进引导垂直线、大数组/对象折叠 <code>[ … ]</code>、行号、当前行高亮、<kbd>⌘F</kbd> 搜索、<kbd>⌘D</kbd> 多光标、<kbd>⌘Z</kbd> undo
-- **JSON syntax highlighting**：nav.js 加 CSS-only highlighter（auto-detect <pre><code> starting with [/{/"），CSS .json-key/string/number/bool/null 与 .tree-* 同色（string 用绿色 #15803D）
+- **F1 编辑器交互细节**：补全 CodeMirror 6 标配扩展说明 —— soft-wrap 软换行、括号匹配高亮、缩进引导垂直线、大数组/对象折叠 `[ … ]`、行号、当前行高亮、<kbd>⌘F</kbd> 搜索、<kbd>⌘D</kbd> 多光标、<kbd>⌘Z</kbd> undo
+- **JSON syntax highlighting**：nav.js 加 CSS-only highlighter（auto-detect `<pre><code>` starting with [/{/"），CSS .json-key/string/number/bool/null 与 .tree-* 同色（string 用绿色 #15803D）
 - **Constraints hover tooltip**：00 C 章节 small 灰字改为 CSS-only hover tooltip（data-tip 属性 + ::after，"够轻够快" 类无 tooltip 直接简短）
 
 ### Removed (plan 聚焦产品边界)

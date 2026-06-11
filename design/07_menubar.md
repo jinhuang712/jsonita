@@ -4,30 +4,24 @@ SPEC · 章节 07
 
 tray icon · 全局快捷键注册 / 冲突检测 / 权限引导 · 平台差异。
 
-## 1菜单栏 tray
+## 1 菜单栏 tray
 
-### 1.1结构
+### 1.1 结构
 
-常驻菜单栏图标，单击左键 → toggle 浮窗；右键 → 弹下拉菜单。完整下拉菜单视觉：见 [12 § 4 菜单栏 tray](../design/01_mockups.md#4设置-modal)。
+常驻菜单栏图标，单击左键 → toggle 浮窗；右键 → 弹下拉菜单。完整下拉菜单视觉：见 [12 § 4 菜单栏 tray](../design/01_mockups.md#4-设置-modal)。
 
 菜单项序：
 
 | order | label | accelerator | action |
-
 | --- | --- | --- | --- |
-
 | 1 | Toggle Jsonita | — | emit tray:toggle |
-
 | 2 | Settings… | `⌘,` | show window + emit tray:open-settings |
-
 | — | (separator) | — | — |
-
 | 3 | Quit Jsonita | `⌘Q` | app.exit(0) |
 
-### 1.2实现
+### 1.2 实现
 
 ```
-
 // src-tauri/src/system/tray.rs
 use tauri::{
     AppHandle, Manager,
@@ -86,15 +80,14 @@ fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
         _ => {}
     }
 }
-
 ```
 
-### 1.3动态图标
+### 1.3 动态图标
 
 v1 不做。
 v2 可扩展：检测到剪贴板含 JSON 时 tray 图标加红点，提示 user "have something to format"。
 
-### 1.4"在菜单栏显示图标" 开关（reserved / future）
+### 1.4 "在菜单栏显示图标" 开关（reserved / future）
 
 当前 `settings.show_in_menubar` 字段存在，但运行时未消费；tray 始终创建。未来接入该开关时：
 
@@ -104,26 +97,21 @@ v2 可扩展：检测到剪贴板含 JSON 时 tray 图标加红点，提示 user
 
 Dock 图标也跟随：菜单栏关 + dock 关 → 应用就完全 headless（必须留 Quit 入口 → 不允许同时关）
 
-## 2全局快捷键
+## 2 全局快捷键
 
-### 2.1默认绑定
+### 2.1 默认绑定
 
 | action | 默认 accelerator | 是否可自定义 |
-
 | --- | --- | --- |
-
 | toggle_window | `CmdOrCtrl+Shift+J` | 是（全局） |
-
 | restore_last | `CmdOrCtrl+Shift+L` | 是（全局） |
-
 | split_toggle（单窗 / 双栏） | `CmdOrCtrl+\` | 是（窗口内；阶段 1 已实现） |
 
-其他 in-app 快捷键（ `Tab` /`⇧Tab` /`⌘K` /`⌘⇧L` /`Esc` /`⌘W` ）由 React 端处理，不走 global-shortcut（不抢系统）。 `split_toggle` （ `⌘\` 切换单窗 / 双栏，阶段 1 已实现）也属窗口内快捷键，但可在设置「快捷键 → 可自定义」改键，与 `toggle_window` /`restore_last` 并列；其状态栏控件与 `⌘Y` History 一样，平时只显文字、hover / 键盘聚焦才浮现键位（见 [01 § 2](../design/01_mockups.md#2状态栏-4-态对照) ）。
+其他 in-app 快捷键（ `Tab` /`⇧Tab` /`⌘K` /`⌘⇧L` /`Esc` /`⌘W` ）由 React 端处理，不走 global-shortcut（不抢系统）。 `split_toggle` （ `⌘\` 切换单窗 / 双栏，阶段 1 已实现）也属窗口内快捷键，但可在设置「快捷键 → 可自定义」改键，与 `toggle_window` /`restore_last` 并列；其状态栏控件与 `⌘Y` History 一样，平时只显文字、hover / 键盘聚焦才浮现键位（见 [01 § 2](../design/01_mockups.md#2-状态栏-4-态对照) ）。
 
-### 2.2注册
+### 2.2 注册
 
 ```
-
 // src-tauri/src/system/shortcuts.rs
 use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
@@ -182,15 +170,13 @@ fn parse_accelerator(s: &str) -> Result<Shortcut, JsonitaError> {
     let code = code.ok_or_else(|| JsonitaError::Io("missing key".into()))?;
     Ok(Shortcut::new(Some(mods), code))
 }
-
 ```
 
-### 2.3冲突检测
+### 2.3 冲突检测
 
 用户改快捷键时调 `shortcut_register` command：
 
 ```
-
 #[tauri::command]
 pub async fn shortcut_register(
     app: tauri::AppHandle,
@@ -218,19 +204,17 @@ pub async fn shortcut_register(
         }
     }
 }
-
 ```
 
 WARN
 
 macOS / Windows 的全局快捷键 API 不直接 暴露"被哪个 App 占用"。我们只能知道注册成功与否。 `with_app: None` 时 UI 显示 "Already used by system or another app"。
 
-### 2.4系统级保留快捷键拒绝清单
+### 2.4 系统级保留快捷键拒绝清单
 
 注册前在 Rust 端先 reject 这些"绝不可改"的组合，避免给用户挖坑：
 
 ```
-
 // 用户不能绑定的组合（系统级或会破坏 OS 体验）
 const RESERVED: &[&str] = &[
     "CmdOrCtrl+Q",          // Quit App
@@ -248,19 +232,17 @@ fn check_reserved(acc: &str) -> Result<(), JsonitaError> {
     }
     Ok(())
 }
-
 ```
 
-## 3macOS Accessibility 权限
+## 3 macOS Accessibility 权限
 
 tauri-plugin-global-shortcut 在 macOS 不需要 Accessibility 权限 ── 它走 `CGEventTap` 的 Annotated event tap （监听键盘组合，不需要事件注入权限）。 v1 默认不要求。
 
 但 macOS 13+ 在某些情况下仍会弹出 "Input Monitoring" 请求 ── 这种情况下：
 
-### 3.1检测 + 引导
+### 3.1 检测 + 引导
 
 ```
-
 // src-tauri/src/system/permissions.rs
 #[cfg(target_os = "macos")]
 pub fn check_input_monitoring() -> bool {
@@ -280,12 +262,11 @@ pub fn check_input_monitoring() -> bool {
 pub fn request_input_monitoring() {
     unsafe { let _ = crate::ffi::IOHIDRequestAccess(1); }
 }
-
 ```
 
-### 3.2用户引导 UI
+### 3.2 用户引导 UI
 
-首次启动失败 → 弹 Accessibility Modal。视觉与文案：见 [12 § 10 macOS 权限引导 Modal](../design/01_mockups.md#10empty-states)。当前实现打开 `Privacy_Accessibility` 设置页。
+首次启动失败 → 弹 Accessibility Modal。视觉与文案：见 [12 § 10 macOS 权限引导 Modal](../design/01_mockups.md#10-empty-states)。当前实现打开 `Privacy_Accessibility` 设置页。
 
 触发条件：
 
@@ -294,7 +275,6 @@ pub fn request_input_monitoring() {
 用户在设置面板录入新快捷键 → `shortcut_register()` 返回 `Conflict`
 
 ```
-
 // 打开系统设置 → Privacy → Accessibility
 fn open_accessibility_settings() {
     use std::process::Command;
@@ -302,49 +282,31 @@ fn open_accessibility_settings() {
         .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
         .spawn();
 }
-
 ```
 
-## 4In-app 快捷键
+## 4 In-app 快捷键
 
 仅在浮窗 focus 时响应， 不 走 global-shortcut：
 
 | action | combo | 实现 |
-
 | --- | --- | --- |
-
 | 切换功能 Tab | `Tab` /`⇧Tab` | window keydown capture；仅非编辑态拦截 |
-
 | 退出 editing | `Esc` （焦点在 CodeMirror / 表单输入内） | window keydown capture → activeElement.blur() |
-
 | 关闭浮窗 | `Esc` ×2（非编辑态） /`⌘W` | 连续两次 Esc 才调用 window_hide；单次 Esc 只进入待关闭窗口 |
-
 | 错误 JSON 直接执行 AI Fix | `⌘Enter` | 当 parse error 且 AI Fix 可用时优先拦截；单双栏一致，切到 `AiFixPane` 并自动请求；单窗右下角提示显示 Run AI Fix 而不是 Run Format |
-
 | 接受 AI Fix 结果 | `⌘Enter` | `awaiting-decision` 时优先拦截；替换输入、写 history、回到 Format |
-
 | 取消 AI Fix 结果 | `Esc` | `awaiting-decision` /`error` 时优先拦截；reset AI store、回到 Format，不隐藏窗口 |
-
 | 打开 / 关闭 History | `⌘Y` | window keydown capture；即使编辑器聚焦也响应；Settings 打开时不拦截 |
-
 | 打开 Settings | `⌘,` | window keydown capture；与 macOS menu accelerator 一致；History 打开时不拦截 |
-
 | 单窗模式应用当前功能 | `⌘Enter` | window keydown capture；仅 `singlePaneMode=true` 时拦截并写回 input |
-
 | 编辑器 / Tree 字体放大 | `⌘+` | window keydown capture；每次 +2px，更新 UI store 字号并触发动态窗口缩放 |
-
 | 编辑器 / Tree 字体缩小 | `⌘-` | window keydown capture；每次 -2px |
-
 | 重置编辑器 / Tree 字号 | `⌘0` | window keydown capture；回到 13px |
-
 | 清空输入（不污染上次会话） | `⌘K` | React useHotkeys + session_clear_last |
-
 | 恢复上次会话 | `⌘⇧L` | React useHotkeys + session_load_last |
-
 | CodeMirror 内置 | `⌘F` /`⌘D` /`⌘Z` /`⌘⇧Z` | CodeMirror 6 默认 keymap |
 
 ```
-
 // src/shell/FloatingWindow.tsx (节选)
 import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -355,19 +317,13 @@ window.addEventListener('keydown', handleEditorFontZoom, true);
 useHotkeys('meta+w', handleClose);
 useHotkeys('meta+k', handleClearInput);
 useHotkeys('meta+shift+l', handleRestoreLast);
-
 ```
 
-## 5Windows 平台差异
+## 5 Windows 平台差异
 
 | 差异 | 说明 |
-
 | --- | --- |
-
 | accelerator 字符串 | 用 `CmdOrCtrl` 占位符；Windows 解析为 Ctrl |
-
 | 系统托盘 | tauri tray 自动对应 Windows shell notification area |
-
 | 权限 | 无需 Input Monitoring；全局快捷键直接可用 |
-
 | 菜单栏图标尺寸 | Windows 用 16×16 ICO；template 概念 N/A，直接 light 主题黑 icon |

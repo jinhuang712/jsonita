@@ -13,21 +13,17 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {"name":"alice","age":30,"items":["a","b","c"]}
-
 ```
 
 Output · 2 spaces Copy
 
 ```
-
 {
   "name": "alice",
   "age": 30,
   "items": ["a", "b", "c"]
 }
-
 ```
 
 Valid JSON ·5 lines ·76 bytes ⌘Y History
@@ -37,21 +33,17 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {"name":"alice","age":30,"items":["a","b","c"]}
-
 ```
 
 Output · 2 spaces Copy
 
 ```
-
 {
   "name": "alice",
   "age": 30,
   "items": ["a", "b", "c"]
 }
-
 ```
 
 Valid JSON ·5 lines ·76 bytes ⌘Y History
@@ -63,20 +55,16 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 Output · single line Copy
 
 ```
-
 {"name":"alice","age":30}
-
 ```
 
 Valid JSON ·1 line ·26 bytes ⌘Y History
@@ -86,20 +74,16 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 Output · single line Copy
 
 ```
-
 {"name":"alice","age":30}
-
 ```
 
 Valid JSON ·1 line ·26 bytes ⌘Y History
@@ -111,14 +95,12 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "user": {
     "name": "alice",
     "active": true
   }
 }
-
 ```
 
 Tree · hover 行尾复制
@@ -138,14 +120,12 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "user": {
     "name": "alice",
     "active": true
   }
 }
-
 ```
 
 Tree · hover 行尾复制
@@ -167,20 +147,16 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 Output · escaped string Copy
 
 ```
-
 "{\"name\":\"alice\",\"age\":30}"
-
 ```
 
 Valid JSON ·1 line ⌘Y History
@@ -190,20 +166,16 @@ Format Minify Tree →Str →JSON Settings
 Input
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 Output · escaped string Copy
 
 ```
-
 "{\"name\":\"alice\",\"age\":30}"
-
 ```
 
 Valid JSON ·1 line ⌘Y History
@@ -215,20 +187,16 @@ Format Minify Tree →Str →JSON AI Fix Settings
 Input · 非法
 
 ```
-
 {
   name: 'alice',
   age: 30,
 }
-
 ```
 
 Output · 错误
 
 ```
-
 // 等待修复后输出
-
 ```
 
 Line 2, Col 3: key must be a string ⌘Y History
@@ -238,20 +206,16 @@ Format Minify Tree →Str →JSON AI Fix Settings
 Input · 非法
 
 ```
-
 {
   name: 'alice',
   age: 30,
 }
-
 ```
 
 Output · 错误
 
 ```
-
 // 等待修复后输出
-
 ```
 
 Line 2, Col 3: key must be a string ⌘Y History
@@ -263,12 +227,10 @@ Format Minify Tree →Str →JSON Settings
 In-place editor
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 ⌘↵ Run Format
@@ -280,12 +242,10 @@ Format Minify Tree →Str →JSON Settings
 In-place editor
 
 ```
-
 {
   "name": "alice",
   "age": 30
 }
-
 ```
 
 ⌘↵ Run Format
