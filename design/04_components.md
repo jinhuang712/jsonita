@@ -197,7 +197,7 @@ op-type chip ：每行左侧显示 op_type 的色彩 chip；format/minify 用 pr
 
 ### 4.6 SettingsView
 
-Settings 是主壳内页面状态，不是 overlay dialog。点击右上角齿轮、tray Settings 或 `⌘,` 后，主 Jsonita 卡片内部从 editor workspace 切换为 Settings workspace；外层圆角、阴影、玻璃背景和窗口尺寸保持同一张卡片。左侧 nav（W 150）是固定目录索引，右侧是单一连续滚动配置页，按 General / Shortcuts / AI / History / JSON Transform / About 从头到尾顺序渲染；点击目录滚动到对应 section，右侧滚动时目录高亮跟随。底部 footer（Done / Reset）固定，`Esc`、Done 和 Settings 页内 `⌘W` 都返回 editor workspace。
+Settings 是主壳内页面状态，不是 overlay dialog。点击右上角齿轮、tray Settings 或 `⌘,` 后，主 Jsonita 卡片内部从 editor workspace 切换为 Settings workspace；外层圆角、阴影、玻璃背景和窗口尺寸保持同一张卡片。左侧 nav（W 150）是固定目录索引，右侧是单一连续滚动配置页，按 General / Shortcuts / AI / History / JSON Transform / About 从头到尾顺序渲染；点击目录滚动到对应 section，右侧滚动时目录高亮跟随。目录点击触发的 smooth scroll 期间必须锁定被点击的目标项，不允许高亮依次闪到滚动途中经过的 section；滚动到目标附近后再恢复普通 scrollspy。底部 footer（Done / Reset）固定，`Esc`、Done 和 Settings 页内 `⌘W` 都返回 editor workspace。
 
 规则：所有改动 即时生效 （不需要 Done 按钮提交，每个 Switch / Select 变化立刻 `settings_set` ）。Done 仅关闭 Settings 页面。Reset all 直接恢复默认。
 

@@ -7,6 +7,11 @@ import { useUiStore } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
 import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
+import {
+  clampSettingsScrollTarget,
+  resolveSettingsActiveGroup,
+  shouldReleaseSettingsScrollLock,
+} from './settingsScrollSpy';
 
 /**
  * 设置页 — 左侧目录索引 + 右侧连续滚动配置文档。
@@ -30,6 +35,7 @@ export function SettingsView() {
   const setSettings = useSettingsStore((s) => s.setSettings);
   const [activeGroup, setActiveGroup] = useState<Group>('general');
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const programmaticScrollRef = useRef<{ group: Group; targetTop: number } | null>(null);
   const sectionRefs = useRef<Record<Group, HTMLElement | null>>({
     general: null,
     shortcuts: null,
@@ -76,8 +82,13 @@ export function SettingsView() {
     if (!scrollEl || !target) return;
     const scrollRect = scrollEl.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
+    const targetTop = clampSettingsScrollTarget(
+      scrollEl.scrollTop + targetRect.top - scrollRect.top - 8,
+      scrollEl.scrollHeight - scrollEl.clientHeight,
+    );
+    programmaticScrollRef.current = { group, targetTop };
     scrollEl.scrollTo({
-      top: Math.max(0, scrollEl.scrollTop + targetRect.top - scrollRect.top - 8),
+      top: targetTop,
       behavior: 'smooth',
     });
     setActiveGroup(group);
@@ -88,6 +99,17 @@ export function SettingsView() {
     if (!scrollEl) return;
 
     const updateActiveGroup = () => {
+      const lock = programmaticScrollRef.current;
+      if (lock) {
+        setActiveGroup((current) =>
+          current === lock.group ? current : lock.group,
+        );
+        if (shouldReleaseSettingsScrollLock(scrollEl.scrollTop, lock.targetTop)) {
+          programmaticScrollRef.current = null;
+        }
+        return;
+      }
+
       if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 8) {
         setActiveGroup((current) =>
           current === GROUPS[GROUPS.length - 1] ? current : GROUPS[GROUPS.length - 1],
@@ -103,7 +125,8 @@ export function SettingsView() {
           next = group;
         }
       }
-      setActiveGroup((current) => (current === next ? current : next));
+      const resolved = resolveSettingsActiveGroup(next, programmaticScrollRef.current?.group ?? null);
+      setActiveGroup((current) => (current === resolved ? current : resolved));
     };
 
     updateActiveGroup();
