@@ -1,20 +1,16 @@
-SPEC · 章节 03
-
 # 设计令牌
 
 颜色 / 字体 / 间距 / 圆角 / 阴影 / 动效 ── 先讲设计语言与命名规则，再列 light + dark 取值表。
 
-INFO
-
 本章是 视觉契约：所有 UI 颜色 / 字号 / 间距必须经 token，不允许 hardcode 颜色或魔法值。组件如何使用 token 见 [04 组件库](04_components.md)；图标资源调色见 [05](05_icons_theme.md)。
 
-一 · 设计
+## 一 · 设计
 
-## 1 设计语言锚点
+### 1 设计语言锚点
 
 Jsonita 的视觉语言锚定在四点上，所有 token 取值都为之服务：
 
-### 要表达 · Express
+#### 要表达 · Express
 
 极简克制 ── 不装饰，编辑器和数据是主角
 
@@ -24,7 +20,7 @@ macOS native 气质 ── SF Pro · 系统 blur · vibrancy 风
 
 瞬时清晰 ── 状态色不饱和但识别度高（红=错，绿=有效）
 
-### 避免 · Avoid
+#### 避免 · Avoid
 
 大色块 / 渐变背景 ── 浮窗保持极轻
 
@@ -34,7 +30,7 @@ macOS native 气质 ── SF Pro · 系统 blur · vibrancy 风
 
 动效 > 200ms ── 工具应即时响应
 
-## 2 命名规则
+### 2 命名规则
 
 token 在 CSS variables 中以 `--kebab-case` 暴露；在 Tailwind 中以同名映射。 新加 token 必须遵守：
 
@@ -50,7 +46,7 @@ JSON 高亮 以 `--json-*` 前缀
 
 禁止 冗长前缀 `--color-*` / `--font-size-*` ── 语义本身已分类
 
-## 3 token 域总览
+### 3 token 域总览
 
 | 域 | 前缀 | 下游章节 | 本章节段 |
 | --- | --- | --- | --- |
@@ -61,11 +57,11 @@ JSON 高亮 以 `--json-*` 前缀
 | 动效 | `--dur-* / --ease-*` | 06 窗口 · 04 组件 | § 9 |
 | Z-index | `--z-*` | 04 组件（Modal / Tooltip；Toast 为保留设计） | § 10 |
 
-二 · 取值
+## 二 · 取值
 
-## 4 颜色
+### 4 颜色
 
-### 4.1 分类
+#### 4.1 分类
 
 | 组 | token | 用途 |
 | --- | --- | --- |
@@ -81,7 +77,7 @@ JSON 高亮 以 `--json-*` 前缀
 | `--info / --info-bg` | 信息提示 / Tree 类青色弱强调 |  |
 | 操作类型 | `--op-format / --op-tree / --op-convert / --op-ai-fix` | History op-chip 四色区分 |
 
-### 4.2 品牌 + 中性取值（light / dark 双列）
+#### 4.2 品牌 + 中性取值（light / dark 双列）
 
 | token | light | dark | 设计意图 |
 | --- | --- | --- | --- |
@@ -105,7 +101,7 @@ JSON 高亮 以 `--json-*` 前缀
 | `--border` | `rgba(0,0,0,.07)` | `rgba(255,255,255,.1)` | 普通分隔线 |
 | `--border-strong` | `rgba(0,0,0,.13)` | `rgba(255,255,255,.16)` | 强调分隔（如表头） |
 
-### 4.3 状态色取值
+#### 4.3 状态色取值
 
 | token | light | dark | 说明 |
 | --- | --- | --- | --- |
@@ -116,7 +112,7 @@ JSON 高亮 以 `--json-*` 前缀
 
 关键设计：dark 模式下，状态色背景统一用 透明度叠加 （14%）而不是实色 ── 避免大片饱和色块在深色背景上视觉刺眼。
 
-### 4.4 JSON 语法高亮 + 编辑器专属
+#### 4.4 JSON 语法高亮 + 编辑器专属
 
 | token | light | dark | 用途 |
 | --- | --- | --- | --- |
@@ -135,7 +131,7 @@ JSON 高亮 以 `--json-*` 前缀
 | `--editor-bracket-match` | `rgba(10,108,224,.16)` | `rgba(127,179,255,.22)` | 括号匹配 |
 | `--editor-indent-guide` | `rgba(0,0,0,.07)` | `rgba(255,255,255,.1)` | 缩进引导线 |
 
-### 4.5 History op-chip 四色
+#### 4.5 History op-chip 四色
 
 | token | light | dark | 用途 |
 | --- | --- | --- | --- |
@@ -144,7 +140,7 @@ JSON 高亮 以 `--json-*` 前缀
 | `--op-convert / --op-convert-bg` | `#1F8A50` /`rgba(31,158,90,.12)` | `#5BE3A0` /`rgba(91,227,160,.2)` | →str / →json |
 | `--op-ai-fix / --op-ai-fix-bg` | `#A4621A` /`rgba(181,101,29,.13)` | `#FFC58A` /`rgba(255,182,107,.2)` | AI Fix |
 
-## 5 对比度核验（WCAG）
+### 5 对比度核验（WCAG）
 
 | 组合 | light 比 | dark 比 | WCAG |
 | --- | --- | --- | --- |
@@ -159,9 +155,9 @@ OK
 
 所有正文文本组合 ≥ AA（4.5 : 1）；body text 达 AAA（7 : 1）。无障碍达标。
 
-## 6 字体
+### 6 字体
 
-### 6.1 字体栈
+#### 6.1 字体栈
 
 不打包字体文件，全用系统字体。原因：SF Pro 是 macOS 系统字体质感最对；打包字体会让 dmg 体积超过 15 MB 红线（ [04 NFR § 1](../plan/04_nfr.md) ）。
 
@@ -170,7 +166,7 @@ OK
 | `--font-sans` | -apple-system → BlinkMacSystemFont → "SF Pro Display"（mac）→ "Segoe UI"（Win）→ "PingFang SC"（中文 mac）→ "Microsoft YaHei UI"（中文 Win）→ Helvetica → Arial → sans-serif |
 | `--font-mono` | "SF Mono"（mac）→ "JetBrains Mono"（已装）→ "Cascadia Code"（Win Terminal 默认）→ Menlo → Consolas → "Liberation Mono" → monospace |
 
-### 6.2 字号 scale（4 档 + 编辑器独立）
+#### 6.2 字号 scale（4 档 + 编辑器独立）
 
 | token | px | 用途 |
 | --- | --- | --- |
@@ -186,7 +182,7 @@ OK
 
 浮窗缩放域： `--fs-editor` 是 `⌘+` /`⌘-` /`⌘0` 的源值；浮窗根节点用它派生 `--fs-tree`、 `--fs-xs`、 `--fs-sm`。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（ `--fs-xs` ≤ 12.5px， `--fs-sm` ≤ 14px），避免 chrome 喧宾夺主。Settings Modal / History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。
 
-### 6.3 字重 + 行高
+#### 6.3 字重 + 行高
 
 | 类别 | token | 值 | 用途 |
 | --- | --- | --- | --- |
@@ -200,7 +196,7 @@ OK
 | `--lh-loose` | 1.75 | Markdown 渲染 |  |
 | `--lh-code` | 1.55 | 编辑器正文 + line number gutter + tree |  |
 
-## 7 间距 scale（8 档 / 4 px 节奏）
+### 7 间距 scale（8 档 / 4 px 节奏）
 
 | token | px | 典型场景 |
 | --- | --- | --- |
@@ -214,7 +210,7 @@ OK
 | `--sp-8` | 32 | doc-article 边距 |
 | `--sp-10` | 40 | 大段落分隔 |
 
-## 8 圆角 / 边框 / 阴影
+### 8 圆角 / 边框 / 阴影
 
 | 类别 | token | 值 | 用途 |
 | --- | --- | --- | --- |
@@ -238,11 +234,11 @@ OK
 
 dark 阴影特殊处理：浮层主要靠边框与背景层级区分，阴影只做弱分层；不额外叠亮边，避免深色界面显得装饰化。
 
-## 9 动效
+### 9 动效
 
 动效基线来自 `design/jsonita-motion-demo.md`，已沉淀为下列 token 与动画清单。设计稿中的 Material / spring / instant 只作为评审对照；真实实现默认使用偏 macOS 的 `--ease-native`，并尊重 reduced motion。
 
-### 9.1 时长 + 缓动
+#### 9.1 时长 + 缓动
 
 | 类别 | token | 值 | 场景 |
 | --- | --- | --- | --- |
@@ -256,11 +252,10 @@ dark 阴影特殊处理：浮层主要靠边框与背景层级区分，阴影只
 | `--ease-in` | `cubic-bezier(0.4, 0.0, 1, 1)` | 出场 |  |
 | `--ease-native` | `cubic-bezier(0.32, 0.72, 0, 1)` | 玻璃方向主力缓动；阶段 2 已用于状态栏快捷键、浮窗呼出、Tab active pill、AI Fix 入场、主题手动切换。可选 `--ease-spring` 走 CSS `linear()` |  |
 
-INFO
 
 遵循 `@media (prefers-reduced-motion: reduce)`：所有 `animation-duration` 降为 1 ms（实际禁用）。
 
-### 9.2 关键动画清单
+#### 9.2 关键动画清单
 
 | 动画 | 触发 | 变换 | 时长 / 缓动 |
 | --- | --- | --- | --- |
@@ -272,11 +267,10 @@ INFO
 | `toast-in` | 保留动画 | opacity 0→1 + translateY 8px→0 | `--dur-base` /`--ease-out` |
 | `fade-out` | 保留动画 | opacity 1→0 | `--dur-slow` |
 
-INFO
 
 玻璃方向动画（阶段 2 已实现 →[design/HANDOFF.md](HANDOFF.md) § 4）：主力缓动为 `--ease-native`。浮窗呼出 scale 起点为 `0.96`、出场比入场更快（140 ms）；Tab active 药丸滑动使用 left / width + `--ease-native`；切 Tab / 单窗为 即时布局切换 （不 remount 面板、不淡入 —— remount 会拆掉 CodeMirror、丢输入光标、手感 clunky）；AI Fix 从右滑入 + 一次性琥珀微光（ 不循环 ）；主题切换仅在手动切换时对全局色做约 180 ms 交叉淡，初次加载与 system 自动变化不触发以防 FOUC。 硬约束：绝不动 `backdrop-filter` / blur 半径（合成层卡顿），只动 transform / opacity / 颜色类属性。
 
-### 9.3 设计稿到 token 的承接
+#### 9.3 设计稿到 token 的承接
 
 | 设计稿 | 沉淀内容 | 权威位置 |
 | --- | --- | --- |
@@ -285,9 +279,9 @@ INFO
 | `jsonita-glass-mockups.md` | AI Fix 琥珀强调、History op-chip 四色、Toast 4 variant reserved、SVG 描边图标方向 | § 4.3、§ 4.5、04 § 4.3、05 图标章节 |
 | `jsonita-motion-demo.md` | 150ms summon、140ms dismiss、180ms theme fade、native easing、禁动 blur | § 9.1、§ 9.2 |
 | `jsonita-singlepane-statusbar-demo.md` | 状态栏右侧 hover/focus 才滑出快捷键，单双栏切换不改窗口尺寸 | 01 § 2、04 § 4.2 |
-| `jsonita-settings-detail.md` | 设置分组、checkbox 视觉、API key 行内反馈、About 路径展示 | 01 § 4、04 § 4.6-4.8、13 § 3.3 |
+| `jsonita-settings-detail.md` | 设置分组、checkbox 视觉、API key 行内反馈、About 路径展示 | 01 § 4、04 § 4.6-4.8、[spec/appendix/schemas](../spec/appendix/schemas.md) |
 
-## 10 Z-index scale
+### 10 Z-index scale
 
 | token | 值 | 用途 |
 | --- | --- | --- |
@@ -300,9 +294,9 @@ INFO
 | `--z-toast` | 60 | 保留 token；当前未接入 Toast |
 | `--z-tooltip` | 70 | Tooltip（最顶） |
 
-三 · 主题切换机制
+## 三 · 主题切换机制
 
-## 11 主题切换流程
+### 11 主题切换流程
 
 设置项 `settings.theme: 'system' | 'light' | 'dark'` （默认 `'system'` ）。 effective theme 的权威解析在原生： `window_set_theme(mode)` IPC 读 `NSApp.effectiveAppearance` 回传 `'light' | 'dark'`。webview 的 `matchMedia` 不参与取值，仅在 `system` 模式下作 OS 主题切换的 re-trigger ── 因为 `NSWindow.appearance` 被 pin 成具体值后会污染 webview 的 `prefers-color-scheme` （旧 bug：light→system 不变 dark，见 [06 § 2.6](06_window.md) ）。
 
@@ -318,7 +312,7 @@ INFO
 | `editorStore.setTheme` | 同步 CodeMirror theme extension | 编辑器主题与 UI theme 对齐 |
 | `localStorage["jsonita.theme.effective"]` | 缓存 effective theme | `src/index.html` inline script 可在 React 挂载前提前设 `data-theme`，避免 FOUC |
 
-### 11.1 核心实现要点
+#### 11.1 核心实现要点
 
 原生权威解析 ： `settings.theme` 变化时调 `window_set_theme(mode)` ，原生按 mode 解析 ── `system` 读 `NSApp.effectiveAppearance` （真实 OS 主题），回传 effective theme（light / dark）。前端 不再 用 webview `matchMedia` 取值（会被 NSWindow.appearance pin 污染）
 
@@ -332,7 +326,7 @@ CodeMirror 单独通知 ：编辑器有自己的 theme extension（不读 CSS va
 
 避免 FOUC ：PROJECT.md `<head>` 内联一段 script 先于 React bundle 读 localStorage cache 设 `data-theme`
 
-### 11.2 resolve + apply 核心 ~18 行
+#### 11.2 resolve + apply 核心 ~18 行
 
 ```
 // src/theme/useEffectiveTheme.ts
@@ -362,7 +356,7 @@ useEffect(() => {
 }, [theme]);
 ```
 
-### 11.3 FOUC 避免（inline script ~7 行）
+#### 11.3 FOUC 避免（inline script ~7 行）
 
 ```
 <!-- PROJECT.md <head>，先于主 bundle -->
@@ -376,9 +370,9 @@ useEffect(() => {
 </script>
 ```
 
-四 · Tailwind 集成
+## 四 · Tailwind 集成
 
-## 12 Tailwind 映射规则
+### 12 Tailwind 映射规则
 
 用 Tailwind 是为了"快写 utility"，但 颜色 / 间距 / 字号 都引用 CSS variables， 不 用 Tailwind 默认色板。
 
@@ -393,7 +387,7 @@ useEffect(() => {
 | `transitionDuration / TimingFunction` | `var(--dur-* / --ease-*)` | `duration-base ease-out` |
 | `darkMode` | `['selector', '[data-theme="dark"]']` | `dark:bg-bg-card` |
 
-### 12.1 config 骨架（~20 行核心）
+#### 12.1 config 骨架（~20 行核心）
 
 ```
 // tailwind.config.ts ── 关键 extend；完整文件含全部 12 个 token 域
@@ -418,11 +412,11 @@ export default {
 } satisfies Config;
 ```
 
-五 · 预览
+## 五 · 预览
 
-## 13 同一组件 light vs dark
+### 13 同一组件 light vs dark
 
-### 13.1 状态栏（合法 / 错误）
+#### 13.1 状态栏（合法 / 错误）
 
 light · valid
 
@@ -434,7 +428,7 @@ dark · valid
 
 ● Valid JSON · 5 lines · 76 bytes History (12) · Settings
 
-### 13.2 错误状态
+#### 13.2 错误状态
 
 light · parse error
 
@@ -446,7 +440,7 @@ dark · parse error
 
 ● Invalid JSON
 
-### 13.3 JSON 树 ── 类型颜色
+#### 13.3 JSON 树 ── 类型颜色
 
 light tree
 
@@ -473,4 +467,3 @@ age: 30
 active: true
 
 extra: null
-

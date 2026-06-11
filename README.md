@@ -89,7 +89,7 @@ Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `
 | [`PROJECT.md`](PROJECT.md) | 文档导航入口 |
 | [`WORKFLOW.md`](WORKFLOW.md) | 仓库工作流程与 agent 规范 |
 | [`plan/`](plan/) | 产品边界、功能、技术栈、NFR |
-| [`spec/`](spec/) | 架构、IPC、JSON 引擎、存储、AI、打包、schema、日志 |
+| [`spec/`](spec/) | 核心系统契约与 `spec/appendix/` 技术明细 |
 | [`design/`](design/) | UI、视觉设计、交互、原型、设计令牌、图标、窗口、菜单栏、编辑器、i18n、a11y |
 | [`TODO.md`](TODO.md) | 项目级开放 backlog |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史 |

@@ -31,7 +31,7 @@ Output
 
 错误处理：实时高亮 parser 返回的非法位置（行号 + col），并补充常见非法 JSON token；错误时显示「AI Fix」入口（前提 AI 已启用）。
 
-非法 JSON、AI Fix、单窗执行与 Diff 决策态的完整交互权威见 [design/02 § 4](../design/02_interaction.md#4-ai-fix-流程仅错误时) 与 [design/02 § 6.2](../design/02_interaction.md#6.2-single-pane-run-hint)。
+非法 JSON、AI Fix、单窗执行与 Diff 决策态的完整交互权威见 [design/02 § 4](../design/02_interaction.md#4-ai-fix-流程-仅错误时) 与 [design/02 § 6.2](../design/02_interaction.md#6.2-single-pane-run-hint)。
 
 编辑器 input 交互权威见 [design/02 § 1.0.2](../design/02_interaction.md#1.0.2-editor-input-interactions)，编辑器技术契约见 [design/08](../design/08_editor.md)。
 
@@ -247,7 +247,7 @@ Prompt 策略 ：严格要求「只返回合法 JSON，无解释 / markdown 包�
 
 ### F7.1 General
 
-General 覆盖语言、主题、开机自启动、失焦隐藏、智能缩放、单窗模式与自动粘贴剪贴板。字段边界见 [spec/13 § 3.3](../spec/13_schemas.md)，具体控件行为见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)。
+General 覆盖语言、主题、开机自启动、失焦隐藏、智能缩放、单窗模式与自动粘贴剪贴板。字段边界见 [spec/appendix/schemas](../spec/appendix/schemas.md)，具体控件行为见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)。
 
 ### F7.2 Shortcuts
 
@@ -255,15 +255,15 @@ General 覆盖语言、主题、开机自启动、失焦隐藏、智能缩放、
 
 ### F7.3 AI
 
-AI 分组覆盖 AI Auto Fix 总开关、DeepSeek API key、连接测试、保存与移除。存储契约见 [spec/10 § 6](../spec/10_storage.md)，客户端契约见 [spec/11](../spec/11_ai_client.md)，控件行为见 [design/04](../design/04_components.md)。
+AI 分组覆盖 AI Auto Fix 总开关、DeepSeek API key、连接测试、保存与移除。存储契约见 [spec/appendix/schemas](../spec/appendix/schemas.md)，客户端契约见 [spec/08_ai_repair.md](../spec/08_ai_repair.md)，控件行为见 [design/04](../design/04_components.md)。
 
 ### F7.4 History
 
-History 分组覆盖历史上限、写入规则与清理策略；持久化规则见 [spec/10](../spec/10_storage.md)。
+History 分组覆盖历史上限、写入规则与清理策略；持久化规则见 [spec/07_storage_session.md](../spec/07_storage_session.md)。
 
 ### F7.5 JSON Transform
 
-JSON Transform 分组覆盖嵌套 stringified JSON 自动解开、解析超时阈值与编辑器 soft-wrap。算法契约见 [spec/09](../spec/09_json_engine.md)，控件行为见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)。
+JSON Transform 分组覆盖嵌套 stringified JSON 自动解开、解析超时阈值与编辑器 soft-wrap。算法契约见 [spec/06_json_engine.md](../spec/06_json_engine.md)，控件行为见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)。
 
 ### F7.6 About
 
@@ -295,7 +295,7 @@ transform 成功时写 sqlite `last_session` 单行表（覆盖式）
 
 可选模式：默认是左右双栏（input | output）对比；开启后取消右侧 output 面板，主区域只承载一个工作视图。交互权威见 [design/02 § 6.1](../design/02_interaction.md#6.1-single-pane-status-controls) 与 [design/02 § 6.2](../design/02_interaction.md#6.2-single-pane-run-hint)。
 
-适用场景：屏幕小、希望只保留输入区域。历史与会话写入规则仍按 F5 / F8 / [spec/10](../spec/10_storage.md) 执行。
+适用场景：屏幕小、希望只保留输入区域。历史与会话写入规则仍按 F5 / F8 / [spec/07_storage_session.md](../spec/07_storage_session.md) 执行。
 
 ## F10 浮窗智能缩放
 

@@ -1,10 +1,6 @@
-SPEC · 章节 04
-
 # 组件库映射
 
 shadcn/ui 复用 + 自定义组件清单 + props 契约。所有视觉效果（颜色 / 布局 / 状态截图）见 [01 mockups](../design/01_mockups.md)；颜色 token 见 [03 design tokens](03_design_tokens.md)。
-
-REF
 
 本章是 组件契约 （props / 状态 / 关键交互规则）；视觉权威在 [01 mockups](../design/01_mockups.md)；颜色 / 间距 / 圆角 / 阴影 token 权威在 [03 design tokens](03_design_tokens.md)。本章不重复绘制视觉、不重复列举颜色 token。
 
@@ -70,7 +66,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 
 ### 4.1 TabBar
 
-顶部功能区：左侧 5 个基础 Tab（Format / Minify / Tree / →Str / →JSON）+ AI Fix（仅错误态相关）+ 右上设置按钮。视觉见 [01 § 1.1-1.5](../design/01_mockups.md#1.1-format-tab-valid-json默认呼出后) （默认 / 各 Tab 切换 / AI Fix 出现）。
+顶部功能区：左侧 5 个基础 Tab（Format / Minify / Tree / →Str / →JSON）+ AI Fix（仅错误态相关）+ 右上设置按钮。视觉见 [01 § 1.1-1.5](../design/01_mockups.md#1.1-format-tab-valid-json-默认呼出后) （默认 / 各 Tab 切换 / AI Fix 出现）。
 
 ```
 // src/shell/TabBar.tsx
@@ -248,11 +244,11 @@ UX：
 
 Test 中：按钮显示 `...` ；返回后在输入区下方显示 ok / error 文本
 
-Test 不消耗存好的 key：直接输入框的当前值传给 `ai_test_connection` （详见 [11 § 9](../spec/11_ai_client.md) ）
+Test 不消耗存好的 key：直接输入框的当前值传给 `ai_test_connection` （详见 [AI wire protocol](../spec/appendix/ai-protocol.md) ）
 
 ### 4.9 TreeView（含 Hover 复制）
 
-JSON 树视图。视觉：见 [01 § 1.3 Tree Tab](../design/01_mockups.md#1.3-tree-tab含-hover-复制-见-12) + [01 § 12 hover 复制](../design/01_mockups.md#12-tree-节点-hover-复制plan-f2-spec-08-4.5)。实现细节： [08 § 4.5](08_editor.md)。
+JSON 树视图。视觉：见 [01 § 1.3 Tree Tab](../design/01_mockups.md#1.3-tree-tab-含-hover-复制-见-12) + [01 § 12 hover 复制](../design/01_mockups.md#12-tree-节点-hover-复制-plan-f2-design-08-4.5)。实现细节： [08 § 4.5](08_editor.md)。
 
 ```
 interface TreeViewProps {
@@ -279,7 +275,7 @@ interface CopyNodeInfo {
 
 ### 4.10 DiffView
 
-AI Fix 应用前的 diff 展示。视觉（双栏 / 行染色 light+dark）见 [01 § 8 AI Fix DiffView](../design/01_mockups.md#8-ai-fix-diffview)；diff 算法实现见 [11 § 8](../spec/11_ai_client.md)。
+AI Fix 应用前的 diff 展示。视觉（双栏 / 行染色 light+dark）见 [01 § 8 AI Fix DiffView](../design/01_mockups.md#8-ai-fix-diffview)；diff 算法实现见 [AI diff reference](../spec/appendix/ai-protocol.md)。
 
 ```
 interface DiffViewProps {

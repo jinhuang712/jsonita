@@ -40,14 +40,19 @@ Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a glob
 
 | Path | Purpose |
 | --- | --- |
-| [spec/00_architecture.md](spec/00_architecture.md) | Process model, module boundaries, data flow, errors, and directory structure. |
-| [spec/02_ipc.md](spec/02_ipc.md) | Frontend/Rust command, event, payload, and performance contracts. |
-| [spec/09_json_engine.md](spec/09_json_engine.md) | JSON format, minify, string conversion, nested unwrap, error location, and performance behavior. |
-| [spec/10_storage.md](spec/10_storage.md) | SQLite, settings, session state, `secrets.json`, migrations, and corruption recovery. |
-| [spec/11_ai_client.md](spec/11_ai_client.md) | DeepSeek repair flow, prompt boundary, JSON extraction, errors, diff, and test connection. |
-| [spec/12_packaging.md](spec/12_packaging.md) | Tauri config, capabilities, DMG/APP/NSIS, signing, notarization, GitHub Release, and later Homebrew. |
-| [spec/13_schemas.md](spec/13_schemas.md) | Core data models, settings, IPC, SQLite schema, window state, and secrets schema. |
-| [spec/15_logging.md](spec/15_logging.md) | Logging boundary, redaction, rolling files, event catalog, export, and support workflow. |
+| [spec/README.md](spec/README.md) | Spec 入口、核心/附录边界、主权对象地图和写作规则。 |
+| [spec/00_system_architecture.md](spec/00_system_architecture.md) | Process model, layering, module ownership, data flow, and cross-cutting invariants. |
+| [spec/01_runtime_lifecycle.md](spec/01_runtime_lifecycle.md) | Startup, tray/shortcut entry, show/hide/focus, quit, and restore lifecycle. |
+| [spec/02_frontend_execution.md](spec/02_frontend_execution.md) | Editor store, panes, preview/apply behavior, Tree view, AI pane, and visible state. |
+| [spec/03_ipc_boundary.md](spec/03_ipc_boundary.md) | Frontend/Rust command and event boundary, async semantics, payload limits, and authority. |
+| [spec/04_error_model.md](spec/04_error_model.md) | Unified failure semantics, recoverability, UI obligations, and retry boundaries. |
+| [spec/05_security_privacy.md](spec/05_security_privacy.md) | Local data boundary, secrets, AI egress, logging privacy, permissions, and trust assumptions. |
+| [spec/06_json_engine.md](spec/06_json_engine.md) | JSON transform contract, parse location, stringify/unwrap behavior, and performance boundary. |
+| [spec/07_storage_session.md](spec/07_storage_session.md) | SQLite, settings, window state, secrets, history, and last-session ownership. |
+| [spec/08_ai_repair.md](spec/08_ai_repair.md) | DeepSeek repair flow, prompt boundary, response validation, Diff decision state, and failures. |
+| [spec/09_logging_observability.md](spec/09_logging_observability.md) | Local log boundary, redaction, rolling files, event classes, export, and support workflow. |
+| [spec/10_packaging_distribution.md](spec/10_packaging_distribution.md) | Build artifacts, signing/notarization, release channels, and future distribution boundaries. |
+| [spec/appendix/README.md](spec/appendix/README.md) | Schema、命令、事件、SQL、prompt、配置、发布和测试明细附录。 |
 
 ### Design
 

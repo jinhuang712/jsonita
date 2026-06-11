@@ -52,6 +52,6 @@ API key 不外泄
 
 ## D文档权威边界
 
-`design/` 是 UI、视觉、交互、原型和可访问性材料的唯一目录。产品范围以 [plan/01](01_features.md) 为准，交互流程以 [design/02_interaction.md](../design/02_interaction.md) 为准，视觉、组件、数据契约分别以 [design/01_mockups.md](../design/01_mockups.md)、[design/04_components.md](../design/04_components.md)、[spec/13_schemas.md](../spec/13_schemas.md) 为准。
+`design/` 是 UI、视觉、交互、原型和可访问性材料的唯一目录。产品范围以 [plan/01](01_features.md) 为准，交互流程以 [design/02_interaction.md](../design/02_interaction.md) 为准，视觉、组件、数据契约分别以 [design/01_mockups.md](../design/01_mockups.md)、[design/04_components.md](../design/04_components.md)、[spec/appendix](../spec/appendix/README.md) 为准。
 
 历史视觉探索已迁移为 Markdown 并保留在 `design/` 下；实现任务应读取 [design/README.md](../design/README.md) 后再进入具体设计文档。未决问题进入 [TODO.md](../TODO.md)，结构化变更进入 [CHANGELIST.md](../CHANGELIST.md)。

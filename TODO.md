@@ -4,7 +4,7 @@
 
 ## P1
 
-- [ ] 崩溃恢复 / 数据完整性 spec 增补：补齐 SQLite、settings.json、window.json 损坏时的检测、恢复、用户提示与日志策略；完成条件是 `spec/10_storage.md` 与 `spec/15_logging.md` 都有明确契约。
+- [ ] 崩溃恢复 / 数据完整性 spec 增补：补齐 SQLite、settings.json、window.json 损坏时的检测、恢复、用户提示与日志策略；完成条件是 [`spec/07_storage_session.md`](spec/07_storage_session.md) 与 [`spec/09_logging_observability.md`](spec/09_logging_observability.md) 都有明确契约。
 
 ## P2
 
