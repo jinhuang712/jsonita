@@ -1,17 +1,17 @@
 /**
  * JSON Path 工具 — 把"对象路径数组"转 design/08 § 4.3 用户友好格式
- * `$.user.items[0].name`（不用 RFC 6901 pointer）。
+ * `user.items[0].name`（不用 RFC 6901 pointer，也不带 `$` 前缀）。
  */
 
 export function pathToString(path: (string | number)[]): string {
-  let out = '$';
+  let out = '';
   for (const seg of path) {
     if (typeof seg === 'number') {
       out += `[${seg}]`;
     } else {
       // 简化处理：标识符 key 用 . 形式；含特殊字符走 ["..."]
       if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(seg)) {
-        out += `.${seg}`;
+        out += out === '' ? seg : `.${seg}`;
       } else {
         out += `[${JSON.stringify(seg)}]`;
       }

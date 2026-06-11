@@ -12,7 +12,7 @@ PLAN · 章节 03
 | 前端框架 | React 18 + TypeScript 5 + Vite 5 | JSON 控件生态最完整；社区 Tauri 模板成熟 |
 | UI 组件 | Tailwind CSS + shadcn/ui | 极轻量、可裁剪、设计风格高度可控 |
 | 编辑器 | CodeMirror 6 | ~150KB；语法高亮、错误标注；性能优于 Monaco |
-| JSON 树渲染 | react-json-view-lite | 纯渲染组件，无重 deps |
+| JSON 树渲染 | 自渲染递归 TreeView | 精确控制主题、hover 复制、键盘交互与懒渲染 |
 | 状态管理 | Zustand | API 极简，bundle 几乎无感 |
 | 本地存储 | SQLite（rusqlite） | 支持搜索、置顶、收藏；零外部进程 |
 | 密钥存储 | 本地 `secrets.json` （chmod 600） | 放数据目录；dev rebuild / app 更新不弹系统凭据授权；跨平台一致 |
@@ -34,7 +34,7 @@ PLAN · 章节 03
 
 ### 2.2 为什么选 React 而非 Svelte / Vue
 
-JSON 类控件生态压倒性优势：CodeMirror 6 / react-json-view-lite / monaco-react 等均有成熟 React 封装。Tauri 官方模板与 React 契合度最高。Svelte 体积更优但生态薄；Vue 中性但无明显优势。
+JSON 类控件生态压倒性优势：CodeMirror 6、状态管理与自渲染 TreeView 都能以小体积落在 React 上；复杂编辑能力由 CodeMirror 承担，树视图保留在本仓库内自绘以控制主题和交互。Tauri 官方模板与 React 契合度最高。Svelte 体积更优但生态薄；Vue 中性但无明显优势。
 
 ### 2.3 为什么选 CodeMirror 6 而非 Monaco
 
@@ -90,6 +90,5 @@ SQLite 体积小（rusqlite 静态编译 ~600KB）、零外部进程、支持索
 | `vite + @vitejs/plugin-react` | 构建 |
 | `tailwindcss` | 样式 |
 | `@codemirror/state / view / lang-json` | 编辑器 |
-| `react-json-view-lite` | JSON 树 |
 | `zustand` | 状态 |
 | `@tauri-apps/api` | 前后端 IPC |

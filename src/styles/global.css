@@ -372,6 +372,11 @@ kbd {
   cursor: default;
 }
 
+.jsonita-tree-root {
+  color: var(--json-key);
+  font-weight: 600;
+}
+
 .jsonita-tree-index {
   color: var(--text-muted);
 }
@@ -419,9 +424,9 @@ kbd {
   opacity: 0;
   transform: translateY(-50%);
   padding: 1px 5px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+  background: transparent;
   color: var(--text-muted);
   font-size: var(--fs-xs);
   line-height: 1;

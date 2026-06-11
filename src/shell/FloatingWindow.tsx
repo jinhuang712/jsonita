@@ -53,15 +53,17 @@ export function FloatingWindow() {
   }, []);
 
   // Tree 是当前输入内容的视图；不依赖 output preview，避免非法状态时静默退回编辑器。
+  const shouldRenderTree = activePane === 'tree';
+  const showTreeInSinglePane = singlePaneMode && shouldRenderTree;
   const treeState = useMemo(() => {
+    if (!shouldRenderTree) return { kind: 'idle' as const };
     if (content.trim() === '') return { kind: 'empty' as const };
     try {
       return { kind: 'valid' as const, data: JSON.parse(content) as unknown };
     } catch {
       return { kind: 'invalid' as const };
     }
-  }, [content]);
-  const showTreeInSinglePane = singlePaneMode && activePane === 'tree';
+  }, [content, shouldRenderTree]);
   const chromeFontDelta = editorFontSize - 13;
   const chromeXsFontSize = clamp(11 + chromeFontDelta * 0.18, 10, 12.5);
   const chromeSmFontSize = clamp(12.5 + chromeFontDelta * 0.22, 11, 14);
@@ -151,6 +153,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 type TreePanelState =
+  | { kind: 'idle' }
   | { kind: 'valid'; data: unknown }
   | { kind: 'empty' }
   | { kind: 'invalid' };
