@@ -1,8 +1,8 @@
 //! `JsonitaError` — 全局单一错误枚举。
 //!
-//! Spec ref: `spec/13_schemas.html` § 1.1 错误类型表
+//! Spec ref: `spec/13_schemas.md` § 1.1 错误类型表
 //! 跨 IPC 序列化为 `{"kind": "...", "data": ...}` (tag/content)
-//! UI 分级响应见 `spec/02_ipc.html` § 8 错误矩阵
+//! 调用方错误契约见 `spec/02_ipc.md` § 8
 
 use serde::Serialize;
 use thiserror::Error;

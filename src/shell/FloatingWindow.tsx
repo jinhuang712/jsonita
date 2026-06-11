@@ -17,7 +17,7 @@ import { WindowResizeHandles } from './WindowResizeHandles';
 /**
  * 浮窗主壳 — TabBar 上 + 左右双栏（input | output）+ StatusBar 下。
  *
- * Spec ref: spec/01_mockups.html § 1 主浮窗 6 态 · spec/08 § 5 编辑器 ↔ 树同步
+ * Spec ref: design/01_mockups.md § 1 主浮窗 6 态 · design/08 § 5 编辑器 ↔ 树同步
  * M1-N4：双栏 CSS Grid 静态 50/50；M1-N9 起加智能缩放 + 可拖边 resize。
  */
 export function FloatingWindow() {
@@ -34,7 +34,7 @@ export function FloatingWindow() {
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
-  // 智能缩放：内容 / 字号变化后自动调整窗口（spec/06 § 7）
+  // 智能缩放：内容 / 字号变化后自动调整窗口（design/06 § 7）
   useSmartWidth();
 
   useEffect(() => {

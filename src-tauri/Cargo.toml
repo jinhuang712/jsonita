@@ -45,5 +45,5 @@ strip = true
 
 [lints.rust]
 # objc 0.2 sel_impl 宏内部 cfg(cargo-clippy) Rust 1.80+ check-cfg 误报；
-# module-level #![allow(unexpected_cfgs)] 进不去 macro 展开（spec/06 § 3 NSPanel 必需）。
+# module-level #![allow(unexpected_cfgs)] 进不去 macro 展开（design/06 § 3 NSPanel 必需）。
 unexpected_cfgs = { level = "allow", check-cfg = [] }

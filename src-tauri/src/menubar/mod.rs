@@ -1,8 +1,8 @@
 //! Menubar tray + native menu.
 //!
-//! Spec ref: `spec/07_menubar.html` § 1 tray API · § 2 menu 结构 · § 3 macOS 跨平台
-//! Mockup ref: `spec/01_mockups.html` § 3 菜单栏 tray（light/dark 对照）
-//! Icon ref: `spec/05_icons_theme.html` § 3 menubar template
+//! Spec ref: `design/07_menubar.md` § 1 tray API · § 2 menu 结构 · § 3 macOS 跨平台
+//! Mockup ref: `design/01_mockups.md` § 3 菜单栏 tray（light/dark 对照）
+//! Icon ref: `design/05_icons_theme.md` § 3 menubar template
 //!
 //! M0-N2 范围：装好 tray + 原生菜单 + 事件钩子；
 //! 不接 浮窗 toggle 实现（属 M0-N3）— 这里只 `emit("tray:toggle", ())`。

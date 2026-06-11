@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "locales": ["zh-CN", "en"],
-  "defaultLocale": "zh-CN",
-  "fallbackLocale": "en",
-  "titlePolicy": "preserve-source-language",
-  "terminologyPolicy": "use-glossary-first"
-}

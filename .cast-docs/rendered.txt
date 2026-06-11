@@ -1,3 +1,0 @@
-site/index.cast.json -> index.html
-site/todo.json -> todo.html
-site/changelist.json -> changelist.html

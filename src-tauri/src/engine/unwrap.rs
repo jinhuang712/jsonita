@@ -1,6 +1,6 @@
 //! 嵌套 stringified JSON 全量解开。
 //!
-//! Spec ref: `spec/09_json_engine.html` § 6 ── 200 ms 超时是终极兜底。
+//! Spec ref: `spec/09_json_engine.md` § 6 ── 200 ms 超时是终极兜底。
 //! 关键决策（§ 6.2）：
 //! - 只解 object/array 开头的 string（"123" "true" 保留）
 //! - 走 walk 递归（无层数硬限，可选 max_depth）

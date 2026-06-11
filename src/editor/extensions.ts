@@ -1,5 +1,5 @@
 /**
- * CodeMirror 6 扩展组装 — spec/08 § 1.2 (12 项标配) + § 1.3。
+ * CodeMirror 6 扩展组装 — design/08 § 1.2 (12 项标配) + § 1.3。
  */
 
 import { closeBrackets } from '@codemirror/autocomplete';

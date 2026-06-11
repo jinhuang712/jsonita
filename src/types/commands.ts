@@ -1,7 +1,7 @@
 /**
  * IPC command 入参 / 出参类型 — Rust 端 `#[serde(rename_all = "camelCase")]` 跨 IPC 镜像。
  *
- * Spec ref: spec/13_schemas.html § 3.1-3.5
+ * Spec ref: spec/13_schemas.md § 3.1-3.5
  */
 
 import type { IndentMode, OpType, QuoteStyle } from './enums';

@@ -52,7 +52,7 @@ export function App() {
     };
   }, [setSettingsModalOpen]);
 
-  // Modal 打开期间周期轮询：用户授权后自动 close（spec/07 § 3.2 不需重启即可呼出）
+  // Modal 打开期间周期轮询：用户授权后自动 close（design/07 § 3.2 不需重启即可呼出）
   useEffect(() => {
     if (!modalOpen) return;
     const id = setInterval(async () => {

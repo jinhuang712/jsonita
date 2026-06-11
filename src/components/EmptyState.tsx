@@ -1,5 +1,5 @@
 /**
- * Empty State 组件 — spec/01_mockups.html § 10 6 处 placeholder。
+ * Empty State 组件 — design/01_mockups.md § 10 6 处 placeholder。
  *
  * 用法：`<EmptyState icon="{ }" title="..." hint="⌘V" />`
  */

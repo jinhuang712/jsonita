@@ -1,6 +1,6 @@
 //! 多屏定位 — 浮窗呼出到鼠标所在屏的水平中央、垂直上 1/3。
 //!
-//! Spec ref: `spec/06_window.html` § 4 多屏定位
+//! Spec ref: `design/06_window.md` § 4 多屏定位
 //! - 走 cursor → find monitor → center + top 1/3
 //! - 鼠标在屏外 / 单屏断开 → fallback primary monitor
 //! - 用 PhysicalPosition 统一 ── monitor.position() 与 cursor_position() 都是 physical
@@ -39,7 +39,7 @@ pub fn position_for_cursor(win: &WebviewWindow) -> tauri::Result<()> {
 
     // 水平居中
     let x = mp.x + ((ms.width as i32 - win_size.width as i32) / 2);
-    // 垂直上 1/3（避免遮挡用户当前关注区域 ── spec/06 § 4.2）
+    // 垂直上 1/3（避免遮挡用户当前关注区域 ── design/06 § 4.2）
     let y = mp.y + ((ms.height as i32 - win_size.height as i32) / 3);
 
     win.set_position(PhysicalPosition::new(x, y))?;

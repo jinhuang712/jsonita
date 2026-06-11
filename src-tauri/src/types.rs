@@ -1,6 +1,6 @@
 //! 数据模型 ── 8 个 enum + IPC payload structs。
 //!
-//! Spec ref: `spec/13_schemas.html` § 2 枚举 / § 3 IPC payload structs
+//! Spec ref: `spec/13_schemas.md` § 2 枚举 / § 3 IPC payload structs
 //! 所有 enum 用 `kebab-case`；所有 struct 用 `camelCase`（spec/13 § 7 命名规范）。
 
 use serde::{Deserialize, Serialize};
