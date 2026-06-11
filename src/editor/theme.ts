@@ -65,20 +65,20 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     outline: '1px solid var(--primary-edge)',
   },
   '.cm-searchMatch': {
-    backgroundColor: 'color-mix(in srgb, var(--primary) 14%, transparent)',
-    outline: '1px solid color-mix(in srgb, var(--primary) 16%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 11%, transparent)',
+    outline: '1px solid color-mix(in srgb, var(--primary) 13%, transparent)',
     borderRadius: '2px',
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: 'color-mix(in srgb, var(--primary) 24%, transparent)',
-    outlineColor: 'color-mix(in srgb, var(--primary) 28%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 18%, transparent)',
+    outlineColor: 'color-mix(in srgb, var(--primary) 23%, transparent)',
   },
   '.jsonita-search-panel': {
     display: 'grid',
-    gap: '6px',
-    padding: '7px 10px',
+    gap: '5px',
+    padding: '6px 10px',
     borderBottom: '1px solid var(--border)',
-    backgroundColor: 'color-mix(in srgb, var(--chrome-bg-strong) 54%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--bg-code) 82%, var(--surface-raised))',
     backdropFilter: 'var(--glass-blur)',
     WebkitBackdropFilter: 'var(--glass-blur)',
     fontFamily: 'var(--font-sans)',
@@ -88,7 +88,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.jsonita-search-row': {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: '5px',
     minWidth: 0,
   },
   '.jsonita-search-label': {
@@ -101,11 +101,11 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.jsonita-search-input': {
     minWidth: '96px',
     flex: '1 1 180px',
-    height: '27px',
+    height: '26px',
     padding: '0 8px',
-    border: '1px solid var(--border)',
+    border: '1px solid var(--control-border)',
     borderRadius: 'var(--radius-md)',
-    backgroundColor: 'color-mix(in srgb, var(--bg-code) 72%, transparent)',
+    backgroundColor: 'var(--control-bg)',
     color: 'var(--text)',
     font: 'inherit',
     outline: 'none',
@@ -123,8 +123,8 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     whiteSpace: 'nowrap',
   },
   '.jsonita-search-button': {
-    height: '27px',
-    minWidth: '27px',
+    height: '26px',
+    minWidth: '26px',
     padding: '0 8px',
     border: '1px solid transparent',
     borderRadius: 'var(--radius-md)',
@@ -135,8 +135,8 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     cursor: 'pointer',
   },
   '.jsonita-search-button:hover': {
-    backgroundColor: 'var(--chrome-bg-strong)',
-    color: 'var(--text)',
+    backgroundColor: 'var(--control-bg-hover)',
+    color: 'color-mix(in srgb, var(--text) 84%, var(--primary))',
   },
   '.jsonita-search-button:focus-visible': {
     boxShadow: 'var(--shadow-focus)',
@@ -149,8 +149,8 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   },
   '.jsonita-search-toggle-active': {
     borderColor: 'var(--primary-edge)',
-    backgroundColor: 'var(--primary-soft)',
-    color: 'var(--primary)',
+    backgroundColor: 'var(--control-bg-active)',
+    color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
   },
   '.jsonita-search-close': {
     minWidth: '27px',
@@ -166,15 +166,15 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     position: 'absolute',
     left: '2px',
     top: '50%',
-    width: '3px',
+    width: '2px',
     height: 'calc(var(--fs-editor) * 0.88)',
     borderRadius: '999px',
-    backgroundColor: 'color-mix(in srgb, var(--primary) 20%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 22%, transparent)',
     transform: 'translateY(-50%)',
   },
   '.cm-lineNumbers .cm-gutterElement.jsonita-search-line-number-active::before': {
     backgroundColor: 'color-mix(in srgb, var(--primary) 38%, transparent)',
-    boxShadow: '0 0 0 1px color-mix(in srgb, var(--primary) 12%, transparent)',
+    boxShadow: 'none',
   },
   '.cm-lintRange-error': {
     backgroundImage:
@@ -204,7 +204,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     boxShadow: 'none',
   },
   '.cm-tooltip-lint': {
-    backgroundColor: 'color-mix(in srgb, var(--glass-bg) 92%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 92%, transparent)',
     color: 'var(--text)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--radius-md)',

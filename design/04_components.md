@@ -18,13 +18,13 @@ shadcn/ui 是源码不是依赖 ── 按需 `npx shadcn@latest add <component>
 
 | 组件 | 来源 | 用途 | 覆写要点 |
 | --- | --- | --- | --- |
-| `Button` | shadcn | 设置 / Modal 内按钮 | variant=default 改 bg `var(--primary)` · radius `--radius-md` |
-| `Input` | shadcn | 设置 / API key 输入 | border `--border-strong` · focus ring `--shadow-focus` |
+| `Button` | shadcn | 设置 / Modal 内按钮 | default/ghost 都从 `--control-bg` / `--control-bg-active` 派生；不使用实心高饱和 primary |
+| `Input` | shadcn | 设置 / API key 输入 | background `--control-bg` · border `--control-border` · focus ring `--shadow-focus` |
 | `Label` | shadcn | 表单项标签 | color `--text-muted` · fs `--fs-sm` |
 | `Select` | shadcn | 主题 / 缩进 / 历史上限选择 | 下拉浮层 bg `--bg-card` · 阴影 `--shadow-lg` |
-| `Switch / Checkbox` | shadcn / custom | 设置面板所有 boolean 项 | 低饱和 checked bg `--primary`；自定义 checkbox 保留原生 input 可访问性 |
+| `Switch / Checkbox` | shadcn / custom | 设置面板所有 boolean 项 | checked 态用 `--control-bg-active` + `--primary-edge`，不使用整块实心蓝；自定义 checkbox 保留原生 input 可访问性 |
 | `Tabs` | shadcn | 设置面板分组（General / Shortcuts / AI / ...） | border-bottom + active underline 样式 |
-| `Dialog` | shadcn (Radix) | 历史 / 权限 / AI 错误 modal | 背景 `--bg-overlay` · 容器 radius `--radius-2xl` |
+| `Dialog` | shadcn (Radix) | 历史 / 权限 / AI 错误 modal | 遮罩 `--bg-overlay` · 容器 `--bg-elevated` + `--glass-border` · 按钮走 `--control-*` |
 | `DropdownMenu` | shadcn | 历史项右键菜单 / Tray 替代菜单 | 同 Select |
 | `Tooltip` | shadcn | 按钮 / 状态栏 hover 提示 | bg dark always · z `--z-tooltip` |
 | `ScrollArea` | shadcn | 历史列表 / 设置面板滚动 | thumb color `--border-strong` |
@@ -63,6 +63,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `SettingsView` | settings/SettingsView.tsx | 主壳内设置页（左侧 nav + 右侧 panel） |
 | `ShortcutInput` | settings/ShortcutInput.tsx | 录入快捷键 + 冲突检测 |
 | `ApiKeyInput` | settings/ApiKeyInput.tsx | masked 输入 + 测试连接 |
+| `ShortcutPermissionModal` | permissions/ShortcutPermissionModal.tsx | macOS 全局快捷键权限恢复弹窗 |
 
 ## 4 关键自定义组件详设
 
@@ -74,7 +75,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | --- | --- |
 | Find row | 搜索输入、match count、上/下一个、`Aa`、`.*`、`word`、`All`、关闭。 |
 | Shortcut | `⌘F` 首次打开搜索；搜索已打开时再次 `⌘F` 关闭搜索，形成快速 toggle。 |
-| Buttons | 使用低对比 chip/icon button，active 用 `--primary-soft` + `--primary-edge`。 |
+| Buttons | 使用低对比 chip/icon button，active 用 `--control-bg-active` + `--primary-edge`。 |
 | Count | `x / n`，超过计数上限显示 `1000+`。 |
 | i18n | 文案从 `panes.search.*` 读取；不得 hardcode 英文。 |
 
@@ -101,7 +102,7 @@ interface TabBarProps {
 
 AI Fix Tab 条件渲染 ：仅 `showAiFix = true` （编辑器 parse error）时渲染；从 idle 到出现走 fade-in 150ms
 
-ai variant 视觉 ：橙色渐变背景 ── 与其他 Tab 视觉上明显区分，提示这是"修复"入口（颜色用 `--accent` 系列 token）
+ai variant 视觉 ：使用低透明 `--accent-soft` 和细边框提示这是"修复"入口；不使用橙色渐变、glow 或大面积彩色块
 
 active 动效 ：active Tab 背后使用独立胶囊层，点击或 `Tab` / `⇧Tab` 切换时走 180ms 位移与宽度过渡；文字颜色 / weight 同步过渡，避免键盘切换时只有瞬时跳变
 
@@ -187,11 +188,11 @@ interface HistoryItemProps {
 
 关键契约：
 
-op-type chip ：每行左侧显示 op_type 的色彩 chip（format/minify 用 primary 色 / tree 用 info 色 / str-json 互转用 ok 色 / ai-fix 用 accent 色） ── 让用户扫一眼就能识别操作类型
+op-type chip ：每行左侧显示 op_type 的低饱和色彩 chip（format/minify 用蓝灰 / tree 用 info / str-json 互转用 ok / ai-fix 用 accent） ── 让用户扫一眼能识别操作类型，但不能抢过 JSON 摘要
 
 显式写入 ：AI Fix Accept、单窗 `⌘Enter` 成功应用 Format / Minify / →Str / →JSON 时写入 history；普通编辑输入不自动写入，避免噪音
 
-op-type chip ：每行左侧显示 op_type 的色彩 chip；format/minify 用 primary，tree 用 info，str-json 互转用 ok，ai-fix 用 accent
+列表行 hover / focus 只显示弱 surface 背景和左侧细标，不使用整行强色高亮。filter、Pin、Star、Clear、搜索框和 footer 按钮统一走 `--control-*` token。
 
 保留策略 ：Clear 只删除普通条目；pinned / starred 保留，与 SQLite `history_clear` 契约一致
 
@@ -212,9 +213,23 @@ Settings 是主壳内页面状态，不是 overlay dialog。点击右上角齿�
 | JSON Transform | `SettingsCheckbox(autoUnwrap)` · number input ·`SettingsCheckbox(editorSoftWrap)` | 影响 JSON 引擎、CodeMirror 软换行、智能缩放指标 |
 | About | 只读 metadata + GitHub button + path chips | `open_github` 在系统浏览器打开仓库 |
 
-Boolean 控件：当前实现使用自定义 `SettingsCheckbox` 包裹原生 `input[type=checkbox]`。视觉为小号圆角方块 + 低饱和 primary checked 态，避免系统默认蓝色 checkbox 与深色浮窗割裂；原生 input 透明覆盖，保留点击、键盘和屏阅器语义。
+Boolean 控件：当前实现使用自定义 `SettingsCheckbox` 包裹原生 `input[type=checkbox]`。视觉为小号圆角方块 + `--control-bg-active` checked 态，勾选图标使用 currentColor，避免系统默认蓝色 checkbox 与深色浮窗割裂；原生 input 透明覆盖，保留点击、键盘和屏阅器语义。
+
+Settings 左侧目录 active 项使用弱 `--control-bg-active` 和左侧 2px 内阴影标记，不铺高饱和蓝色块。右侧连续页面、footer、select、number input、ShortcutInput 和 ApiKeyInput 都使用 `--control-*`，让 Settings 像主壳内的配置文档，而不是另一套表单 UI。
 
 About 分组：使用轻量信息面板展示产品名、版本、License、作者与数据目录；右上角提供 GitHub 外链按钮，调用 `open_github` command 在系统浏览器中打开仓库。
+
+### 4.6.1 ShortcutPermissionModal
+
+权限弹窗只在 macOS 全局快捷键或辅助功能权限不可用时出现。它是全局 dialog，但视觉仍必须跟 Native Quiet Glass 一致：
+
+| 子区 | 规则 |
+| --- | --- |
+| Overlay | 使用 `--bg-overlay`，不硬编码黑色透明度。 |
+| Card | 使用 `--bg-elevated` + `--glass-border` + `--shadow-lg`，保留 `--glass-blur`。不得使用纯白卡片、emoji hero 或独立字体栈。 |
+| Icon | 使用小号 `⌘` token chip，表达快捷键权限，不使用彩色 emoji。 |
+| Buttons | Later 和 Open System Settings 都走 `--control-*`；主按钮用 `--control-bg-active` + `--primary-edge`，不使用实心高饱和蓝。 |
+| Copy | 标题正文走 i18n；正文颜色用 `--text-muted`，避免弹窗比编辑器更抢眼。 |
 
 ### 4.7 ShortcutInput
 

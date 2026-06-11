@@ -56,17 +56,19 @@ export function SinglePaneHint() {
         gap: 6,
         maxWidth: 'calc(100% - 24px)',
         padding: '5px 8px',
-        border: isAiFixPrimary ? '1px solid var(--accent)' : '1px solid var(--border)',
+        border: isAiFixPrimary
+          ? '1px solid color-mix(in srgb, var(--accent) 28%, var(--control-border))'
+          : '1px solid var(--control-border)',
         borderRadius: 'var(--radius-md)',
         background: isAiFixPrimary
-          ? 'color-mix(in srgb, var(--accent) 18%, var(--glass-bg))'
-          : 'color-mix(in srgb, var(--glass-bg) 76%, transparent)',
+          ? 'color-mix(in srgb, var(--accent) 10%, var(--surface-raised))'
+          : 'color-mix(in srgb, var(--surface-raised) 84%, transparent)',
         backdropFilter: 'var(--glass-blur)',
         WebkitBackdropFilter: 'var(--glass-blur)',
         boxShadow: isAiFixPrimary
-          ? '0 6px 18px color-mix(in srgb, var(--accent) 14%, transparent), var(--shadow-sm)'
+          ? '0 6px 18px color-mix(in srgb, var(--accent) 8%, transparent), var(--shadow-sm)'
           : 'var(--shadow-sm)',
-        color: isAiFixPrimary ? 'var(--accent)' : STATE_COLOR[state],
+        color: isAiFixPrimary ? 'color-mix(in srgb, var(--accent) 82%, var(--text))' : STATE_COLOR[state],
         fontFamily: 'var(--font-mono)',
         fontSize: 'var(--fs-xs)',
         lineHeight: 1.3,
@@ -79,11 +81,11 @@ export function SinglePaneHint() {
           padding: '1px 5px',
           borderRadius: 'var(--radius-sm)',
           border: isAiFixPrimary
-            ? '1px solid color-mix(in srgb, var(--accent) 42%, transparent)'
-            : '1px solid var(--border-strong)',
+            ? '1px solid color-mix(in srgb, var(--accent) 32%, transparent)'
+            : '1px solid var(--control-border)',
           background: isAiFixPrimary
-            ? 'color-mix(in srgb, var(--accent) 12%, transparent)'
-            : 'var(--chrome-bg-strong)',
+            ? 'color-mix(in srgb, var(--accent) 8%, transparent)'
+            : 'var(--control-bg)',
           color: isAiFixPrimary ? 'var(--accent)' : 'var(--text)',
           fontFamily: 'inherit',
           fontSize: 'inherit',

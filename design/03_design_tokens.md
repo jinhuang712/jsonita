@@ -20,11 +20,13 @@ macOS native 气质 ── SF Pro · 系统 blur · vibrancy 风
 
 瞬时清晰 ── 状态色不饱和但识别度高（红=错，绿=有效）
 
+Native Quiet Glass 是当前实现方向：窗口保留 macOS 玻璃气质，但交互强调从鲜亮系统蓝收敛为蓝灰系低饱和提示。编辑器内容永远是视觉主角；TabBar、Search、Settings、History、权限弹窗、状态栏和快捷键提示都只能用弱背景、细边框、轻字重和短动效建立层级。
+
 #### 避免 · Avoid
 
 大色块 / 渐变背景 ── 浮窗保持极轻
 
-多种品牌色 ── 系统蓝是唯一交互强调色；AI Fix 的琥珀只用于修复路径
+多种品牌色 ── 蓝灰是唯一交互强调色；AI Fix 的琥珀只用于修复路径，不做 glow 或大面积彩色块
 
 圆角 ≥ 16px 的"App"感 ── 文档卡片最多 10px
 
@@ -40,6 +42,8 @@ token 在 CSS variables 中以 `--kebab-case` 暴露；在 Tailwind 中以同名
 
 状态色背景 统一加 `-bg` 后缀（ `--ok-bg` · `--danger-bg` ）
 
+控件表面 统一用 `--control-*`（ `--control-bg` / `--control-bg-hover` / `--control-bg-active` / `--control-border` ）。按钮、输入框、搜索 chip、设置项、History action 和权限弹窗按钮不得各自发明背景色。
+
 编辑器专属 以 `--editor-*` 前缀
 
 JSON 高亮 以 `--json-*` 前缀
@@ -50,7 +54,7 @@ JSON 高亮 以 `--json-*` 前缀
 
 | 域 | 前缀 | 下游章节 | 本章节段 |
 | --- | --- | --- | --- |
-| 颜色（品牌 / 中性 / 状态 / JSON / Editor） | `--primary / --bg / --ok / --json-* / --editor-*` | 04 组件 · 05 图标 · 08 编辑器 | § 4 |
+| 颜色（品牌 / 中性 / 控件 / 状态 / JSON / Editor） | `--primary / --bg / --control-* / --ok / --json-* / --editor-*` | 04 组件 · 05 图标 · 08 编辑器 | § 4 |
 | 字体 | `--font-* / --fs-* / --fw-* / --lh-*` | 04 组件 · 08 编辑器 | § 6 |
 | 间距 | `--sp-*` | 04 组件 | § 7 |
 | 圆角 / 边框 / 阴影 | `--radius-* / --bw-* / --shadow-*` | 04 组件 · 06 窗口 | § 8 |
@@ -65,9 +69,10 @@ JSON 高亮 以 `--json-*` 前缀
 
 | 组 | token | 用途 |
 | --- | --- | --- |
-| 品牌 | `--primary` | 主操作 / 链接 / 选中 / focus ring（系统蓝） |
+| 品牌 | `--primary` | 主操作 / 链接 / 选中 / focus ring（低饱和蓝灰） |
 | `--accent` | AI Fix / Diff Accept / inline code（琥珀） |  |
 | 中性 | `--bg / --bg-card / --bg-code / --bg-overlay` | 页面 / 卡片 / 代码块 / Modal 遮罩 |
+| 控件 | `--control-bg / --control-bg-hover / --control-bg-active / --control-border` | 按钮、输入框、搜索 chip、设置行、History action、权限弹窗按钮 |
 | `--glass-bg / --glass-blur / --glass-border / --glass-highlight` | 浮窗原生玻璃叠色 / 文档 mockup 的 CSS 玻璃预览 |  |
 | `--text / --text-muted / --text-faint` | 正文 / 弱化 / 几乎隐形（占位 / 元信息） |  |
 | `--border / --border-strong` | 普通分隔 / 强调分隔 |  |
@@ -81,23 +86,24 @@ JSON 高亮 以 `--json-*` 前缀
 
 | token | light | dark | 设计意图 |
 | --- | --- | --- | --- |
-| `--primary` | `#0A6CE0` | `#0A84FF` | 系统蓝；active tab / 主按钮 / 选中 |
-| `--primary-soft` | `rgba(10,108,224,.12)` | `rgba(10,132,255,.2)` | hover / active 背景 |
-| `--primary-edge` | `rgba(10,108,224,.28)` | `rgba(127,179,255,.34)` | hover 边框 |
-| `--accent` | `#A4621A` | `#FFC58A` | AI Fix / Diff Accept / inline code；琥珀强调 |
-| `--accent-soft` | `rgba(181,101,29,.13)` | `rgba(255,182,107,.16)` |  |
-| `--glass-bg` | `rgba(255,255,255,.62)` | `rgba(26,28,36,.55)` | 浮窗唯一主叠色；避免叠加后遮住原生 vibrancy |
+| `--primary` | `#436F9F` | `#8AA3BE` | 低饱和蓝灰；active tab / 主按钮 / 选中 |
+| `--primary-soft` | `rgba(67,111,159,.11)` | `rgba(138,163,190,.12)` | hover / active 背景，只作轻提示 |
+| `--primary-edge` | `rgba(67,111,159,.24)` | `rgba(138,163,190,.24)` | hover / focus / active 细边框 |
+| `--accent` | `#916334` | `#C49A6C` | AI Fix / Diff Accept / inline code；琥珀强调但不 glow |
+| `--accent-soft` | `rgba(145,99,52,.12)` | `rgba(196,154,108,.13)` | AI Fix 背景叠色 |
+| `--glass-bg` | `rgba(255,255,255,.62)` | `rgba(23,25,31,.72)` | 浮窗唯一主叠色；dark 下加深以避免灰幕感，仍保留原生 vibrancy |
 | `--glass-blur` | `blur(42px) saturate(180%)` | `blur(42px) saturate(175%)` | 文档 mockup 模拟；真机由原生 vibrancy 负责 |
 | `--chrome-bg` | `transparent` | `transparent` | TabBar / StatusBar 不再铺整条 band，只靠主窗 tint + 发丝线分层 |
-| `--chrome-bg-strong` | `rgba(255,255,255,.2)` | `rgba(255,255,255,.1)` | hover / kbd / 局部 glass chip |
-| `--tab-active-bg / --tab-active-border` | `rgba(10,108,224,.12)` /`rgba(10,108,224,.24)` | `rgba(255,255,255,.14)` /`rgba(255,255,255,.2)` | active tab pill；dark 下按 design mockup 用白色玻璃 pill + 系统蓝文字 |
+| `--chrome-bg-strong` | `rgba(255,255,255,.16)` | `rgba(255,255,255,.07)` | hover / kbd / 局部 glass chip |
+| `--control-bg / --control-bg-hover / --control-bg-active / --control-border` | `rgba(255,255,255,.24)` / `rgba(255,255,255,.34)` / `rgba(70,111,160,.12)` / `rgba(34,43,58,.12)` | `rgba(255,255,255,.045)` / `rgba(255,255,255,.075)` / `rgba(136,161,190,.13)` / `rgba(255,255,255,.115)` | 所有控件表面；避免各组件硬编码按钮色 |
+| `--tab-active-bg / --tab-active-border` | `rgba(255,255,255,.2)` /`rgba(67,111,159,.18)` | `rgba(255,255,255,.09)` /`rgba(255,255,255,.14)` | active tab pill；只表达位置，不形成蓝色大块 |
 | `--bg` | `rgba(255,255,255,0)` | `rgba(26,28,36,0)` | Tauri 透明窗口底 |
-| `--bg-card` | `rgba(255,255,255,.62)` | `rgba(26,28,36,.55)` | 浮窗 / Modal / 卡片叠层 |
-| `--bg-code` | `rgba(255,255,255,.46)` | `rgba(26,28,36,.42)` | code / pre 块 |
+| `--bg-card` | `rgba(255,255,255,.62)` | `rgba(23,25,31,.68)` | 浮窗 / Modal / 卡片叠层 |
+| `--bg-code` | `rgba(255,255,255,.46)` | `rgba(23,25,31,.5)` | code / pre 块；搜索条 dark 下也从该 token 派生 |
 | `--bg-overlay` | `rgba(0,0,0,0.32)` | `rgba(0,0,0,0.56)` | Modal 遮罩；dark 更浓避免反白 |
-| `--text` | `#1D1F26` | `#EEF0F4` | 正文 |
-| `--text-muted` | `rgba(20,22,30,.5)` | `rgba(255,255,255,.55)` | 弱化（meta / placeholder） |
-| `--text-faint` | `rgba(20,22,30,.34)` | `rgba(255,255,255,.36)` | 几乎隐形（占位 hint） |
+| `--text` | `#20232A` | `#E7E9ED` | 正文 |
+| `--text-muted` | `rgba(26,30,40,.54)` | `rgba(231,233,237,.57)` | 弱化（meta / placeholder） |
+| `--text-faint` | `rgba(26,30,40,.36)` | `rgba(231,233,237,.36)` | 几乎隐形（占位 hint） |
 | `--border` | `rgba(0,0,0,.07)` | `rgba(255,255,255,.1)` | 普通分隔线 |
 | `--border-strong` | `rgba(0,0,0,.13)` | `rgba(255,255,255,.16)` | 强调分隔（如表头） |
 
@@ -105,10 +111,10 @@ JSON 高亮 以 `--json-*` 前缀
 
 | token | light | dark | 说明 |
 | --- | --- | --- | --- |
-| `--ok` /`--ok-bg` | `#1F9E5A` /`rgba(31,158,90,.12)` | `#5BE3A0` /`rgba(91,227,160,.18)` | 状态文字 / valid badge |
-| `--warn` /`--warn-bg` | `#A4621A` /`rgba(181,101,29,.13)` | `#FFB66B` /`rgba(255,182,107,.16)` | 大文件 / 超时 |
-| `--danger` /`--danger-bg` | `#C0392B` /`rgba(192,57,43,.1)` | `#F2A0A0` /`rgba(242,160,160,.14)` | parse 错 / HTTP 错 |
-| `--info` /`--info-bg` | `#0D7E72` /`rgba(13,148,136,.12)` | `#5FE3C8` /`rgba(45,212,191,.2)` | callout / Tree 类信息 |
+| `--ok` /`--ok-bg` | `#477E63` /`rgba(71,126,99,.12)` | `#8DBFA1` /`rgba(141,191,161,.13)` | 状态文字 / valid badge |
+| `--warn` /`--warn-bg` | `#8C673A` /`rgba(140,103,58,.12)` | `#C7A172` /`rgba(199,161,114,.12)` | 大文件 / 超时 |
+| `--danger` /`--danger-bg` | `#A35B56` /`rgba(163,91,86,.11)` | `#D69A96` /`rgba(214,154,150,.13)` | parse 错 / HTTP 错 |
+| `--info` /`--info-bg` | `#4E7974` /`rgba(78,121,116,.12)` | `#8DB7B1` /`rgba(141,183,177,.13)` | callout / Tree 类信息 |
 
 关键设计：dark 模式下，状态色背景统一用 透明度叠加 （14%）而不是实色 ── 避免大片饱和色块在深色背景上视觉刺眼。
 
@@ -116,29 +122,29 @@ JSON 高亮 以 `--json-*` 前缀
 
 | token | light | dark | 用途 |
 | --- | --- | --- | --- |
-| `--json-key` | `#0B66C2` | `#82C0FF` | 系统蓝附近；key 视觉锚 |
-| `--json-string` | `#2E7D4F` | `#84E08F` | 绿系字符串 |
-| `--json-number` | `#B5651D` | `#FFB66B` | 暖色数字 |
-| `--json-bool` | `#7A4FC0` | `#C9B0FF` | 紫色 bool，区分 number |
+| `--json-key` | `#4E7FAE` | `#9AB6D0` | 蓝灰 key 视觉锚 |
+| `--json-string` | `#548365` | `#91C09B` | 低饱和绿系字符串 |
+| `--json-number` | `#9A7043` | `#D0A879` | 低饱和暖色数字 |
+| `--json-bool` | `#7668A4` | `#B8ACD3` | 柔和紫色 bool，区分 number |
 | `--json-null` | `rgba(20,22,30,.36)` | `rgba(255,255,255,.36)` | 同 text-faint |
 | `--json-punc` | `rgba(20,22,30,.4)` | `rgba(255,255,255,.42)` | 标点（淡化） |
 | `--editor-bg` | `transparent` | `transparent` | 编辑器透明，避免覆盖主窗原生玻璃 |
 | `--editor-gutter` | `transparent` | `transparent` | 行号槽不再形成整块暗带 |
-| `--editor-line-active` | `rgba(10,108,224,.028)` | `rgba(10,132,255,.028)` | 当前行高亮；只作定位，不能形成整条蓝带 |
-| `--editor-selection` | `rgba(10,108,224,.22)` | `rgba(10,132,255,.28)` | 选区 |
-| `--editor-cursor` | `#0A6CE0` | `#7FB3FF` | 光标 |
-| `--editor-error-underline` | `#C0392B` | `#F2A0A0` | parse error 下划线 |
-| `--editor-bracket-match` | `rgba(10,108,224,.16)` | `rgba(127,179,255,.22)` | 括号匹配 |
+| `--editor-line-active` | `rgba(67,111,159,.035)` | `rgba(138,163,190,.04)` | 当前行高亮；只作定位，不能形成整条蓝带 |
+| `--editor-selection` | `rgba(67,111,159,.2)` | `rgba(138,163,190,.2)` | 选区 |
+| `--editor-cursor` | `#436F9F` | `#A7BDD4` | 光标 |
+| `--editor-error-underline` | `#A35B56` | `#D69A96` | parse error 下划线 |
+| `--editor-bracket-match` | `rgba(67,111,159,.15)` | `rgba(138,163,190,.17)` | 括号匹配 |
 | `--editor-indent-guide` | `rgba(0,0,0,.07)` | `rgba(255,255,255,.1)` | 缩进引导线 |
 
 #### 4.5 History op-chip 四色
 
 | token | light | dark | 用途 |
 | --- | --- | --- | --- |
-| `--op-format / --op-format-bg` | `#0A6CE0` /`rgba(10,108,224,.12)` | `#7FB3FF` /`rgba(10,132,255,.2)` | format / minify |
-| `--op-tree / --op-tree-bg` | `#0D7E72` /`rgba(13,148,136,.12)` | `#5FE3C8` /`rgba(45,212,191,.2)` | tree |
-| `--op-convert / --op-convert-bg` | `#1F8A50` /`rgba(31,158,90,.12)` | `#5BE3A0` /`rgba(91,227,160,.2)` | →str / →json |
-| `--op-ai-fix / --op-ai-fix-bg` | `#A4621A` /`rgba(181,101,29,.13)` | `#FFC58A` /`rgba(255,182,107,.2)` | AI Fix |
+| `--op-format / --op-format-bg` | `#4E7FAE` /`rgba(78,127,174,.11)` | `#9AB6D0` /`rgba(154,182,208,.12)` | format / minify |
+| `--op-tree / --op-tree-bg` | `#4E7974` /`rgba(78,121,116,.12)` | `#8DB7B1` /`rgba(141,183,177,.13)` | tree |
+| `--op-convert / --op-convert-bg` | `#548365` /`rgba(84,131,101,.12)` | `#91C09B` /`rgba(145,192,155,.13)` | →str / →json |
+| `--op-ai-fix / --op-ai-fix-bg` | `#916334` /`rgba(145,99,52,.12)` | `#C49A6C` /`rgba(196,154,108,.13)` | AI Fix |
 
 ### 5 对比度核验（WCAG）
 
