@@ -40,7 +40,7 @@
         <tr><td>失焦自动隐藏（可关）</td><td>02 § 1</td><td>§ 6 失焦监听</td></tr>
         <tr><td>关闭浮窗保留 last_session</td><td>plan/01 F8</td><td>§ 5 关闭事件路由；合法内容由实时 transform 持久化</td></tr>
         <tr><td>150 ms 淡入 / 140 ms 淡出</td><td>02 § 3</td><td>§ 8 动效（CSS only）</td></tr>
-        <tr><td>原生玻璃 / vibrancy</td><td><a href="01_mockups.html">01</a> 视觉权威 + <a href="03_design_tokens.html">03</a> 设计 token</td><td>§ 3.4 Tauri window effects + 透明窗口</td></tr>
+        <tr><td>原生玻璃 / vibrancy</td><td><a href="../design/HANDOFF.md">design/HANDOFF</a> 阶段 3</td><td>§ 3.4 Tauri window effects + 透明窗口</td></tr>
         <tr><td>记忆大小（不记忆位置）</td><td>02 § 1</td><td>§ 7 智能缩放 / 持久化</td></tr>
       </tbody>
     </table>
@@ -264,7 +264,7 @@ fn register_close_intercept(win: &amp;tauri::WebviewWindow) {
       </tbody>
     </table>
 
-    <p><b>单窗切换联动（阶段 1 已实现 → <a href="01_mockups.html">01 § 2</a> · <a href="07_menubar.html">07 § 2</a>）</b>：<code>singlePaneMode</code> 由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 切换；切换<b>只切换布局</b>（双栏 grid ↔ 单栏），<b>不随切换自动改窗口尺寸</b> —— 实测「toggle 后延迟跳一次原生窗口」与布局切换不同步、手感 clunky，已移除；窗口尺寸仍由内容 / 字号驱动的智能缩放（§ 7）按当前模式的宽度约束调整。</p>
+    <p><b>单窗切换联动（阶段 1 已实现 → <a href="07_menubar.html">07 § 2</a> · <a href="../design/HANDOFF.md">design/HANDOFF.md</a> § 5）</b>：<code>singlePaneMode</code> 由状态栏 <code>Switch to [Single / Split] Panel</code> 控件或快捷键 <kbd>⌘\</kbd> 切换；切换<b>只切换布局</b>（双栏 grid ↔ 单栏），<b>不随切换自动改窗口尺寸</b> —— 实测「toggle 后延迟跳一次原生窗口」与布局切换不同步、手感 clunky，已移除；窗口尺寸仍由内容 / 字号驱动的智能缩放（§ 7）按当前模式的宽度约束调整。</p>
 
     <h3><span class="h3-num">7.3</span>持久化字段（<a href="13_schemas.html">13 § 5.2 window.json</a>）</h3>
 

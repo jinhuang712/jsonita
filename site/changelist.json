@@ -16,7 +16,7 @@
       "engineering",
       "product"
     ],
-    "updatedAt": "2026-06-04",
+    "updatedAt": "2026-06-03",
     "description": {
       "zh-CN": "Jsonita 产品、计划、规格、发布与工作流的重要变化记录。",
       "en": "Important Jsonita product, plan, spec, release, and workflow changes."
@@ -116,25 +116,6 @@
           ],
           "rows": [
             [
-              "2026-06-04",
-              {
-                "zh-CN": "旧设计探索稿中的稳定决策已迁入 plan/spec 权威文档，并删除旧设计目录以避免死链和重复权威。",
-                "en": "Migrated stable decisions from the old design explorations into authoritative plan/spec docs and removed the old design directory to avoid dead links and duplicate authority."
-              },
-              {
-                "zh-CN": "plan/00、plan/01、spec/01、spec/03、spec/06、src/styles/tokens.css、CHANGELIST.md、site/changelist.json、changelist.html。",
-                "en": "plan/00, plan/01, spec/01, spec/03, spec/06, src/styles/tokens.css, CHANGELIST.md, site/changelist.json, and changelist.html."
-              },
-              {
-                "zh-CN": "运行本地链接检查、CAST docs freshness/profile 检查，并用精准搜索确认旧设计目录引用清零。",
-                "en": "Run local link checks, CAST docs freshness/profile checks, and targeted search to confirm old design-directory references are cleared."
-              },
-              {
-                "zh-CN": "后续 UI 实现只看 spec/01 视觉权威、spec/03 token/动效、spec/06 窗口 runtime 与 plan/01 功能约束。",
-                "en": "Future UI work should use spec/01 for visual authority, spec/03 for tokens/motion, spec/06 for window runtime, and plan/01 for feature constraints."
-              }
-            ],
-            [
               "2026-06-03",
               {
                 "zh-CN": "按最新版 cast-a-start 修复 Jsonita 文档结构：新增 .cast-docs/WORKFLOW.md，瘦身 AGENTS.md / CLAUDE.md，升级首页、TODO、CHANGELIST 为 CAST JSON-first 渲染面，并补充 docs:render / docs:check / docs:render-mermaid。",
@@ -227,8 +208,8 @@
                 "en": "plan/, spec/, site/todo.json, site/changelist.json, todo.html, changelist.html, and index.html."
               },
               {
-                "zh-CN": "旧探索稿只作为历史事件记录；稳定结论已经迁入 plan/spec，后续实现不再依赖探索稿。",
-                "en": "Old exploration drafts remain only as historical events; stable conclusions have moved into plan/spec, and future implementation no longer depends on the drafts."
+                "zh-CN": "design/*.html 保留为历史探索材料，不再作为实现规格权威。",
+                "en": "design/*.html remains historical exploration material and is no longer implementation authority."
               }
             ]
           ]
