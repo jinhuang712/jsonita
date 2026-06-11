@@ -87,6 +87,8 @@ object / array 节点（含 root）递归复制完整子树为 pretty-printed JS
 
 `⌘F` 搜索打开时，搜索条插入在顶部 TabBar 下方，不覆盖 JSON 文本。命中结果在正文中以低透明 primary tint 标出；左侧行号 gutter 只显示低饱和细竖线提示本行有命中，当前命中行略强，但不能接近错误 marker 的强度。关闭搜索后，正文 match 和 gutter hint 同时消失。
 
+`⌘F` 是搜索 toggle：面板关闭时打开搜索，面板打开时再次按下 `⌘F` 关闭搜索。Jsonita 不提供 `⌘R` / `Cmd+R` replace 搜索快捷键，搜索面板也不显示 replace row。
+
 ### 1.1 Tab 切换
 
 顶部功能 Tab：Format / Minify / Tree / →Str / →JSON；AI Fix 仅在 parse error 且 AI 可用时出现在最右，右上角固定设置按钮。切换靠鼠标点击，或在非编辑态按 `Tab` 正向 /`⇧Tab` 反向循环；焦点在 CodeMirror / 表单输入内时不拦截 Tab。active 状态 = 冷色焦点态，并通过 180ms 胶囊位移 / 宽度过渡强化键盘切换手感。

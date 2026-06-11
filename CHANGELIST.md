@@ -6,15 +6,21 @@
 
 ## [Unreleased]
 
-### fix · 搜索面板替换行对齐与命中居中
+### feat · 搜索快捷键 toggle 与纯搜索面板
 
-- 修复 docked 搜索面板中 Replace label 与输入框错位的问题；Find / Replace 两行共用固定 label 列，不再额外左缩进。
+- `Cmd+F` / `⌘F` 首次按下打开搜索；搜索面板已打开时再次按下 `Cmd+F` 关闭搜索，形成双击 F 的快速关闭手势。
+- 搜索面板移除 replace 行与 replace 操作，Jsonita 不再提供 `Cmd+R` / replace 搜索快捷键；当前面板只承担查找、导航、选择全部匹配与关闭。
+- 同步清理 search i18n、CSS 与设计契约，避免保留 replace 面板的历史债务。
+
+### fix · 搜索面板布局与命中居中
+
+- 修复 docked 搜索面板内部 label / input 对齐问题，保持单行搜索条紧凑稳定。
 - 搜索跳转统一使用 CodeMirror `scrollToMatch` center 策略，`Enter`、`Shift+Enter`、上/下一个按钮和 `Cmd+G` 命中后都尽量滚到编辑区中间，而不是贴近顶部或底部。
 
 ### feat · Jsonita 风格 docked 搜索面板
 
 - `⌘F` 不再展示 CodeMirror 默认底部搜索表单，改为 TabBar 下方的 Jsonita docked 搜索条；搜索条参与布局，不覆盖 JSON 文本。
-- 保留 CodeMirror 搜索状态、match highlight、replace、`Enter` / `Shift+Enter`、`Cmd+G` 等内置行为。
+- 保留 CodeMirror 搜索状态、match highlight、`Enter` / `Shift+Enter`、`Cmd+G` 等内置行为。
 - 搜索命中行在行号 gutter 内显示低饱和细竖线；当前命中略强，但不使用高饱和、高对比色，也不替换行号数字。
 - 搜索 UI 文案接入 `panes.search.*` i18n，并同步 `design/` 与 `plan/` 契约。
 

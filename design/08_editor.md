@@ -32,7 +32,7 @@ CodeMirror 6 集成 · JSON 树渲染 · 错误标注 · 状态栏联动 · ligh
 | bracketMatching | @codemirror/language | 光标在 { [ 时高亮配对的 } ] |
 | closeBrackets | @codemirror/autocomplete | 自动补 { → } / [ → ] |
 | history | @codemirror/commands | `⌘Z` /`⌘⇧Z` undo / redo |
-| search | @codemirror/search | `⌘F` 搜索面板；使用 Jsonita 自定义 docked panel |
+| search | @codemirror/search | `⌘F` 搜索面板；使用 Jsonita 自定义 docked panel 和 toggle keymap |
 | search line markers | @codemirror/view lineNumberMarkers | 搜索命中行在行号 gutter 内显示低饱和提示 |
 | drawSelection | @codemirror/view | 多光标选区绘制 |
 | EditorState.allowMultipleSelections | @codemirror/state | `⌘D` 多光标 |
@@ -113,14 +113,14 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 
 ### 1.3.1 搜索面板契约
 
-`⌘F` 打开的搜索 UI 不使用 CodeMirror 默认底部表单。Jsonita 使用 `search({ top: true, createPanel })` 提供自定义面板，面板 dock 在 TabBar 下方、编辑正文上方，参与布局，不覆盖任何 JSON 文本。
+`⌘F` 打开的搜索 UI 不使用 CodeMirror 默认底部表单。Jsonita 使用 `search({ top: true, createPanel })` 提供自定义面板，面板 dock 在 TabBar 下方、编辑正文上方，参与布局，不覆盖任何 JSON 文本。`⌘F` 是 toggle：面板关闭时打开，面板打开时再次按下 `⌘F` 关闭；不定义 `⌘R` / `Cmd+R` replace 快捷键。
 
 结构：
 
 | 区域 | 内容 | 交互 |
 | --- | --- | --- |
 | Find row | `Find` label、搜索输入、`x / n` 计数、上一个/下一个、`Aa`、`.*`、`word`、`All`、关闭 | `Enter` 下一项，`Shift+Enter` 上一项，`Esc` 关闭。 |
-| Replace row | `Replace` label、替换输入、Replace、All | 保留 CodeMirror replace 能力；不弹额外 modal。 |
+| Shortcut | `⌘F` / `Cmd+F` | 关闭时打开搜索，打开时关闭搜索。 |
 | Match highlight | 文本内 match 背景 | 使用低透明 `--primary`，不使用高饱和黄/青/紫。 |
 | Gutter hint | 行号 gutter 内弱竖线 | 普通命中弱提示，当前命中稍强；不能替换行号数字。 |
 
@@ -128,7 +128,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 
 - 搜索面板只用 `--chrome-bg-strong`、`--bg-code`、`--border`、`--text-muted`、`--primary-soft` 等 token。
 - 不使用大面积蓝色块，不使用高对比文字按钮；上一项/下一项用 `↑` / `↓`。
-- Find / Replace 两行共用固定 label 列；Replace row 不做额外左缩进，输入框左边缘必须与 Find 输入框对齐。
+- 搜索面板只提供查找、导航、选择全部匹配与关闭；不得保留 replace row、replace button 或 replace 输入框。
 - 搜索关闭后，文本 match 和 gutter hint 一起消失。
 - 搜索 gutter 只表达“本行有搜索命中”，不能和 parse error 的 `--danger` marker 混淆。
 - 搜索跳转使用居中滚动策略；当前命中不能贴在编辑区顶部或底部作为默认定位。
