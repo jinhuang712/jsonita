@@ -415,9 +415,9 @@ Settings… `⌘,`
 
 Quit Jsonita `⌘Q`
 
-## 4 设置 Modal
+## 4 SettingsView
 
-当前实现整体 W 600、左 nav 140、右 panel + footer。所有改动 即时生效，Done 仅关闭，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。详版交互已从 `design/jsonita-settings-detail.md` 迁入本节和 [04 § 4.6-4.8](04_components.md)。
+当前实现是主壳内 Settings 页面，不是遮罩 Modal：点击齿轮、tray Settings 或 `⌘,` 后，主卡片内部整体切到设置页；Done、`Esc` 或设置页内 `⌘W` 返回编辑工作区。左 nav、右 panel + footer 占用同一张 Jsonita 卡片。所有改动即时生效，Done 仅关闭设置页，Reset all 直接恢复默认。General 只展示当前生效项；"初始宽度 / 重置浮窗尺寸"不再出现在设置面板。详版交互已从 `design/jsonita-settings-detail.md` 迁入本节和 [04 § 4.6-4.8](04_components.md)。
 
 light
 
@@ -808,7 +808,7 @@ age: 30
 | 章节 | 引用本章哪节 |
 | --- | --- |
 | 04 组件库 · TreeView | § 1.3 · § 12 |
-| 04 组件库 · SettingsModal / DiffView；HistoryItem 为保留设计 | § 4 · § 8；§ 5 reserved |
+| 04 组件库 · SettingsView / DiffView；HistoryItem 为保留设计 | § 4 · § 8；§ 5 reserved |
 | 06 窗口 runtime · 智能缩放 | § 11 |
 | 07 菜单栏 · tray / 权限 | § 3 · § 9 |
 | 08 编辑器 & 树 · hover 复制 | § 1.3 · § 12 |

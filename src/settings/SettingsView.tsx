@@ -9,10 +9,10 @@ import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
 
 /**
- * 设置 Modal — 6 分组 nav + 字段。
+ * 设置页 — 6 分组 nav + 字段。
  *
- * 视觉锚：design/01_mockups.md § 4 设置 Modal
- * Spec ref: design/04 § 4.6 SettingsModal
+ * 视觉锚：design/jsonita-settings-detail.md
+ * Spec ref: design/04 § 4.6 SettingsView
  * M2-N1 minimal：General + AI + JSON Transform + History 4 组（Shortcuts M2-N5；About M3）；
  * 字段：launchAtLogin / hideOnBlur / autoUnwrap / aiEnabled / historyLimit / smartWidth / editorSoftWrap。
  * 即时生效：onChange 立即 settings_set。
@@ -22,10 +22,10 @@ type Group = 'general' | 'shortcuts' | 'ai' | 'history' | 'jsonTransform' | 'abo
 
 const GROUPS: Group[] = ['general', 'shortcuts', 'ai', 'history', 'jsonTransform', 'about'];
 
-export function SettingsModal() {
+export function SettingsView() {
   const { t } = useTranslation('settings');
-  const open = useUiStore((s) => s.settingsModalOpen);
-  const setOpen = useUiStore((s) => s.setSettingsModalOpen);
+  const open = useUiStore((s) => s.settingsViewOpen);
+  const setOpen = useUiStore((s) => s.setSettingsViewOpen);
   const settings = useSettingsStore((s) => s.settings);
   const setSettings = useSettingsStore((s) => s.setSettings);
   const [activeGroup, setActiveGroup] = useState<Group>('general');
@@ -61,44 +61,32 @@ export function SettingsModal() {
     }
   };
 
-  if (!open) return null;
-
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-modal-title"
+      aria-labelledby="settings-page-title"
       style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'var(--bg-overlay)',
+        flex: 1,
+        minHeight: 0,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 50,
+        flexDirection: 'column',
+        background: 'var(--glass-bg)',
+        color: 'var(--text)',
+        fontFamily: 'var(--font-sans)',
       }}
-      onClick={() => setOpen(false)}
     >
       <div
         style={{
-          width: 600,
-          maxHeight: '70vh',
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border-strong)',
-          borderRadius: 'var(--radius-2xl)',
-          boxShadow: 'var(--shadow-lg)',
+          flex: 1,
+          minHeight: 0,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          fontFamily: 'var(--font-sans)',
-          color: 'var(--text)',
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         <div
-          id="settings-modal-title"
+          id="settings-page-title"
           style={{
-            padding: '12px 16px',
+            padding: '14px 18px',
             borderBottom: '1px solid var(--border)',
             fontSize: 'var(--fs-lg)',
             fontWeight: 600,
@@ -109,7 +97,7 @@ export function SettingsModal() {
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <nav
             style={{
-              width: 140,
+              width: 150,
               borderRight: '1px solid var(--border)',
               background: 'var(--bg-elevated-nav)',
               padding: 'var(--sp-2) 0',
@@ -142,7 +130,7 @@ export function SettingsModal() {
               </button>
             ))}
           </nav>
-          <div style={{ flex: 1, padding: 'var(--sp-4)', overflow: 'auto', fontSize: 'var(--fs-sm)' }}>
+          <div style={{ flex: 1, padding: 'var(--sp-5)', overflow: 'auto', fontSize: 'var(--fs-sm)' }}>
             {activeGroup === 'general' && (
               <GroupGeneral settings={settings} patch={patch} />
             )}

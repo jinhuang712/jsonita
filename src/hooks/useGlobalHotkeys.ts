@@ -62,12 +62,12 @@ export function useGlobalHotkeys() {
   const activePane = useUiStore((s) => s.activePane);
   const showAiFix = useUiStore((s) => s.showAiFix);
   const historyModalOpen = useUiStore((s) => s.historyModalOpen);
-  const settingsModalOpen = useUiStore((s) => s.settingsModalOpen);
+  const settingsViewOpen = useUiStore((s) => s.settingsViewOpen);
   const singlePaneApplyState = useUiStore((s) => s.singlePaneApplyState);
   const setActivePane = useUiStore((s) => s.setActivePane);
   const setShowAiFix = useUiStore((s) => s.setShowAiFix);
   const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
-  const setSettingsModalOpen = useUiStore((s) => s.setSettingsModalOpen);
+  const setSettingsViewOpen = useUiStore((s) => s.setSettingsViewOpen);
   const setSinglePaneApplyState = useUiStore((s) => s.setSinglePaneApplyState);
   const zoomEditorFont = useUiStore((s) => s.zoomEditorFont);
   const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
@@ -95,7 +95,7 @@ export function useGlobalHotkeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Tab' || event.altKey || event.ctrlKey || event.metaKey) return;
-      if (historyModalOpen || settingsModalOpen || isTypingTarget(event.target)) return;
+      if (historyModalOpen || settingsViewOpen || isTypingTarget(event.target)) return;
 
       const panes = showAiFix && aiEnabled ? [...PANE_ORDER, 'ai-fix' as Pane] : PANE_ORDER;
       const currentIndex = panes.indexOf(activePane);
@@ -110,7 +110,7 @@ export function useGlobalHotkeys() {
 
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [activePane, aiEnabled, historyModalOpen, settingsModalOpen, setActivePane, showAiFix]);
+  }, [activePane, aiEnabled, historyModalOpen, settingsViewOpen, setActivePane, showAiFix]);
 
   // ⌘Y 打开 / 关闭 History。即使编辑器聚焦也响应，方便随手找回历史。
   useEffect(() => {
@@ -120,7 +120,7 @@ export function useGlobalHotkeys() {
         !hasPrimaryModifier(event) ||
         event.altKey ||
         event.shiftKey ||
-        settingsModalOpen
+        settingsViewOpen
       ) {
         return;
       }
@@ -131,12 +131,12 @@ export function useGlobalHotkeys() {
 
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [historyModalOpen, setHistoryModalOpen, settingsModalOpen]);
+  }, [historyModalOpen, setHistoryModalOpen, settingsViewOpen]);
 
   // 可自定义窗口内快捷键：切换单窗 / 双栏。默认 CmdOrCtrl+\。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (historyModalOpen || settingsModalOpen) return;
+      if (historyModalOpen || settingsViewOpen) return;
       if (!eventMatchesAccelerator(event, shortcutSplitToggle)) return;
 
       consume(event);
@@ -151,7 +151,7 @@ export function useGlobalHotkeys() {
   }, [
     historyModalOpen,
     setSettings,
-    settingsModalOpen,
+    settingsViewOpen,
     shortcutSplitToggle,
     singlePaneMode,
   ]);
@@ -170,12 +170,35 @@ export function useGlobalHotkeys() {
       }
 
       consume(event);
-      setSettingsModalOpen(true);
+      setHistoryModalOpen(false);
+      setSettingsViewOpen(true);
     };
 
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [historyModalOpen, setSettingsModalOpen]);
+  }, [historyModalOpen, setHistoryModalOpen, setSettingsViewOpen]);
+
+  // Settings 是主壳内页面状态；Esc 返回编辑工作区，不触发双击 Esc 隐藏。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        !settingsViewOpen ||
+        event.key !== 'Escape' ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+
+      consume(event);
+      setSettingsViewOpen(false);
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [setSettingsViewOpen, settingsViewOpen]);
 
   // Cmd+A 只允许编辑器 / 表单走原生全选，其他 UI chrome 绝不触发 DOM 全页选择。
   useEffect(() => {
@@ -202,7 +225,7 @@ export function useGlobalHotkeys() {
   // AI Fix 快捷键优先于普通 single-pane apply / Esc hide，单双栏一致。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (historyModalOpen || settingsModalOpen) return;
+      if (historyModalOpen || settingsViewOpen) return;
 
       const isCmdEnter =
         event.key === 'Enter' &&
@@ -258,7 +281,7 @@ export function useGlobalHotkeys() {
     retryAi,
     setActivePane,
     setContent,
-    settingsModalOpen,
+    settingsViewOpen,
     showAiFix,
   ]);
 
@@ -266,7 +289,7 @@ export function useGlobalHotkeys() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-      if (historyModalOpen || settingsModalOpen) return;
+      if (historyModalOpen || settingsViewOpen) return;
 
       event.preventDefault();
       event.stopPropagation();
@@ -288,7 +311,7 @@ export function useGlobalHotkeys() {
 
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [historyModalOpen, settingsModalOpen]);
+  }, [historyModalOpen, settingsViewOpen]);
 
   useEffect(() => {
     if (singlePaneApplyState !== 'success' && singlePaneApplyState !== 'error') return;
@@ -309,7 +332,7 @@ export function useGlobalHotkeys() {
       ) {
         return;
       }
-      if (!singlePaneMode || historyModalOpen || settingsModalOpen) return;
+      if (!singlePaneMode || historyModalOpen || settingsViewOpen) return;
       if (activePane === 'tree' || activePane === 'ai-fix') return;
 
       event.preventDefault();
@@ -365,7 +388,7 @@ export function useGlobalHotkeys() {
     setActivePane,
     setSinglePaneApplyState,
     setStatus,
-    settingsModalOpen,
+    settingsViewOpen,
     singlePaneMode,
   ]);
 
@@ -373,17 +396,23 @@ export function useGlobalHotkeys() {
   useHotkeys(
     `${primaryHotkeyPrefix()}+k`,
     () => {
+      if (historyModalOpen || settingsViewOpen) return;
       clearEditor();
       session.clearLast().catch(() => {});
     },
     { preventDefault: true },
+    [clearEditor, historyModalOpen, settingsViewOpen],
   );
 
   // ⌘⇧L 找回上次会话
   useHotkeys(
     `${primaryHotkeyPrefix()}+shift+l`,
-    restoreLast,
+    () => {
+      if (historyModalOpen || settingsViewOpen) return;
+      restoreLast();
+    },
     { preventDefault: true },
+    [historyModalOpen, restoreLast, settingsViewOpen],
   );
 
   // 全局快捷键 Cmd+Shift+L 由 Rust 发事件；窗口 focus 内的 meta+shift+l 走上面的 useHotkeys。
@@ -401,15 +430,20 @@ export function useGlobalHotkeys() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setContent]);
 
-  // ⌘W 关闭浮窗（design/06 § 5.1 路由）
+  // ⌘W 关闭浮窗；Settings 页内先返回编辑工作区。
   useHotkeys(`${primaryHotkeyPrefix()}+w`, () => {
+    if (settingsViewOpen) {
+      setSettingsViewOpen(false);
+      return;
+    }
     win.hide().catch(() => {});
-  });
+  }, { preventDefault: true }, [setSettingsViewOpen, settingsViewOpen]);
 
   // ⌘+ / ⌘- / ⌘0 调整编辑器与树视图字体大小。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!hasPrimaryModifier(event) || event.altKey) return;
+      if (historyModalOpen || settingsViewOpen) return;
 
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();
@@ -429,5 +463,5 @@ export function useGlobalHotkeys() {
 
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [resetEditorFontSize, zoomEditorFont]);
+  }, [historyModalOpen, resetEditorFontSize, settingsViewOpen, zoomEditorFont]);
 }

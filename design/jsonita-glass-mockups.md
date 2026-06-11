@@ -286,7 +286,7 @@ AI Fix
 
 Cancel ⌘↵ Accept
 
-2.2 设置 Modal
+2.2 SettingsView
 
 Settings
 
@@ -941,7 +941,7 @@ Open Settings
     </div>
 
     <div>
-      <p class="cap">2.2 设置 Modal</p>
+      <p class="cap">2.2 SettingsView</p>
       <div class="grid2">
         <div class="stage stage-l"><div class="win win-l">
           <div class="mtitle"><div class="traffic"><span class="tl-r"></span><span class="tl-y"></span><span class="tl-g"></span></div><div class="mtitle-name">Settings</div></div>

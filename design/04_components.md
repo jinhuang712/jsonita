@@ -10,7 +10,7 @@ shadcn/ui 是源码不是依赖 ── 按需 `npx shadcn@latest add <component>
 
 基元用 shadcn （Button / Input / Select / Switch / Dialog / Tooltip / DropdownMenu / Tabs / ScrollArea）
 
-业务组件自写 （Editor / TreeView / TabBar / StatusBar / SettingsModal 等；Toast / HistoryModal 为保留设计）
+业务组件自写 （Editor / TreeView / TabBar / StatusBar / SettingsView 等；Toast / HistoryModal 为保留设计）
 
 不引 antd / Mantine / Chakra ── bundle 太大且风格冲突
 
@@ -24,7 +24,7 @@ shadcn/ui 是源码不是依赖 ── 按需 `npx shadcn@latest add <component>
 | `Select` | shadcn | 主题 / 缩进 / 历史上限选择 | 下拉浮层 bg `--bg-card` · 阴影 `--shadow-lg` |
 | `Switch / Checkbox` | shadcn / custom | 设置面板所有 boolean 项 | 低饱和 checked bg `--primary`；自定义 checkbox 保留原生 input 可访问性 |
 | `Tabs` | shadcn | 设置面板分组（General / Shortcuts / AI / ...） | border-bottom + active underline 样式 |
-| `Dialog` | shadcn (Radix) | 设置 / 历史 / AI 错误 modal | 背景 `--bg-overlay` · 容器 radius `--radius-2xl` |
+| `Dialog` | shadcn (Radix) | 历史 / 权限 / AI 错误 modal | 背景 `--bg-overlay` · 容器 radius `--radius-2xl` |
 | `DropdownMenu` | shadcn | 历史项右键菜单 / Tray 替代菜单 | 同 Select |
 | `Tooltip` | shadcn | 按钮 / 状态栏 hover 提示 | bg dark always · z `--z-tooltip` |
 | `ScrollArea` | shadcn | 历史列表 / 设置面板滚动 | thumb color `--border-strong` |
@@ -60,7 +60,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `DiffView` | panes/DiffView.tsx | AI Fix 接受前的 diff 展示（左原右改） |
 | `HistoryModal` | history/HistoryModal.tsx | 历史列表 Modal：搜索、筛选、载入、Pin / Star / Clear |
 | `HistoryItem` | history/HistoryModal.tsx | 历史单行 UI：op chip、摘要、Pin / Star 操作 |
-| `SettingsModal` | settings/SettingsModal.tsx | 设置面板（左侧 nav + 右侧 panel） |
+| `SettingsView` | settings/SettingsView.tsx | 主壳内设置页（左侧 nav + 右侧 panel） |
 | `ShortcutInput` | settings/ShortcutInput.tsx | 录入快捷键 + 冲突检测 |
 | `ApiKeyInput` | settings/ApiKeyInput.tsx | masked 输入 + 测试连接 |
 
@@ -105,7 +105,7 @@ ai variant 视觉 ：橙色渐变背景 ── 与其他 Tab 视觉上明显区�
 
 active 动效 ：active Tab 背后使用独立胶囊层，点击或 `Tab` / `⇧Tab` 切换时走 180ms 位移与宽度过渡；文字颜色 / weight 同步过渡，避免键盘切换时只有瞬时跳变
 
-设置入口 ：右上角固定设置图标按钮，点击区不小于 34 × 30 px，默认态保留弱边框与 soft 背景， `aria-label=Open settings` ，tooltip 显示 `⌘,` ；点击打开 `SettingsModal`
+设置入口 ：右上角固定设置图标按钮，点击区不小于 34 × 30 px，默认态保留弱边框与 soft 背景， `aria-label=Open settings` ，tooltip 显示 `⌘,` ；点击后主壳内部切到 `SettingsView`
 
 字号缩放 ：Tab button 不允许 hardcode `12px` ；必须使用浮窗根节点派生的 `--fs-editor` 与 `--lh-tight` ，与 CodeMirror 正文字号保持一致，让用户能从 Format / Minify 等顶部标签直接感知当前放大程度
 
@@ -150,7 +150,7 @@ type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 
 ### 4.3 Toast（reserved / future）
 
-当前代码没有 `src/shell/Toast.tsx`，也未接入 `sonner`。运行时错误目前由状态栏、AI 面板局部错误、Shortcut Permission / Settings Modal 呈现；以下 API 是后续接入 Toast 时的保留契约。
+当前代码没有 `src/shell/Toast.tsx`，也未接入 `sonner`。运行时错误目前由状态栏、AI 面板局部错误、Shortcut Permission Modal 和 Settings 页面局部错误呈现；以下 API 是后续接入 Toast 时的保留契约。
 
 ```
 // src/shell/Toast.tsx ── API 契约
@@ -195,13 +195,13 @@ op-type chip ：每行左侧显示 op_type 的色彩 chip；format/minify 用 pr
 
 保留策略 ：Clear 只删除普通条目；pinned / starred 保留，与 SQLite `history_clear` 契约一致
 
-### 4.6 SettingsModal
+### 4.6 SettingsView
 
-Dialog 整体 W 720 × H 540（最大）。左侧 nav（W 180）+ 右侧 panel + 底部 footer（Done / Reset）。视觉与布局见 [01 § 4 设置 Modal](../design/01_mockups.md#4-设置-modal)。
+Settings 是主壳内页面状态，不是 overlay dialog。点击右上角齿轮、tray Settings 或 `⌘,` 后，主 Jsonita 卡片内部从 editor workspace 切换为 Settings workspace；外层圆角、阴影、玻璃背景和窗口尺寸保持同一张卡片。左侧 nav（W 150）+ 右侧 panel + 底部 footer（Done / Reset），`Esc`、Done 和 Settings 页内 `⌘W` 都返回 editor workspace。
 
-规则：所有改动 即时生效 （不需要 Done 按钮提交，每个 Switch / Select 变化立刻 `settings_set` ）。Done 仅关闭 Modal。Reset 弹二次确认 Dialog。
+规则：所有改动 即时生效 （不需要 Done 按钮提交，每个 Switch / Select 变化立刻 `settings_set` ）。Done 仅关闭 Settings 页面。Reset all 直接恢复默认。
 
-当前实现尺寸：真实组件使用 W 600、左 nav 140、max-height 70vh；如果未来回到设计详版的 W 720 / nav 180，必须同步 [01 § 4](../design/01_mockups.md#4-设置-modal) 和本节。当前以真实实现为准。
+当前实现尺寸：`SettingsView` 继承外层浮窗尺寸；左 nav 150，右 panel 自适应剩余宽度，内容区滚动。当前以真实实现为准。
 
 | 分组 | 组件 | 状态 / 副作用 |
 | --- | --- | --- |
@@ -218,7 +218,7 @@ About 分组：使用轻量信息面板展示产品名、版本、License、作�
 
 ### 4.7 ShortcutInput
 
-设置面板 Shortcuts 分组内的录入控件，视觉嵌入 [01 § 4 设置 Modal](../design/01_mockups.md#4-设置-modal) 的 Shortcuts panel。
+设置面板 Shortcuts 分组内的录入控件，视觉嵌入 `SettingsView` 的 Shortcuts panel。
 
 ```
 interface ShortcutInputProps {
@@ -244,7 +244,7 @@ interface ShortcutInputProps {
 
 ### 4.8 ApiKeyInput
 
-设置面板 AI 分组内的 API key 录入 + 测试连接控件。视觉嵌入 [01 § 4 设置 Modal](../design/01_mockups.md#4-设置-modal)。
+设置面板 AI 分组内的 API key 录入 + 测试连接控件。视觉嵌入 `SettingsView`。
 
 ```
 interface ApiKeyInputProps {

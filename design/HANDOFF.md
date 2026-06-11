@@ -123,7 +123,7 @@
 **阶段 1 · 单窗功能(低风险,纯前端 + settings)**
 - `src/store/settings.ts` + Rust Settings（见 [`A00-schemas.md`](../spec/appendix/A00-schemas.md)）新增 `shortcutSplitToggle`,默认 `CmdOrCtrl+\`。
 - 窗口内快捷键监听 + 与「可自定义」快捷键体系打通（见 [`S02-ipc-boundary.md`](../spec/S02-ipc-boundary.md) 与 [`I01-ipc-api.md`](../spec/platform/I01-ipc-api.md)）；`⌘\` 不走 global-shortcut。
-- `SettingsModal` Shortcuts 面板加这条可自定义项。
+- `SettingsView` Shortcuts 面板加这条可自定义项。
 - StatusBar:加 `Switch to [Single/Split] Panel` 控件(hover 浮现 `⌘\`),History 改为 hover 浮现 `⌘Y`;切单窗只改布局,不主动缩窗;去掉左侧 "single-pane"。
 
 **阶段 2 · 动画**

@@ -6,14 +6,14 @@ import { useLocaleSync } from './i18n/useLocaleSync';
 import { HistoryModal } from './history/HistoryModal';
 import { settings as settingsApi } from './ipc/commands';
 import { ShortcutPermissionModal } from './permissions/ShortcutPermissionModal';
-import { SettingsModal } from './settings/SettingsModal';
 import { FloatingWindow } from './shell/FloatingWindow';
 import { useSettingsStore } from './store/settings';
 import { useUiStore } from './store/ui';
 
 export function App() {
   const [modalOpen, setModalOpen] = useState(false);
-  const setSettingsModalOpen = useUiStore((s) => s.setSettingsModalOpen);
+  const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
+  const setSettingsViewOpen = useUiStore((s) => s.setSettingsViewOpen);
   const setSettings = useSettingsStore((s) => s.setSettings);
   useGlobalHotkeys();
   useLocaleSync();
@@ -41,8 +41,11 @@ export function App() {
         unlisten1 = fn;
       },
     );
-    // tray Settings 项 / ⌘, 触发：打开 Settings Modal
-    listen('tray:open-settings', () => setSettingsModalOpen(true)).then((fn) => {
+    // tray Settings 项 / ⌘, 触发：切到 Settings 页
+    listen('tray:open-settings', () => {
+      setHistoryModalOpen(false);
+      setSettingsViewOpen(true);
+    }).then((fn) => {
       unlisten2 = fn;
     });
 
@@ -50,7 +53,7 @@ export function App() {
       if (unlisten1) unlisten1();
       if (unlisten2) unlisten2();
     };
-  }, [setSettingsModalOpen]);
+  }, [setHistoryModalOpen, setSettingsViewOpen]);
 
   // Modal 打开期间周期轮询：用户授权后自动 close（design/07 § 3.2 不需重启即可呼出）
   useEffect(() => {
@@ -70,7 +73,6 @@ export function App() {
     <>
       <FloatingWindow />
       <HistoryModal />
-      <SettingsModal />
       {modalOpen && <ShortcutPermissionModal onClose={() => setModalOpen(false)} />}
     </>
   );
