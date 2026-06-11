@@ -30,6 +30,7 @@ import { jsonitaJsonHighlight } from './highlight';
 import { externalLinter, supplementalJsonLinter, type ExternalEditorError } from './lint';
 import { jsonitaSearchGutter } from './searchGutter';
 import { createJsonitaSearchPanel } from './searchPanel';
+import { centerSearchMatch } from './searchScroll';
 import { jsonitaDarkTheme, jsonitaLightTheme } from './theme';
 
 export interface EditorConfig {
@@ -54,7 +55,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     closeBrackets(),
     history(),
     drawSelection(),
-    search({ top: true, createPanel: createJsonitaSearchPanel }),
+    search({ top: true, createPanel: createJsonitaSearchPanel, scrollToMatch: centerSearchMatch }),
     highlightSelectionMatches(),
     jsonitaSearchGutter,
     indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),

@@ -128,8 +128,10 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 
 - 搜索面板只用 `--chrome-bg-strong`、`--bg-code`、`--border`、`--text-muted`、`--primary-soft` 等 token。
 - 不使用大面积蓝色块，不使用高对比文字按钮；上一项/下一项用 `↑` / `↓`。
+- Find / Replace 两行共用固定 label 列；Replace row 不做额外左缩进，输入框左边缘必须与 Find 输入框对齐。
 - 搜索关闭后，文本 match 和 gutter hint 一起消失。
 - 搜索 gutter 只表达“本行有搜索命中”，不能和 parse error 的 `--danger` marker 混淆。
+- 搜索跳转使用居中滚动策略；当前命中不能贴在编辑区顶部或底部作为默认定位。
 
 ### 1.4 React 封装
 

@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### fix · 搜索面板替换行对齐与命中居中
+
+- 修复 docked 搜索面板中 Replace label 与输入框错位的问题；Find / Replace 两行共用固定 label 列，不再额外左缩进。
+- 搜索跳转统一使用 CodeMirror `scrollToMatch` center 策略，`Enter`、`Shift+Enter`、上/下一个按钮和 `Cmd+G` 命中后都尽量滚到编辑区中间，而不是贴近顶部或底部。
+
 ### feat · Jsonita 风格 docked 搜索面板
 
 - `⌘F` 不再展示 CodeMirror 默认底部搜索表单，改为 TabBar 下方的 Jsonita docked 搜索条；搜索条参与布局，不覆盖 JSON 文本。
