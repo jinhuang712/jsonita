@@ -1,6 +1,6 @@
 # 附录：日志明细
 
-核心语义见 [09_logging_observability.md](../09_logging_observability.md)。本页只列字段、事件和脱敏规则。
+核心语义见 [S06-logging-observability.md](../S06-logging-observability.md)。本页只列字段、事件和脱敏规则。
 
 ## JSONL 字段
 

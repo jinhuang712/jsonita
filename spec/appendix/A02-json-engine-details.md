@@ -1,6 +1,6 @@
 # 附录：JSON Engine 明细
 
-核心语义见 [06_json_engine.md](../06_json_engine.md)。本页只列签名、伪代码和测试边界。
+核心语义见 [M01-json-engine.md](../M01-json-engine.md)。本页只列签名、伪代码和测试边界。
 
 ## 函数签名
 

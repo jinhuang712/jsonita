@@ -34,7 +34,7 @@ sequenceDiagram
 
 启动顺序有意把日志放在最前面，因为启动失败也需要诊断。SQLite 打不开不会直接阻塞 UI，因为用户仍可能只做临时 JSON 变换；窗口创建失败才是启动阻塞，因为没有可交互界面。
 
-Tauri 配置中的 `visible: false` 是生命周期关键字段，不是视觉细节。默认窗口尺寸是 `860 x 560`，最小尺寸是 `440 x 340`；这些值影响预热、智能缩放和恢复策略，完整配置见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+Tauri 配置中的 `visible: false` 是生命周期关键字段，不是视觉细节。默认窗口尺寸是 `860 x 560`，最小尺寸是 `440 x 340`；这些值影响预热、智能缩放和恢复策略。release 门禁见 [platform/R00-release-readiness.md](platform/R00-release-readiness.md)，完整配置明细见 [appendix/A04-packaging-details.md](appendix/A04-packaging-details.md)。
 
 ## Window State Machine
 
@@ -123,7 +123,7 @@ macOS 焦点策略由 NSPanel-like 行为、Accessory activation policy、always
 
 ## 相关文档
 
-- 系统分层见 [00_system_architecture.md](00_system_architecture.md)。
-- 前端快捷键和 pane 行为见 [02_frontend_execution.md](02_frontend_execution.md)。
-- window command/event 完整表见 [appendix/ipc-api.md](appendix/ipc-api.md)。
-- window state schema 和 Tauri window 配置见 [appendix/schemas.md](appendix/schemas.md) 与 [appendix/packaging-details.md](appendix/packaging-details.md)。
+- 系统分层见 [S00-system-architecture.md](S00-system-architecture.md)。
+- 前端快捷键和 pane 行为见 [M00-frontend-execution.md](M00-frontend-execution.md)。
+- window command/event 完整表见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)。
+- window state schema 和 Tauri window 配置见 [appendix/A00-schemas.md](appendix/A00-schemas.md) 与 [appendix/A04-packaging-details.md](appendix/A04-packaging-details.md)。

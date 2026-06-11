@@ -37,7 +37,7 @@ command 是前端主动请求 Rust 做事；event 是 Rust 告诉前端某个状
 | `shortcuts` | `shortcut_register`、`shortcut_status`、`shortcut_retry`、`open_accessibility_settings` | `shortcuts::*` | `ShortcutRegisterResp` | 全局快捷键 | 注册失败可修改参数后重试。 |
 | `logging` | 前端日志薄层、`open_log_dir` | `logging::*`、`cmds::system` | logger service | 写本地日志 | 日志失败不能影响 JSON 主流程。 |
 
-完整签名见 [appendix/ipc-api.md](appendix/ipc-api.md)。核心 spec 只保留行为判断必需的名字。
+完整签名见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)。核心 spec 只保留行为判断必需的名字。
 
 ## Command 与 Event 的方向性
 
@@ -139,6 +139,6 @@ IPC 字段一旦漂移，错误分诊、settings patch 和 AI retry 都会变成
 
 ## 相关文档
 
-- 错误分诊见 [04_error_model.md](04_error_model.md)。
-- 前端过期响应和 input 覆盖规则见 [02_frontend_execution.md](02_frontend_execution.md)。
-- 完整 command/event 和 schema 见 [appendix/ipc-api.md](appendix/ipc-api.md) 与 [appendix/schemas.md](appendix/schemas.md)。
+- 错误分诊见 [S03-error-model.md](S03-error-model.md)。
+- 前端过期响应和 input 覆盖规则见 [M00-frontend-execution.md](M00-frontend-execution.md)。
+- 完整 command/event 和 schema 见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md) 与 [appendix/A00-schemas.md](appendix/A00-schemas.md)。

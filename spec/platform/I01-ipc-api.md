@@ -1,6 +1,6 @@
-# 附录：IPC API 明细
+# I01 · IPC API
 
-核心语义见 [03_ipc_boundary.md](../03_ipc_boundary.md)。本页只列签名、返回值、错误分支。
+核心语义见 [../S02-ipc-boundary.md](../S02-ipc-boundary.md)。本页定义 Tauri IPC integration contract：command/event 列表、返回值、主要错误分支和命名约定。
 
 ## Commands
 

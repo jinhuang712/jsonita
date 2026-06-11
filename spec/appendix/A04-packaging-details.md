@@ -1,6 +1,6 @@
 # 附录：打包发布明细
 
-核心语义见 [10_packaging_distribution.md](../10_packaging_distribution.md)。本页只列配置摘要、命令和签名变量。
+核心语义见 [S07-packaging-distribution.md](../S07-packaging-distribution.md)。本页只列配置摘要、命令和签名变量。
 
 ## Tauri config 摘要
 

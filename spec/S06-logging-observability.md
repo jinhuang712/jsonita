@@ -33,7 +33,7 @@ Rust 是当前 durable writer。前端 logger 现在只保留 API shape 并输�
 | `source` | 前端/Rust/模块来源 | 建议 | `frontend`、`rust`、`ai`、`store`。 |
 | `fields` | allow-list 扩展字段 | 可选 | line/col、retryAfterSec、window size source。 |
 
-完整字段表在 [appendix/logging-details.md](appendix/logging-details.md)。核心 spec 点名这些字段，是因为它们影响错误定位和隐私边界。
+完整字段表在 [appendix/A03-logging-details.md](appendix/A03-logging-details.md)。核心 spec 点名这些字段，是因为它们影响错误定位和隐私边界。
 
 ## 事件分类和诊断目标
 
@@ -58,7 +58,7 @@ flowchart TD
   Deny -->|"否"| Review["按最小必要字段保留或丢弃"]
 ```
 
-deny-list 类别在 [05_security_privacy.md](05_security_privacy.md) 定义。日志系统必须做二次脱敏，即使前端已经声称 payload 是安全的。
+deny-list 类别在 [S04-security-privacy.md](S04-security-privacy.md) 定义。日志系统必须做二次脱敏，即使前端已经声称 payload 是安全的。
 
 字段策略：
 
@@ -116,6 +116,6 @@ Jsonita 是本地工具，用户数据默认留在本机。远程 telemetry 会�
 
 ## 相关文档
 
-- 错误字段边界见 [04_error_model.md](04_error_model.md)。
-- 隐私 deny-list 见 [05_security_privacy.md](05_security_privacy.md)。
-- logging command 明细和事件 catalog 见 [appendix/logging-details.md](appendix/logging-details.md) 与 [appendix/ipc-api.md](appendix/ipc-api.md)。
+- 错误字段边界见 [S03-error-model.md](S03-error-model.md)。
+- 隐私 deny-list 见 [S04-security-privacy.md](S04-security-privacy.md)。
+- logging command 明细和事件 catalog 见 [appendix/A03-logging-details.md](appendix/A03-logging-details.md) 与 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)。

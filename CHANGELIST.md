@@ -6,11 +6,19 @@
 
 ## [Unreleased]
 
+### docs · 落地 S/M/I/R/A/V spec 编号体系
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 将当前 spec 文件从旧数字序列迁移为 `Sxx` 系统契约、`Mxx` 用户能力、`spec/platform/Ixx` 集成契约、`spec/platform/Rxx` 可靠性契约、`spec/appendix/Axx` 实现明细和 `spec/appendix/Vxx` 验证明细。 |
+| 影响文档 | `spec/`、`spec/platform/`、`spec/appendix/`、`AGENTS.md`、`CLAUDE.md`、`PROJECT.md`、`README.md`、`plan/`、`design/`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈没有看到 `S` / `M` / `I` / `R` 文档编号；本次去掉“未来迁移”的临时映射，让文件名、导航、入口规则和链接都直接呈现编号体系。 |
+
 ### docs · 引入通用 WORKFLOW 并下沉 Jsonita 专属约束
 
 | 字段 | 内容 |
 | --- | --- |
-| 变更 | 用 open-novel 蒸馏出的项目无关 workflow 覆盖根目录 `WORKFLOW.md`，并把 Jsonita 专属 Git、文档源、产品边界和验证规则迁入 `AGENTS.md` / `CLAUDE.md`。 |
+| 变更 | 用 open-novel 蒸馏出的项目无关 workflow 覆盖根目录 `WORKFLOW.md`，并把 Jsonita 专属 Git、文档源、产品边界和验证规则迁入 `AGENTS.md` / `CLAUDE.md`。后续 `S/M/I/R/A/V` 实体编号已在 spec 目录落地。 |
 | 影响文档 | `WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`README.md`、`PROJECT.md`、`CHANGELIST.md`。 |
 | 关联 | 用户要求复用 `/Users/jin.huang/dev/projects/open-novel/WORKFLOW.md`，同时保持本仓库不重新引入 HTML/CAST 文档系统、不使用 `yummy`、继续使用 `CHANGELIST.md` 作为 changelog。 |
 
@@ -34,9 +42,9 @@
 
 ### docs · 重写核心 spec 叙事与失败语义
 
-- `spec/00_system_architecture.md` 到 `spec/10_packaging_distribution.md` 从统一模板改为按主题定制骨架，核心文档直接说明系统契约、技术路径、职责边界、状态流和用户可见结果。
+- `spec/S00-system-architecture.md` 到 `spec/S07-packaging-distribution.md`、`spec/M00-frontend-execution.md` 到 `spec/M02-ai-repair.md` 从统一模板改为按主题定制骨架，核心文档直接说明系统契约、技术路径、职责边界、状态流和用户可见结果。
 - 每篇核心 spec 补充 Mermaid 图、关键决策表、失败矩阵和 FAQ；图表只使用 Mermaid，不引入 ASCII diagram。
-- `spec/04_error_model.md` 明确定义“失败语义”：触发点、不变量、用户可见结果、恢复动作和日志边界，而不是抽象规章。
+- `spec/S03-error-model.md` 明确定义“失败语义”：触发点、不变量、用户可见结果、恢复动作和日志边界，而不是抽象规章。
 - 核心 spec 补回影响行为的 command、event、error kind、状态和关键字段名；完整 schema、DDL、prompt、命令签名仍留在 appendix。
 - 校准 appendix 中的日志事件、SQLite `schema_version.v`、`busy_timeout`、`window.json` 字段和 frontend logging reserved 状态，避免附录和实现漂移。
 - 清理源码注释里的旧 spec 编号和旧路径引用，统一指向当前 Markdown 权威文档。

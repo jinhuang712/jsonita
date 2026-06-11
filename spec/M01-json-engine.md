@@ -26,7 +26,7 @@ flowchart TD
 | String to JSON | `json_parse` | 输入字符串字面量或普通 JSON 字符串 | JSON text | `Parse` | 否 | 否 |
 | Unwrap stringified | `json_unwrap_stringified` | `UnwrapOpts.timeoutMs`、`maxDepth` | 解包后的 JSON | `Parse`、`UnwrapTimeout` | 否 | 否 |
 
-字段完整定义见 [appendix/schemas.md](appendix/schemas.md)，算法和测试样例见 [appendix/json-engine-details.md](appendix/json-engine-details.md)。
+字段完整定义见 [appendix/A00-schemas.md](appendix/A00-schemas.md)，算法和测试样例见 [appendix/A02-json-engine-details.md](appendix/A02-json-engine-details.md)。
 
 ## 为什么选择 `serde_json`
 
@@ -124,6 +124,6 @@ partial result 会让用户误以为得到完整 JSON。超时是失败，必须
 
 ## 相关文档
 
-- 前端 preview 和 apply 规则见 [02_frontend_execution.md](02_frontend_execution.md)。
-- 错误分诊见 [04_error_model.md](04_error_model.md)。
-- 函数签名、fixture 和完整 option 字段见 [appendix/json-engine-details.md](appendix/json-engine-details.md) 与 [appendix/schemas.md](appendix/schemas.md)。
+- 前端 preview 和 apply 规则见 [M00-frontend-execution.md](M00-frontend-execution.md)。
+- 错误分诊见 [S03-error-model.md](S03-error-model.md)。
+- 函数签名、fixture 和完整 option 字段见 [appendix/A02-json-engine-details.md](appendix/A02-json-engine-details.md) 与 [appendix/A00-schemas.md](appendix/A00-schemas.md)。

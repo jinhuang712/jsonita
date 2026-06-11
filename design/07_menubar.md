@@ -105,7 +105,7 @@ Dock 图标也跟随：菜单栏关 + dock 关 → 应用就完全 headless（�
 | restore_last | `CmdOrCtrl+Shift+L` | 是（全局） |
 | split_toggle（单窗 / 双栏） | `CmdOrCtrl+\` | 是（窗口内；阶段 1 已实现） |
 
-其他 in-app 快捷键（ `Tab` /`⇧Tab` /`⌘K` /`⌘⇧L` /`Esc` /`⌘W` ）由 React 端处理，不走 global-shortcut（不抢系统）。 `split_toggle` （ `⌘\` 切换单窗 / 双栏，阶段 1 已实现）也属窗口内快捷键，但可在设置「快捷键 → 可自定义」改键，与 `toggle_window` /`restore_last` 并列；其状态栏控件与 `⌘Y` History 一样，平时只显文字、hover / 键盘聚焦才浮现键位（见 [01 § 2](../design/01_mockups.md#2-状态栏-4-态对照) ）。
+其他 in-app 快捷键（ `Tab` /`⇧Tab` /`⌘K` /`⌘⇧L` /`Esc` /`⌘W` ）由 React 端处理，不走 global-shortcut（不抢系统）。 `split_toggle` （ `⌘\` 切换单窗 / 双栏，阶段 1 已实现）也属窗口内快捷键，但可在设置「快捷键 → 可自定义」改键，与 `toggle_window` /`restore_last` 并列；其状态栏控件与 `⌘Y` History 一样，平时只显文字、hover / 键盘聚焦才浮现键位（见 [design/01 § 2](01_mockups.md) ）。
 
 ### 2.2 注册
 

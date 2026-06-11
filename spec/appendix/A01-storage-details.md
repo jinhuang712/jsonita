@@ -1,6 +1,6 @@
 # 附录：存储明细
 
-核心语义见 [07_storage_session.md](../07_storage_session.md)。本页只列 DDL、PRAGMA、迁移和路径。
+核心语义见 [S05-storage-session.md](../S05-storage-session.md)。本页只列 DDL、PRAGMA、迁移和路径。
 
 ## SQLite DDL
 

@@ -52,7 +52,7 @@ sequenceDiagram
   end
 ```
 
-核心语义只点名到 `accounts.deepseek_api_key.value` 级别：它是 DeepSeek key 的本地存储位置。完整 JSON 结构在 [appendix/schemas.md](appendix/schemas.md)。
+核心语义只点名到 `accounts.deepseek_api_key.value` 级别：它是 DeepSeek key 的本地存储位置。完整 JSON 结构在 [appendix/A00-schemas.md](appendix/A00-schemas.md)。
 
 测试连接走 `ai_test_connection(apiKey, modelId)`，直接使用输入框当前值，不依赖、也不覆盖已保存 key。这样用户可以测试新 key，而不会在测试失败时污染已保存 secret。
 
@@ -78,7 +78,7 @@ AI 默认关闭。即使前端误显示入口，Rust `ai_fix` 仍必须检查 `a
 - window state。
 - 剪贴板全文，除非它就是当前 editor input 且用户触发 AI Fix。
 
-AI wire protocol 和 prompt 模板见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
+AI provider 接入边界见 [platform/I00-ai-provider-protocol.md](platform/I00-ai-provider-protocol.md)，wire protocol 和 prompt 模板见 [appendix/A05-ai-protocol-details.md](appendix/A05-ai-protocol-details.md)。
 
 ## 日志 deny list
 
@@ -92,7 +92,7 @@ AI wire protocol 和 prompt 模板见 [appendix/ai-protocol.md](appendix/ai-prot
 | 剪贴板全文 | `clipboardText`、完整 paste preview。 |
 | AI raw output | `raw`、未脱敏模型原文。 |
 
-如果脱敏失败，宁可丢字段，也不能写出敏感内容。完整日志字段和 allow/deny list 见 [appendix/logging-details.md](appendix/logging-details.md)。
+如果脱敏失败，宁可丢字段，也不能写出敏感内容。完整日志字段和 allow/deny list 见 [appendix/A03-logging-details.md](appendix/A03-logging-details.md)。
 
 ## 权限和能力边界
 
@@ -104,7 +104,7 @@ AI wire protocol 和 prompt 模板见 [appendix/ai-protocol.md](appendix/ai-prot
 | 全局快捷键 | macOS 权限和冲突处理 | 失败可恢复，不阻塞 tray。 |
 | 打开日志/DB 路径 | 系统动作 | 必须是用户触发。 |
 
-Tauri capabilities 和 entitlements 只开放实际需要的 command 能力，完整配置见 [appendix/packaging-details.md](appendix/packaging-details.md)。
+Tauri capabilities 和 entitlements 只开放实际需要的 command 能力，完整配置见 [appendix/A04-packaging-details.md](appendix/A04-packaging-details.md)，release 门禁见 [platform/R00-release-readiness.md](platform/R00-release-readiness.md)。
 
 ## 隐私失败矩阵
 
@@ -133,7 +133,7 @@ Tauri capabilities 和 entitlements 只开放实际需要的 command 能力，�
 
 ## 相关文档
 
-- 数据所有权见 [07_storage_session.md](07_storage_session.md)。
-- AI 修复外发流程见 [08_ai_repair.md](08_ai_repair.md)。
-- 日志脱敏见 [09_logging_observability.md](09_logging_observability.md)。
-- secrets/settings schema 见 [appendix/schemas.md](appendix/schemas.md)。
+- 数据所有权见 [S05-storage-session.md](S05-storage-session.md)。
+- AI 修复外发流程见 [M02-ai-repair.md](M02-ai-repair.md)。
+- 日志脱敏见 [S06-logging-observability.md](S06-logging-observability.md)。
+- secrets/settings schema 见 [appendix/A00-schemas.md](appendix/A00-schemas.md)。

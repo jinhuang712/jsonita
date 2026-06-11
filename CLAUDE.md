@@ -18,9 +18,12 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 | Workflow Term | Jsonita Path |
 | --- | --- |
 | `CHANGELOG.md` | [CHANGELIST.md](CHANGELIST.md) |
-| `spec/Sxx-*.md` | Current core specs [spec/00_system_architecture.md](spec/00_system_architecture.md) through [spec/10_packaging_distribution.md](spec/10_packaging_distribution.md) until an explicit renumbering migration happens. |
-| `spec/Mxx-*.md` | User-facing capability contracts currently live in [plan/01_features.md](plan/01_features.md), [design/](design/), and the relevant core spec. Do not create Mxx files unless the spec map is intentionally migrated. |
-| `spec/platform/Ixx-*.md` / `Rxx-*.md` | Use [spec/appendix/](spec/appendix/README.md) for implementation details today; create `spec/platform/` only when a real platform contract is added and README/spec navigation is updated in the same change. |
+| `spec/Sxx-*.md` | Active system contracts in [spec/](spec/), from [S00](spec/S00-system-architecture.md) through [S07](spec/S07-packaging-distribution.md). |
+| `spec/Mxx-*.md` | Active user-facing capability contracts in [spec/](spec/), currently [M00](spec/M00-frontend-execution.md), [M01](spec/M01-json-engine.md), and [M02](spec/M02-ai-repair.md). |
+| `spec/platform/Ixx-*.md` | Active cross-boundary integration contracts in [spec/platform/](spec/platform/README.md). |
+| `spec/platform/Rxx-*.md` | Active reliability and runtime operations contracts in [spec/platform/](spec/platform/README.md). |
+| `spec/appendix/Axx-*.md` | Numbered implementation details in [spec/appendix/](spec/appendix/README.md). |
+| `spec/appendix/Vxx-*.md` | Numbered verification details in [spec/appendix/](spec/appendix/README.md). |
 | `progress/Pxxx-*.md` | Use durable history in [CHANGELIST.md](CHANGELIST.md); create `progress/` only for substantial archived records that should not stay in TODO. |
 
 ## Documentation Source Policy
