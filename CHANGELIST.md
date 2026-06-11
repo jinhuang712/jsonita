@@ -11,7 +11,7 @@
 | 字段 | 内容 |
 | --- | --- |
 | 变更 | 清理上一轮遗留项：版本推进到 `1.0.0-beta.2`，补齐 SQLite/settings/window 损坏恢复契约、存储恢复日志事件、安全合规发布清单和 macOS vibrancy 验收记录；README 进度改为当前 beta scope 已闭环，TODO 活跃区清空。 |
-| 影响文档 | `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`、`src/settings/SettingsView.tsx`、`.github/workflows/ci.yml`、`README.md`、`TODO.md`、`spec/`、`spec/platform/`、`spec/appendix/`、`CHANGELIST.md`。 |
+| 影响文档 | `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`、`src/settings/SettingsView.tsx`、`.github/workflows/ci.yml`、`.github/workflows/pages.yml`、`README.md`、`TODO.md`、`spec/`、`spec/platform/`、`spec/appendix/`、`CHANGELIST.md`。 |
 | 关联 | 用户要求把遗留问题全部处理掉；本次同时准备新的 GitHub prerelease，避免旧 `v1.0.0-beta.1` asset 落后于 `main`。 |
 
 ### fix · Settings 目录点击滚动时左侧高亮频闪
