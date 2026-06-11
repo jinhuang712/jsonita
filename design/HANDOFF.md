@@ -91,7 +91,7 @@
 **硬约束:**
 - **绝不动 `backdrop-filter` / blur 半径**(合成层上极卡)——只动 `transform` / `opacity`。
 - `prefers-reduced-motion: reduce` 已实现(全部 →1ms);玻璃窗在该模式下直接 opacity 出现、**不缩放**。对应 macOS「减弱动态效果」,必须尊重。
-- 现状:`spec/06 §2.5` 明说浮窗 show/hide 过渡类**前端尚未接**,token 是保留设计 —— 实现时才真正接上。
+- 现状:[`spec/01_runtime_lifecycle.md`](../spec/01_runtime_lifecycle.md) 明说浮窗 show/hide 过渡类**前端尚未接**,token 是保留设计 —— 实现时才真正接上。
 
 ---
 
@@ -121,8 +121,8 @@
 ## 7 . 实现阶段(锁定顺序 1→2→3,详见 TODO.md)
 
 **阶段 1 · 单窗功能(低风险,纯前端 + settings)**
-- `src/store/settings.ts` + Rust Settings(`spec/13`)新增 `shortcutSplitToggle`,默认 `CmdOrCtrl+\`。
-- 全局 hotkey 注册 + 与「可自定义」快捷键体系打通(`spec/07`)。
+- `src/store/settings.ts` + Rust Settings（见 [`spec/appendix/schemas.md`](../spec/appendix/schemas.md)）新增 `shortcutSplitToggle`,默认 `CmdOrCtrl+\`。
+- 全局 hotkey 注册 + 与「可自定义」快捷键体系打通（见 [`spec/03_ipc_boundary.md`](../spec/03_ipc_boundary.md) 与 [`spec/appendix/ipc-api.md`](../spec/appendix/ipc-api.md)）。
 - `SettingsModal` Shortcuts 面板加这条可自定义项。
 - StatusBar:加 `Switch to [Single/Split] Panel` 控件(hover 浮现 `⌘\`),History 改为 hover 浮现 `⌘Y`;切单窗触发 smart resize 缩窄;去掉左侧 "single-pane"。
 
@@ -131,7 +131,7 @@
 - 接上 summon/dismiss 过渡类;tab pill 滑动;AI Fix entrance;主题交叉淡;守 reduced-motion;**不动 blur**。
 
 **阶段 3 · 玻璃重绘(大,需原生,要 build 验证)**
-- Tauri:`tauri.conf.json` 窗口 `transparent: true` + macOS `NSVisualEffectView` vibrancy(`spec/06`)。
+- Tauri:`tauri.conf.json` 窗口 `transparent: true` + macOS `NSVisualEffectView` vibrancy（见 [`spec/01_runtime_lifecycle.md`](../spec/01_runtime_lifecycle.md) 与 [`spec/appendix/packaging-config.md`](../spec/appendix/packaging-details.md)）。
 - `src/styles/tokens.css` 切玻璃调色板(§2/§3),light + dark `[data-theme="dark"]`;同步 `design/03_design_tokens.md`。
 - 维护 [design/01_mockups.md](01_mockups.md) 的玻璃视觉权威，并在实现变化后同步更新。
 - `cargo build` / `tauri dev` 验收磨砂效果 + 手动验收清单(本文件不跑 build)。

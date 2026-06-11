@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### docs · 拆分核心 spec 与附录明细
+
+- `spec/README.md` 定义核心/附录边界、主权对象归属和后续 spec 写作规则。
+- 旧的大型 spec 文件拆为中文核心文档：系统架构、运行时生命周期、前端执行、IPC、错误模型、安全隐私、JSON engine、存储会话、AI repair、日志和打包分发。
+- 核心 spec 写回系统机制、关键流程、技术取舍、职责边界、失败语义和用户可见结果，读完即可理解系统主线。
+- `spec/appendix/` 收缩为真正附录，只保存 schema、IPC API、SQL、prompt、日志字段、打包命令等查表型明细。
+- 更新 `PROJECT.md`、`README.md`、`WORKFLOW.md`、`TODO.md`、`plan/` 和 `design/` 链接，并清理会污染 tree view 的迁移标签和 standalone section marker。
+
 ### docs · Markdown-first documentation migration
 
 - UI、设计、交互、原型图、设计 token、图标、窗口、菜单栏、编辑器、i18n 与 a11y 内容统一迁移到 `design/`；`design/README.md` 作为 coding agent 的设计阅读入口。

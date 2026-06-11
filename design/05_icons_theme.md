@@ -1,5 +1,3 @@
-SPEC · 章节 05
-
 # 图标资源 & 主题
 
 manifest.json 全景 · 各资源的用法与路径 · 主题切换时的图标选择策略。
@@ -76,7 +74,6 @@ Surface · Light #FFFFFF light theme 浮窗 / 卡片
 
 Surface · Dark #000000 dark master 背景（实际 token `--bg` 用 #161A20）
 
-INFO
 
 图标设计风格按 manifest 锁定为 flat source-derived export; no shadow, no gradient, no rounded corners ── 圆角由 macOS / Windows 系统在生成预览时自行处理（macOS 自动套 squircle）。
 

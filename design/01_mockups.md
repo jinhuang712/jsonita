@@ -1,5 +1,3 @@
-SPEC · 章节 01
-
 # 原型图 & 交互细节
 
 所有界面真实 HTML/CSS mockup ── 每个 mock 左右 light/dark 双版。本章是 Jsonita 视觉层的唯一权威。
@@ -757,7 +755,7 @@ Output
 
 soft-wrap = on（默认）→ 长行换行不溢出，宽度按最多 96 列估算，但仍按行数 / 字号增高。soft-wrap = off → 长行水平滚动，宽度按实际最长行估算。
 
-## 12 Tree 节点 Hover 复制（plan F2 · spec 08 § 4.5）
+## 12 Tree 节点 Hover 复制（plan F2 · design/08 § 4.5）
 
 hover 任意节点 → 行尾出现描边 copy 图标 + `copy` 文案。leaf 复制 raw value；object/array 递归复制 pretty JSON。
 
@@ -815,4 +813,3 @@ age: 30
 | 07 菜单栏 · tray / 权限 | § 3 · § 9 |
 | 08 编辑器 & 树 · hover 复制 | § 1.3 · § 12 |
 | 11 AI 客户端 · DiffView · 无 API key | § 8 · § 10.2 |
-

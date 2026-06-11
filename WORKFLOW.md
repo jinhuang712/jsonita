@@ -32,10 +32,16 @@ This file is the mandatory workflow policy for Jsonita. `AGENTS.md` and `CLAUDE.
 ## Document Structure
 
 - `plan/` owns product intent, scope, feature list, technology choices, release boundaries, and non-functional requirements.
-- `spec/` owns non-UI implementation contracts: architecture, IPC, JSON engine, storage, AI client, packaging, schemas, and logging.
+- `spec/` owns non-UI implementation contracts.
+- `spec/README.md` is the spec entrypoint and sovereign object map.
+- `spec/00_*` through `spec/10_*` are core specs. They must be Chinese, readable system documents that explain contracts, technical paths, responsibility boundaries, state flow, failure semantics, and user-visible results.
+- `spec/appendix/` owns detailed schemas, command signatures, events, SQL, prompt templates, config blocks, release commands, and test matrices.
+- Core specs must name behavior-affecting fields, states, events, and rules, but full field expansion belongs in `spec/appendix/`.
+- Each lifecycle, state machine, failure semantic, data owner, and context rule has exactly one authoritative core spec. Other docs link to that authority instead of redefining it.
 - `design/` owns all UI, visual design, interaction, prototype, design token, icon, window, menu-bar, editor, i18n, and accessibility material.
 - Start design work from `design/README.md`.
 - Preserve prototype source blocks in design Markdown when exact CSS, layout, or visual structure matters to implementation.
+- Do not add text-art diagrams. Use prose, ordered flows, Markdown tables, or design assets instead.
 
 ## Jsonita Product Contracts
 
