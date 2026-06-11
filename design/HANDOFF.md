@@ -20,7 +20,7 @@
 | `jsonita-design-explorations.md` | 最初 3 个方向对比(石墨 / 暖调 / 玻璃) | 为什么选玻璃(历史背景) |
 | `jsonita-glass-hero-light-dark.md` | 玻璃 hero 精修 · light+dark | 玻璃材质 / 系统蓝 / 语法色基调 |
 | `jsonita-glass-mockups.md` | **玻璃全屏 mockup(主参考)** | 6 态主窗 + AI Fix Diff + 设置 + 历史 + 权限 + 状态栏4态 + 菜单栏 + 空状态 + Toast,均 light+dark |
-| `jsonita-settings-detail.md` | 设置 6 面板详版(交互,可点 nav 切换) | 每个面板真实字段 + 控件形态 |
+| `jsonita-settings-detail.md` | 设置连续滚动详版(左侧目录索引 + 右侧完整配置页) | 每个分组真实字段 + 控件形态 + 滚动高亮 |
 | `jsonita-motion-demo.md` | 动画交互 demo | 缓动对比(原生/Material/轻弹/即时)、呼出/隐藏/tab/AI Fix/缩放/主题 的脚感 |
 | `jsonita-singlepane-statusbar-demo.md` | **单窗切换 + 状态栏 hover 场景(最终版 v2)** | Switch 控件 + hover 浮现快捷键 + 双栏↔单栏布局切换；窗口不主动缩窄 |
 

@@ -12,6 +12,7 @@ import { isJsonitaError } from '../ipc/error';
 import { on } from '../ipc/events';
 import { eventMatchesAccelerator, hasPrimaryModifier, primaryHotkeyPrefix } from '../keyboard/accelerators';
 import { acceptAiFix } from '../panes/aiFixActions';
+import { shouldCloseSettingsOnKeyDown } from '../settings/settingsKeymap';
 import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
@@ -181,14 +182,7 @@ export function useGlobalHotkeys() {
   // Settings 是主壳内页面状态；Esc 返回编辑工作区，不触发双击 Esc 隐藏。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        !settingsViewOpen ||
-        event.key !== 'Escape' ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.shiftKey
-      ) {
+      if (!shouldCloseSettingsOnKeyDown(settingsViewOpen, event)) {
         return;
       }
 

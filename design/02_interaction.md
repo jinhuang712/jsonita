@@ -234,7 +234,7 @@ diff 展示修复点 → 接受 / 撤销
 
 ## 6 设置面板交互
 
-打开入口：右上角设置图标、菜单栏 Settings…、或 `⌘,`。Modal 打开时读取 `settings_get_all`，并订阅 `settings:changed`；左侧 6 个 nav 项切换右侧 panel，不重建整个 Modal。
+打开入口：右上角设置图标、菜单栏 Settings…、或 `⌘,`。Settings 打开时主 Jsonita 卡片从编辑工作区切到设置工作区，并读取 `settings_get_all`、订阅 `settings:changed`；左侧 6 个 nav 项保留为目录索引，右侧是连续滚动配置页。
 
 | 分组 | 核心交互 | 结果 |
 | --- | --- | --- |
@@ -245,7 +245,7 @@ diff 展示修复点 → 接受 / 撤销
 | JSON Transform | 自动解嵌套、unwrap timeout number、soft-wrap checkbox | 影响 Format / Tree / 编辑器渲染与智能缩放计算 |
 | About | GitHub 按钮、版本 / License / 作者 / 数据路径只读展示 | GitHub 走系统浏览器；路径用于用户排查与卸载 |
 
-底部按钮：Done 只关闭 Modal；Reset all 调 `settings_reset` 并广播 `settings:changed`。设置项没有“Apply”步骤，避免用户误以为更改处于未保存状态。
+退出方式：`Esc`、Done 或 Settings 页内 `⌘W` 都返回主编辑工作区，不隐藏整个浮窗，也不触发双击 `Esc` 的隐藏窗口逻辑。Reset all 调 `settings_reset` 并广播 `settings:changed`。设置项没有“Apply”步骤，避免用户误以为更改处于未保存状态。
 
 ### 6.1 Single-pane status controls
 

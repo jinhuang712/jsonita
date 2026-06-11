@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+### feat · Settings 页 Esc 返回主界面
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | Settings 打开时，纯 `Esc` 被显式识别为返回主编辑工作区；带 `Option` / `Control` / `Command` / `Shift` 的 Escape 不触发关闭。该规则抽到 `src/settings/settingsKeymap.ts` 并加入 `node:test` 覆盖。 |
+| 影响文档 | `src/hooks/useGlobalHotkeys.ts`、`src/settings/settingsKeymap.ts`、`tests/settings/settingsKeymap.test.mjs`、`design/02_interaction.md`、`CHANGELIST.md`。 |
+| 关联 | 用户要求设置界面按 `Esc` 退回主界面，同时不能触发普通编辑区双击 `Esc` 隐藏窗口语义。 |
+
+### feat · Settings 右侧改为连续滚动配置页
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | SettingsView 保留左侧目录索引，右侧从单一 active panel 改为完整连续配置页；General / Shortcuts / AI / History / JSON Transform / About 顺序渲染在同一个滚动容器中，点击左侧目录滚动到对应 section，滚动时左侧高亮跟随。 |
+| 影响文档 | `src/settings/SettingsView.tsx`、`design/04_components.md`、`design/HANDOFF.md`、`design/jsonita-settings-detail.md`、`plan/01_features.md`、`spec/M00-frontend-execution.md`、`CHANGELIST.md`。 |
+| 关联 | 用户希望在保留左侧目录索引的情况下，Settings config page 能够从头滚动到尾，而不是每次只看一个分组面板。 |
+
 ### feat · Settings 改为主壳内联页面
 
 | 字段 | 内容 |

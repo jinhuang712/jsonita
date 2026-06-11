@@ -246,7 +246,7 @@ Prompt 策略 ：严格要求「只返回合法 JSON object / array，无解释 
 
 ## F7 设置面板
 
-设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。Settings 是主壳内 page state，不是遮罩 modal：右上角齿轮、`⌘,` 和 tray Settings 会把主卡片内容从编辑工作区切到设置工作区；Done、`Esc` 或 Settings 页内 `⌘W` 返回编辑工作区。完整交互权威见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)，组件契约见 [design/04](../design/04_components.md)。
+设置面板按真实实现拆成 6 个分组：General / Shortcuts / AI / History / JSON Transform / About。Settings 是主壳内 page state，不是遮罩 modal：右上角齿轮、`⌘,` 和 tray Settings 会把主卡片内容从编辑工作区切到设置工作区；Done、`Esc` 或 Settings 页内 `⌘W` 返回编辑工作区。左侧目录索引固定，右侧是从 General 到 About 的连续滚动配置页；点击目录滚动到对应 section，滚动时目录 active 高亮跟随。完整交互权威见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)，组件契约见 [design/04](../design/04_components.md)。
 
 ### F7.1 General
 
