@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### docs · 重写核心 spec 叙事与失败语义
+
+- `spec/00_system_architecture.md` 到 `spec/10_packaging_distribution.md` 从统一模板改为按主题定制骨架，核心文档直接说明系统契约、技术路径、职责边界、状态流和用户可见结果。
+- 每篇核心 spec 补充 Mermaid 图、关键决策表、失败矩阵和 FAQ；图表只使用 Mermaid，不引入 ASCII diagram。
+- `spec/04_error_model.md` 明确定义“失败语义”：触发点、不变量、用户可见结果、恢复动作和日志边界，而不是抽象规章。
+- 核心 spec 补回影响行为的 command、event、error kind、状态和关键字段名；完整 schema、DDL、prompt、命令签名仍留在 appendix。
+- 校准 appendix 中的日志事件、SQLite `schema_version.v`、`busy_timeout`、`window.json` 字段和 frontend logging reserved 状态，避免附录和实现漂移。
+- 清理源码注释里的旧 spec 编号和旧路径引用，统一指向当前 Markdown 权威文档。
+
 ### docs · 拆分核心 spec 与附录明细
 
 - `spec/README.md` 定义核心/附录边界、主权对象归属和后续 spec 写作规则。

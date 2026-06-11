@@ -163,7 +163,7 @@ pub enum ShortcutRegisterResp {
 }
 
 /// 设置面板 ShortcutInput 调 → 验证 + 写 SettingsStore + 重新注册。
-/// design/07 § 2.3 / spec/02 § 6.1.7
+/// design/07_menubar.md / spec/03_ipc_boundary.md
 #[tauri::command]
 pub async fn shortcut_register(app: AppHandle, req: ShortcutRegisterReq) -> ShortcutRegisterResp {
     if !req.force_override && is_reserved(&req.accelerator) {

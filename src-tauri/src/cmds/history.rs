@@ -1,4 +1,4 @@
-//! history 分组 ── SQLite history 表 + FTS5（spec/02 § 2.2）。
+//! history 分组 ── SQLite history 表，见 spec/07_storage_session.md。
 //!
 //! M1-N6：真实实现走 `crate::store::history`；M2 起接 settings.history_limit。
 
@@ -70,8 +70,7 @@ pub fn record(
     h::add(&db, content, op, DEFAULT_LIMIT)
 }
 
-/// 前端调用：M2-N4 AI Fix Accept 后写入历史。
-/// spec/02 § 6.1.2 IPC 列表的扩展（spec 待追认）。
+/// 前端调用：AI Fix Accept 或明确历史写入后追加历史。
 #[tauri::command]
 pub async fn history_add(
     content: String,

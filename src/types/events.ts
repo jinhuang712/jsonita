@@ -1,7 +1,7 @@
 /**
  * Tauri event 名 → payload 类型映射（用于 typed listen）。
  *
- * Spec ref: spec/02_ipc.md § 7 Events 总表
+ * Spec ref: spec/03_ipc_boundary.md 与 spec/appendix/ipc-api.md。
  */
 
 import type { Settings } from '../store/settings';

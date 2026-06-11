@@ -1,6 +1,6 @@
 //! history 表 CRUD + FTS5 搜索 + 自动 trim。
 //!
-//! Spec ref: spec/10 § 4 · spec/13 § 3.2 / § 4.1
+//! Spec ref: spec/07_storage_session.md 与 spec/appendix/storage-details.md。
 
 use rusqlite::params;
 use sha2::{Digest, Sha256};
@@ -185,7 +185,7 @@ pub fn set_starred(db: &Db, id: i64, starred: bool) -> Result<(), JsonitaError> 
     Ok(())
 }
 
-/// 清空 history（保留 pinned + starred）── spec/10 § 3 I-6 不变量。
+/// 清空 history（保留 pinned + starred）── 见 spec/07_storage_session.md。
 pub fn clear(db: &Db) -> Result<u32, JsonitaError> {
     let conn = db.pool().get()?;
     let n = conn.execute("DELETE FROM history WHERE pinned = 0 AND starred = 0", [])?;

@@ -1,47 +1,153 @@
 # AI Repair
 
-AI Fix 是一个可选修复流程，不是 Jsonita 的基础能力。它只在用户启用 AI、存在 API key、并明确进入修复路径时运行。AI 的输出必须先被校验为合法 JSON，再交给用户通过 Diff 决策是否应用。
+AI Fix 是可选决策流，不是自动修复。Jsonita 可以请求模型帮忙修 JSON，但模型输出必须经过本地提取、JSON engine 校验和用户 Diff 确认，才能触碰 editor input。
 
-## 读完这篇你应该知道
+## 运行门禁
 
-- AI Fix 什么时候可以运行，什么时候必须拒绝。
-- 请求里能发送哪些上下文。
-- 模型输出如何被提取和校验。
-- 为什么 Accept 前必须经过 Diff。
+AI Fix 只有在这些条件同时成立时才运行：
 
-## 前置条件
+| Gate | 检查位置 | 失败时 |
+| --- | --- | --- |
+| `settings.aiEnabled=true` | 前端入口 + Rust `ai_fix` | 返回 `AiDisabled`，不发 HTTP。 |
+| `secrets.json` 有 DeepSeek key | Rust secrets store | 返回 `Secrets`，不发 HTTP。 |
+| 当前 input 来自 editor | 前端 request | 只发送当前文本，不使用 history。 |
+| 有可用 request context | AI pane | 带 parse line/col/msg 更好，没有也必须受限 prompt。 |
+| requestId 唯一 | 前端生成 | 防止重复请求和旧响应混淆。 |
 
-AI Fix 只有在以下条件都满足时才可运行：settings 中 `aiEnabled` 为 true；secrets.json 中有可用 API key；用户当前处于可修复的错误状态或显式触发 AI 修复；请求文本来自当前 editor。
+前端隐藏入口只是体验优化，Rust gate 才是安全边界。
 
-即使前端误显示入口，Rust command 仍必须在 AI disabled 或 key 缺失时拒绝请求。
+## 请求链路
 
-## 请求流程
+```mermaid
+sequenceDiagram
+  participant UI as AI Fix Pane
+  participant Cmd as ai_fix
+  participant Sec as secrets.json
+  participant Prompt as prompt builder
+  participant DS as DeepSeek
+  participant Val as response validator
+  participant Diff as DiffView
 
-1. 前端进入 AI Fix pane，记录当前 input 和 parse error context。
-2. 前端调用 `ai_fix`，带 requestId 防止重复请求混淆。
-3. Rust 从 secrets store 读取 API key。
-4. Rust 构造 system prompt 和 user prompt，只发送当前修复文本及必要错误位置。
-5. DeepSeek 返回后，Rust 提取可能被包裹的 JSON。
-6. Rust 用 JSON engine 校验输出必须是合法 JSON。
-7. 成功后返回 fixed JSON 和元信息。
-8. 前端展示 DiffView。
-9. 用户 Accept 才覆盖 input；Cancel 保留原文。
+  UI->>Cmd: text + errorLine/errorCol/errorMsg + requestId
+  Cmd->>Sec: 读取 API key
+  Cmd->>Prompt: 构造 system/user prompt
+  Prompt->>DS: deepseek-chat request
+  DS-->>Cmd: model output
+  Cmd->>Val: extract JSON + validate
+  alt valid JSON
+    Cmd-->>UI: fixed + model + tokens + elapsedMs
+    UI->>Diff: 展示 before/after
+  else invalid JSON or upstream error
+    Cmd-->>UI: JsonitaError
+  end
+```
+
+请求默认值属于行为级约束：
+
+| 参数 | 默认值 | 原因 |
+| --- | --- | --- |
+| model | `deepseek-chat` | v1 beta 默认 DeepSeek chat 模型。 |
+| temperature | `0` | 修复任务需要确定性，不需要发散。 |
+| response format | `json_object` | 提高模型只返回 JSON 的概率。 |
+| timeout | `60s` | AI 允许比本地 transform 慢，但不能无限挂起。 |
+| max tokens | 按输入估算 | 避免输出被截断，同时不暴涨请求。 |
+
+完整 wire protocol 见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
 
 ## Prompt 边界
 
-Prompt 的目标是让模型只返回修复后的 JSON，不解释、不加 Markdown、不发散。系统不能把 history、settings、secrets、日志、窗口状态等上下文塞进 prompt。
+AI prompt 的目标只有一个：返回修复后的 JSON。它不能变成“解释错误、生成报告、读取历史上下文”的通道。
 
-如果模型输出非法 JSON，系统不能让用户 Accept；可以保留 raw output 作为诊断材料，但需要遵守日志脱敏规则。
+允许进入 prompt 的内容：
 
-## Diff 决策
+- 当前 editor text。
+- parse error 的 `line`、`col`、`msg`。
+- 简短规则：只返回 JSON，不返回 Markdown，不返回解释。
 
-AI 输出即使合法，也不是自动可信结果。DiffView 是用户确认边界。Accept 表示用户允许覆盖 editor，后续才可能写 history/last_session。Cancel 和关闭 pane 都不改变 input。
+禁止进入 prompt 的内容：
 
-## 失败语义
+- history、last_session、settings 全量配置。
+- API key、secrets、日志。
+- window state、路径、剪贴板全文。
+- support logs 或之前 AI raw output。
 
-AI disabled、missing key、secrets failure、HTTP failure、rate limit、invalid model output 都必须保持原 input。Rate limit 保留 retry-after。HTTP 错误展示状态摘要。invalid JSON 不提供 Accept。
+## 响应提取与校验
 
-## 附录
+模型可能不完全听话，所以 Rust validator 需要三层提取：
 
-- Prompt 模板、DeepSeek wire protocol、request 默认值、Diff props 见 [appendix/ai-protocol.md](appendix/ai-protocol.md)。
-- AI request/response payload 字段见 [appendix/schemas.md](appendix/schemas.md)。
+| 响应形态 | 处理 |
+| --- | --- |
+| 纯 JSON | 直接 parse。 |
+| fenced code block | 提取 ```json 或普通 fenced block 内部内容再 parse。 |
+| mixed text | 尝试定位首个 JSON object/array 片段，再 parse。 |
+
+提取成功还不够，结果必须被 JSON engine 校验为合法 JSON。失败返回 `AiInvalidJson`，前端不能显示 Accept。
+
+```mermaid
+flowchart TD
+  Raw["model raw output"] --> Pure{"纯 JSON？"}
+  Pure -->|"是"| Parse["parse and format"]
+  Pure -->|"否"| Fence{"有 fenced block？"}
+  Fence -->|"是"| ExtractFence["提取 block"]
+  Fence -->|"否"| Mixed["从 mixed text 中找 JSON"]
+  ExtractFence --> Parse
+  Mixed --> Parse
+  Parse -->|"成功"| Fixed["fixed JSON"]
+  Parse -->|"失败"| Invalid["AiInvalidJson"]
+```
+
+## Diff Accept Boundary
+
+```mermaid
+flowchart TD
+  Fixed["Rust 返回 fixed JSON"] --> Diff["DiffView before/after"]
+  Diff --> Choice{"用户选择"}
+  Choice -->|"Accept"| Apply["覆盖 editor input"]
+  Choice -->|"Cancel"| Keep["保留原 input"]
+  Choice -->|"关闭 pane"| Keep
+  Apply --> MaybeSave["后续合法动作才写 history/session"]
+```
+
+模型输出合法 JSON，只说明“它可以被展示给用户比较”。Accept 才表示用户授权覆盖。Cancel、离开 pane、请求失败都保持原 input。
+
+## AI 失败矩阵
+
+| 场景 | 触发点 | 不变量 | 用户可见结果 | 可继续动作 | 日志边界 |
+| --- | --- | --- | --- | --- | --- |
+| `AiDisabled` | `ai_fix` gate | 不发 HTTP，input 不变 | AI disabled 提示 | 打开 settings 启用 AI | 记录 kind 和 action。 |
+| missing key / `Secrets` | 读取 key 或保存 key | key 不进 settings/log，input 不变 | 提示配置或保存失败 | 输入 key、修复权限、重试 | 不写 key。 |
+| `Http` | DeepSeek 非 429 错误 | Diff 不出现，input 不变 | 显示状态码摘要 | 检查网络/key/model、重试 | 记录 status/requestId/duration，body 脱敏截断。 |
+| `RateLimit` | 429 或 retry-after | request context 可保留，input 不变 | 显示 retry-after | 稍后重试 | 记录 retryAfterSec，不写 prompt。 |
+| `AiInvalidJson` | 提取或 JSON 校验失败 | Accept 不可见，input 不变 | 模型结果不可用 | 重试或手动修 | raw 默认不入日志。 |
+| stale response | 旧 request 返回 | 最新 input 不被覆盖 | 用户无感或旧 loading 结束 | 继续当前请求 | 可记录 requestId mismatch，无内容。 |
+
+## AI 与其他模块的关系
+
+| 模块 | AI 如何使用它 | 边界 |
+| --- | --- | --- |
+| JSON Engine | 校验 fixed output 是合法 JSON | engine 不知道 AI，也不写 history。 |
+| Secrets | 读取 DeepSeek key | key 不返回前端。 |
+| Settings | gate `aiEnabled` 和 modelId | settings 不包含明文 key。 |
+| Frontend | 展示 loading/error/Diff/Accept | AI 结果不自动覆盖。 |
+| Logging | 记录诊断字段 | 不记录 prompt、raw JSON、key。 |
+
+## FAQ
+
+**AI 关闭时为什么 Rust 还要拒绝？**
+前端只是体验层，可能有 bug 或旧状态。Rust gate 才能保证禁用状态下不会外发。
+
+**模型返回合法 JSON 是否一定应用？**
+不。合法 JSON 只是进入 Diff 的门票。用户 Accept 才能覆盖 input。
+
+**raw output 能不能进日志？**
+默认不能。raw output 很可能包含用户 JSON 或模型复述内容。诊断只记录 kind、requestId、状态码、耗时等允许字段。
+
+**AI Fix 能不能读取 history 提高效果？**
+v1 不允许。history 是本地数据，不是 AI 上下文。AI 只处理当前用户明确请求修复的文本。
+
+## 相关文档
+
+- 前端 AI pane 和 input 覆盖规则见 [02_frontend_execution.md](02_frontend_execution.md)。
+- 安全和外发边界见 [05_security_privacy.md](05_security_privacy.md)。
+- 错误分诊见 [04_error_model.md](04_error_model.md)。
+- Prompt、wire protocol、payload 字段和 Diff props 见 [appendix/ai-protocol.md](appendix/ai-protocol.md) 与 [appendix/schemas.md](appendix/schemas.md)。

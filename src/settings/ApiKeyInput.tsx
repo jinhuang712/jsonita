@@ -6,7 +6,7 @@ import { ai } from '../ipc/commands';
  * API key 输入 + 测试连接 + 保存。
  *
  * 视觉锚：design/01_mockups.md § 6 Settings AI 分组
- * Spec ref: design/04 § 4.8 ApiKeyInput · spec/11 § 9 测试连接
+ * Spec ref: design/04_components.md ApiKeyInput · spec/08_ai_repair.md 测试连接
  * 关键：key 直接传给 ai_test_connection（不先存 secrets.json），test 通过后 set。
  */
 

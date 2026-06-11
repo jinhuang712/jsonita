@@ -34,7 +34,7 @@ CREATE TABLE app_meta (
 );
 
 CREATE TABLE schema_version (
-  version INTEGER NOT NULL
+  v INTEGER NOT NULL
 );
 ```
 
@@ -45,7 +45,7 @@ CREATE TABLE schema_version (
 | `journal_mode` | `WAL` | 降低写阻塞。 |
 | `synchronous` | `NORMAL` | 工具类应用性能/可靠性平衡。 |
 | `foreign_keys` | `ON` | 保持迁移默认安全。 |
-| `busy_timeout` | `1000` | 避免短暂锁冲突直接失败。 |
+| `busy_timeout` | `5000` | 避免短暂锁冲突直接失败。 |
 
 ## 文件路径
 
@@ -62,7 +62,7 @@ CREATE TABLE schema_version (
 | 规则 | 说明 |
 | --- | --- |
 | migration 文件 | `src-tauri/migrations/*.sql`。 |
-| 版本记录 | `schema_version` 单行版本。 |
+| 版本记录 | `schema_version.v` 记录已应用版本。 |
 | settings 缺字段 | Rust 默认值补齐并在下次写入落盘。 |
 | secrets 权限 | 创建后限制当前用户读写。 |
 | corruption handling | 不覆盖当前 editor；返回结构化错误并记录脱敏日志。 |

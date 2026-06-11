@@ -33,7 +33,7 @@
 | window | `window_toggle()` | `()` | Io |
 | window | `window_resize_for_content(metrics)` | `(u32, u32)` | Io |
 | window | `window_reset_size()` | `()` | Io |
-| window | `window_set_theme(mode)` | `light | dark` | Io |
+| window | `window_set_theme(mode)` | `light` or `dark` | Io |
 | system | `shortcut_register(req)` | `ShortcutRegisterResp` | Io |
 | system | `shortcut_status()` | `bool` | Io |
 | system | `shortcut_retry()` | `bool` | Io |
@@ -42,7 +42,7 @@
 | system | `open_log_dir()` | `()` | Io |
 | system | `open_db_path()` | `()` | Io |
 | system | `quit_app()` | `()` | Io |
-| logging | `frontend_log(event)` | `()` | Io |
+| logging | `frontend_log(event)` reserved | `()` | Io；当前前端 logger 不调用，只保留 future IPC shape。 |
 
 ## Events
 

@@ -1,4 +1,4 @@
-//! DeepSeek HTTP 客户端 ── spec/11 § 3 流程 / § 5 默认参数。
+//! DeepSeek HTTP 客户端 ── spec/08_ai_repair.md 请求流程与默认参数。
 //!
 //! M2-N3 minimal：fix() 主流程 + 状态码分支 + extract+二次验证；
 //! 心跳进度推送 / 重试 / 复杂错误透传留 polish。
@@ -109,7 +109,7 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
 
     let started = std::time::Instant::now();
 
-    // max_tokens 估算（spec/11 § 5.2 输出 ≈ 输入；字符÷3≈tokens；×2 余量）
+    // max_tokens 估算：输出约等于输入，字符÷3≈tokens，×2 留余量。
     let max_tokens = ((req.text.chars().count() as f32 / 3.0) * 2.0).clamp(512.0, 8192.0) as u32;
 
     let body = ChatRequest {

@@ -1,4 +1,4 @@
-//! AI 响应抽取 + 验证 — spec/11 § 6 三层 fallback。
+//! AI 响应抽取 + 验证 — spec/08_ai_repair.md 三层 fallback。
 
 /// 从 AI raw 文本抽取 JSON 子串 ── 三 case fallback。
 pub fn extract_json(raw: &str) -> Option<String> {

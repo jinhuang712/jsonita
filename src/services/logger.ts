@@ -1,9 +1,9 @@
 /**
  * 前端日志薄层。
  *
- * Spec ref: spec/15_logging.md § 8 WebView 端薄层。
+ * Spec ref: spec/09_logging_observability.md WebView 端薄层。
  * 当前仅 `console.*` 输出，**不**走 IPC。`log_write` 转发到 Rust 同一文件是
- * reserved / future（spec/15 § 2.2）。
+ * reserved / future。
  *
  * API 形状已锁定：M1 加入 IPC 时调用点（其它模块的 `logger.error/warn/...`）零改动。
  */

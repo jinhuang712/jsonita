@@ -1,7 +1,7 @@
 /**
  * UI store slice — 浮窗活跃 tab / Modal 状态 / AI Fix Tab 可见性。
  *
- * Spec ref: spec/00 § 9 store/ui
+ * Spec ref: spec/02_frontend_execution.md。
  */
 
 import { create } from 'zustand';

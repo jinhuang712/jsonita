@@ -1,4 +1,4 @@
-//! session 分组 ── last_session SQLite 单行表（spec/02 § 2.3）。
+//! session 分组 ── last_session SQLite 单行表，见 spec/07_storage_session.md。
 //!
 //! M1-N7：真实实现走 `crate::store::session`；last_session 由前端 transform 成功时保存。
 

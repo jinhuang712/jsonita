@@ -1,4 +1,4 @@
-//! settings 分组 ── tauri-plugin-store-like JSON 文件持久化（spec/02 § 2.4）。
+//! settings 分组 ── JSON 文件持久化，见 spec/07_storage_session.md。
 //!
 //! M2-N1 真实化：读 / patch / 重置 走 SettingsStore；改后 emit `settings:changed` 广播。
 
@@ -24,7 +24,7 @@ pub async fn settings_set(
         .ok_or_else(|| JsonitaError::Io("patch must be object".into()))?
         .clone();
     let updated = store.patch(obj)?;
-    // emit broadcast — 其他窗口 store 同步更新（spec/02 § 7 events）
+    // emit broadcast — 其他窗口 store 同步更新。
     let _ = app.emit("settings:changed", &updated);
     Ok(updated)
 }

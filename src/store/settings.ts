@@ -1,5 +1,5 @@
 /**
- * Settings zustand slice — mirror Rust Settings struct（spec/13 § 3.3）。
+ * Settings zustand slice — mirror Rust Settings struct（spec/appendix/schemas.md）。
  *
  * 启动期 settings_get_all 一次性加载；patch 通过 settings_set IPC + 监听 settings:changed event 自动同步。
  */
