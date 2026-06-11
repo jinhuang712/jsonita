@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · Settings 目录点击滚动时左侧高亮频闪
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | Settings 左侧目录点击触发 smooth scroll 时，锁定被点击的目标目录项，直到滚动到目标位置附近再恢复普通 scrollspy；不会再把 active 高亮依次切到滚动途中经过的 Shortcuts / AI / History 等分组。 |
+| 影响文档 | `src/settings/SettingsView.tsx`、`src/settings/settingsScrollSpy.ts`、`tests/settings/settingsScrollSpy.test.mjs`、`design/04_components.md`、`CHANGELIST.md`。 |
+| 关联 | 用户截图反馈从 General 往下点目录时，左侧目录高亮会诡异频闪；根因是 smooth scroll 期间 scrollspy 反复用中间 section 覆盖点击目标。 |
+
 ### feat · Settings 页 Esc 返回主界面
 
 | 字段 | 内容 |
