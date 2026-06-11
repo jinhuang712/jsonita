@@ -173,7 +173,7 @@ export function SettingsView() {
               width: 150,
               borderRight: '1px solid var(--border)',
               background: 'var(--bg-elevated-nav)',
-              padding: 'var(--sp-2) 0',
+              padding: 'var(--sp-2) 6px',
             }}
           >
             {GROUPS.map((g) => (
@@ -184,20 +184,24 @@ export function SettingsView() {
                 style={{
                   display: 'block',
                   width: '100%',
-                  padding: '6px 14px',
+                  padding: '6px 10px',
                   fontSize: 'var(--fs-sm)',
                   textAlign: 'left',
                   background:
-                    activeGroup === g ? 'var(--primary-soft)' : 'transparent',
+                    activeGroup === g ? 'var(--control-bg-active)' : 'transparent',
                   color:
-                    activeGroup === g ? 'var(--primary)' : 'var(--text-muted)',
-                  border: 'none',
-                  borderLeft:
                     activeGroup === g
-                      ? '2px solid var(--primary)'
-                      : '2px solid transparent',
+                      ? 'color-mix(in srgb, var(--primary) 66%, var(--text))'
+                      : 'var(--text-muted)',
+                  border: 'none',
+                  borderLeft: '2px solid transparent',
+                  boxShadow:
+                    activeGroup === g
+                      ? 'inset 2px 0 0 var(--primary-edge)'
+                      : 'none',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
-                  fontWeight: activeGroup === g ? 600 : 400,
+                  fontWeight: activeGroup === g ? 560 : 450,
                 }}
               >
                 {t(`groups.${g}` as 'groups.general')}
@@ -209,7 +213,7 @@ export function SettingsView() {
             ref={scrollRef}
             style={{
               flex: 1,
-              padding: 'var(--sp-5)',
+              padding: 'var(--sp-5) var(--sp-6)',
               overflow: 'auto',
               fontSize: 'var(--fs-sm)',
               position: 'relative',
@@ -264,6 +268,7 @@ export function SettingsView() {
           style={{
             padding: '8px 16px',
             borderTop: '1px solid var(--border)',
+            background: 'var(--surface-quiet)',
             display: 'flex',
             justifyContent: 'flex-end',
             gap: 6,
@@ -605,7 +610,7 @@ function SettingsCheckbox({
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path
               d="M3 6.1 5.1 8.2 9 3.8"
-              stroke="white"
+              stroke="currentColor"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -666,7 +671,9 @@ const rowStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  padding: '6px 0',
+  gap: 16,
+  minHeight: 34,
+  padding: '7px 0',
   borderBottom: '1px solid var(--border)',
 };
 
@@ -679,7 +686,7 @@ const sectionLabelStyle: React.CSSProperties = {
 };
 
 const settingsSectionStyle: React.CSSProperties = {
-  padding: '0 0 28px',
+  padding: '0 0 30px',
   scrollMarginTop: 8,
 };
 
@@ -687,7 +694,7 @@ const settingsSectionTitleStyle: React.CSSProperties = {
   margin: '0 0 10px',
   color: 'var(--text)',
   fontSize: 'var(--fs-md)',
-  fontWeight: 700,
+  fontWeight: 650,
   letterSpacing: 0,
 };
 
@@ -724,8 +731,8 @@ const aboutGithubButtonStyle: React.CSSProperties = {
   flex: '0 0 auto',
   padding: '4px 10px',
   borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border-strong)',
-  background: 'var(--bg)',
+  border: '1px solid var(--control-border)',
+  background: 'var(--control-bg)',
   color: 'var(--text)',
   fontFamily: 'var(--font-mono)',
   fontSize: 'var(--fs-xs)',
@@ -768,7 +775,7 @@ const aboutPathsStyle: React.CSSProperties = {
 const aboutPathStyle: React.CSSProperties = {
   padding: '5px 8px',
   borderRadius: 'var(--radius-sm)',
-  background: 'var(--bg)',
+  background: 'var(--control-bg)',
   color: 'var(--text-muted)',
   fontFamily: 'var(--font-mono)',
   fontSize: 'var(--fs-xs)',
@@ -801,8 +808,8 @@ const keyGroupStyle: React.CSSProperties = {
 const keyCapStyle: React.CSSProperties = {
   padding: '2px 6px',
   borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border-strong)',
-  background: 'var(--bg)',
+  border: '1px solid var(--control-border)',
+  background: 'var(--control-bg)',
   color: 'var(--text-muted)',
   fontFamily: 'var(--font-mono)',
   fontSize: 'var(--fs-xs)',
@@ -811,8 +818,8 @@ const keyCapStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   padding: '2px 8px',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border-strong)',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   color: 'var(--text)',
@@ -842,8 +849,8 @@ const checkboxBoxStyle: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: 4,
-  border: '1px solid var(--border-strong)',
-  background: 'var(--bg)',
+  border: '1px solid var(--control-border)',
+  background: 'var(--control-bg)',
   boxShadow: 'inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent)',
   transition:
     'background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)',
@@ -851,15 +858,16 @@ const checkboxBoxStyle: React.CSSProperties = {
 
 const checkboxCheckedStyle: React.CSSProperties = {
   ...checkboxBoxStyle,
-  border: '1px solid var(--primary)',
-  background: 'var(--primary)',
-  boxShadow: 'none',
+  border: '1px solid var(--primary-edge)',
+  background: 'var(--control-bg-active)',
+  color: 'color-mix(in srgb, var(--primary) 78%, var(--text))',
+  boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--primary) 8%, transparent)',
 };
 
 const btnGhost: React.CSSProperties = {
   padding: '4px 12px',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border-strong)',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   cursor: 'pointer',
@@ -868,9 +876,9 @@ const btnGhost: React.CSSProperties = {
 
 const btnPrimary: React.CSSProperties = {
   padding: '4px 12px',
-  background: 'var(--primary)',
-  color: 'white',
-  border: 'none',
+  background: 'var(--control-bg-active)',
+  color: 'color-mix(in srgb, var(--primary) 70%, var(--text))',
+  border: '1px solid var(--primary-edge)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   cursor: 'pointer',

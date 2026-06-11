@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### polish · Native Quiet Glass 全界面精调
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 将当前 UI 从鲜亮系统蓝和局部旧式 modal 风格收敛为 Native Quiet Glass：新增 `--control-*` 控件表面 token，降低 primary / JSON 语法色 / 状态色 / search match / gutter marker 饱和度，统一 TabBar、Search、Tree hover、Settings、History、Shortcut Permission Modal、SinglePaneHint 和按钮/输入/checkbox 的低对比交互语言。 |
+| 影响文档 | `src/styles/tokens.css`、`src/styles/global.css`、`src/editor/theme.ts`、`src/settings/`、`src/history/HistoryModal.tsx`、`src/permissions/ShortcutPermissionModal.tsx`、`src/shell/`、`tests/design/nativeQuietGlass.test.mjs`、`design/03_design_tokens.md`、`design/04_components.md`、`design/08_editor.md`、`CHANGELIST.md`。 |
+| 关联 | 用户选择方案 A，并强调希望精致些、不要只是换颜色；本次同步处理控件密度、浮层层级、旧硬编码权限弹窗、History row hover、搜索面板和全局 token。 |
+
 ### release · v1.0.0-beta.2 交付债务收口
 
 | 字段 | 内容 |

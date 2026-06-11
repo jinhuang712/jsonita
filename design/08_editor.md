@@ -121,12 +121,12 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 | --- | --- | --- |
 | Find row | `Find` label、搜索输入、`x / n` 计数、上一个/下一个、`Aa`、`.*`、`word`、`All`、关闭 | `Enter` 下一项，`Shift+Enter` 上一项，`Esc` 关闭。 |
 | Shortcut | `⌘F` / `Cmd+F` | 关闭时打开搜索，打开时关闭搜索。 |
-| Match highlight | 文本内 match 背景 | 使用低透明 `--primary`，不使用高饱和黄/青/紫。 |
-| Gutter hint | 行号 gutter 内弱竖线 | 普通命中弱提示，当前命中稍强；不能替换行号数字。 |
+| Match highlight | 文本内 match 背景 | 使用低透明蓝灰 `--primary`，普通命中约 11% tint，当前命中约 18% tint；不使用高饱和黄/青/紫。 |
+| Gutter hint | 行号 gutter 内弱竖线 | 普通命中为 2px 弱竖线，当前命中稍强但不加 glow；不能替换行号数字。 |
 
 视觉边界：
 
-- 搜索面板只用 `--chrome-bg-strong`、`--bg-code`、`--border`、`--text-muted`、`--primary-soft` 等 token。
+- 搜索面板只用 `--surface-raised`、`--control-bg`、`--control-bg-hover`、`--control-bg-active`、`--control-border`、`--border`、`--text-muted` 等 token。
 - 不使用大面积蓝色块，不使用高对比文字按钮；上一项/下一项用 `↑` / `↓`。
 - 搜索面板只提供查找、导航、选择全部匹配与关闭；不得保留 replace row、replace button 或 replace 输入框。
 - 搜索关闭后，文本 match 和 gutter hint 一起消失。
@@ -455,7 +455,7 @@ function TreeNode({ value, path, label }) {
   overflow:    auto;
 }
 .jsonita-tree-node     { position: relative; display: flex; align-items: center; min-height: 1.8em; }
-.jsonita-tree-node:hover { background: var(--primary-soft); }
+.jsonita-tree-node:hover { background: var(--surface-quiet); }
 .jsonita-tree-key      { color: var(--json-key);    font-weight: 600; cursor: default; }
 .jsonita-tree-string   { color: var(--json-string); }
 .jsonita-tree-number   { color: var(--json-number); }
@@ -463,7 +463,7 @@ function TreeNode({ value, path, label }) {
 .jsonita-tree-null     { color: var(--json-null);   }
 .jsonita-tree-punc     { color: var(--json-punc);   }
 .jsonita-tree-toggle   { color: var(--text-faint);  cursor: pointer; }
-.jsonita-tree-toggle:hover { color: var(--primary); }
+.jsonita-tree-toggle:hover { color: color-mix(in srgb, var(--primary) 70%, var(--text-muted)); }
 .jsonita-tree-children { padding-left: 16px;        border-left: 1px solid var(--editor-indent-guide); }
 ```
 

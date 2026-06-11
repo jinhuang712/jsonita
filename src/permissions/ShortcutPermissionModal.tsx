@@ -21,11 +21,11 @@ export function ShortcutPermissionModal({ onClose }: Props) {
     <div
       role="dialog"
       aria-modal="true"
-        aria-labelledby="shortcut-permission-modal-title"
+      aria-labelledby="shortcut-permission-modal-title"
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.32)',
+        background: 'var(--bg-overlay)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -34,31 +34,65 @@ export function ShortcutPermissionModal({ onClose }: Props) {
     >
       <div
         style={{
-          width: 360,
-          background: '#FFFFFF',
-          borderRadius: 14,
-          padding: '20px 22px',
-          textAlign: 'center',
-          boxShadow: '0 12px 36px rgba(0,0,0,0.12)',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+          width: 380,
+          background: 'color-mix(in srgb, var(--bg-elevated) 94%, transparent)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: 'var(--radius-xl)',
+          padding: '18px 20px',
+          boxShadow: 'var(--shadow-lg)',
+          color: 'var(--text)',
+          fontFamily: 'var(--font-sans)',
+          backdropFilter: 'var(--glass-blur)',
+          WebkitBackdropFilter: 'var(--glass-blur)',
         }}
       >
-        <div style={{ fontSize: 30, marginBottom: 8 }}>⌨️</div>
-        <div id="shortcut-permission-modal-title" style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
-          {t('shortcutPermissionRequired.title')}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div
+            aria-hidden="true"
+            style={{
+              flex: '0 0 auto',
+              width: 30,
+              height: 30,
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--primary-edge)',
+              background: 'var(--control-bg-active)',
+              color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--fs-sm)',
+              fontWeight: 650,
+            }}
+          >
+            ⌘
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div
+              id="shortcut-permission-modal-title"
+              style={{ fontSize: 'var(--fs-md)', fontWeight: 650, marginBottom: 5 }}
+            >
+              {t('shortcutPermissionRequired.title')}
+            </div>
+            <div
+              style={{
+                fontSize: 'var(--fs-sm)',
+                color: 'var(--text-muted)',
+                lineHeight: 1.55,
+              }}
+            >
+              {t('shortcutPermissionRequired.body', { key: '⌘⇧J' })}
+            </div>
+          </div>
         </div>
         <div
           style={{
-            fontSize: 12,
-            color: '#6B7280',
-            lineHeight: 1.55,
-            marginBottom: 16,
+            display: 'flex',
+            gap: 8,
+            justifyContent: 'flex-end',
+            marginTop: 18,
           }}
         >
-          {t('shortcutPermissionRequired.body', { key: '⌘⇧J' })}
-        </div>
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
           <button onClick={onClose} style={btnGhost}>
             {tc('later')}
           </button>
@@ -77,20 +111,21 @@ export function ShortcutPermissionModal({ onClose }: Props) {
 }
 
 const btnGhost: React.CSSProperties = {
-  padding: '6px 14px',
-  background: '#FFFFFF',
-  border: '1px solid #D1D5DB',
-  borderRadius: 4,
-  fontSize: 12,
+  padding: '5px 12px',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
+  borderRadius: 'var(--radius-sm)',
+  color: 'var(--text)',
+  fontSize: 'var(--fs-sm)',
   cursor: 'pointer',
 };
 
 const btnPrimary: React.CSSProperties = {
-  padding: '6px 14px',
-  background: '#057AF3',
-  color: '#FFFFFF',
-  border: 'none',
-  borderRadius: 4,
-  fontSize: 12,
+  padding: '5px 12px',
+  background: 'var(--control-bg-active)',
+  color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
+  border: '1px solid var(--primary-edge)',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: 'var(--fs-sm)',
   cursor: 'pointer',
 };

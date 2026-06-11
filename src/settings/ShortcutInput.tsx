@@ -121,8 +121,8 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
         onKeyDown={recording ? handleKeyDown : undefined}
         style={{
           padding: '4px 10px',
-          background: recording ? 'var(--primary-soft)' : 'var(--bg-card)',
-          border: `1px solid ${recording ? 'var(--primary)' : 'var(--border-strong)'}`,
+          background: recording ? 'var(--control-bg-active)' : 'var(--control-bg)',
+          border: `1px solid ${recording ? 'var(--primary-edge)' : 'var(--control-border)'}`,
           borderRadius: 'var(--radius-sm)',
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--fs-sm)',
@@ -161,8 +161,8 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
               onClick={overrideReserved}
               style={{
                 padding: '0 6px',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--warn)',
+                background: 'var(--control-bg)',
+                border: '1px solid color-mix(in srgb, var(--warn) 36%, var(--control-border))',
                 color: 'var(--warn)',
                 borderRadius: 4,
                 fontSize: 'var(--fs-xs)',

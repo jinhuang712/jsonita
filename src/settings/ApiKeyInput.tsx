@@ -110,18 +110,18 @@ export function ApiKeyInput({ modelId }: Props) {
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
-  padding: '2px 8px',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border-strong)',
+  padding: '3px 8px',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   color: 'var(--text)',
 };
 
 const btnGhost: React.CSSProperties = {
-  padding: '2px 10px',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border-strong)',
+  padding: '3px 10px',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-xs)',
   cursor: 'pointer',
@@ -129,20 +129,20 @@ const btnGhost: React.CSSProperties = {
 };
 
 const btnPrimary: React.CSSProperties = {
-  padding: '2px 10px',
-  background: 'var(--primary)',
-  color: 'white',
-  border: 'none',
+  padding: '3px 10px',
+  background: 'var(--control-bg-active)',
+  color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
+  border: '1px solid var(--primary-edge)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-xs)',
   cursor: 'pointer',
 };
 
 const btnDanger: React.CSSProperties = {
-  padding: '2px 10px',
-  background: 'var(--bg-card)',
+  padding: '3px 10px',
+  background: 'var(--control-bg)',
   color: 'var(--danger)',
-  border: '1px solid var(--danger)',
+  border: '1px solid color-mix(in srgb, var(--danger) 34%, var(--control-border))',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-xs)',
   cursor: 'pointer',

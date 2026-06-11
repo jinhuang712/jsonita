@@ -178,7 +178,13 @@ function HistoryItem({
   const op = opMeta(row.opType);
   return (
     <article style={itemStyle}>
-      <button type="button" onClick={onApply} onDoubleClick={onApply} style={itemMainStyle}>
+      <button
+        type="button"
+        onClick={onApply}
+        onDoubleClick={onApply}
+        style={itemMainStyle}
+        className="jsonita-history-item-main"
+      >
         <div style={itemMetaStyle}>
           <span style={{ ...chipStyle, color: op.color, background: op.bg }}>{op.label}</span>
           <span style={timeStyle}>
@@ -259,9 +265,9 @@ const modalStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
-  borderRadius: 'var(--radius-lg)',
-  border: '1px solid var(--border-strong)',
-  background: 'var(--bg-elevated)',
+  borderRadius: 'var(--radius-xl)',
+  border: '1px solid var(--glass-border)',
+  background: 'color-mix(in srgb, var(--bg-elevated) 94%, transparent)',
   boxShadow: 'var(--shadow-lg)',
   color: 'var(--text)',
   fontFamily: 'var(--font-sans)',
@@ -284,8 +290,9 @@ const toolbarStyle: React.CSSProperties = {
   display: 'flex',
   gap: 8,
   alignItems: 'center',
-  padding: 12,
+  padding: '10px 12px',
   borderBottom: '1px solid var(--border)',
+  background: 'var(--surface-quiet)',
 };
 
 const searchStyle: React.CSSProperties = {
@@ -293,8 +300,8 @@ const searchStyle: React.CSSProperties = {
   minWidth: 0,
   padding: '6px 9px',
   borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border-strong)',
-  background: 'var(--bg)',
+  border: '1px solid var(--control-border)',
+  background: 'var(--control-bg)',
   color: 'var(--text)',
   fontFamily: 'var(--font-mono)',
   fontSize: 'var(--fs-sm)',
@@ -309,8 +316,8 @@ const filterGroupStyle: React.CSSProperties = {
 const filterButtonStyle: React.CSSProperties = {
   padding: '5px 8px',
   borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border)',
-  background: 'var(--bg)',
+  border: '1px solid var(--control-border)',
+  background: 'var(--control-bg)',
   color: 'var(--text-muted)',
   fontSize: 'var(--fs-xs)',
   cursor: 'pointer',
@@ -319,8 +326,8 @@ const filterButtonStyle: React.CSSProperties = {
 const filterActiveStyle: React.CSSProperties = {
   ...filterButtonStyle,
   border: '1px solid var(--primary-edge)',
-  background: 'var(--primary-soft)',
-  color: 'var(--primary)',
+  background: 'var(--control-bg-active)',
+  color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
   fontWeight: 600,
 };
 
@@ -340,6 +347,7 @@ const emptyStyle: React.CSSProperties = {
 const itemStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'stretch',
+  position: 'relative',
   borderBottom: '1px solid var(--border)',
 };
 
@@ -348,10 +356,13 @@ const itemMainStyle: React.CSSProperties = {
   minWidth: 0,
   padding: '10px 12px',
   border: 'none',
+  borderLeft: '2px solid transparent',
   background: 'transparent',
   color: 'inherit',
   textAlign: 'left',
   cursor: 'pointer',
+  transition:
+    'background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out)',
 };
 
 const itemMetaStyle: React.CSSProperties = {
@@ -368,6 +379,7 @@ const chipStyle: React.CSSProperties = {
   fontSize: 'calc(var(--fs-xs) - 1px)',
   fontFamily: 'var(--font-mono)',
   fontWeight: 700,
+  letterSpacing: 0,
 };
 
 const timeStyle: React.CSSProperties = {
@@ -394,9 +406,9 @@ const actionsStyle: React.CSSProperties = {
 
 const actionStyle: React.CSSProperties = {
   padding: '4px 7px',
-  border: '1px solid var(--border)',
+  border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
-  background: 'var(--bg)',
+  background: 'var(--control-bg)',
   color: 'var(--text-muted)',
   fontSize: 'var(--fs-xs)',
   cursor: 'pointer',
@@ -406,7 +418,7 @@ const actionActiveStyle: React.CSSProperties = {
   ...actionStyle,
   color: 'var(--primary)',
   border: '1px solid var(--primary-edge)',
-  background: 'var(--primary-soft)',
+  background: 'var(--control-bg-active)',
   fontWeight: 600,
 };
 
@@ -417,6 +429,7 @@ const footerStyle: React.CSSProperties = {
   gap: 12,
   padding: '8px 12px',
   borderTop: '1px solid var(--border)',
+  background: 'var(--surface-quiet)',
   fontSize: 'var(--fs-xs)',
 };
 
@@ -431,9 +444,9 @@ const iconButtonStyle: React.CSSProperties = {
 
 const clearButtonStyle: React.CSSProperties = {
   padding: '4px 9px',
-  border: '1px solid var(--border-strong)',
+  border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
-  background: 'var(--bg)',
+  background: 'var(--control-bg)',
   color: 'var(--text)',
   fontSize: 'var(--fs-xs)',
   cursor: 'pointer',
