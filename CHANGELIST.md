@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### docs · 引入通用 WORKFLOW 并下沉 Jsonita 专属约束
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 用 open-novel 蒸馏出的项目无关 workflow 覆盖根目录 `WORKFLOW.md`，并把 Jsonita 专属 Git、文档源、产品边界和验证规则迁入 `AGENTS.md` / `CLAUDE.md`。 |
+| 影响文档 | `WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`README.md`、`PROJECT.md`、`CHANGELIST.md`。 |
+| 关联 | 用户要求复用 `/Users/jin.huang/dev/projects/open-novel/WORKFLOW.md`，同时保持本仓库不重新引入 HTML/CAST 文档系统、不使用 `yummy`、继续使用 `CHANGELIST.md` 作为 changelog。 |
+
 ### feat · 搜索快捷键 toggle 与纯搜索面板
 
 - `Cmd+F` / `⌘F` 首次按下打开搜索；搜索面板已打开时再次按下 `Cmd+F` 关闭搜索，形成双击 F 的快速关闭手势。

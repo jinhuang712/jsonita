@@ -11,7 +11,8 @@ Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a glob
 | [README.md](README.md) | Product introduction, installation, usage, release scripts, and repository overview. |
 | [TODO.md](TODO.md) | Current open backlog, risks, deferred decisions, and readiness blockers. |
 | [CHANGELIST.md](CHANGELIST.md) | Durable project change history. |
-| [WORKFLOW.md](WORKFLOW.md) | Repository workflow and agent operating rules. |
+| [WORKFLOW.md](WORKFLOW.md) | Project-neutral documentation and implementation workflow. |
+| [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) | Jsonita-specific agent constraints, workflow mapping, and validation rules. |
 | [plan/](plan/) | Product plan and non-UI product contracts. |
 | [spec/](spec/) | Technical architecture and non-UI implementation contracts. |
 | [design/](design/) | UI, visual design, interaction, prototype, accessibility, and design-token material. |
