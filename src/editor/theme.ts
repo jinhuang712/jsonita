@@ -91,11 +91,8 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     gap: '6px',
     minWidth: 0,
   },
-  '.jsonita-search-replace-row': {
-    paddingLeft: 'calc(32px + var(--sp-2))',
-  },
   '.jsonita-search-label': {
-    width: '32px',
+    flex: '0 0 54px',
     color: 'var(--text-faint)',
     fontFamily: 'var(--font-mono)',
     fontSize: 'var(--fs-xs)',
