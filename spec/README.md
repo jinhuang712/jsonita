@@ -79,7 +79,7 @@ flowchart TD
 | 系统分层、跨世界数据流 | [S00-system-architecture.md](S00-system-architecture.md) | 其他文档引用这个地图，不重新定义整体架构。 |
 | App 运行状态机 | [S01-runtime-lifecycle.md](S01-runtime-lifecycle.md) | window、shortcut、tray、quit 行为以它为准。 |
 | 前端可见状态与 input 覆盖规则 | [M00-frontend-execution.md](M00-frontend-execution.md) | pane、Tree、AI Diff、single-pane apply 不重复解释。 |
-| IPC command/event 边界 | [S02-ipc-boundary.md](S02-ipc-boundary.md) | 完整签名在附录，行为边界只在这里定义。 |
+| IPC command/event 边界 | [S02-ipc-boundary.md](S02-ipc-boundary.md) | 完整签名在 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)，行为边界只在这里定义。 |
 | 失败分诊模型 | [S03-error-model.md](S03-error-model.md) | 各模块只说明本模块落到哪类失败，不重新发明错误分类。 |
 | 本地优先和外发许可 | [S04-security-privacy.md](S04-security-privacy.md) | AI、logging、storage、packaging 都不能突破这条边界。 |
 | JSON 变换语义 | [M01-json-engine.md](M01-json-engine.md) | UI/IPC/storage 只调用，不重写算法语义。 |
@@ -105,6 +105,7 @@ flowchart TD
 - 完整 IPC command/event 表。
 - SQL DDL、PRAGMA、迁移细节。
 - prompt 模板、DeepSeek wire protocol、默认参数。
+- Tauri command/event 完整签名；详见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)，不要复制到 appendix。
 - 日志字段表、redaction allow/deny list。
 - release 命令、Tauri config、entitlements、签名变量。
 

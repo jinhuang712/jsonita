@@ -372,19 +372,19 @@ TREE 38m
 
 2.4 macOS 权限引导
 
-INPUT MONITORING
+SHORTCUT PERMISSION
 
-需要键盘事件权限
+需要处理系统隐私权限
 
-全局快捷键 ⌘⇧J 需要 Input Monitoring。
+如果 ⌘⇧J 无法在其他 App 前台唤起 Jsonita，请在 macOS 隐私设置中允许 Jsonita。
 
 稍后 打开系统设置
 
-INPUT MONITORING
+SHORTCUT PERMISSION
 
-需要键盘事件权限
+需要处理系统隐私权限
 
-全局快捷键 ⌘⇧J 需要 Input Monitoring。
+如果 ⌘⇧J 无法在其他 App 前台唤起 Jsonita，请在 macOS 隐私设置中允许 Jsonita。
 
 稍后 打开系统设置
 
@@ -998,10 +998,10 @@ Open Settings
       <p class="cap">2.4 macOS 权限引导</p>
       <div class="grid2">
         <div class="stage stage-l"><div class="win win-l" style="max-width:320px">
-          <div class="perm"><div class="perm-k">INPUT MONITORING</div><div class="perm-t">需要键盘事件权限</div><div class="perm-d">全局快捷键 <span class="kbd">⌘⇧J</span> 需要 Input Monitoring。</div><div style="display:flex;gap:6px;justify-content:center"><button class="btn">稍后</button><button class="btn btn-primary">打开系统设置</button></div></div>
+          <div class="perm"><div class="perm-k">SHORTCUT PERMISSION</div><div class="perm-t">需要处理系统隐私权限</div><div class="perm-d">如果 <span class="kbd">⌘⇧J</span> 无法在其他 App 前台唤起 Jsonita，请在 macOS 隐私设置中允许 Jsonita。</div><div style="display:flex;gap:6px;justify-content:center"><button class="btn">稍后</button><button class="btn btn-primary">打开系统设置</button></div></div>
         </div></div>
         <div class="stage stage-d"><div class="win win-d" style="max-width:320px">
-          <div class="perm"><div class="perm-k">INPUT MONITORING</div><div class="perm-t">需要键盘事件权限</div><div class="perm-d">全局快捷键 <span class="kbd">⌘⇧J</span> 需要 Input Monitoring。</div><div style="display:flex;gap:6px;justify-content:center"><button class="btn">稍后</button><button class="btn btn-primary">打开系统设置</button></div></div>
+          <div class="perm"><div class="perm-k">SHORTCUT PERMISSION</div><div class="perm-t">需要处理系统隐私权限</div><div class="perm-d">如果 <span class="kbd">⌘⇧J</span> 无法在其他 App 前台唤起 Jsonita，请在 macOS 隐私设置中允许 Jsonita。</div><div style="display:flex;gap:6px;justify-content:center"><button class="btn">稍后</button><button class="btn btn-primary">打开系统设置</button></div></div>
         </div></div>
       </div>
     </div>

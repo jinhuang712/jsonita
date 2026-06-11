@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### docs · 修复跨文档契约矛盾
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 统一当前文档中关于隐私外发、i18n、快捷键权限、AI repair、release gate、窗口缩放、History 裁剪、日志字段和设计视觉 token 的口径。 |
+| 影响文档 | `README.md`、`PROJECT.md`、`TODO.md`、`plan/`、`spec/`、`spec/platform/`、`spec/appendix/`、`design/`、`CHANGELIST.md`。 |
+| 关联 | 用户要求找出并逐步修复文档中的矛盾；本次把当前契约收敛为：本地优先但用户主动 AI Fix 可最小外发，v1 beta 支持 English / 简体中文，快捷键权限不阻断启动，内部 beta 可未签名但公开 release 必须签名公证，History 与窗口行为以当前实现为准。 |
+
 ### docs · 落地 S/M/I/R/A/V spec 编号体系
 
 | 字段 | 内容 |

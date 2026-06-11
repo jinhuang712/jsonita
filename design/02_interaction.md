@@ -197,7 +197,7 @@ STEP 03
 
 本地验证
 
-try-parse 返回；非法 → 显示原始返回供调试
+try-parse 返回；非法或 repair failed sentinel → 显示模型结果不可用，不暴露 raw output，不显示 Accept
 
 →
 

@@ -36,7 +36,7 @@ AI 可关,没 key 也能用
 
 ### Must Not · 禁止
 
-不联网
+默认不联网；唯一例外是用户主动触发 AI Fix 时，按安全白名单向 DeepSeek 发送当前待修复文本和最小 parse context
 
 不强制使用 AI
 

@@ -1,4 +1,4 @@
-//! AI 响应抽取 + 验证 — spec/08_ai_repair.md 三层 fallback。
+//! AI 响应抽取 + 验证 — spec/M02-ai-repair.md 三层 fallback。
 
 /// 从 AI raw 文本抽取 JSON 子串 ── 三 case fallback。
 pub fn extract_json(raw: &str) -> Option<String> {
@@ -29,6 +29,14 @@ pub fn extract_json(raw: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+pub fn is_repair_failed_sentinel(value: &serde_json::Value) -> bool {
+    value
+        .as_object()
+        .and_then(|obj| obj.get("_jsonita_repair_failed"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -62,5 +70,14 @@ mod tests {
     #[test]
     fn nothing_to_extract() {
         assert_eq!(extract_json("no json here"), None);
+    }
+
+    #[test]
+    fn detects_repair_failed_sentinel() {
+        let value: serde_json::Value =
+            serde_json::json!({ "_jsonita_repair_failed": true, "reason": "too broken" });
+        assert!(is_repair_failed_sentinel(&value));
+        assert!(!is_repair_failed_sentinel(&serde_json::json!({ "ok": true })));
+        assert!(!is_repair_failed_sentinel(&serde_json::json!([1, 2, 3])));
     }
 }

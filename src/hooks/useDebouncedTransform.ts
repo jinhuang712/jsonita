@@ -1,7 +1,7 @@
 /**
  * Editor onChange → debounce 300 ms → Rust engine 调用 → 更新 store output / error。
  *
- * Spec ref: spec/02_frontend_execution.md / design/08_editor.md 状态栏联动。
+ * Spec ref: spec/M00-frontend-execution.md / design/08_editor.md 状态栏联动。
  * 大文件 > 5 MB 直接标 `large` 不调 engine（design/08 § 3.1）。
  */
 

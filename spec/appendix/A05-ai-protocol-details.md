@@ -35,7 +35,7 @@ OUTPUT FORMAT: plain JSON text. No prefix, no suffix.
 | temperature | `0.0`。 |
 | max_tokens | `clamp(input_chars / 3 * 2, 512, 8192)`。 |
 | stream | `false`。 |
-| response_format | `{ "type": "json_object" }`。 |
+| response_format | 不强制 `json_object`；v1 需要允许 object 或 array。 |
 | timeout | `60s`。 |
 | auth | bearer token from `secrets.json`。 |
 
@@ -47,6 +47,7 @@ OUTPUT FORMAT: plain JSON text. No prefix, no suffix.
 | fenced | 包含 code fence 或 `json` fence | 取 fence 内文本后验证。 |
 | mixed text | 找首个 `{`/`[` 与最后一个 `}`/`]` | 截取后验证。 |
 | 失败 | 无法抽取或 parse 失败 | `AiInvalidJson`。 |
+| repair failed sentinel | parse 后包含 `_jsonita_repair_failed: true` | `AiInvalidJson`，不进入 Diff。 |
 
 ## 错误映射
 
@@ -59,6 +60,7 @@ OUTPUT FORMAT: plain JSON text. No prefix, no suffix.
 | HTTP 429 | `RateLimit { retry_after_sec }` |
 | empty choices/content | `AiInvalidJson` |
 | extracted text parse failure | `AiInvalidJson` |
+| `_jsonita_repair_failed` sentinel | `AiInvalidJson` |
 
 ## Diff props
 
@@ -68,4 +70,3 @@ OUTPUT FORMAT: plain JSON text. No prefix, no suffix.
 | `after` | `string` | AI 修复后且已验证合法 JSON 的文本。 |
 | `onAccept` | `() => void` | 覆盖 editor。 |
 | `onReject` | `() => void` | 保留原文。 |
-

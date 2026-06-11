@@ -200,9 +200,9 @@ Output · DeepSeek 修复
 }
 ```
 
-Prompt 策略 ：严格要求「只返回合法 JSON，无解释 / markdown 包裹」
+Prompt 策略 ：严格要求「只返回合法 JSON object / array，无解释 / markdown 包裹」；无法修复时返回约定失败 sentinel，Rust 必须把它映射为 `AiInvalidJson`，不能进入 Diff
 
-验证 ：本地 try-parse 验证返回；失败给出原始返回供调试
+验证 ：本地 try-parse 验证返回；失败只显示不可用提示，不把原始返回写入日志或暴露为可接受结果
 
 呈现 ：diff 形式展示修复点，用户决定接受 / 撤销
 
@@ -212,7 +212,7 @@ Prompt 策略 ：严格要求「只返回合法 JSON，无解释 / markdown 包�
 
 ## F5 历史记录
 
-本地 SQLite，最近 100 条 FIFO 滚动；可搜索、置顶、收藏。History 按钮或 `⌘Y` 打开本地历史面板；点击条目载入编辑器。路径 `~/Library/Application Support/Jsonita/history.db`。
+本地 SQLite，默认最近 100 条；可搜索、置顶、收藏。裁剪时先保留 pinned，再保留 starred，最后按时间淘汰普通记录。History 按钮或 `⌘Y` 打开本地历史面板；点击条目载入编辑器。路径 `~/Library/Application Support/Jsonita/history.db`。
 
 历史 op-chip 的视觉语义与 token 归 [design/01](../design/01_mockups.md) 和 [design/03](../design/03_design_tokens.md) 管理。
 
@@ -234,12 +234,13 @@ Prompt 策略 ：严格要求「只返回合法 JSON，无解释 / markdown 包�
 | --- | --- | --- |
 | 呼出 / 隐藏浮窗 | `⌘⇧J` | 是（全局） |
 | 找回上次会话 | `⌘⇧L` | 是（全局可选） |
+| 切换单窗 / 双栏 | `⌘\` | 是（窗口内；与全局快捷键同一录入组件，但不走 global-shortcut） |
 | 清空输入（ 不 写入「上次」） | `⌘K` | 否 |
 | 打开设置 | `⌘,` | 否；右上角设置按钮等效 |
 | 非编辑态切换功能 Tab | `Tab` /`⇧Tab` | 否 |
 | 关闭 / 退出编辑 | `Esc` ×2 /`⌘W` | 否；编辑器内第一下 `Esc` 先退出 editing，短时间内第二下才隐藏；AI Fix 决策态单次 `Esc` 仍为 Cancel |
 
-权限：首次启动引导用户授予 macOS Accessibility 权限。
+权限：快捷键注册失败时给出权限或冲突提示，并提供打开 macOS 隐私设置的恢复入口。v1 不在首次启动强制要求 Accessibility；macOS 13+ 可能在特定环境下提示 Input Monitoring。
 
 冲突检测：录入新快捷键时实时检测系统已占用组合。
 
@@ -249,15 +250,15 @@ Prompt 策略 ：严格要求「只返回合法 JSON，无解释 / markdown 包�
 
 ### F7.1 General
 
-General 覆盖语言、主题、开机自启动、失焦隐藏、智能缩放、单窗模式与自动粘贴剪贴板。字段边界见 [A00 schemas](../spec/appendix/A00-schemas.md)，具体控件行为见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)。
+General 覆盖语言、主题、开机自启动、失焦隐藏、智能缩放、单窗模式与自动粘贴剪贴板；v1 beta 默认 English，并允许切换简体中文。字段边界见 [A00 schemas](../spec/appendix/A00-schemas.md)，具体控件行为见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互)。
 
 ### F7.2 Shortcuts
 
-全局呼出、找回上次会话、切换单窗 / 双栏均可配置；内置快捷键只读展示，系统保留组合默认阻塞。快捷键交互权威见 [design/07](../design/07_menubar.md)。
+全局呼出、找回上次会话、窗口内切换单窗 / 双栏均可配置；内置快捷键只读展示，系统保留组合默认阻塞。快捷键交互权威见 [design/07](../design/07_menubar.md)。
 
 ### F7.3 AI
 
-AI 分组覆盖 AI Auto Fix 总开关、DeepSeek API key、连接测试、保存与移除。存储契约见 [A00 schemas](../spec/appendix/A00-schemas.md)，客户端契约见 [M02 AI Repair](../spec/M02-ai-repair.md)，控件行为见 [design/04](../design/04_components.md)。
+AI 分组覆盖 AI Auto Fix 总开关、DeepSeek API key、连接测试、保存与移除；`aiModelId` 使用默认 `deepseek-chat`，当前不暴露独立编辑控件。存储契约见 [A00 schemas](../spec/appendix/A00-schemas.md)，客户端契约见 [M02 AI Repair](../spec/M02-ai-repair.md)，控件行为见 [design/04](../design/04_components.md)。
 
 ### F7.4 History
 
@@ -307,7 +308,7 @@ transform 成功时写 sqlite `last_session` 单行表（覆盖式）
 | --- | --- | --- | --- |
 | 1. 首次呼出尺寸 | 新光标屏第一次呼出 / 用户从未拖动过 | 固定 860 px（tauri.conf 与 window.json 默认）；高度 560 px | `settings.initialWidth` 字段保留，当前 UI 未渲染，也不影响启动尺寸 |
 | 2. 内容动态缩放 | 粘贴、编辑、字体缩放 → 行长 / 行数 / 字号 / soft-wrap | 评估理想宽高；宽度由可见列数决定，高度由行数 × 行高决定；软换行开时宽度保守但仍可增高 | 设置 General「智能缩放」总开关；交互权威见 [design/02 § 6](../design/02_interaction.md#6-设置面板交互) |
-| 3. 手动拖边缩放 | 用户从窗口边缘拖动 resize | 记忆到 `window.json`；作为下次呼出基准，但不阻止智能缩放开启时继续按内容调整 | 始终可拖；不可关闭 |
+| 3. 手动拖边缩放 | 用户从窗口边缘拖动 resize | 记忆到 `window.json`；作为下次呼出基准，并暂停内容驱动自动缩放，直到重置尺寸 | 始终可拖；不可关闭 |
 | 4. soft-wrap | 编辑器内长行 | 开启时长行换行不溢出，关闭时按实际最长行估算宽度 | 归 F1 编辑器交互与 [design/08](../design/08_editor.md) 管理 |
 
 克制原则的具体数字：
@@ -318,7 +319,7 @@ max 宽度 ：min(1400 px, 当前屏宽 × 70%) ── 13 寸屏 ≈ 1440 × 0.7
 
 min 高度 ：360 px
 
-max 高度 ：屏高 × 75% ── 防止占满
+max 高度 ：min(900 px, 屏高 × 72%) ── 防止占满并保持浮窗感
 
 字号变化参与动态缩放计算；具体快捷键、浮窗 chrome 跟随范围与上限见 [design/02 § 1.1](../design/02_interaction.md#1.1-tab-切换) 与 [design/03](../design/03_design_tokens.md)。
 

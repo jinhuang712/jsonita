@@ -1,7 +1,7 @@
 /**
  * 类型化 Tauri event listen 封装。
  *
- * Spec ref: spec/03_ipc_boundary.md event 方向性。
+ * Spec ref: spec/S02-ipc-boundary.md event 方向性。
  */
 
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';

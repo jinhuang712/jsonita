@@ -1,4 +1,4 @@
-//! settings 分组 ── JSON 文件持久化，见 spec/07_storage_session.md。
+//! settings 分组 ── JSON 文件持久化，见 spec/S05-storage-session.md。
 //!
 //! M2-N1 真实化：读 / patch / 重置 走 SettingsStore；改后 emit `settings:changed` 广播。
 

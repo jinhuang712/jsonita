@@ -48,7 +48,7 @@ sequenceDiagram
 | --- | --- | --- |
 | model | `deepseek-chat` | v1 beta 默认 DeepSeek chat 模型。 |
 | temperature | `0` | 修复任务需要确定性，不需要发散。 |
-| response format | `json_object` | 提高模型只返回 JSON 的概率。 |
+| response format | plain JSON text | v1 必须接受 object 或 array；不能把 array 修复结果判成失败。 |
 | timeout | `60s` | AI 允许比本地 transform 慢，但不能无限挂起。 |
 | max tokens | 按输入估算 | 避免输出被截断，同时不暴涨请求。 |
 
@@ -77,11 +77,13 @@ AI prompt 的目标只有一个：返回修复后的 JSON。它不能变成“�
 
 | 响应形态 | 处理 |
 | --- | --- |
-| 纯 JSON | 直接 parse。 |
+| 纯 JSON object/array | 直接 parse。 |
 | fenced code block | 提取 ```json 或普通 fenced block 内部内容再 parse。 |
 | mixed text | 尝试定位首个 JSON object/array 片段，再 parse。 |
 
 提取成功还不够，结果必须被 JSON engine 校验为合法 JSON。失败返回 `AiInvalidJson`，前端不能显示 Accept。
+
+如果模型返回约定失败 sentinel（例如 `{ "_jsonita_repair_failed": true, "reason": "..." }`），即使它本身是合法 JSON，也必须映射为 `AiInvalidJson` 或等价不可用状态。sentinel 表示“模型拒绝给出修复”，不是可接受的修复结果，不能进入 Diff。
 
 ```mermaid
 flowchart TD
@@ -118,7 +120,7 @@ flowchart TD
 | missing key / `Secrets` | 读取 key 或保存 key | key 不进 settings/log，input 不变 | 提示配置或保存失败 | 输入 key、修复权限、重试 | 不写 key。 |
 | `Http` | DeepSeek 非 429 错误 | Diff 不出现，input 不变 | 显示状态码摘要 | 检查网络/key/model、重试 | 记录 status/requestId/duration，body 脱敏截断。 |
 | `RateLimit` | 429 或 retry-after | request context 可保留，input 不变 | 显示 retry-after | 稍后重试 | 记录 retryAfterSec，不写 prompt。 |
-| `AiInvalidJson` | 提取或 JSON 校验失败 | Accept 不可见，input 不变 | 模型结果不可用 | 重试或手动修 | raw 默认不入日志。 |
+| `AiInvalidJson` | 提取失败、JSON 校验失败或返回 repair failed sentinel | Accept 不可见，input 不变 | 模型结果不可用 | 重试或手动修 | raw 默认不入日志。 |
 | stale response | 旧 request 返回 | 最新 input 不被覆盖 | 用户无感或旧 loading 结束 | 继续当前请求 | 可记录 requestId mismatch，无内容。 |
 
 ## AI 与其他模块的关系
@@ -127,7 +129,7 @@ flowchart TD
 | --- | --- | --- |
 | JSON Engine | 校验 fixed output 是合法 JSON | engine 不知道 AI，也不写 history。 |
 | Secrets | 读取 DeepSeek key | key 不返回前端。 |
-| Settings | gate `aiEnabled` 和 modelId | settings 不包含明文 key。 |
+| Settings | gate `aiEnabled` 并提供内部 `aiModelId` 默认值 | settings 不包含明文 key；v1 UI 不单独暴露 model 编辑控件。 |
 | Frontend | 展示 loading/error/Diff/Accept | AI 结果不自动覆盖。 |
 | Logging | 记录诊断字段 | 不记录 prompt、raw JSON、key。 |
 

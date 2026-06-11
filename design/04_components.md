@@ -150,7 +150,7 @@ type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 
 ### 4.3 Toast（reserved / future）
 
-当前代码没有 `src/shell/Toast.tsx`，也未接入 `sonner`。运行时错误目前由状态栏、AI 面板局部错误、Accessibility / Settings Modal 呈现；以下 API 是后续接入 Toast 时的保留契约。
+当前代码没有 `src/shell/Toast.tsx`，也未接入 `sonner`。运行时错误目前由状态栏、AI 面板局部错误、Shortcut Permission / Settings Modal 呈现；以下 API 是后续接入 Toast 时的保留契约。
 
 ```
 // src/shell/Toast.tsx ── API 契约
@@ -273,7 +273,7 @@ interface TreeViewProps {
   data: unknown;                   // 解析后的 JSON
   initialExpandDepth?: number;     // 默认 2
   onPathClick?: (path: string) => void;     // 点击 key → 复制 path
-  onCopyNode?: (info: CopyNodeInfo) => void; // 点击行尾 📋 → 复制 value/subtree
+  onCopyNode?: (info: CopyNodeInfo) => void; // 点击行尾 copy action → 复制 value/subtree
 }
 
 interface CopyNodeInfo {
@@ -310,7 +310,7 @@ interface DiffViewProps {
 
 不引 monaco-diff（300 KB 太重）
 
-Accept 按钮 = primary variant，并内嵌 `⌘↵` shortcut hint；Reject = outline variant；位置见 mockup
+Accept 按钮使用 accent / amber variant，并内嵌 `⌘↵` shortcut hint；Reject = outline variant；位置见 mockup
 
 ## 5 布局组件清单（无业务）
 

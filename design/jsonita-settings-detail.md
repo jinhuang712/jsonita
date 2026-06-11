@@ -1,6 +1,6 @@
 # Jsonita · 设置详版
 
-6 个面板按真实字段铺全(取自 `src/store/settings.ts` + `SettingsModal.tsx` + zh-CN 文案)。控件按真实实现:开关用 方形勾选框、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。 点左侧 nav 可切换面板 (light 默认「通用」,dark 默认「快捷键」)。
+6 个面板按真实字段铺全(取自 `src/store/settings.ts` + `SettingsModal.tsx` + zh-CN 文案)。控件按真实实现:开关用 方形勾选框、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。`aiModelId` 是内部默认值,不单独暴露编辑控件。 点左侧 nav 可切换面板 (light 默认「通用」,dark 默认「快捷键」)。
 
 Light · 点 nav 切换
 
@@ -58,11 +58,9 @@ DeepSeek API Key
 
 测试 保存 移除 已保存
 
-模型 · deepseek-chat
-
 历史上限 100
 
-可选 10 / 50 / 100 / 200;超出按 pinned → 时间排序淘汰。
+可选 10 / 50 / 100 / 200;超出按 pinned → starred → 时间排序淘汰。
 
 自动解嵌套
 
@@ -152,11 +150,9 @@ DeepSeek API Key
 
 测试 保存 移除 已保存
 
-模型 · deepseek-chat
-
 历史上限 100
 
-可选 10 / 50 / 100 / 200;超出按 pinned → 时间排序淘汰。
+可选 10 / 50 / 100 / 200;超出按 pinned → starred → 时间排序淘汰。
 
 自动解嵌套
 
@@ -190,7 +186,7 @@ Data & logs
 
 全部重置 完成
 
-字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除 + 模型)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.1 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
+字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除;模型为内部默认值不单独暴露)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.1 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
 
 ## Preserved prototype CSS
 
@@ -314,7 +310,7 @@ Data & logs
 
 <header class="head">
   <h1>Jsonita · 设置详版</h1>
-  <p>6 个面板按真实字段铺全(取自 <code>src/store/settings.ts</code> + <code>SettingsModal.tsx</code> + zh-CN 文案)。控件按真实实现:开关用<b>方形勾选框</b>、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。<b>点左侧 nav 可切换面板</b>(light 默认「通用」,dark 默认「快捷键」)。</p>
+  <p>6 个面板按真实字段铺全(取自 <code>src/store/settings.ts</code> + <code>SettingsModal.tsx</code> + zh-CN 文案)。控件按真实实现:开关用<b>方形勾选框</b>、语言/主题/历史上限用下拉、Unwrap 超时是数字输入、API Key 带 测试/保存/移除。<code>aiModelId</code> 是内部默认值,不单独暴露编辑控件。<b>点左侧 nav 可切换面板</b>(light 默认「通用」,dark 默认「快捷键」)。</p>
 </header>
 
 <div class="grid2">
@@ -363,12 +359,11 @@ Data & logs
             <div style="margin-top:10px"><div class="seclabel" style="margin-bottom:6px">DeepSeek API Key</div>
               <span class="inp">••••••••（已保存，可输入新 key 覆盖）</span>
               <div class="aibtns"><button class="btn">测试</button><button class="btn">保存</button><button class="btn">移除</button><span class="okpill">已保存</span></div>
-              <div class="muted-line">模型 · deepseek-chat</div>
             </div>
           </div>
           <div class="panel" data-g="history" hidden>
             <div class="srow last"><span>历史上限</span><span class="sel">100 <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
-            <div class="muted-line">可选 10 / 50 / 100 / 200;超出按 pinned → 时间排序淘汰。</div>
+            <div class="muted-line">可选 10 / 50 / 100 / 200;超出按 pinned → starred → 时间排序淘汰。</div>
           </div>
           <div class="panel" data-g="jsonTransform" hidden>
             <div class="srow"><span>自动解嵌套</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
@@ -431,12 +426,11 @@ Data & logs
             <div style="margin-top:10px"><div class="seclabel" style="margin-bottom:6px">DeepSeek API Key</div>
               <span class="inp">••••••••（已保存，可输入新 key 覆盖）</span>
               <div class="aibtns"><button class="btn">测试</button><button class="btn">保存</button><button class="btn">移除</button><span class="okpill">已保存</span></div>
-              <div class="muted-line">模型 · deepseek-chat</div>
             </div>
           </div>
           <div class="panel" data-g="history" hidden>
             <div class="srow last"><span>历史上限</span><span class="sel">100 <svg class="ico" width="10" height="10"><use href="#i-chev"/></svg></span></div>
-            <div class="muted-line">可选 10 / 50 / 100 / 200;超出按 pinned → 时间排序淘汰。</div>
+            <div class="muted-line">可选 10 / 50 / 100 / 200;超出按 pinned → starred → 时间排序淘汰。</div>
           </div>
           <div class="panel" data-g="jsonTransform" hidden>
             <div class="srow"><span>自动解嵌套</span><span class="cbx on"><svg class="ico"><use href="#i-check"/></svg></span></div>
@@ -456,7 +450,7 @@ Data & logs
 </div>
 
 <footer>
-  字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除 + 模型)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.1 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
+  字段全部来自真实实现,未加未实现项:通用 7 项(语言/主题 + 5 个勾选)、快捷键 2 可自定义 + 9 内置、AI(开关 + DeepSeek key + 测试/保存/移除;模型为内部默认值不单独暴露)、历史上限、JSON 变换 3 项、关于(版本 1.0.0-beta.1 / MIT / 作者 + 数据与日志路径)。强调色仍是系统蓝,勾选框选中 = 蓝填充白勾,与全局玻璃方向一致。
 </footer>
 
 <script>

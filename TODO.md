@@ -12,9 +12,3 @@
 ## P3
 
 - [ ] 安全合规审计清单：面向 macOS App Store、企业部署或更大范围分发时，补充权限、隐私、签名、公证和数据保留材料清单；v1 小范围内测不阻塞。
-
-## Closed By Markdown Migration
-
-- [x] CAST JSON-first 迁移：旧目标是为 `plan/*.html` 与 `spec/*.html` 建 CAST JSON 源、渲染产物与 freshness check；本次改为 Markdown-first，`plan/*.md`、`spec/*.md` 与 `design/*.md` 是最终文档源，CAST / HTML 发布面已移除。
-- [x] legacy Mermaid 发布面：旧目标是用 `pnpm docs:render-mermaid` 与 `pnpm docs:check` 防止 raw Mermaid / CDN 回归；本次移除生成式文档 HTML 与相关脚本，并把压扁图表转为 Markdown 表格 / 步骤说明或保留在 prototype source docs。
-- [x] 为 CAST 文档脚本补 CI：旧目标是把 `pnpm docs:check` 接入 CI；本次删除 CAST 文档脚本，替换为 Markdown link、旧 HTML、CAST residue、flattened diagram、`git diff --check` 与 `pnpm tsc --noEmit` 的本地验证流程。

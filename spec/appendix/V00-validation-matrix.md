@@ -32,7 +32,7 @@
 | 场景 | 验证 | 通过标准 |
 | --- | --- | --- |
 | 版本号改动 | 比对 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`、About panel。 | 版本完全一致。 |
-| macOS DMG | `pnpm release:macos:dmg` | `.dmg` 存在且版本可识别。 |
+| macOS DMG | `pnpm release:macos:dmg`，随后 `hdiutil imageinfo` 与 sha256 检查 | `.dmg` 存在、版本可识别、imageinfo 成功、checksum 可写入 release notes；发布后 GitHub asset 名称和 sha256 与本地一致。 |
 | macOS APP | `pnpm release:macos:app` | `.app` bundle 存在且能打开或进入后续签名流程。 |
 | Windows NSIS | Windows/MSVC 环境执行 `pnpm release:windows:exe` | 生成 NSIS installer `.exe`，不是裸 exe。 |
 

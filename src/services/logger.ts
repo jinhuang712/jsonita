@@ -1,7 +1,7 @@
 /**
  * 前端日志薄层。
  *
- * Spec ref: spec/09_logging_observability.md WebView 端薄层。
+ * Spec ref: spec/S06-logging-observability.md WebView 端薄层。
  * 当前仅 `console.*` 输出，**不**走 IPC。`log_write` 转发到 Rust 同一文件是
  * reserved / future。
  *

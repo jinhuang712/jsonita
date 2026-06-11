@@ -496,9 +496,9 @@ v1 用 [04 § 5](04_components.md) 的 SplitPane 顶部加一个搜索框，clie
 
 | node 类型 | 触发 | 复制内容 |
 | --- | --- | --- |
-| leaf · string | hover 整行 → 行尾出现 `📋` | raw value 含引号： `"alice"` |
+| leaf · string | hover 整行 → 行尾出现描边 copy 图标 + `copy` 文案 | raw value 含引号： `"alice"` |
 | leaf · number / bool / null | 同上 | 字面量： `30` /`true` /`null` |
-| object node（含 root） | hover 标签行 → 标签行尾出现 `📋` | 递归 pretty-print 子树 JSON（2 空格） |
+| object node（含 root） | hover 标签行 → 标签行尾出现描边 copy 图标 + `copy` 文案 | 递归 pretty-print 子树 JSON（2 空格） |
 | array node | 同上 | 同上 |
 
 实现 ── 每行内置轻量 copy action，但只允许一个 active action：自渲染 `TreeNode` 已持有节点 path 与 raw value，不需要 DOM 注入。React 维护 `activeCopyKey` /`copiedKey`，确保父子节点 hover / focus 不会同时露出两个 copy action；鼠标离开树或切到其他节点时立即清理 copied 反馈。copy action 无边框 / 无背景，hover 时不改变整行 cursor。
@@ -558,13 +558,13 @@ function computeCopyText(meta: NodeMeta): string {
 .tree-copy-icon:active { color: var(--text); }
 ```
 
-键盘可达：聚焦在某节点行（含 `tabindex="0"` ）按 `⌘C` 等同于点 `📋`；Tree 容器内按 `⌘A` 选择 root / 整棵树，随后 `⌘C` 复制 root subtree。键盘焦点环用 `--shadow-focus`。应用 chrome 设置 `user-select: none` 并由全局 hotkey 拦截非编辑区 `⌘A`，避免 TabBar / StatusBar 被 DOM 选中。
+键盘可达：聚焦在某节点行（含 `tabindex="0"` ）按 `⌘C` 等同于点 copy action；Tree 容器内按 `⌘A` 选择 root / 整棵树，随后 `⌘C` 复制 root subtree。键盘焦点环用 `--shadow-focus`。应用 chrome 设置 `user-select: none` 并由全局 hotkey 拦截非编辑区 `⌘A`，避免 TabBar / StatusBar 被 DOM 选中。
 
 与点击 key 复制 path 的关系：
 
 点击 key 文字本身 → 复制 path（如 `user.name` ）── 现有行为保留
 
-hover 行尾 `📋` 点击 → 按本节规则复制 value / subtree
+hover 行尾 copy action 点击 → 按本节规则复制 value / subtree
 
 两者独立 ── key 可点 + 行 hover 可见 icon，不冲突
 

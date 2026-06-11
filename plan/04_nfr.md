@@ -47,7 +47,7 @@ PLAN · 章节 04
 
 全键盘可达 ：所有核心功能都有快捷键（详见 [01 · F6 全局快捷键](01_features.md) ）
 
-语言 ：v1 首版本 UI 仅英文；中文 UI 在 M3 阶段
+语言 ：v1 beta 提供 English / 简体中文资源，默认 English；所有 UI 文案必须走 i18n key，不能 hardcode
 
 Empty State ：所有面板（无 JSON / 无历史 / 无 API key）都有清晰的引导提示
 
@@ -95,7 +95,7 @@ v1 不做任何上报，仅在本地写按天滚动日志： `~/Library/Logs/Jso
 | 平台 | 格式 / 命令 | 说明 |
 | --- | --- | --- |
 | macOS | `.dmg` via GitHub Releases | v1 已有，继续保留 |
-| `brew install jsonita` | 建立 homebrew tap（ `klook/homebrew-tap` 或独立 tap），cask 模式拉 .dmg |  |
+| Homebrew Cask | 建立 homebrew tap（独立 tap），cask 模式拉 .dmg | v1.1+，不进入当前 beta gate |
 | Windows 10/11 | `.exe` （NSIS installer） | 推荐主格式：个人用户最熟；带卸载器；菜单栏 / 自启动配置友好 |
 | `.msi` （Wix） | 可选：企业批量部署、winget 仓库收录需要 MSI |  |
 | 跨平台 CLI 包装 | `npx jsonita` /`npm i -g jsonita` | npm 包是个小启动器，下载对应平台 binary 到本地缓存后启动；面向 Node 生态开发者 |
@@ -112,7 +112,7 @@ v1 不做任何上报，仅在本地写按天滚动日志： `~/Library/Logs/Jso
 
 ### 7.4 签名
 
-macOS ：Apple Developer ID + notarization（v1 必须）
+macOS ：小范围内部 beta 可未签名 / 未公证但必须在 release notes 明示；公开 release 必须 Apple Developer ID + notarization
 
 Windows ：EV Code Signing Certificate（v1.1+ Windows 发布前完成；未签名会触发 SmartScreen 警告劝退用户）
 

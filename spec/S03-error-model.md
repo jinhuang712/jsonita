@@ -66,13 +66,13 @@ Rust 业务失败统一进入 `JsonitaError`。前端可以本地化文案，但
 
 ```mermaid
 flowchart TD
-  ErrorModel["04 错误模型"] --> Frontend["02 前端执行：如何显示和保留 input"]
-  ErrorModel --> IPC["03 IPC：如何跨边界传递 kind/data"]
-  ErrorModel --> Engine["06 JSON Engine：Parse 与 UnwrapTimeout"]
-  ErrorModel --> Storage["07 存储：Sqlite/Io 的回滚语义"]
-  ErrorModel --> AI["08 AI Repair：Http/RateLimit/AiInvalidJson/Secrets"]
-  ErrorModel --> Logging["09 日志：允许字段和禁止字段"]
-  ErrorModel --> Release["10 打包：release blocker 不是 runtime fallback"]
+  ErrorModel["S03 错误模型"] --> Frontend["M00 前端执行：如何显示和保留 input"]
+  ErrorModel --> IPC["S02 IPC：如何跨边界传递 kind/data"]
+  ErrorModel --> Engine["M01 JSON Engine：Parse 与 UnwrapTimeout"]
+  ErrorModel --> Storage["S05 存储：Sqlite/Io 的回滚语义"]
+  ErrorModel --> AI["M02 AI Repair：Http/RateLimit/AiInvalidJson/Secrets"]
+  ErrorModel --> Logging["S06 日志：允许字段和禁止字段"]
+  ErrorModel --> Release["S07 打包：release blocker 不是 runtime fallback"]
 ```
 
 每个模块要写自己的失败场景，但必须落到这里的分类。例如 AI 文档可以说明 `RateLimit` 在 AI pane 怎么展示，却不能把 `RateLimit` 解释成“普通 HTTP 错误可忽略”。

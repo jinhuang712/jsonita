@@ -22,7 +22,7 @@
 | `jsonita-glass-mockups.md` | **玻璃全屏 mockup(主参考)** | 6 态主窗 + AI Fix Diff + 设置 + 历史 + 权限 + 状态栏4态 + 菜单栏 + 空状态 + Toast,均 light+dark |
 | `jsonita-settings-detail.md` | 设置 6 面板详版(交互,可点 nav 切换) | 每个面板真实字段 + 控件形态 |
 | `jsonita-motion-demo.md` | 动画交互 demo | 缓动对比(原生/Material/轻弹/即时)、呼出/隐藏/tab/AI Fix/缩放/主题 的脚感 |
-| `jsonita-singlepane-statusbar-demo.md` | **单窗切换 + 状态栏 hover 场景(最终版 v2)** | Switch 控件 + hover 浮现快捷键 + 双栏↔单栏动画 + 顺势缩窄 |
+| `jsonita-singlepane-statusbar-demo.md` | **单窗切换 + 状态栏 hover 场景(最终版 v2)** | Switch 控件 + hover 浮现快捷键 + 双栏↔单栏布局切换；窗口不主动缩窄 |
 
 > 注意：这些设计 Markdown 里保留的 prototype source 使用纯 CSS `backdrop-filter` 模拟玻璃，仅作视觉参考。真机玻璃要走原生 vibrancy(见 §5 阶段 3)。
 
@@ -85,7 +85,7 @@
 | 隐藏 dismiss | opacity 1→0 + scale→.99 + translateY→-4(**比入场快**) | 140ms / ease-in |
 | Tab 切换 | active 药丸滑动(left/width) + 面板内容 cross-fade | 180ms pill / ≤120ms 内容 |
 | AI Fix 出现 | 从右 translateX 10→0 + opacity;落定一次性琥珀微光 | 150ms;glow 一次**不循环** |
-| 单窗切换 | body grid `1fr 1fr`↔`1fr 0fr` + 窗口宽 560→440 顺势缩窄 + Output 淡出 + Run hint 滑入 | 240ms / ease-native |
+| 单窗切换 | body grid `1fr 1fr`↔`1fr 0fr` + Output 淡出 + Run hint 滑入；窗口尺寸不因 toggle 主动变化 | 240ms / ease-native |
 | 主题切换 | 全局 bg/color/border 交叉淡,**仅手动切触发**(初次加载不触发,防 FOUC) | ~180ms |
 
 **硬约束:**
@@ -103,7 +103,7 @@
   - `Switch to Single Panel` / `Switch to Split Panel` —— **纯文字、无图标**;文案是"动作 + 目标态";点击或按 `⌘\` 切换。
   - `History` —— 文字;hover 浮现 `⌘Y`。
 - **快捷键 `⌘\`(`CmdOrCtrl+\`)**:默认内置,但进设置「可自定义」组(与 `⌘⇧J` / `⌘⇧L` 并列)。
-- **切到单窗顺势把窗口缩窄**(单窗内容少;前提是 `smartWidth` 开)。
+- **切到单窗只切布局,不主动缩窗**;窗口尺寸仍由内容 / 字号触发的 smart resize 处理,避免 toggle 后窗口延迟跳动。
 - **去冗余**:单窗下左侧状态栏**不再**显示 "single-pane"(和右侧控件文字重复)。
 
 ---
@@ -122,9 +122,9 @@
 
 **阶段 1 · 单窗功能(低风险,纯前端 + settings)**
 - `src/store/settings.ts` + Rust Settings（见 [`A00-schemas.md`](../spec/appendix/A00-schemas.md)）新增 `shortcutSplitToggle`,默认 `CmdOrCtrl+\`。
-- 全局 hotkey 注册 + 与「可自定义」快捷键体系打通（见 [`S02-ipc-boundary.md`](../spec/S02-ipc-boundary.md) 与 [`I01-ipc-api.md`](../spec/platform/I01-ipc-api.md)）。
+- 窗口内快捷键监听 + 与「可自定义」快捷键体系打通（见 [`S02-ipc-boundary.md`](../spec/S02-ipc-boundary.md) 与 [`I01-ipc-api.md`](../spec/platform/I01-ipc-api.md)）；`⌘\` 不走 global-shortcut。
 - `SettingsModal` Shortcuts 面板加这条可自定义项。
-- StatusBar:加 `Switch to [Single/Split] Panel` 控件(hover 浮现 `⌘\`),History 改为 hover 浮现 `⌘Y`;切单窗触发 smart resize 缩窄;去掉左侧 "single-pane"。
+- StatusBar:加 `Switch to [Single/Split] Panel` 控件(hover 浮现 `⌘\`),History 改为 hover 浮现 `⌘Y`;切单窗只改布局,不主动缩窗;去掉左侧 "single-pane"。
 
 **阶段 2 · 动画**
 - `src/styles/tokens.css` 加 `--ease-native`(+可选 spring)。

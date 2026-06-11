@@ -1,4 +1,4 @@
-//! system 分组 stubs ── 全局快捷键 / 剪贴板 / Finder 打开，见 spec/03_ipc_boundary.md。
+//! system 分组 stubs ── 全局快捷键 / 剪贴板 / Finder 打开，见 spec/S02-ipc-boundary.md。
 //!
 //! M1-N1：clipboard_read 走 tauri-plugin-clipboard-manager（v2）→ 留 M1-N2 加；
 //! 当前返回空 sniff。open_log_dir / open_db_path 走 std::process::Command spawn。

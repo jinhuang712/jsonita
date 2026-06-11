@@ -4,9 +4,9 @@
 
 # Jsonita
 
-**Tiny menu-bar JSON toolkit for macOS — paste, format, fix, copy. ⌘⇧J.**
+**Tiny menu-bar JSON toolkit for macOS - paste, format, fix, copy. ⌘⇧J.**
 
-一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集 · 浮窗 P95 < 500 ms · 内存稳态 < 80 MB · 隐私零上传。
+一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集 · 浮窗 P95 < 500 ms · 内存稳态 < 80 MB · 本地优先；仅用户主动触发 AI Fix 时外发当前待修复文本。
 
 > 截图与演示 GIF 待 v1.0 发布前 (M3-N6) 录入；当前请直接 `pnpm tauri dev` 起本地实例预览。
 
@@ -26,8 +26,8 @@
 | **会话保留** | 合法 transform 成功后保存上次会话 · `⌘⇧L` 手动找回 · `⌘K` 清空 |
 | **自定义快捷键** | 默认 `⌘⇧J` 呼出 / `⌘⇧L` 恢复；可改 + 冲突检测 + override 二次确认 |
 | **智能宽度** | 粘长行自动扩宽（4 层逻辑：手动拖锁定 / soft-wrap 跳过 / smartWidth 开关 / max-chars 阈值） |
-| **i18n** | English / 简体中文 |
-| **隐私** | 所有用户数据本地（SQLite + `secrets.json`）· DeepSeek API key 存用户数据目录并限制文件权限 · 日志不记 JSON 内容 |
+| **i18n** | English / 简体中文；默认 English，可在 Settings 切换 |
+| **隐私** | SQLite / settings / window state / `secrets.json` 本地保存 · DeepSeek API key 存用户数据目录并限制文件权限 · 日志不记 JSON 内容 · AI Fix 只在用户主动触发时发送当前文本与 parse context |
 
 ## 系统需求
 
@@ -40,8 +40,9 @@
 ### v1 内测发布（优先）
 
 ```bash
-# 从 GitHub Releases 下载 .dmg，拖到 /Applications 后启动。
-# v1 先用 .dmg + GitHub Release 小范围内测；Homebrew / updater 后置到 v1.1+。
+# 受邀 beta 用户从 GitHub Releases 下载 .dmg，拖到 /Applications 后启动。
+# v1 先用 .dmg + GitHub Release 小范围内测；未签名 / 未公证状态必须以 release notes 明示。
+# Homebrew / updater 后置到 v1.1+；公开 release 前必须补 Developer ID signing + notarization。
 open https://github.com/jinhuang712/jsonita/releases/latest
 ```
 
@@ -64,13 +65,13 @@ pnpm release:macos:dmg                    # 生产 dmg（未签名或按本机�
 ```bash
 pnpm release:macos:dmg      # macOS：构建 .dmg → release-artifacts/macos-dmg/
 pnpm release:macos:app      # macOS：构建 .app → release-artifacts/macos-app/
-pnpm release:windows:exe    # Windows/MSVC：构建 NSIS installer .exe → release-artifacts/windows-exe/
+pnpm release:windows:exe    # Windows/MSVC：脚本支持，v1 beta 非主发布链路
 pnpm release:all            # 当前平台可构建的全部发布产物
 ```
 
-Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `Jsonita.exe`。
+Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 macOS `.dmg`。后续 Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `Jsonita.exe`。
 
-首次启动 macOS 会问 Accessibility 权限（全局快捷键需要）── 浮窗内 Modal 引导跳系统设置。授权后无需重启即生效。
+全局快捷键注册失败时，仍可从菜单栏打开 Jsonita；权限或系统保留组合会在浮窗内提示并引导到 macOS 隐私设置。macOS 13+ 可能出现 Input Monitoring 提示；当前 v1 不把 Accessibility 授权作为启动前置条件。
 
 ## 基本使用
 

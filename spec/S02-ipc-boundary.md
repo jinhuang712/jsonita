@@ -34,7 +34,7 @@ command 是前端主动请求 Rust 做事；event 是 Rust 告诉前端某个状
 | `ai` | `ai_set_api_key`、`ai_delete_api_key`、`ai_test_connection`、`ai_has_api_key`、`ai_fix` | `cmds::ai`、`ai::*`、`store::secrets` | `AiFixReq`、`AiFixResp` | secrets 读写或 HTTP | `ai_fix` 用 `requestId` 防混淆；key 保存不可重复伪成功。 |
 | `window` | `window_show`、`window_hide`、`window_toggle`、`window_resize_for_content`、`window_set_theme` | `cmds::window`、`window::*`、`store::window` | `ContentMetrics` | 系统窗口和 `window.json` | 可重试，但不能改 editor。 |
 | `system` | `clipboard_read`、`open_log_dir`、`open_db_path`、`open_github`、`quit_app` | `cmds::system` | `ClipboardSniff` | 系统能力 | 需要用户动作，不应后台循环。 |
-| `shortcuts` | `shortcut_register`、`shortcut_status`、`shortcut_retry`、`open_accessibility_settings` | `shortcuts::*` | `ShortcutRegisterResp` | 全局快捷键 | 注册失败可修改参数后重试。 |
+| `shortcuts` | `shortcut_register`、`shortcut_status`、`shortcut_retry`、`open_accessibility_settings` | `shortcuts::*` | `ShortcutRegisterResp` | 全局快捷键 | 注册失败可修改参数后重试；`open_accessibility_settings` 是既有命令名，用户语义是打开 macOS 隐私设置处理快捷键权限。 |
 | `logging` | 前端日志薄层、`open_log_dir` | `logging::*`、`cmds::system` | logger service | 写本地日志 | 日志失败不能影响 JSON 主流程。 |
 
 完整签名见 [platform/I01-ipc-api.md](platform/I01-ipc-api.md)。核心 spec 只保留行为判断必需的名字。

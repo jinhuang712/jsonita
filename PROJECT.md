@@ -22,7 +22,7 @@ Jsonita is a tiny macOS menu-bar JSON toolkit that appears instantly from a glob
 | Topic | Current Contract |
 | --- | --- |
 | v1 release | Use GitHub Releases plus a `.dmg` for small beta testing first. Homebrew, updater, and npm wrapper stay v1.1+ work. |
-| Install entry | Use README source-build commands during development; beta users download the `.dmg` from GitHub Releases. |
+| Install entry | Use README source-build commands during development; invited beta users download the `.dmg` from GitHub Releases and must read release notes for unsigned/notarization status. |
 | Privacy boundary | User data stays local: SQLite, settings, window state, and `secrets.json`. Logs do not record JSON content or API keys. |
 | API key storage | API keys live in the app data directory `secrets.json` with restricted permissions. Do not reintroduce system Keychain as product storage. |
 
