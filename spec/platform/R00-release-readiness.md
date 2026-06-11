@@ -41,6 +41,7 @@ stateDiagram-v2
 | 产物可解释 | 当前 release scope 的产物输出到约定目录，文件名能对应当前版本。v1 beta scope 要求 macOS `.dmg`，`.app` 可用于本地 smoke test；Windows NSIS 是脚本预留，不阻断当前 beta。 | 阻断 release；不能用旧产物顶替。 |
 | 签名状态明确 | 对外 release 需要 Developer ID 签名和 notarization；小范围 beta 可以明确标注 unsigned。 | 对外 release 阻断；内部 beta 必须在 release notes 明说。 |
 | 隐私边界保留 | 打包配置只开放 DeepSeek 网络例外和必要 Tauri capabilities。 | 阻断 release；不能以“先发包”为理由扩大权限。 |
+| 安全合规清单关闭 | 当前发布范围对应的签名、公证、权限、隐私、数据保留、secrets 和分发通道要求已在 [../S07-packaging-distribution.md](../S07-packaging-distribution.md) 逐项满足或明确后置。 | 阻断超出范围的发布；内部 beta 只能带着明确限制发布。 |
 | 验证记录完整 | 本次改动范围对应的 build/test/doc checks 已跑，并把失败项留在 TODO 或修掉。 | 阻断 release；不能把未跑验证写成通过。 |
 
 ## 用户可见结果

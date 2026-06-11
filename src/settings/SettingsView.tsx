@@ -635,7 +635,7 @@ function GroupAbout() {
       </div>
 
       <div style={aboutMetaGridStyle}>
-        <AboutMeta label="Version" value="1.0.0-beta.1" />
+        <AboutMeta label="Version" value="1.0.0-beta.2" />
         <AboutMeta label="License" value="MIT" />
         <AboutMeta label="Author" value="Jin Huang" />
       </div>

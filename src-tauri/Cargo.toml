@@ -1,6 +1,6 @@
 [package]
 name = "jsonita"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 description = "Tiny menu-bar JSON toolkit"
 edition = "2021"
 rust-version = "1.77"

@@ -26,6 +26,7 @@
 | Rust domain 或 command | `PATH="/Users/jin.huang/.cargo/bin:$PATH" cargo check --manifest-path src-tauri/Cargo.toml` | Cargo check 退出 0。 |
 | Tauri 配置或窗口行为 | `PATH="/Users/jin.huang/.cargo/bin:$PATH" pnpm tauri dev` 或对应 package build。 | App 能启动，目标窗口/权限/快捷键路径可操作。 |
 | Packaging script | 对应 `pnpm release:*` 命令。 | 产物进入约定 `release-artifacts/` 子目录。 |
+| macOS 原生 vibrancy | `PATH="/Users/jin.huang/.cargo/bin:$PATH" cargo build --manifest-path src-tauri/Cargo.toml`，并用本地 `.app` smoke test。 | `window::apply_glass_mode` 在 macOS 编译通过；light 使用 `Popover`，dark 使用 `HudWindow`，system 读取 OS appearance；透明窗口和 WebView 背景保持透明。 |
 
 ## Release 变更
 
@@ -35,6 +36,14 @@
 | macOS DMG | `pnpm release:macos:dmg`，随后 `hdiutil imageinfo` 与 sha256 检查 | `.dmg` 存在、版本可识别、imageinfo 成功、checksum 可写入 release notes；发布后 GitHub asset 名称和 sha256 与本地一致。 |
 | macOS APP | `pnpm release:macos:app` | `.app` bundle 存在且能打开或进入后续签名流程。 |
 | Windows NSIS | Windows/MSVC 环境执行 `pnpm release:windows:exe` | 生成 NSIS installer `.exe`，不是裸 exe。 |
+
+## 已执行的关键验收记录
+
+| 日期 | 范围 | 证据 | 结论 |
+| --- | --- | --- | --- |
+| 2026-06-11 | Settings scrollspy 修复 | Playwright 打开设置页，点击 About 后 active 变化为 `General -> About`，未经过中间目录项。 | 左侧目录频闪修复通过。 |
+| 2026-06-11 | macOS app smoke test | `pnpm release:macos:app` 生成 `release-artifacts/macos-app/Jsonita.app`；覆盖安装到 `/Applications/Jsonita.app` 后进程路径为 `/Applications/Jsonita.app/Contents/MacOS/jsonita`。 | 本地 `.app` 可启动。 |
+| 2026-06-11 | 原生 vibrancy 编译验收 | `cargo test --manifest-path src-tauri/Cargo.toml` 已覆盖 macOS target 编译；本轮 release 前再跑 `cargo build --manifest-path src-tauri/Cargo.toml`。 | `HudWindow` / `Popover` 选择路径可编译，真实主题切换需继续通过 smoke test 验证 UI 观感。 |
 
 ## 残留检查清单
 

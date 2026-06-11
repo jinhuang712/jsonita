@@ -69,6 +69,19 @@ pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis
 | `TAURI_NO_SIGN=1` | 本地临时无签名构建。 |
 | `TAURI_CI=1` / `CI=true` | CI 非交互构建。 |
 
+## Compliance evidence fields
+
+release notes 或 release checklist 至少记录这些事实：
+
+| 字段 | beta unsigned | public release |
+| --- | --- | --- |
+| signing status | `unsigned` | Developer ID identity。 |
+| notarization status | `not notarized` | notarization request id + staple verification。 |
+| artifact checksum | sha256 | sha256。 |
+| privacy note | 本地优先；AI Fix 主动外发；日志脱敏。 | 同 beta，并补公开渠道隐私说明链接。 |
+| permissions note | DeepSeek network exception；无 Apple Events/JIT/unsigned memory。 | 同 beta，并记录权限复核结果。 |
+| data retention note | app data 路径、logs 7 days、卸载删除路径。 | 同 beta，并补 support/export 说明。 |
+
 ## Release artifact directories
 
 | 脚本 | 输出目录 |

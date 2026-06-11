@@ -66,3 +66,15 @@ CREATE TABLE schema_version (
 | settings 缺字段 | Rust 默认值补齐并在下次写入落盘。 |
 | secrets 权限 | 创建后限制当前用户读写。 |
 | corruption handling | 不覆盖当前 editor；返回结构化错误并记录脱敏日志。 |
+
+## Corruption recovery detail
+
+核心恢复语义见 [S05-storage-session.md](../S05-storage-session.md)。实现明细按数据类型拆分：
+
+| 数据 | 检查点 | fallback 产物 | 后续写入 |
+| --- | --- | --- | --- |
+| SQLite | open、migration、`PRAGMA integrity_check`。 | 原 DB 保留在 app data 目录；运行时进入无 history/session 或新空 DB。 | 只有新 DB 初始化成功后才能恢复 history/session 写入。 |
+| settings.json | `serde_json` parse + `Settings` 反序列化。 | 内存 `Settings::default()` snapshot。 | 用户 reset 或成功 patch 后重写完整 settings。 |
+| window.json | `serde_json` parse + `WindowState` 反序列化 + 尺寸下限。 | 默认 `860 x 560` 或 clamp 到硬下限。 | resize 成功后重写 `window.json`。 |
+
+实现不得把损坏文件内容、history row、last_session content、完整 settings 或 secrets 写入日志。
