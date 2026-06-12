@@ -11,7 +11,12 @@ body {
   overscroll-behavior: none;
   background: transparent;
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* 内层滚动不向文档链式传播（修滚动弹出浮窗边界的橡皮筋） */
@@ -52,7 +57,7 @@ kbd {
   background: var(--bg-code);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-ui);
   font-size: var(--fs-xs);
   color: var(--text);
 }
@@ -62,9 +67,11 @@ kbd {
   left: 0;
   top: 0;
   bottom: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--tab-active-bg);
-  box-shadow: inset 0 0 0 1px var(--tab-active-border);
+  box-shadow:
+    inset 0 0 0 1px var(--tab-active-border),
+    0 1px 2px rgba(0, 0, 0, 0.08);
   pointer-events: none;
   transition:
     transform 180ms var(--ease-native),
@@ -75,14 +82,16 @@ kbd {
 .jsonita-tab-button {
   position: relative;
   z-index: 1;
-  padding: 5px 10px;
+  min-height: 27px;
+  padding: 0 9px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
-  font-family: inherit;
-  font-size: var(--fs-editor);
-  font-weight: 450;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0;
   line-height: var(--lh-tight);
   cursor: pointer;
   transform: translateY(0);
@@ -184,8 +193,8 @@ kbd {
 }
 
 .jsonita-tab-button-active {
-  color: color-mix(in srgb, var(--primary) 62%, var(--text));
-  font-weight: 560;
+  color: color-mix(in srgb, var(--primary) 68%, var(--text));
+  font-weight: 590;
 }
 
 .jsonita-chrome-icon-button {
@@ -277,9 +286,90 @@ kbd {
   border-radius: var(--radius-sm);
   background: var(--control-bg);
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-ui);
   font-size: calc(var(--fs-xs) - 1px);
   line-height: 1.35;
+}
+
+.jsonita-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface-quiet) 38%, transparent);
+}
+
+.jsonita-pane + .jsonita-pane {
+  box-shadow: inset 1px 0 0 var(--border);
+}
+
+.jsonita-pane-input::after {
+  content: "";
+  position: absolute;
+  top: var(--sp-4);
+  bottom: var(--sp-4);
+  right: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--border-strong) 64%, transparent) 18%,
+    color-mix(in srgb, var(--border-strong) 64%, transparent) 82%,
+    transparent
+  );
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.jsonita-pane-single::after {
+  display: none;
+}
+
+.jsonita-editor-shell {
+  position: relative;
+  height: 100%;
+}
+
+.jsonita-editor-empty-hint {
+  position: absolute;
+  top: 22px;
+  left: 48px;
+  z-index: 1;
+  max-width: min(320px, calc(100% - 72px));
+  padding: 0;
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+  pointer-events: none;
+}
+
+.jsonita-editor-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  margin-bottom: 8px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--control-bg) 78%, transparent);
+  color: color-mix(in srgb, var(--primary) 54%, var(--text-muted));
+  font-family: var(--font-code);
+  font-size: var(--fs-sm);
+  line-height: 1;
+}
+
+.jsonita-editor-empty-title {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 520;
+  line-height: var(--lh-snug);
+}
+
+.jsonita-editor-empty-meta {
+  margin-top: 3px;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
 }
 
 .jsonita-history-item-main:hover,
@@ -300,7 +390,7 @@ kbd {
   padding: var(--sp-3) var(--sp-4);
   background: var(--editor-bg);
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
   font-size: var(--fs-tree);
   line-height: var(--lh-code);
 }

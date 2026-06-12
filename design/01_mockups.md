@@ -8,6 +8,8 @@
 
 阶段 3 已落地：本章已从 flat 重绘为 原生玻璃（macOS vibrancy） 视觉权威；材质 / 调色 / 动效出处仍见 [design/HANDOFF.md](HANDOFF.md) 与 `design/jsonita-*.md` prototype source blocks。当前实现使用 Tauri 透明窗口 + macOS window effects；CSS mockup 用 `backdrop-filter` 仅模拟文档预览。实现层必须保持主窗单层玻璃 tint，TabBar / StatusBar / editor 只用轻量叠层，避免叠成旧 flat 深色面板。
 
+默认空态也是视觉权威的一部分：呼出后不能只出现大面积空深色玻璃和一枚行号。输入区、输出区、轻量分隔、短空态文案和状态栏必须共同说明这是一个可立即粘贴和预览的 JSON 工具；空态不得加入插画、历史阶段、TODO 或说明书式段落。
+
 ## 1 主浮窗 ── 6 种状态
 
 ### 1.1 Format Tab · valid JSON（默认呼出后）

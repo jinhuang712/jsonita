@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Editor } from '../editor/Editor';
 import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
@@ -22,6 +23,7 @@ import { WindowResizeHandles } from './WindowResizeHandles';
  * M1-N4：双栏 CSS Grid 静态 50/50；M1-N9 起加智能缩放 + 可拖边 resize。
  */
 export function FloatingWindow() {
+  const { t } = useTranslation('shell');
   const content = useEditorStore((s) => s.content);
   const outputText = useEditorStore((s) => s.outputText);
   const setContent = useEditorStore((s) => s.setContent);
@@ -107,42 +109,57 @@ export function FloatingWindow() {
               display: 'grid',
               gridTemplateColumns: singlePaneMode ? '1fr' : '1fr 1fr',
               minHeight: 0,
+              padding: '2px 0',
             }}
           >
             <div
-              style={{
-                borderRight: singlePaneMode ? 'none' : '1px solid var(--border)',
-                overflow: 'hidden',
-              }}
+              className={
+                singlePaneMode
+                  ? 'jsonita-pane jsonita-pane-input jsonita-pane-single'
+                  : 'jsonita-pane jsonita-pane-input'
+              }
             >
               {singlePaneMode && activePane === 'ai-fix' ? (
                 <AiFixPane />
               ) : showTreeInSinglePane ? (
                 <TreePanel state={treeState} />
               ) : (
-                <Editor
-                  theme={effectiveTheme}
-                  value={content}
-                  onChange={setContent}
-                  softWrap={editorSoftWrap}
-                  error={editorError}
-                />
+                <EditorFrame
+                  empty={content.trim() === ''}
+                  mark="{ }"
+                  title={t('editor.inputEmptyTitle')}
+                  meta={t('editor.inputEmptyMeta')}
+                >
+                  <Editor
+                    theme={effectiveTheme}
+                    value={content}
+                    onChange={setContent}
+                    softWrap={editorSoftWrap}
+                    error={editorError}
+                  />
+                </EditorFrame>
               )}
             </div>
             {!singlePaneMode && (
-              <div style={{ overflow: 'hidden' }}>
+              <div className="jsonita-pane jsonita-pane-output">
                 {activePane === 'ai-fix' ? (
                   <AiFixPane />
                 ) : activePane === 'tree' ? (
                   <TreePanel state={treeState} />
                 ) : (
-                  <Editor
-                    theme={effectiveTheme}
-                    value={outputText}
-                    readOnly={true}
-                    softWrap={editorSoftWrap}
-                    placeholderText="→ output"
-                  />
+                  <EditorFrame
+                    empty={outputText.trim() === ''}
+                    mark="↳"
+                    title={t('editor.outputEmptyTitle')}
+                    meta={t('editor.outputEmptyMeta')}
+                  >
+                    <Editor
+                      theme={effectiveTheme}
+                      value={outputText}
+                      readOnly={true}
+                      softWrap={editorSoftWrap}
+                    />
+                  </EditorFrame>
                 )}
               </div>
             )}
@@ -152,6 +169,33 @@ export function FloatingWindow() {
         </>
       )}
       <WindowResizeHandles />
+    </div>
+  );
+}
+
+function EditorFrame({
+  children,
+  empty,
+  mark,
+  title,
+  meta,
+}: {
+  children: React.ReactNode;
+  empty: boolean;
+  mark: string;
+  title: string;
+  meta: string;
+}) {
+  return (
+    <div className="jsonita-editor-shell">
+      {empty && (
+        <div className="jsonita-editor-empty-hint" aria-hidden="true">
+          <div className="jsonita-editor-empty-mark">{mark}</div>
+          <div className="jsonita-editor-empty-title">{title}</div>
+          <div className="jsonita-editor-empty-meta">{meta}</div>
+        </div>
+      )}
+      {children}
     </div>
   );
 }

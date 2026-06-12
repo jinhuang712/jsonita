@@ -11,6 +11,12 @@
     "line": "Line",
     "col": "Col"
   },
+  "editor": {
+    "inputEmptyTitle": "Paste JSON",
+    "inputEmptyMeta": "Format, minify, inspect, or repair",
+    "outputEmptyTitle": "Output appears here",
+    "outputEmptyMeta": "Results stay separate until you apply them"
+  },
   "actions": {
     "history": "History",
     "openHistory": "Open history",

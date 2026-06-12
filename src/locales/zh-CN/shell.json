@@ -11,6 +11,12 @@
     "line": "行",
     "col": "列"
   },
+  "editor": {
+    "inputEmptyTitle": "粘贴 JSON",
+    "inputEmptyMeta": "格式化、压缩、查看树，或修复",
+    "outputEmptyTitle": "结果显示在这里",
+    "outputEmptyMeta": "结果保持分离，直到你主动应用"
+  },
   "actions": {
     "history": "历史",
     "openHistory": "打开历史",

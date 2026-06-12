@@ -90,9 +90,10 @@ export function TabBar() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 4,
-        padding: '8px 10px',
-        background: 'transparent',
+        gap: 5,
+        minHeight: 44,
+        padding: '7px 10px 8px',
+        background: 'color-mix(in srgb, var(--surface-quiet) 28%, transparent)',
         borderBottom: '1px solid var(--border)',
         cursor: 'grab',
         position: 'relative',
@@ -103,7 +104,7 @@ export function TabBar() {
         role="tablist"
         aria-label="Pane tabs"
         ref={tabListRef}
-        style={{ display: 'flex', alignItems: 'center', gap: 4, position: 'relative' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 5, position: 'relative' }}
       >
         {activeRect && (
           <span
@@ -150,7 +151,8 @@ export function TabBar() {
             padding: '4px 10px',
             fontSize: 'var(--fs-sm)',
             lineHeight: 'var(--lh-tight)',
-            fontWeight: 560,
+            fontWeight: 580,
+            fontFamily: 'var(--font-ui)',
             background: 'var(--accent-soft)',
             color: 'var(--accent)',
             border: '1px solid color-mix(in srgb, var(--accent) 24%, transparent)',
@@ -174,7 +176,7 @@ export function TabBar() {
         aria-label={tShell('actions.openSettings')}
         title={`${tShell('actions.openSettings')} (${formatAccelerator('CmdOrCtrl+,')})`}
       >
-        <GearIcon width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
+        <GearIcon width={15} height={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
     </div>
   );

@@ -16,11 +16,11 @@ Jsonita 的视觉语言锚定在四点上，所有 token 取值都为之服务�
 
 macOS native 气质 ── SF Pro · 系统 blur · vibrancy 风
 
-开发者审美 ── mono 字体多用 · 类型颜色清晰
+开发者审美 ── JSON 内容用清晰等宽字体；界面 chrome 使用系统 text 字体，避免整窗都像代码面板
 
 瞬时清晰 ── 状态色不饱和但识别度高（红=错，绿=有效）
 
-Native Quiet Glass 是当前实现方向：窗口保留 macOS 玻璃气质，但交互强调从鲜亮系统蓝收敛为蓝灰系低饱和提示。编辑器内容永远是视觉主角；TabBar、Search、Settings、History、权限弹窗、状态栏和快捷键提示都只能用弱背景、细边框、轻字重和短动效建立层级。
+Native Quiet Glass 是当前实现方向：窗口保留 macOS 玻璃气质，但交互强调从鲜亮系统蓝收敛为蓝灰系低饱和提示。编辑器内容永远是视觉主角；TabBar、Search、Settings、History、权限弹窗、状态栏和快捷键提示都只能用弱背景、细边框、轻字重和短动效建立层级。默认空态也必须有输入 / 输出区域和轻量引导，不能只露出一整块空深色玻璃。
 
 #### 避免 · Avoid
 
@@ -93,7 +93,7 @@ JSON 高亮 以 `--json-*` 前缀
 | `--accent-soft` | `rgba(145,99,52,.12)` | `rgba(196,154,108,.13)` | AI Fix 背景叠色 |
 | `--glass-bg` | `rgba(255,255,255,.62)` | `rgba(23,25,31,.72)` | 浮窗唯一主叠色；dark 下加深以避免灰幕感，仍保留原生 vibrancy |
 | `--glass-blur` | `blur(42px) saturate(180%)` | `blur(42px) saturate(175%)` | 文档 mockup 模拟；真机由原生 vibrancy 负责 |
-| `--chrome-bg` | `transparent` | `transparent` | TabBar / StatusBar 不再铺整条 band，只靠主窗 tint + 发丝线分层 |
+| `--chrome-bg` | `transparent` | `transparent` | 主窗 chrome 默认不铺实色 band；TabBar / StatusBar 可叠极轻 `surface-quiet` 以建立层级，但不能压过编辑区 |
 | `--chrome-bg-strong` | `rgba(255,255,255,.16)` | `rgba(255,255,255,.07)` | hover / kbd / 局部 glass chip |
 | `--control-bg / --control-bg-hover / --control-bg-active / --control-border` | `rgba(255,255,255,.24)` / `rgba(255,255,255,.34)` / `rgba(70,111,160,.12)` / `rgba(34,43,58,.12)` | `rgba(255,255,255,.045)` / `rgba(255,255,255,.075)` / `rgba(136,161,190,.13)` / `rgba(255,255,255,.115)` | 所有控件表面；避免各组件硬编码按钮色 |
 | `--tab-active-bg / --tab-active-border` | `rgba(255,255,255,.2)` /`rgba(67,111,159,.18)` | `rgba(255,255,255,.09)` /`rgba(255,255,255,.14)` | active tab pill；只表达位置，不形成蓝色大块 |
@@ -169,21 +169,27 @@ OK
 
 | token | 优先级（左 → 右） |
 | --- | --- |
-| `--font-sans` | -apple-system → BlinkMacSystemFont → "SF Pro Display"（mac）→ "Segoe UI"（Win）→ "PingFang SC"（中文 mac）→ "Microsoft YaHei UI"（中文 Win）→ Helvetica → Arial → sans-serif |
-| `--font-mono` | "SF Mono"（mac）→ "JetBrains Mono"（已装）→ "Cascadia Code"（Win Terminal 默认）→ Menlo → Consolas → "Liberation Mono" → monospace |
+| `--font-ui` | -apple-system → BlinkMacSystemFont → "SF Pro Text"（mac 小字号 UI）→ "Segoe UI"（Win）→ "PingFang SC"（中文 mac）→ "Microsoft YaHei UI"（中文 Win）→ Helvetica → Arial → sans-serif |
+| `--font-sans` | `var(--font-ui)`；保留给旧调用点 |
+| `--font-text` | 与 `--font-ui` 同源；用于较长说明文本 |
+| `--font-code` | ui-monospace → "SF Mono"（mac）→ "JetBrains Mono"（已装）→ "Cascadia Code"（Win Terminal 默认）→ Menlo → Consolas → "Liberation Mono" → 中文 UI 字体 → monospace |
+| `--font-mono` | `var(--font-code)`；保留给旧调用点 |
+| `--font-mono-ui` | "SF Mono" → ui-monospace → Menlo → Consolas → "Liberation Mono" → monospace；只用于快捷键、数字、行号等短 UI token |
+
+字体使用边界：TabBar、StatusBar、Settings、History、权限弹窗和普通按钮使用 `--font-ui`。CodeMirror 正文、Tree 内容、JSON 片段使用 `--font-code`。快捷键 badge、行号、计数值使用 `--font-mono-ui`。不要把整个状态栏、搜索标签或普通按钮改成等宽字体。
 
 #### 6.2 字号 scale（4 档 + 编辑器独立）
 
 | token | px | 用途 |
 | --- | --- | --- |
 | `--fs-xs` | 11 | tag / breadcrumb / meta |
-| `--fs-sm` | 12.5 | 表格 td / 状态栏；Toast 为保留设计 |
+| `--fs-sm` | 12 | TabBar / 表格 td / 状态栏；Toast 为保留设计 |
 | `--fs-base` | 13.5 | UI 默认（按钮 / 输入框 / 列表） |
 | `--fs-md` | 14 | 设置面板正文 / Modal body |
 | `--fs-lg` | 16 | Modal 标题 / Tab 文字 |
 | `--fs-xl` | 20 | 设置面板分组标题 |
 | `--fs-2xl` | 26 | 预留（v1 未用） |
-| `--fs-editor` | 13 | CodeMirror 主编辑器（独立调） |
+| `--fs-editor` | 13.5 | CodeMirror 主编辑器（独立调） |
 | `--fs-tree` | 12 | JSON 树视图 |
 
 浮窗缩放域： `--fs-editor` 是 `⌘+` /`⌘-` /`⌘0` 的源值；浮窗根节点用它派生 `--fs-tree`、 `--fs-xs`、 `--fs-sm`。CodeMirror 正文、line number gutter、Tree 完整跟随编辑器字号；顶部 TabBar、SinglePaneHint、StatusBar 的紧凑文字只轻微跟随并封顶（ `--fs-xs` ≤ 12.5px， `--fs-sm` ≤ 14px），避免 chrome 喧宾夺主。SettingsView 作为主壳内页面沿用浮窗 token；History Modal 等独立 modal 仍使用全局 token，不跟随编辑器字号。

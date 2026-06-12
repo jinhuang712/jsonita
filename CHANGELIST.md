@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### polish · Native Quiet A 视觉层级与字体收敛
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 将主窗口继续收敛到用户选择的 Quiet Native Pro 方向：TabBar / StatusBar 改为更紧凑的系统 text 字体和轻量 surface，编辑区加入输入 / 输出 pane 分层与空态 overlay，避免空窗口只剩大块深色玻璃；字体 token 拆为 UI、代码、快捷键三类，减少整窗等宽字体带来的笨重感。 |
+| 影响文档 | `src/styles/tokens.css`、`src/styles/global.css`、`src/shell/FloatingWindow.tsx`、`src/shell/TabBar.tsx`、`src/shell/StatusBar.tsx`、`src/shell/SinglePaneHint.tsx`、`src/editor/theme.ts`、`src/locales/*/shell.json`、`tests/design/nativeQuietGlass.test.mjs`、`design/01_mockups.md`、`design/03_design_tokens.md`、`design/04_components.md`、`design/08_editor.md`、`plan/04_nfr.md`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈当前截图“不够好看”，并追加指出字体不好看；本次不改 JSON transform 行为，只调整产品视觉层级、空态和字体边界。 |
+
 ### fix · 搜索面板恢复 Replace 能力入口
 
 | 字段 | 内容 |
