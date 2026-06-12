@@ -109,7 +109,7 @@ active 动效 ：active Tab 背后使用独立胶囊层，点击或 `Tab` / `⇧
 
 设置入口 ：右上角固定设置图标按钮，点击区不小于 34 × 30 px，默认态保留弱边框与 soft 背景， `aria-label=Open settings` ，tooltip 显示 `⌘,` ；点击后主壳内部切到 `SettingsView`
 
-字号缩放 ：Tab button 不允许 hardcode `12px` ；必须使用浮窗根节点派生的 `--fs-editor` 与 `--lh-tight` ，与 CodeMirror 正文字号保持一致，让用户能从 Format / Minify 等顶部标签直接感知当前放大程度
+字体与密度 ：Tab button 使用 `--font-ui` 和浮窗派生的 `--fs-sm`，保持 macOS 工具栏的小字号质感；不要使用 `--font-code`，也不要让 Tab 文字等比例追随编辑器字号放大。active pill 只表达当前位置，不能变成大面积高亮按钮。
 
 键盘 ：当焦点不在 CodeMirror / input / textarea / select / contenteditable 内时，裸 `Tab` 正向、 `⇧Tab` 反向循环切换功能 Tab；焦点在 Tab 按钮本身时， `Enter` / `Space` 走原生 button 激活。AI Fix 仅在可见且启用时加入循环。 不绑 `⌘1-6` （见 [plan/02 § 1.1](../design/02_interaction.md) ）
 
@@ -135,11 +135,11 @@ interface StatusBarProps {
 | `empty` | "—"（无圆点） |
 | `large` | "● Large file · X bytes" |
 
-右侧固定 History 按钮，点击或 `⌘Y` 打开历史； `Switch to [Single / Split] Panel` 与 History 对称，平时只显示文字，hover 或键盘 focus 时各自滑出快捷键 badge。状态栏不铺整条背景，只使用主窗 tint + 顶部分隔线；设置入口不再放在状态栏，改由 TabBar 右上角按钮与 `⌘,` 承担。StatusBar 使用浮窗缩放域中的 `--fs-xs`，随编辑器字号轻微缩放并封顶，保持单行高度紧凑。
+右侧固定 History 按钮，点击或 `⌘Y` 打开历史； `Switch to [Single / Split] Panel` 与 History 对称，平时只显示文字，hover 或键盘 focus 时各自滑出快捷键 badge。状态栏使用 `--font-ui`，只有行数、字节数和快捷键 badge 使用 `--font-mono-ui`；不要让整条状态栏变成等宽字体。状态栏只叠极轻 surface 和顶部分隔线；设置入口不再放在状态栏，改由 TabBar 右上角按钮与 `⌘,` 承担。StatusBar 使用浮窗缩放域中的 `--fs-xs`，随编辑器字号轻微缩放并封顶，保持单行高度紧凑。
 
 ### 4.2.1 SinglePaneHint
 
-单窗模式专用的右下角提示组件。仅当 `settings.singlePaneMode=true` 且 active pane 不是 Tree 时渲染，位置固定在编辑器右下角、状态栏上方，提示 `⌘↵` Run {pane}； `⌘Enter` 执行时切换为 running / applied / failed 短反馈。Tree 是视图模式，直接整栏渲染 `TreeView`，不显示 Run hint。字号使用浮窗缩放域中的 `--fs-xs`。
+单窗模式专用的右下角提示组件。仅当 `settings.singlePaneMode=true` 且 active pane 不是 Tree 时渲染，位置固定在编辑器右下角、状态栏上方，提示 `⌘↵` Run {pane}； `⌘Enter` 执行时切换为 running / applied / failed 短反馈。Tree 是视图模式，直接整栏渲染 `TreeView`，不显示 Run hint。提示正文使用 `--font-ui`；只有 `kbd` 使用 `--font-mono-ui`。
 
 ```
 // src/shell/SinglePaneHint.tsx
@@ -149,6 +149,18 @@ type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 ### 4.2.2 ShortcutHint（已移除）
 
 旧版浮窗 show 时会在右下角显示一块 temporary keymap HUD（ `Esc` /`Tab` /`⇧Tab` ）。玻璃方向落地后该 HUD 不再渲染：主窗只保留状态栏两个 hover/focus 快捷键 badge 与单窗模式 `SinglePaneHint`，避免覆盖编辑区并回到旧 flat 深色浮层观感。
+
+### 4.2.3 EditorFrame 空态与 pane surface
+
+`FloatingWindow` 在 `Editor` 外包一层 `EditorFrame`。它不改变 CodeMirror 文本，不写 store，只在当前 pane 为空时显示 overlay 引导。
+
+| 区域 | 规则 |
+| --- | --- |
+| Input 空态 | 显示 `{ }` 小标记、`Paste JSON` 和一行短 meta；位置靠近编辑器起始行，不能居中做 hero，也不能覆盖行号。 |
+| Output 空态 | 显示轻量结果占位，说明输出会在这里出现；空态不能使用 CodeMirror placeholder 字符串代替，因为那会让左右栏读起来像一块空 editor。 |
+| Pane surface | 输入 / 输出 pane 都有极轻 `surface-quiet` 叠层；双栏中间用弱分隔线，单窗模式移除中线。 |
+| 字体 | 空态标题与说明使用 `--font-ui`，JSON 小标记使用 `--font-code`。 |
+| 禁止 | 不做大插画、不做营销式说明、不显示历史 phase 或 TODO 文案、不把空态写入编辑器内容。 |
 
 ### 4.3 Toast（reserved / future）
 

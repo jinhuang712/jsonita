@@ -75,16 +75,22 @@
   --op-ai-fix-bg: rgba(145, 99, 52, 0.12);
 
   /* § 6 字体 */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
     "PingFang SC", "Microsoft YaHei UI", Helvetica, Arial, sans-serif;
-  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas,
-    "Liberation Mono", "PingFang SC", "Microsoft YaHei UI", monospace;
+  --font-sans: var(--font-ui);
+  --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    "PingFang SC", "Microsoft YaHei UI", Helvetica, Arial, sans-serif;
+  --font-code: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo,
+    Consolas, "Liberation Mono", "PingFang SC", "Microsoft YaHei UI", monospace;
+  --font-mono: var(--font-code);
+  --font-mono-ui: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono",
+    monospace;
   --fs-xs: 11px;
-  --fs-sm: 12.5px;
+  --fs-sm: 12px;
   --fs-base: 13.5px;
   --fs-md: 14px;
   --fs-lg: 16px;
-  --fs-editor: 13px;
+  --fs-editor: 13.5px;
   --fs-tree: 12px;
   --lh-tight: 1.25;
   --lh-snug: 1.4;

@@ -37,3 +37,25 @@ test('history and settings use shared quiet surface tokens for controls', () => 
   assert.match(settings, /var\(--control-bg\)/);
   assert.match(settings, /var\(--control-bg-active\)/);
 });
+
+test('native polish separates UI, code, and shortcut typography', () => {
+  const tokens = read('src/styles/tokens.css');
+  const statusBar = read('src/shell/StatusBar.tsx');
+  const editorTheme = read('src/editor/theme.ts');
+
+  assert.match(tokens, /--font-ui:/);
+  assert.match(tokens, /--font-code:/);
+  assert.match(tokens, /--font-mono-ui:/);
+  assert.match(statusBar, /fontFamily:\s*'var\(--font-ui\)'/);
+  assert.match(editorTheme, /fontFamily:\s*'var\(--font-code\)'/);
+});
+
+test('empty workspace uses editor overlays instead of leaving a blank glass void', () => {
+  const shell = read('src/shell/FloatingWindow.tsx');
+  const styles = read('src/styles/global.css');
+
+  assert.match(shell, /function EditorFrame/);
+  assert.match(shell, /jsonita-editor-empty-hint/);
+  assert.match(styles, /\.jsonita-pane\b/);
+  assert.match(styles, /\.jsonita-editor-empty-hint\b/);
+});

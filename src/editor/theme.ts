@@ -13,7 +13,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     color: 'var(--text)',
     backgroundColor: 'var(--editor-bg)',
     fontSize: 'var(--fs-editor)',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-code)',
     height: '100%',
     userSelect: 'text',
   },
@@ -23,7 +23,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.cm-content': {
     caretColor: 'var(--editor-cursor)',
     padding: 'var(--sp-3) 0',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-code)',
     lineHeight: 'var(--lh-code)',
   },
   '.cm-line': {
@@ -39,7 +39,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     backgroundColor: 'var(--editor-gutter)',
     color: 'var(--text-faint)',
     border: 'none',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-mono-ui)',
     fontSize: 'var(--fs-editor)',
     lineHeight: 'var(--lh-code)',
   },
@@ -97,7 +97,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.jsonita-search-label': {
     flex: '0 0 54px',
     color: 'var(--text-faint)',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-ui)',
     fontSize: 'var(--fs-xs)',
     lineHeight: 'var(--lh-tight)',
   },
@@ -123,7 +123,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.jsonita-search-count': {
     minWidth: '54px',
     color: 'var(--text-faint)',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-mono-ui)',
     fontSize: 'var(--fs-xs)',
     textAlign: 'center',
     whiteSpace: 'nowrap',
@@ -150,7 +150,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   },
   '.jsonita-search-toggle': {
     minWidth: '34px',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-mono-ui)',
     fontSize: 'var(--fs-xs)',
   },
   '.jsonita-search-toggle-active': {

@@ -210,6 +210,10 @@ export function Editor({ value, onChange, onErrorChange, theme, ...cfg }: Editor
 
 生命周期契约： `cfg.error` 是 lint 数据，不是 EditorView 生命周期配置。输入半截 JSON 时 debounce parse 会频繁改变错误位置；这只能触发 `forceLinting(view)` 刷新红线，不能销毁 / 重建 CodeMirror，否则会打断连续输入、焦点、光标和输入法上下文。 `value` /`cfg.error` 变化后需要立即并在下一帧再次 force lint；当 `cfg.error=null` 时先 `setDiagnostics([])`，清掉 CodeMirror 在 doc change 映射阶段保留的旧 diagnostics / lint gutter marker。
 
+空态契约：CodeMirror 不负责产品空态文案。主壳的 `EditorFrame` 在 editor 外层显示 input / output overlay，保证空 JSON 时仍能看到输入区、输出区和轻量引导；overlay 不进入 doc、不参与搜索、不影响 lint。CodeMirror placeholder 只适合极短技术占位，不承担当前主界面空态。
+
+字体契约：CodeMirror 正文使用 `--font-code`；行号、搜索计数和快捷键类短 token 使用 `--font-mono-ui`；搜索 label、按钮和 shell 文案使用 `--font-ui`。不要把整条搜索面板或状态栏改成等宽字体。
+
 ### 1.5 Light theme extension
 
 ```
@@ -221,13 +225,13 @@ export const jsonitaLightTheme = EditorView.theme({
     color:           'var(--text)',
     backgroundColor: 'var(--editor-bg)',
     fontSize:        'var(--fs-editor)',
-    fontFamily:      'var(--font-mono)',
+    fontFamily:      'var(--font-code)',
     height:          '100%',
   },
   '.cm-content': {
     caretColor: 'var(--editor-cursor)',
     padding:    'var(--sp-3) 0',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-code)',
     lineHeight: 'var(--lh-code)',
   },
   '.cm-line': {
@@ -241,7 +245,7 @@ export const jsonitaLightTheme = EditorView.theme({
     backgroundColor: 'var(--editor-gutter)',
     color:           'var(--text-faint)',
     border:          'none',
-    fontFamily:      'var(--font-mono)',
+    fontFamily:      'var(--font-mono-ui)',
     fontSize:        'var(--fs-editor)',
     lineHeight:      'var(--lh-code)',
   },

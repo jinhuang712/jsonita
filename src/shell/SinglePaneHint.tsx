@@ -69,7 +69,7 @@ export function SinglePaneHint() {
           ? '0 6px 18px color-mix(in srgb, var(--accent) 8%, transparent), var(--shadow-sm)'
           : 'var(--shadow-sm)',
         color: isAiFixPrimary ? 'color-mix(in srgb, var(--accent) 82%, var(--text))' : STATE_COLOR[state],
-        fontFamily: 'var(--font-mono)',
+        fontFamily: 'var(--font-ui)',
         fontSize: 'var(--fs-xs)',
         lineHeight: 1.3,
         pointerEvents: 'none',
@@ -87,7 +87,7 @@ export function SinglePaneHint() {
             ? 'color-mix(in srgb, var(--accent) 8%, transparent)'
             : 'var(--control-bg)',
           color: isAiFixPrimary ? 'var(--accent)' : 'var(--text)',
-          fontFamily: 'inherit',
+          fontFamily: 'var(--font-mono-ui)',
           fontSize: 'inherit',
         }}
       >
