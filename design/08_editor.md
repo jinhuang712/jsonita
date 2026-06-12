@@ -120,6 +120,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 | 区域 | 内容 | 交互 |
 | --- | --- | --- |
 | Find row | `Find` label、搜索输入、`x / n` 计数、上一个/下一个、`Aa`、`.*`、`word`、`All`、关闭 | `Enter` 下一项，`Shift+Enter` 上一项，`Esc` 关闭。 |
+| Replace row | `Replace` label、替换输入、`Replace`、`All` | 在替换输入内按 `Enter` 或点击 `Replace` 替换当前匹配；点击 `All` 替换所有匹配。 |
 | Shortcut | `⌘F` / `Cmd+F` | 关闭时打开搜索，打开时关闭搜索。 |
 | Match highlight | 文本内 match 背景 | 使用低透明蓝灰 `--primary`，普通命中约 11% tint，当前命中约 18% tint；不使用高饱和黄/青/紫。 |
 | Gutter hint | 行号 gutter 内弱竖线 | 普通命中为 2px 弱竖线，当前命中稍强但不加 glow；不能替换行号数字。 |
@@ -128,7 +129,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 
 - 搜索面板只用 `--surface-raised`、`--control-bg`、`--control-bg-hover`、`--control-bg-active`、`--control-border`、`--border`、`--text-muted` 等 token。
 - 不使用大面积蓝色块，不使用高对比文字按钮；上一项/下一项用 `↑` / `↓`。
-- 搜索面板只提供查找、导航、选择全部匹配与关闭；不得保留 replace row、replace button 或 replace 输入框。
+- 搜索面板必须暴露 replace 输入、替换当前匹配和替换全部按钮；不通过 `⌘R` / `Cmd+R` 快捷键触发 replace。
 - 搜索关闭后，文本 match 和 gutter hint 一起消失。
 - 搜索 gutter 只表达“本行有搜索命中”，不能和 parse error 的 `--danger` marker 混淆。
 - 搜索跳转使用居中滚动策略；当前命中不能贴在编辑区顶部或底部作为默认定位。

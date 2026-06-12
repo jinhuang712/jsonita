@@ -75,7 +75,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   },
   '.jsonita-search-panel': {
     display: 'grid',
-    gap: '5px',
+    gap: '4px',
     padding: '6px 10px',
     borderBottom: '1px solid var(--border)',
     backgroundColor: 'color-mix(in srgb, var(--bg-code) 82%, var(--surface-raised))',
@@ -90,6 +90,9 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     alignItems: 'center',
     gap: '5px',
     minWidth: 0,
+  },
+  '.jsonita-search-replace-row': {
+    paddingLeft: 0,
   },
   '.jsonita-search-label': {
     flex: '0 0 54px',
@@ -113,6 +116,9 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.jsonita-search-input:focus': {
     borderColor: 'var(--primary-edge)',
     boxShadow: 'var(--shadow-focus)',
+  },
+  '.jsonita-search-replace-input': {
+    flex: '1 1 180px',
   },
   '.jsonita-search-count': {
     minWidth: '54px',
@@ -151,6 +157,10 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     borderColor: 'var(--primary-edge)',
     backgroundColor: 'var(--control-bg-active)',
     color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
+  },
+  '.jsonita-search-replace-button': {
+    minWidth: '64px',
+    color: 'var(--text-muted)',
   },
   '.jsonita-search-close': {
     minWidth: '27px',

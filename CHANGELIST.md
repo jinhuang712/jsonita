@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · 搜索面板恢复 Replace 能力入口
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | `⌘F` 打开的 docked 搜索面板重新暴露 Replace 行，包含替换输入、替换当前匹配和替换全部按钮；继续不注册 `Cmd+R` / `⌘R` replace 快捷键。 |
+| 影响文档 | `src/editor/searchPanel.ts`、`src/editor/theme.ts`、`src/locales/*/panes.json`、`tests/editor/searchPanel.test.mjs`、`design/04_components.md`、`design/08_editor.md`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈 Native Quiet Glass 后 `Cmd+F` 面板只剩 Find，Replace 能力没有可见入口；根因是前次移除 `Cmd+R` 时把 replace UI 也写成了禁止项。 |
+
 ### polish · Native Quiet Glass 全界面精调
 
 | 字段 | 内容 |
@@ -78,11 +86,11 @@
 | 影响文档 | `WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`README.md`、`PROJECT.md`、`CHANGELIST.md`。 |
 | 关联 | 用户要求复用 `/Users/jin.huang/dev/projects/open-novel/WORKFLOW.md`，同时保持本仓库不重新引入 HTML/CAST 文档系统、不使用 `yummy`、继续使用 `CHANGELIST.md` 作为 changelog。 |
 
-### feat · 搜索快捷键 toggle 与纯搜索面板
+### feat · 搜索快捷键 toggle 与移除 Cmd+R
 
 - `Cmd+F` / `⌘F` 首次按下打开搜索；搜索面板已打开时再次按下 `Cmd+F` 关闭搜索，形成双击 F 的快速关闭手势。
-- 搜索面板移除 replace 行与 replace 操作，Jsonita 不再提供 `Cmd+R` / replace 搜索快捷键；当前面板只承担查找、导航、选择全部匹配与关闭。
-- 同步清理 search i18n、CSS 与设计契约，避免保留 replace 面板的历史债务。
+- Jsonita 不再提供 `Cmd+R` / replace 搜索快捷键；replace 能力应通过 `Cmd+F` 面板内的 Replace 行暴露。
+- 同步清理 search i18n、CSS 与设计契约，避免保留快捷键层面的 replace 历史债务。
 
 ### fix · 搜索面板布局与命中居中
 

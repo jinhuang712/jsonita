@@ -4,6 +4,8 @@ import {
   findNext,
   findPrevious,
   getSearchQuery,
+  replaceAll,
+  replaceNext,
   selectMatches,
   setSearchQuery,
 } from '@codemirror/search';
@@ -22,6 +24,7 @@ class JsonitaSearchPanel implements Panel {
 
   private query: SearchQuery;
   private readonly searchField: HTMLInputElement;
+  private readonly replaceField: HTMLInputElement;
   private readonly countLabel: HTMLSpanElement;
   private readonly caseButton: HTMLButtonElement;
   private readonly regexpButton: HTMLButtonElement;
@@ -34,6 +37,11 @@ class JsonitaSearchPanel implements Panel {
     this.searchField.setAttribute('main-field', 'true');
     this.searchField.value = this.query.search;
     this.searchField.addEventListener('input', () => this.commit());
+
+    this.replaceField = input(t('field.replace'), 'jsonita-search-input jsonita-search-replace-input');
+    this.replaceField.setAttribute('data-role', 'replace-input');
+    this.replaceField.value = this.query.replace;
+    this.replaceField.addEventListener('input', () => this.commit());
 
     this.countLabel = elt('span', 'jsonita-search-count');
 
@@ -58,6 +66,24 @@ class JsonitaSearchPanel implements Panel {
         iconButton(t('actions.all'), t('actions.selectAll'), () => selectMatches(this.view)),
         iconButton('×', t('actions.close'), () => closeSearchPanel(this.view), 'jsonita-search-close'),
       ]),
+      elt('div', 'jsonita-search-row jsonita-search-replace-row', [
+        elt('span', 'jsonita-search-label', [t('label.replace')]),
+        this.replaceField,
+        iconButton(
+          t('actions.replace'),
+          t('actions.replaceNext'),
+          () => replaceNext(this.view),
+          'jsonita-search-replace-button',
+          'replace-next',
+        ),
+        iconButton(
+          t('actions.all'),
+          t('actions.replaceAll'),
+          () => replaceAll(this.view),
+          'jsonita-search-replace-button',
+          'replace-all',
+        ),
+      ]),
     );
 
     this.syncDom();
@@ -73,6 +99,7 @@ class JsonitaSearchPanel implements Panel {
     if (queryChanged) {
       this.query = nextQuery;
       this.searchField.value = nextQuery.search;
+      this.replaceField.value = nextQuery.replace;
     }
 
     if (update.docChanged || update.selectionSet || update.viewportChanged || queryChanged) {
@@ -83,7 +110,7 @@ class JsonitaSearchPanel implements Panel {
   private commit() {
     const query = new SearchQuery({
       search: this.searchField.value,
-      replace: this.query.replace,
+      replace: this.replaceField.value,
       caseSensitive: this.query.caseSensitive,
       regexp: this.query.regexp,
       wholeWord: this.query.wholeWord,
@@ -99,7 +126,7 @@ class JsonitaSearchPanel implements Panel {
   private toggle(key: 'caseSensitive' | 'regexp' | 'wholeWord') {
     const query = new SearchQuery({
       search: this.searchField.value,
-      replace: this.query.replace,
+      replace: this.replaceField.value,
       caseSensitive: key === 'caseSensitive' ? !this.query.caseSensitive : this.query.caseSensitive,
       regexp: key === 'regexp' ? !this.query.regexp : this.query.regexp,
       wholeWord: key === 'wholeWord' ? !this.query.wholeWord : this.query.wholeWord,
@@ -122,6 +149,11 @@ class JsonitaSearchPanel implements Panel {
       return;
     }
 
+    if (event.key === 'Enter' && event.target === this.replaceField) {
+      event.preventDefault();
+      replaceNext(this.view);
+      return;
+    }
   }
 
   private syncDom() {
@@ -174,6 +206,7 @@ function iconButton(
   label: string,
   onClick: () => void,
   extraClass = '',
+  role?: string,
 ): HTMLButtonElement {
   const node = document.createElement('button');
   node.type = 'button';
@@ -181,6 +214,7 @@ function iconButton(
   node.textContent = text;
   node.title = label;
   node.setAttribute('aria-label', label);
+  if (role) node.setAttribute('data-role', role);
   node.addEventListener('click', onClick);
   return node;
 }

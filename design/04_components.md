@@ -54,7 +54,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `StatusBar` | shell/StatusBar.tsx | 底部状态栏（valid / error · lines · bytes · History） |
 | `Toast` | reserved | 未来封装 sonner；当前错误通过状态栏 / AI 面板 / 设置弹窗呈现 |
 | `Editor` | editor/Editor.tsx | CodeMirror 6 包装（见 [07](08_editor.md) ） |
-| `EditorSearchPanel` | editor/searchPanel.ts | `⌘F` docked 搜索条；替换 CodeMirror 默认面板但复用搜索状态，不提供 replace UI |
+| `EditorSearchPanel` | editor/searchPanel.ts | `⌘F` docked Find + Replace 面板；替换 CodeMirror 默认面板但复用搜索与替换状态 |
 | `EditorSearchGutter` | editor/searchGutter.ts | 行号 gutter 内的低饱和搜索命中提示 |
 | `TreeView` | tree/TreeView.tsx | JSON 树 ── 自渲染递归节点，支持 path / hover 复制 |
 | `DiffView` | panes/DiffView.tsx | AI Fix 接受前的 diff 展示（左原右改） |
@@ -74,12 +74,13 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | 子区 | 规则 |
 | --- | --- |
 | Find row | 搜索输入、match count、上/下一个、`Aa`、`.*`、`word`、`All`、关闭。 |
+| Replace row | 替换输入、`Replace` 当前匹配、`All` 替换全部；按钮低对比，不使用高饱和主按钮。 |
 | Shortcut | `⌘F` 首次打开搜索；搜索已打开时再次 `⌘F` 关闭搜索，形成快速 toggle。 |
 | Buttons | 使用低对比 chip/icon button，active 用 `--control-bg-active` + `--primary-edge`。 |
 | Count | `x / n`，超过计数上限显示 `1000+`。 |
 | i18n | 文案从 `panes.search.*` 读取；不得 hardcode 英文。 |
 
-Jsonita search panel 是纯搜索面板，不提供 replace row、replace button 或 `⌘R` / `Cmd+R` replace 快捷键。
+Jsonita search panel 提供 replace UI，但不提供 `⌘R` / `Cmd+R` replace 快捷键；用户必须通过 `⌘F` 打开的面板输入替换内容并点击按钮执行。
 
 `EditorSearchGutter` 使用 CodeMirror `lineNumberMarkers`，在行号 gutter element 上加 class，再由 CSS `::before` 画弱竖线。它不能新增明显的独立列，不能替换行号数字，不能使用高饱和色。
 
