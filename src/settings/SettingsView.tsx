@@ -5,6 +5,7 @@ import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
+import { CloseIcon } from '../components/icons';
 import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
 import {
@@ -157,15 +158,33 @@ export function SettingsView() {
         }}
       >
         <div
-          id="settings-page-title"
           style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
             padding: '14px 18px',
             borderBottom: '1px solid var(--border)',
-            fontSize: 'var(--fs-lg)',
-            fontWeight: 600,
           }}
         >
-          {t('title')}
+          <div
+            id="settings-page-title"
+            style={{
+              fontSize: 'var(--fs-lg)',
+              fontWeight: 600,
+            }}
+          >
+            {t('title')}
+          </div>
+          <button
+            type="button"
+            className="jsonita-settings-close"
+            onClick={() => setOpen(false)}
+            aria-label={t('actions.close')}
+            title={t('actions.close')}
+          >
+            <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
+          </button>
         </div>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <nav

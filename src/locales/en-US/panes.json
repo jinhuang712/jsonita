@@ -8,8 +8,8 @@
     "format": "Format",
     "minify": "Minify",
     "tree": "Tree",
-    "jsonToStr": "→Str",
-    "strToJson": "→JSON",
+    "jsonToStr": "To String",
+    "strToJson": "To JSON",
     "aiFix": "AI Fix",
     "aiFixDisabledTooltip": "AI Fix is disabled. Enable it in Settings → AI."
   },

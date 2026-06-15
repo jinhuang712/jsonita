@@ -9,7 +9,7 @@ import { create } from 'zustand';
 export type Pane = 'format' | 'minify' | 'tree' | 'json-to-str' | 'str-to-json' | 'ai-fix';
 export type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 
-export const DEFAULT_EDITOR_FONT_SIZE = 13;
+export const DEFAULT_EDITOR_FONT_SIZE = 15;
 export const MIN_EDITOR_FONT_SIZE = 10;
 export const MAX_EDITOR_FONT_SIZE = 24;
 export const EDITOR_FONT_ZOOM_STEP = 2;
@@ -19,6 +19,8 @@ interface UiState {
   showAiFix: boolean; // editor parse error 时 = true
   historyModalOpen: boolean;
   settingsViewOpen: boolean;
+  escCloseHintVisible: boolean;
+  escCloseHintRenderKey: number;
   singlePaneApplyState: SinglePaneApplyState;
   editorFontSize: number;
 
@@ -26,6 +28,8 @@ interface UiState {
   setShowAiFix: (b: boolean) => void;
   setHistoryModalOpen: (b: boolean) => void;
   setSettingsViewOpen: (b: boolean) => void;
+  setEscCloseHintVisible: (b: boolean) => void;
+  showEscCloseHint: () => void;
   setSinglePaneApplyState: (s: SinglePaneApplyState) => void;
   setEditorFontSize: (size: number) => void;
   zoomEditorFont: (delta: number) => void;
@@ -37,6 +41,8 @@ export const useUiStore = create<UiState>((set) => ({
   showAiFix: false,
   historyModalOpen: false,
   settingsViewOpen: false,
+  escCloseHintVisible: false,
+  escCloseHintRenderKey: 0,
   singlePaneApplyState: 'idle',
   editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
 
@@ -44,6 +50,12 @@ export const useUiStore = create<UiState>((set) => ({
   setShowAiFix: (b) => set({ showAiFix: b }),
   setHistoryModalOpen: (b) => set({ historyModalOpen: b }),
   setSettingsViewOpen: (b) => set({ settingsViewOpen: b }),
+  setEscCloseHintVisible: (b) => set({ escCloseHintVisible: b }),
+  showEscCloseHint: () =>
+    set((s) => ({
+      escCloseHintVisible: true,
+      escCloseHintRenderKey: s.escCloseHintRenderKey + 1,
+    })),
   setSinglePaneApplyState: (s) => set({ singlePaneApplyState: s }),
   setEditorFontSize: (size) =>
     set({ editorFontSize: clampFontSize(size) }),

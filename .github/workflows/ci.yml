@@ -39,6 +39,9 @@ jobs:
       - name: Type check
         run: pnpm tsc --noEmit
 
+      - name: Node tests
+        run: pnpm test:node
+
       - name: Rust test
         run: cargo test --manifest-path src-tauri/Cargo.toml
         # M0 无 engine 单测；M1-N2 起 cargo test 才有实际用例

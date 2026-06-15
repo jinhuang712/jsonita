@@ -290,7 +290,7 @@ fn open_accessibility_settings() {
 | --- | --- | --- |
 | 切换功能 Tab | `Tab` /`⇧Tab` | window keydown capture；仅非编辑态拦截 |
 | 退出 editing | `Esc` （焦点在 CodeMirror / 表单输入内） | window keydown capture → activeElement.blur() |
-| 关闭浮窗 | `Esc` ×2（非编辑态） /`⌘W` | 连续两次 Esc 才调用 window_hide；单次 Esc 只进入待关闭窗口 |
+| 关闭浮窗 | `Esc` ×2（非编辑态） /`⌘W` | 连续两次 Esc 才调用 window_hide；单次 Esc 显示 EscCloseHint 并进入待关闭窗口 |
 | 错误 JSON 直接执行 AI Fix | `⌘Enter` | 当 parse error 且 AI Fix 可用时优先拦截；单双栏一致，切到 `AiFixPane` 并自动请求；单窗右下角提示显示 Run AI Fix 而不是 Run Format |
 | 接受 AI Fix 结果 | `⌘Enter` | `awaiting-decision` 时优先拦截；替换输入、写 history、回到 Format |
 | 取消 AI Fix 结果 | `Esc` | `awaiting-decision` /`error` 时优先拦截；reset AI store、回到 Format，不隐藏窗口 |

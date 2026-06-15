@@ -31,7 +31,7 @@ Tauri 默认 `alwaysOnTop: true` 在 macOS 等同 `NSWindow.setLevel(.floating)`
 
 #### 2.3 关闭 = hide 而非 close
 
-红色 traffic light / 非编辑态连续两次 `Esc` /`⌘W` 映射为 `window.hide()`，进程保留 ── 这样下次呼出依然是亚毫秒级。焦点在 CodeMirror 或表单输入内时，第一下 `Esc` 只 `blur()` 退出 editing；随后短时间内再按 `Esc` 才隐藏浮窗。 只有 `⌘Q` 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。
+红色 traffic light / 非编辑态连续两次 `Esc` /`⌘W` 映射为 `window.hide()`，进程保留 ── 这样下次呼出依然是亚毫秒级。焦点在 CodeMirror 或表单输入内时，第一下 `Esc` 只 `blur()` 退出 editing，且不计入双击关闭窗口；退出编辑态后再按一次 `Esc` 会先显示 Double Esc to close 提示，第二次才隐藏浮窗。 只有 `⌘Q` 或 tray Quit 才真正退出应用。详见 § 5 关闭事件路由。
 
 #### 2.4 定位到光标所在屏，不记忆位置
 
@@ -167,8 +167,8 @@ Focused false CR app.exit settings
 
 | 来源 | 路由 | 是否保存 session |
 | --- | --- | --- |
-| `Esc` （editing 中） | blur active editor/input，只退出 editing | 否 |
-| `Esc` ×2（非 editing） | hide；单次 Esc 只进入待关闭窗口 | 否；合法内容已由实时 transform 保存 last_session |
+| `Esc` （editing 中） | blur active editor/input，只退出 editing，不计入关闭窗口双击 | 否 |
+| `Esc` ×2（非 editing） | hide；单次 Esc 进入待关闭窗口并显示 Double Esc to close 提示 | 否；合法内容已由实时 transform 保存 last_session |
 | `⌘W` | hide | 否；合法内容已由实时 transform 保存 last_session |
 | 失焦（hide_on_blur=true） | hide | 否；合法内容已由实时 transform 保存 last_session |
 | 红 traffic light 点击 | hide（拦截 close → hide） | 否；合法内容已由实时 transform 保存 last_session |

@@ -49,13 +49,13 @@ export function SinglePaneHint() {
       style={{
         position: 'absolute',
         right: 12,
-        bottom: 34,
+        bottom: 44,
         zIndex: 'var(--z-sticky)',
         display: 'flex',
         alignItems: 'center',
         gap: 6,
         maxWidth: 'calc(100% - 24px)',
-        padding: '5px 8px',
+        padding: '6px 10px',
         border: isAiFixPrimary
           ? '1px solid color-mix(in srgb, var(--accent) 28%, var(--control-border))'
           : '1px solid var(--control-border)',

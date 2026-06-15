@@ -17,9 +17,9 @@ import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { EDITOR_FONT_ZOOM_STEP, useUiStore, type Pane } from '../store/ui';
+import { decideEscClose, ESC_CLOSE_HINT_MS } from './escCloseHint';
 
 const PANE_ORDER: Pane[] = ['format', 'minify', 'tree', 'json-to-str', 'str-to-json'];
-const DOUBLE_ESC_HIDE_MS = 700;
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -52,6 +52,7 @@ function consume(event: KeyboardEvent) {
 
 export function useGlobalHotkeys() {
   const lastExitEscAtRef = useRef(0);
+  const escCloseHintTimerRef = useRef<number | null>(null);
   const content = useEditorStore((s) => s.content);
   const setContent = useEditorStore((s) => s.setContent);
   const setOutput = useEditorStore((s) => s.setOutput);
@@ -69,6 +70,8 @@ export function useGlobalHotkeys() {
   const setShowAiFix = useUiStore((s) => s.setShowAiFix);
   const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
   const setSettingsViewOpen = useUiStore((s) => s.setSettingsViewOpen);
+  const setEscCloseHintVisible = useUiStore((s) => s.setEscCloseHintVisible);
+  const showEscCloseHint = useUiStore((s) => s.showEscCloseHint);
   const setSinglePaneApplyState = useUiStore((s) => s.setSinglePaneApplyState);
   const zoomEditorFont = useUiStore((s) => s.zoomEditorFont);
   const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
@@ -91,6 +94,13 @@ export function useGlobalHotkeys() {
       /* ignore */
     }
   };
+
+  useEffect(() => {
+    if (historyModalOpen || settingsViewOpen || activePane === 'ai-fix') {
+      setEscCloseHintVisible(false);
+      lastExitEscAtRef.current = 0;
+    }
+  }, [activePane, historyModalOpen, setEscCloseHintVisible, settingsViewOpen]);
 
   // 不在编辑器 / 表单里时，Tab / Shift+Tab 在功能 tab 间循环。
   useEffect(() => {
@@ -256,6 +266,8 @@ export function useGlobalHotkeys() {
 
       if (isPlainEsc && activePane === 'ai-fix' && (aiStatus === 'awaiting-decision' || aiStatus === 'error')) {
         consume(event);
+        lastExitEscAtRef.current = 0;
+        setEscCloseHintVisible(false);
         resetAi();
         setActivePane('format');
       }
@@ -282,30 +294,59 @@ export function useGlobalHotkeys() {
   // 单击 Esc 只退出编辑态 / 预备关闭；连续双击 Esc 才隐藏浮窗。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-      if (historyModalOpen || settingsViewOpen) return;
+      const isPlainEscape =
+        event.key === 'Escape' &&
+        !event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey;
+      const decision = decideEscClose({
+        isPlainEscape,
+        isBlocked:
+          historyModalOpen ||
+          settingsViewOpen ||
+          activePane === 'ai-fix',
+        isEditing: isTypingTarget(event.target),
+        lastNonEditingEscAt: lastExitEscAtRef.current,
+        now: Date.now(),
+      });
+      if (decision.action === 'ignore') return;
 
       event.preventDefault();
       event.stopPropagation();
+      lastExitEscAtRef.current = decision.nextLastEscAt;
 
-      const now = Date.now();
-      if (exitEditing(event.target)) {
-        lastExitEscAtRef.current = now;
+      if (decision.action === 'exit-editing') {
+        exitEditing(event.target);
+        setEscCloseHintVisible(false);
         return;
       }
 
-      if (now - lastExitEscAtRef.current <= DOUBLE_ESC_HIDE_MS) {
-        lastExitEscAtRef.current = 0;
+      if (decision.action === 'hide-window') {
+        setEscCloseHintVisible(false);
         win.hide().catch(() => {});
         return;
       }
 
-      lastExitEscAtRef.current = now;
+      showEscCloseHint();
+      if (escCloseHintTimerRef.current !== null) {
+        window.clearTimeout(escCloseHintTimerRef.current);
+      }
+      escCloseHintTimerRef.current = window.setTimeout(() => {
+        setEscCloseHintVisible(false);
+        escCloseHintTimerRef.current = null;
+      }, ESC_CLOSE_HINT_MS);
     };
 
     window.addEventListener('keydown', onKeyDown, true);
-    return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [historyModalOpen, settingsViewOpen]);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true);
+      if (escCloseHintTimerRef.current !== null) {
+        window.clearTimeout(escCloseHintTimerRef.current);
+        escCloseHintTimerRef.current = null;
+      }
+    };
+  }, [activePane, aiStatus, historyModalOpen, setEscCloseHintVisible, settingsViewOpen, showEscCloseHint]);
 
   useEffect(() => {
     if (singlePaneApplyState !== 'success' && singlePaneApplyState !== 'error') return;

@@ -19,15 +19,21 @@
   },
   "actions": {
     "history": "历史",
+    "settings": "设置",
+    "splitPanel": "分栏",
     "openHistory": "打开历史",
     "switchToSinglePanel": "切到单窗",
     "switchToSplitPanel": "切到双栏",
-    "openSettings": "打开设置"
+    "openSettings": "打开设置",
+    "windowActions": "窗口操作"
   },
   "singlePane": {
     "run": "执行{{pane}}",
     "running": "正在执行{{pane}}…",
     "applied": "已执行{{pane}}",
     "failed": "无法执行{{pane}}"
+  },
+  "escCloseHint": {
+    "doubleEscToClose": "双击 Esc 关闭"
   }
 }

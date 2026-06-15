@@ -8,8 +8,8 @@
     "format": "格式化",
     "minify": "压缩",
     "tree": "树视图",
-    "jsonToStr": "→字符串",
-    "strToJson": "→JSON",
+    "jsonToStr": "转字符串",
+    "strToJson": "转 JSON",
     "aiFix": "AI 修复",
     "aiFixDisabledTooltip": "AI 修复未启用。请到 Settings → AI 开启。"
   },
