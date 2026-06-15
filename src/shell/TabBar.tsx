@@ -1,11 +1,24 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEditorStore } from '../store/editor';
+import { settings as settingsApi } from '../ipc/commands';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
-import { GearIcon } from '../components/icons';
+import {
+  FormatIcon,
+  GearIcon,
+  HistoryIcon,
+  JsonBracesIcon,
+  MinifyIcon,
+  SplitPanelIcon,
+  SparklesIcon,
+  ToStringIcon,
+  TreeIcon,
+  type IconProps,
+} from '../components/icons';
 
 /**
  * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
@@ -14,13 +27,18 @@ import { GearIcon } from '../components/icons';
  * Spec ref: design/04_components.md § 4.1 TabBar
  */
 
-const TABS: { id: Pane; key: string }[] = [
-  { id: 'format', key: 'format' },
-  { id: 'minify', key: 'minify' },
-  { id: 'tree', key: 'tree' },
-  { id: 'json-to-str', key: 'jsonToStr' },
-  { id: 'str-to-json', key: 'strToJson' },
+const TABS: { id: Pane; key: string; Icon: (props: IconProps) => JSX.Element }[] = [
+  { id: 'format', key: 'format', Icon: FormatIcon },
+  { id: 'minify', key: 'minify', Icon: MinifyIcon },
+  { id: 'tree', key: 'tree', Icon: TreeIcon },
+  { id: 'json-to-str', key: 'jsonToStr', Icon: ToStringIcon },
+  { id: 'str-to-json', key: 'strToJson', Icon: JsonBracesIcon },
 ];
+
+type ChromeActionTooltip = {
+  label: string;
+  shortcut: string;
+};
 
 export function TabBar() {
   const { t } = useTranslation('panes');
@@ -30,6 +48,8 @@ export function TabBar() {
   const setActive = useUiStore((s) => s.setActivePane);
   const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
   const setSettingsViewOpen = useUiStore((s) => s.setSettingsViewOpen);
+  const settings = useSettingsStore((s) => s.settings);
+  const setSettings = useSettingsStore((s) => s.setSettings);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
   const editorStatus = useEditorStore((s) => s.status);
   const showAiFixPrompt = showAiFix && editorStatus === 'error' && !aiEnabled;
@@ -84,6 +104,13 @@ export function TabBar() {
     getCurrentWindow().startDragging().catch(() => {});
   };
 
+  const toggleSinglePaneMode = () => {
+    settingsApi
+      .set({ singlePaneMode: !settings.singlePaneMode })
+      .then(setSettings)
+      .catch(() => {});
+  };
+
   return (
     <div
       onMouseDown={startDragging}
@@ -118,6 +145,7 @@ export function TabBar() {
         )}
         {TABS.map((tab) => {
           const isActive = active === tab.id;
+          const { Icon } = tab;
           return (
             <button
               key={tab.id}
@@ -134,6 +162,7 @@ export function TabBar() {
                   : 'jsonita-tab-button'
               }
             >
+              <Icon className="jsonita-tab-button-icon" width={13} height={13} strokeWidth={2} aria-hidden="true" />
               {t(`tab.${tab.key}` as 'tab.format')}
             </button>
           );
@@ -148,6 +177,9 @@ export function TabBar() {
           onClick={() => undefined}
           title={t('tab.aiFixDisabledTooltip')}
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
             padding: '4px 10px',
             fontSize: 'var(--fs-sm)',
             lineHeight: 'var(--lh-tight)',
@@ -163,21 +195,77 @@ export function TabBar() {
               'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)',
           }}
         >
+          <SparklesIcon width={13} height={13} strokeWidth={2} aria-hidden="true" />
           {t('tab.aiFix')}
         </button>
       )}
-      <button
-        type="button"
-        className="jsonita-chrome-icon-button"
-        onClick={() => {
-          setHistoryModalOpen(false);
-          setSettingsViewOpen(true);
-        }}
-        aria-label={tShell('actions.openSettings')}
-        title={`${tShell('actions.openSettings')} (${formatAccelerator('CmdOrCtrl+,')})`}
-      >
-        <GearIcon width={15} height={15} strokeWidth={1.75} aria-hidden="true" />
-      </button>
+      <div className="jsonita-chrome-actions" aria-label={tShell('actions.windowActions')}>
+        <ChromeActionButton
+          onClick={toggleSinglePaneMode}
+          aria-label={
+            settings.singlePaneMode
+              ? tShell('actions.switchToSplitPanel')
+              : tShell('actions.switchToSinglePanel')
+          }
+          tooltipLabel={tShell('actions.splitPanel')}
+          tooltipShortcut={formatAccelerator(settings.shortcutSplitToggle)}
+        >
+          <SplitPanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+        </ChromeActionButton>
+        <ChromeActionButton
+          onClick={() => {
+            setSettingsViewOpen(false);
+            setHistoryModalOpen(true);
+          }}
+          aria-label={tShell('actions.openHistory')}
+          tooltipLabel={tShell('actions.history')}
+          tooltipShortcut={formatAccelerator('CmdOrCtrl+Y')}
+        >
+          <HistoryIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+        </ChromeActionButton>
+        <ChromeActionButton
+          onClick={() => {
+            setHistoryModalOpen(false);
+            setSettingsViewOpen(true);
+          }}
+          aria-label={tShell('actions.openSettings')}
+          tooltipLabel={tShell('actions.settings')}
+          tooltipShortcut={formatAccelerator('CmdOrCtrl+,')}
+        >
+          <GearIcon width={15} height={15} strokeWidth={1.75} aria-hidden="true" />
+        </ChromeActionButton>
+      </div>
     </div>
+  );
+}
+
+function ChromeActionButton({
+  children,
+  onClick,
+  tooltipLabel,
+  tooltipShortcut,
+  ...buttonProps
+}: PropsWithChildren<
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'type' | 'title'> & {
+    tooltipLabel: ChromeActionTooltip['label'];
+    tooltipShortcut: ChromeActionTooltip['shortcut'];
+  }
+>) {
+  const tooltipId = useId();
+
+  return (
+    <button
+      {...buttonProps}
+      type="button"
+      className="jsonita-chrome-icon-button"
+      onClick={onClick}
+      aria-describedby={tooltipId}
+    >
+      {children}
+      <span id={tooltipId} role="tooltip" className="jsonita-chrome-tooltip">
+        <span className="jsonita-chrome-tooltip-label">{tooltipLabel}</span>
+        <kbd className="jsonita-chrome-tooltip-shortcut">{tooltipShortcut}</kbd>
+      </span>
+    </button>
   );
 }

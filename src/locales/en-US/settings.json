@@ -8,6 +8,9 @@
     "jsonTransform": "JSON Transform",
     "about": "About"
   },
+  "actions": {
+    "close": "Close settings"
+  },
   "general": {
     "language": "Language",
     "theme": "Theme",

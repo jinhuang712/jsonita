@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### feat · 非编辑态 Esc 关闭提示
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 主界面非编辑态单击 `Esc` 后在状态栏上方显示高透明 `Double Esc to close` 提示，连续第二次 `Esc` 才隐藏浮窗；编辑器 / 表单聚焦时第一下 `Esc` 只退出编辑态，不计入关闭窗口双击。每次触发都会重新挂载提示并重播 fade 生命周期，避免只显示第一次或突然消失。AI Fix 决策态继续优先消费 `Esc`，避免误触关闭提示。 |
+| 影响文档 | `src/hooks/escCloseHint.ts`、`src/hooks/useGlobalHotkeys.ts`、`src/store/ui.ts`、`src/shell/FloatingWindow.tsx`、`src/styles/global.css`、`src/locales/*/shell.json`、`tests/shell/escCloseHint.test.mjs`、`package.json`、`.github/workflows/ci.yml`、`design/02_interaction.md`、`design/04_components.md`、`design/06_window.md`、`design/07_menubar.md`、`spec/M00-frontend-execution.md`、`spec/S01-runtime-lifecycle.md`、`CHANGELIST.md`。 |
+| 关联 | 用户要求主界面在输入框失焦后单击 `Esc` 时显示“double esc to close”高透明提示，并希望实现前后自行截图和严格审核。 |
+
 ### polish · Native Quiet A 视觉层级与字体收敛
 
 | 字段 | 内容 |

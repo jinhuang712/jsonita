@@ -80,6 +80,9 @@ kbd {
 }
 
 .jsonita-tab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   position: relative;
   z-index: 1;
   min-height: 27px;
@@ -98,6 +101,11 @@ kbd {
   transition:
     color var(--dur-base) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-tab-button-icon {
+  flex: 0 0 auto;
+  opacity: 0.88;
 }
 
 .jsonita-floating-window {
@@ -197,11 +205,26 @@ kbd {
   font-weight: 590;
 }
 
+.jsonita-chrome-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.jsonita-chrome-actions .jsonita-chrome-icon-button {
+  width: 30px;
+  height: 28px;
+  margin-left: 0;
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--text));
+}
+
 .jsonita-chrome-icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  position: relative;
   width: 26px;
   height: 26px;
   margin-left: 8px;
@@ -231,6 +254,154 @@ kbd {
 }
 
 .jsonita-chrome-icon-button:active {
+  transform: translateY(1px);
+}
+
+.jsonita-chrome-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: var(--z-tooltip);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  max-width: 220px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 540;
+  line-height: var(--lh-tight);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-3px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-chrome-tooltip-label {
+  white-space: nowrap;
+}
+
+.jsonita-chrome-tooltip-shortcut {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  background: var(--control-bg);
+  border-color: var(--control-border);
+  font-size: calc(var(--fs-xs) - 1px);
+}
+
+.jsonita-chrome-icon-button:hover .jsonita-chrome-tooltip,
+.jsonita-chrome-icon-button:focus-visible .jsonita-chrome-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.jsonita-esc-close-hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(64px, 8vh, 92px);
+  z-index: var(--z-tooltip);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 9px 12px;
+  border: 1px solid rgba(175, 199, 222, 0.22);
+  border-radius: var(--radius-lg);
+  background: rgba(20, 24, 31, 0.66);
+  color: rgba(242, 244, 247, 0.94);
+  box-shadow: 0 18px 42px -22px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  font-family: var(--font-ui);
+  font-size: calc(var(--fs-sm) + 0.5px);
+  font-weight: 620;
+  letter-spacing: 0;
+  line-height: var(--lh-tight);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: jsonita-esc-close-hint-lifecycle 1700ms var(--ease-native) both;
+}
+
+.jsonita-esc-key-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.jsonita-esc-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 31px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid rgba(175, 199, 222, 0.22);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(242, 244, 247, 0.92);
+  font-family: var(--font-mono-ui);
+  font-size: calc(var(--fs-xs) + 0.5px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+@keyframes jsonita-esc-close-hint-lifecycle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  35% {
+    opacity: 0.92;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -3px);
+  }
+}
+
+.jsonita-settings-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--text));
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-settings-close:hover,
+.jsonita-settings-close:focus-visible {
+  background: var(--control-bg-hover);
+  border-color: var(--control-border);
+  color: color-mix(in srgb, var(--primary) 72%, var(--text));
+  outline: none;
+}
+
+.jsonita-settings-close:active {
   transform: translateY(1px);
 }
 
@@ -328,48 +499,6 @@ kbd {
 .jsonita-editor-shell {
   position: relative;
   height: 100%;
-}
-
-.jsonita-editor-empty-hint {
-  position: absolute;
-  top: 22px;
-  left: 48px;
-  z-index: 1;
-  max-width: min(320px, calc(100% - 72px));
-  padding: 0;
-  color: var(--text-faint);
-  font-family: var(--font-ui);
-  pointer-events: none;
-}
-
-.jsonita-editor-empty-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 22px;
-  margin-bottom: 8px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--control-bg) 78%, transparent);
-  color: color-mix(in srgb, var(--primary) 54%, var(--text-muted));
-  font-family: var(--font-code);
-  font-size: var(--fs-sm);
-  line-height: 1;
-}
-
-.jsonita-editor-empty-title {
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-  font-weight: 520;
-  line-height: var(--lh-snug);
-}
-
-.jsonita-editor-empty-meta {
-  margin-top: 3px;
-  color: var(--text-faint);
-  font-size: var(--fs-xs);
-  line-height: var(--lh-snug);
 }
 
 .jsonita-history-item-main:hover,

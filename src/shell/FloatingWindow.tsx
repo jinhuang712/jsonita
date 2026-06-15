@@ -30,6 +30,8 @@ export function FloatingWindow() {
   const editorError = useEditorStore((s) => s.error);
   const activePane = useUiStore((s) => s.activePane);
   const settingsOpen = useUiStore((s) => s.settingsViewOpen);
+  const escCloseHintVisible = useUiStore((s) => s.escCloseHintVisible);
+  const escCloseHintRenderKey = useUiStore((s) => s.escCloseHintRenderKey);
   const editorFontSize = useUiStore((s) => s.editorFontSize);
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
@@ -68,9 +70,9 @@ export function FloatingWindow() {
       return { kind: 'invalid' as const };
     }
   }, [content, shouldRenderTree]);
-  const chromeFontDelta = editorFontSize - 13;
-  const chromeXsFontSize = clamp(11 + chromeFontDelta * 0.18, 10, 12.5);
-  const chromeSmFontSize = clamp(12.5 + chromeFontDelta * 0.22, 11, 14);
+  const chromeFontDelta = editorFontSize - 15;
+  const chromeXsFontSize = clamp(12 + chromeFontDelta * 0.18, 11.5, 13.2);
+  const chromeSmFontSize = clamp(13.5 + chromeFontDelta * 0.22, 12.5, 15);
 
   return (
     <div
@@ -124,12 +126,7 @@ export function FloatingWindow() {
               ) : showTreeInSinglePane ? (
                 <TreePanel state={treeState} />
               ) : (
-                <EditorFrame
-                  empty={content.trim() === ''}
-                  mark="{ }"
-                  title={t('editor.inputEmptyTitle')}
-                  meta={t('editor.inputEmptyMeta')}
-                >
+                <EditorFrame>
                   <Editor
                     theme={effectiveTheme}
                     value={content}
@@ -147,12 +144,7 @@ export function FloatingWindow() {
                 ) : activePane === 'tree' ? (
                   <TreePanel state={treeState} />
                 ) : (
-                  <EditorFrame
-                    empty={outputText.trim() === ''}
-                    mark="↳"
-                    title={t('editor.outputEmptyTitle')}
-                    meta={t('editor.outputEmptyMeta')}
-                  >
+                  <EditorFrame>
                     <Editor
                       theme={effectiveTheme}
                       value={outputText}
@@ -165,6 +157,12 @@ export function FloatingWindow() {
             )}
           </div>
           <SinglePaneHint />
+          {escCloseHintVisible && (
+            <EscCloseHint
+              key={escCloseHintRenderKey}
+              label={t('escCloseHint.doubleEscToClose')}
+            />
+          )}
           <StatusBar />
         </>
       )}
@@ -175,27 +173,20 @@ export function FloatingWindow() {
 
 function EditorFrame({
   children,
-  empty,
-  mark,
-  title,
-  meta,
 }: {
   children: React.ReactNode;
-  empty: boolean;
-  mark: string;
-  title: string;
-  meta: string;
 }) {
+  return <div className="jsonita-editor-shell">{children}</div>;
+}
+
+function EscCloseHint({ label }: { label: string }) {
   return (
-    <div className="jsonita-editor-shell">
-      {empty && (
-        <div className="jsonita-editor-empty-hint" aria-hidden="true">
-          <div className="jsonita-editor-empty-mark">{mark}</div>
-          <div className="jsonita-editor-empty-title">{title}</div>
-          <div className="jsonita-editor-empty-meta">{meta}</div>
-        </div>
-      )}
-      {children}
+    <div className="jsonita-esc-close-hint" role="status" aria-live="polite">
+      <span className="jsonita-esc-key-combo" aria-hidden="true">
+        <kbd className="jsonita-esc-key">Esc</kbd>
+        <kbd className="jsonita-esc-key">Esc</kbd>
+      </span>
+      <span>{label}</span>
     </div>
   );
 }

@@ -19,15 +19,21 @@
   },
   "actions": {
     "history": "History",
+    "settings": "Settings",
+    "splitPanel": "Split Panel",
     "openHistory": "Open history",
     "switchToSinglePanel": "Switch to Single Panel",
     "switchToSplitPanel": "Switch to Split Panel",
-    "openSettings": "Open settings"
+    "openSettings": "Open settings",
+    "windowActions": "Window actions"
   },
   "singlePane": {
     "run": "Run {{pane}}",
     "running": "Running {{pane}}…",
     "applied": "Applied {{pane}}",
     "failed": "Could not run {{pane}}"
+  },
+  "escCloseHint": {
+    "doubleEscToClose": "Double Esc to close"
   }
 }

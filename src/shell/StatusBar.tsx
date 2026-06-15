@@ -1,13 +1,8 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { settings as settingsApi } from '../ipc/commands';
-import { formatAccelerator } from '../keyboard/accelerators';
 import { useEditorStore } from '../store/editor';
-import { useSettingsStore } from '../store/settings';
-import { useUiStore } from '../store/ui';
 
 /**
- * 底部状态栏 — 4 态文案（valid / error / empty / large）+ 右侧 History 入口。
+ * 底部状态栏 — 4 态文案（valid / error / empty / large）。
  *
  * 视觉锚：design/01_mockups.md § 2 状态栏 4 态对照
  * Spec ref: design/04_components.md § 4.2 StatusBar
@@ -17,18 +12,6 @@ export function StatusBar() {
   const status = useEditorStore((s) => s.status);
   const bytes = useEditorStore((s) => s.bytes);
   const lines = useEditorStore((s) => s.lines);
-  const settings = useSettingsStore((s) => s.settings);
-  const setSettings = useSettingsStore((s) => s.setSettings);
-  const setHistoryModalOpen = useUiStore((s) => s.setHistoryModalOpen);
-  const [splitHintVisible, setSplitHintVisible] = useState(false);
-  const [historyHintVisible, setHistoryHintVisible] = useState(false);
-
-  const toggleSinglePaneMode = () => {
-    settingsApi
-      .set({ singlePaneMode: !settings.singlePaneMode })
-      .then(setSettings)
-      .catch(() => {});
-  };
 
   let left: React.ReactNode;
   switch (status) {
@@ -66,7 +49,7 @@ export function StatusBar() {
       aria-atomic="true"
       style={{
         display: 'flex',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         alignItems: 'center',
         minHeight: 33,
         padding: '5px 12px',
@@ -78,50 +61,6 @@ export function StatusBar() {
       }}
     >
       {left}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
-        <button
-          type="button"
-          onClick={toggleSinglePaneMode}
-          onMouseEnter={() => setSplitHintVisible(true)}
-          onMouseLeave={() => setSplitHintVisible(false)}
-          onFocus={() => setSplitHintVisible(true)}
-          onBlur={() => setSplitHintVisible(false)}
-          className={splitHintVisible ? 'jsonita-statusbar-action jsonita-statusbar-action-hint-visible' : 'jsonita-statusbar-action'}
-          aria-label={
-            settings.singlePaneMode
-              ? t('actions.switchToSplitPanel')
-              : t('actions.switchToSinglePanel')
-          }
-          title={formatAccelerator(settings.shortcutSplitToggle)}
-        >
-          <span className="jsonita-statusbar-shortcut">
-            {formatAccelerator(settings.shortcutSplitToggle)}
-          </span>
-          <span>
-            {settings.singlePaneMode
-              ? t('actions.switchToSplitPanel')
-              : t('actions.switchToSinglePanel')}
-          </span>
-        </button>
-        <span
-          aria-hidden="true"
-          style={{ width: 1, height: 13, background: 'var(--border-strong)', opacity: 0.8 }}
-        />
-        <button
-          type="button"
-          onClick={() => setHistoryModalOpen(true)}
-          onMouseEnter={() => setHistoryHintVisible(true)}
-          onMouseLeave={() => setHistoryHintVisible(false)}
-          onFocus={() => setHistoryHintVisible(true)}
-          onBlur={() => setHistoryHintVisible(false)}
-          className={historyHintVisible ? 'jsonita-statusbar-action jsonita-statusbar-action-hint-visible' : 'jsonita-statusbar-action'}
-          aria-label={t('actions.openHistory')}
-          title={formatAccelerator('CmdOrCtrl+Y')}
-        >
-          <span className="jsonita-statusbar-shortcut">{formatAccelerator('CmdOrCtrl+Y')}</span>
-          <span>{t('actions.history')}</span>
-        </button>
-      </div>
     </div>
   );
 }

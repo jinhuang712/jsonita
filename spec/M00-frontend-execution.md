@@ -14,6 +14,7 @@ React WebView 拥有这些可见状态：
 | `error` | `src/store/editor.ts` | `Parse` 映射、清空、成功 preview | Rust error payload 是来源。 |
 | `activePane` | `src/store/ui.ts` | TabBar 和快捷键 | UI 状态，非 durable truth。 |
 | `settingsViewOpen` | `src/store/ui.ts` | 齿轮按钮、tray Settings、`CmdOrCtrl+,`、Done、`Esc` | Settings page 是否替换主 workspace。 |
+| `escCloseHintVisible` | `src/store/ui.ts` | 非编辑态单击 `Esc`、双击 `Esc`、History / Settings 打开、提示超时 | “双击 Esc 关闭”临时提示是否可见；不持久化。 |
 | `settings` snapshot | `src/store/settings.ts` | `settings_get_all`、`settings:changed` | Rust `settings.json`。 |
 | AI fix state | `src/store/ai.ts`、`src/panes/AiFixPane.tsx` | AI pane request、success、error、Accept/Cancel | 没有 durable truth，Accept 后才进入 editor。 |
 

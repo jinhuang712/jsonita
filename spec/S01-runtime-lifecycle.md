@@ -44,7 +44,10 @@ stateDiagram-v2
   Starting --> WarmHidden: services ready + hidden WebView ready
   WarmHidden --> Showing: Cmd+Shift+J or tray toggle
   Showing --> Active: window:shown
-  Active --> Hiding: Esc / Cmd+W / close / blur
+  Active --> CloseHintPending: first non-editing Esc
+  CloseHintPending --> Active: hint timeout / editor focus / overlay open
+  CloseHintPending --> Hiding: second Esc
+  Active --> Hiding: Cmd+W / close / blur
   Hiding --> WarmHidden: window:will-hide then hide()
   Active --> Quitting: Cmd+Q or tray Quit
   WarmHidden --> Quitting: tray Quit
@@ -69,8 +72,8 @@ stateDiagram-v2
 | `Cmd+Shift+J` | `WarmHidden` | 进入 `Showing` | 否 | 全局快捷键只负责 toggle，不碰 editor 内容。 |
 | `Cmd+Shift+J` | `Active` | 进入 `Hiding` 或 toggle hide | 否 | toggle 是窗口动作，不是 session 动作。 |
 | Tray toggle | `WarmHidden` / `Active` | show 或 hide | 否 | 与快捷键等价。 |
-| `Esc` | editor 正在编辑特殊状态 | 先退出局部状态 | 否 | 例如关闭搜索或退出局部交互。 |
-| `Esc` | 普通 active | hide | 否 | 隐藏不是退出。 |
+| `Esc` | editor 正在编辑特殊状态 | 先退出局部状态 | 否 | 例如关闭搜索或退出局部交互；不计入双击关闭窗口。 |
+| `Esc` | 普通 active | 首次显示 EscCloseHint，连续第二次进入 `Hiding` | 否 | 隐藏不是退出。 |
 | `Cmd+W` 或 close | `Active` | hide | 否 | 关闭窗口不销毁 WebView。 |
 | `Cmd+Q` | 任意常驻状态 | quit | 否 | 退出本身不制造新恢复目标。 |
 | 合法 transform 成功 | `Active` | UI 显示结果 | 是，可更新 | last_session 由业务成功决定，不由窗口动作决定。 |

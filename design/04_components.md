@@ -150,6 +150,10 @@ type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 
 旧版浮窗 show 时会在右下角显示一块 temporary keymap HUD（ `Esc` /`Tab` /`⇧Tab` ）。玻璃方向落地后该 HUD 不再渲染：主窗只保留状态栏两个 hover/focus 快捷键 badge 与单窗模式 `SinglePaneHint`，避免覆盖编辑区并回到旧 flat 深色浮层观感。
 
+### 4.2.2.1 EscCloseHint
+
+非编辑态单击 `Esc` 后，主窗在状态栏上方显示短暂高透明提示 `Esc` `Esc` Double Esc to close；提示约 1.7s 生命周期内快速出现、短暂停留后渐隐，不允许突然消失。每次触发都必须重新挂载提示并重播完整动画，即使上一次提示仍处于渐隐阶段。连续第二次 `Esc` 才隐藏窗口。焦点仍在 CodeMirror、input、textarea、select 或 contenteditable 时，第一下 `Esc` 只退出编辑态并清掉提示，不计入双击关闭窗口的第一下，避免用户未看到提示就直接关窗。
+
 ### 4.2.3 EditorFrame 空态与 pane surface
 
 `FloatingWindow` 在 `Editor` 外包一层 `EditorFrame`。它不改变 CodeMirror 文本，不写 store，只在当前 pane 为空时显示 overlay 引导。

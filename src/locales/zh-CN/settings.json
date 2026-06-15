@@ -8,6 +8,9 @@
     "jsonTransform": "JSON 变换",
     "about": "关于"
   },
+  "actions": {
+    "close": "关闭设置"
+  },
   "general": {
     "language": "语言",
     "theme": "主题",

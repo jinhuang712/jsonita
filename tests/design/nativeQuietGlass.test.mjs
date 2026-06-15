@@ -50,12 +50,39 @@ test('native polish separates UI, code, and shortcut typography', () => {
   assert.match(editorTheme, /fontFamily:\s*'var\(--font-code\)'/);
 });
 
-test('empty workspace uses editor overlays instead of leaving a blank glass void', () => {
+test('empty workspace does not render decorative editor watermark overlays', () => {
   const shell = read('src/shell/FloatingWindow.tsx');
   const styles = read('src/styles/global.css');
 
   assert.match(shell, /function EditorFrame/);
-  assert.match(shell, /jsonita-editor-empty-hint/);
+  assert.doesNotMatch(shell, /jsonita-editor-empty-hint/);
+  assert.doesNotMatch(shell, /inputEmptyTitle|inputEmptyMeta|outputEmptyTitle|outputEmptyMeta/);
   assert.match(styles, /\.jsonita-pane\b/);
-  assert.match(styles, /\.jsonita-editor-empty-hint\b/);
+  assert.doesNotMatch(styles, /\.jsonita-editor-empty-hint\b/);
+});
+
+test('default typography is large enough for the floating utility chrome', () => {
+  const tokens = read('src/styles/tokens.css');
+  const uiStore = read('src/store/ui.ts');
+  const shell = read('src/shell/FloatingWindow.tsx');
+
+  assert.match(uiStore, /DEFAULT_EDITOR_FONT_SIZE\s*=\s*15/);
+  assert.match(tokens, /--fs-xs:\s*12px/);
+  assert.match(tokens, /--fs-sm:\s*13\.5px/);
+  assert.match(tokens, /--fs-base:\s*14\.5px/);
+  assert.match(tokens, /--fs-editor:\s*15px/);
+  assert.match(shell, /clamp\(12 \+ chromeFontDelta \* 0\.18,\s*11\.5,\s*13\.2\)/);
+  assert.match(shell, /clamp\(13\.5 \+ chromeFontDelta \* 0\.22,\s*12\.5,\s*15\)/);
+});
+
+test('dark theme keeps text and controls bright enough to avoid a dull gray UI', () => {
+  const tokens = read('src/styles/tokens.css');
+
+  assert.match(tokens, /--text:\s*#F2F4F7/);
+  assert.match(tokens, /--text-muted:\s*rgba\(242,\s*244,\s*247,\s*0\.72\)/);
+  assert.match(tokens, /--text-faint:\s*rgba\(242,\s*244,\s*247,\s*0\.52\)/);
+  assert.match(tokens, /--control-bg-hover:\s*rgba\(255,\s*255,\s*255,\s*0\.12\)/);
+  assert.match(tokens, /--glass-bg:\s*rgba\(28,\s*32,\s*40,\s*0\.9\)/);
+  assert.match(tokens, /--glass-border:\s*rgba\(255,\s*255,\s*255,\s*0\.2\)/);
+  assert.match(tokens, /--primary:\s*#AFC7DE/);
 });

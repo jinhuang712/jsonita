@@ -171,11 +171,11 @@ STEP 04
 
 关闭
 
-编辑器内第一下 `Esc` 退出 editing；非编辑态连续两次 `Esc` / 失焦 /`⌘W` → 隐藏浮窗；每次呼出时右下角短暂提示 Esc / 双 Esc / Tab / ⇧Tab，不重复提示 `⌘Y` History；合法内容由实时 transform 持久化为「上次会话」
+编辑器内第一下 `Esc` 退出 editing 且不计入关闭窗口；非编辑态第一下 `Esc` 在状态栏上方短暂提示 `Esc` `Esc` Double Esc to close，第二下 `Esc` / 失焦 /`⌘W` → 隐藏浮窗；合法内容由实时 transform 持久化为「上次会话」
 
 ## 4 AI Fix 流程（仅错误时）
 
-非法 JSON 时 `⌘Enter` 直接进入 AI Fix 并发起请求；单窗右下角显示 Run AI Fix，不显示 Run Format。AI Fix 未启用时不展示错误 JSON 的执行提示，只在右上角保留弱化 AI Fix 提示入口。Diff 决策态 `⌘Enter` 接受修复， `Esc` 取消，并在右下角短提示中替换为 Accept / Cancel 语境。单双栏模式规则一致。
+非法 JSON 时 `⌘Enter` 直接进入 AI Fix 并发起请求；单窗右下角显示 Run AI Fix，不显示 Run Format。AI Fix 未启用时不展示错误 JSON 的执行提示，只在右上角保留弱化 AI Fix 提示入口。Diff 决策态 `⌘Enter` 接受修复，`Esc` 取消；AI Fix 决策态优先消费 `Esc`，不会触发 EscCloseHint 或双击关闭窗口。单双栏模式规则一致。
 
 STEP 01
 
