@@ -11,58 +11,58 @@
       --app-radius: 18px;
       --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
       --font-code: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-      --page-bg: #eef1f4;
-      --page-rail: rgba(255, 255, 255, 0.72);
-      --page-border: rgba(35, 42, 51, 0.13);
-      --page-text: #1f252d;
-      --page-muted: rgba(31, 37, 45, 0.62);
-      --page-faint: rgba(31, 37, 45, 0.42);
-      --glass-bg: rgba(248, 250, 252, 0.88);
-      --glass-bg-strong: rgba(255, 255, 255, 0.78);
-      --glass-border: rgba(38, 46, 58, 0.16);
-      --pane-bg: rgba(255, 255, 255, 0.48);
-      --pane-bg-strong: rgba(255, 255, 255, 0.72);
-      --control-bg: rgba(37, 46, 58, 0.07);
-      --control-hover: rgba(37, 46, 58, 0.12);
-      --control-active: rgba(37, 46, 58, 0.17);
-      --primary: #5c7184;
-      --accent: #a66f2e;
-      --good: #4e7d62;
-      --bad: #a45656;
-      --warn: #9a7440;
-      --shadow: 0 28px 70px rgba(35, 42, 51, 0.19);
-      --line: rgba(38, 46, 58, 0.12);
-      --json-key: #5c6f84;
-      --json-string: #597a5d;
-      --json-number: #8e6840;
+      --page-bg: #f3f5f7;
+      --page-rail: rgba(255, 255, 255, 0.58);
+      --page-border: rgba(20, 26, 36, 0.095);
+      --page-text: #20232a;
+      --page-muted: rgba(26, 30, 40, 0.56);
+      --page-faint: rgba(26, 30, 40, 0.36);
+      --glass-bg: rgba(255, 255, 255, 0.62);
+      --glass-bg-strong: rgba(255, 255, 255, 0.52);
+      --glass-border: rgba(0, 0, 0, 0.07);
+      --pane-bg: rgba(255, 255, 255, 0.34);
+      --pane-bg-strong: rgba(255, 255, 255, 0.52);
+      --control-bg: rgba(255, 255, 255, 0.24);
+      --control-hover: rgba(255, 255, 255, 0.34);
+      --control-active: rgba(67, 111, 159, 0.12);
+      --primary: #436f9f;
+      --accent: #916334;
+      --good: #477e63;
+      --bad: #a35b56;
+      --warn: #8c673a;
+      --shadow: 0 28px 64px -24px rgba(25, 31, 44, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      --line: rgba(20, 26, 36, 0.075);
+      --json-key: #4e7fae;
+      --json-string: #548365;
+      --json-number: #9a7043;
       color-scheme: light;
     }
 
     [data-theme="dark"] {
-      --page-bg: #171a1f;
-      --page-rail: rgba(34, 38, 45, 0.74);
+      --page-bg: #181b20;
+      --page-rail: rgba(28, 32, 40, 0.58);
       --page-border: rgba(255, 255, 255, 0.12);
       --page-text: #f2f4f7;
-      --page-muted: rgba(242, 244, 247, 0.66);
-      --page-faint: rgba(242, 244, 247, 0.42);
-      --glass-bg: rgba(28, 32, 40, 0.91);
-      --glass-bg-strong: rgba(39, 44, 54, 0.78);
-      --glass-border: rgba(255, 255, 255, 0.20);
-      --pane-bg: rgba(255, 255, 255, 0.055);
-      --pane-bg-strong: rgba(255, 255, 255, 0.085);
-      --control-bg: rgba(255, 255, 255, 0.075);
+      --page-muted: rgba(242, 244, 247, 0.72);
+      --page-faint: rgba(242, 244, 247, 0.52);
+      --glass-bg: rgba(28, 32, 40, 0.9);
+      --glass-bg-strong: rgba(255, 255, 255, 0.07);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --pane-bg: rgba(255, 255, 255, 0.065);
+      --pane-bg-strong: rgba(255, 255, 255, 0.095);
+      --control-bg: rgba(255, 255, 255, 0.07);
       --control-hover: rgba(255, 255, 255, 0.12);
-      --control-active: rgba(255, 255, 255, 0.17);
+      --control-active: rgba(175, 199, 222, 0.16);
       --primary: #afc7de;
-      --accent: #d4a15f;
-      --good: #91c39e;
-      --bad: #d68989;
-      --warn: #d0a66d;
-      --shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
+      --accent: #c49a6c;
+      --good: #8dbfa1;
+      --bad: #d69a96;
+      --warn: #c7a172;
+      --shadow: 0 28px 64px -24px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.16);
       --line: rgba(255, 255, 255, 0.12);
-      --json-key: #afc7de;
-      --json-string: #9fc49d;
-      --json-number: #d3a66d;
+      --json-key: #9ab6d0;
+      --json-string: #91c09b;
+      --json-number: #d0a879;
       color-scheme: dark;
     }
 
@@ -98,17 +98,17 @@
       min-width: 1250px;
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 286px 1fr;
-      grid-template-rows: 64px 1fr;
+      grid-template-columns: 196px minmax(1054px, 1fr);
+      grid-template-rows: 58px 1fr;
     }
 
     .topbar {
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: 286px 1fr auto;
+      grid-template-columns: 196px minmax(0, 1fr) auto;
       align-items: center;
-      gap: 18px;
-      padding: 0 22px;
+      gap: 16px;
+      padding: 0 18px;
       border-bottom: 1px solid var(--page-border);
       background: color-mix(in srgb, var(--page-rail), transparent 10%);
       backdrop-filter: blur(24px) saturate(150%);
@@ -125,15 +125,15 @@
     }
 
     .brand-mark {
-      width: 30px;
-      height: 30px;
-      border-radius: 9px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       display: grid;
       place-items: center;
       color: var(--page-bg);
       background: var(--page-text);
       font-weight: 720;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     .brand-title {
@@ -142,13 +142,13 @@
     }
 
     .brand-title strong {
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.15;
     }
 
     .brand-title span {
       color: var(--page-muted);
-      font-size: 11px;
+      font-size: 10.5px;
       line-height: 1.2;
     }
 
@@ -160,8 +160,8 @@
       gap: 4px;
       padding: 4px;
       border: 1px solid var(--page-border);
-      border-radius: 11px;
-      background: var(--control-bg);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--control-bg), transparent 18%);
     }
 
     .page-nav {
@@ -177,9 +177,9 @@
       border: 0;
       color: var(--page-muted);
       background: transparent;
-      border-radius: 8px;
-      min-height: 30px;
-      padding: 0 10px;
+      border-radius: 9px;
+      min-height: 29px;
+      padding: 0 9px;
       white-space: nowrap;
       transition: background 140ms ease, color 140ms ease;
     }
@@ -200,42 +200,119 @@
       box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--page-border), transparent 20%);
     }
 
-    .sidebar {
+    .prototype-inspector {
       border-right: 1px solid var(--page-border);
-      background: var(--page-rail);
-      padding: 18px 16px 28px;
+      background: color-mix(in srgb, var(--page-rail), transparent 26%);
+      padding: 16px 12px 26px;
       overflow: auto;
+      opacity: 0.78;
     }
 
-    .sidebar-section {
+    .inspector-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
       margin: 0 0 18px;
     }
 
-    .sidebar-section h2 {
-      margin: 0 0 8px;
+    .inspector-head strong {
+      display: block;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .inspector-head span {
+      display: block;
       color: var(--page-faint);
+      font-size: 10.5px;
+      line-height: 1.25;
+      margin-top: 2px;
+    }
+
+    .reset-button {
+      min-height: 28px;
+      border: 1px solid var(--page-border);
+      border-radius: 8px;
+      padding: 0 8px;
+      color: var(--page-muted);
+      background: color-mix(in srgb, var(--control-bg), transparent 20%);
       font-size: 11px;
+      white-space: nowrap;
+      width: fit-content;
+    }
+
+    .reset-button:hover {
+      color: var(--page-text);
+      background: var(--control-hover);
+    }
+
+    .sidebar-section {
+      margin: 0 0 13px;
+    }
+
+    .sidebar-section h2,
+    .sidebar-section summary {
+      margin: 0 0 7px;
+      color: var(--page-faint);
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
+    .sidebar-section summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-section summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .sidebar-section summary::after {
+      content: "+";
+      color: var(--page-faint);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .sidebar-section[open] summary::after {
+      content: "-";
+    }
+
     .matrix-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px 4px;
     }
 
     .matrix-button {
-      min-height: 28px;
-      padding: 0 9px;
-      font-size: 12px;
-      background: var(--control-bg);
+      min-height: 26px;
+      padding: 0 7px;
+      font-size: 10.5px;
+      background: color-mix(in srgb, var(--control-bg), transparent 12%);
+    }
+
+    .sidebar-section[data-advanced] {
+      opacity: 0.68;
     }
 
     .canvas-region {
-      padding: 32px 36px 44px;
+      padding: 32px 56px 48px;
       overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .canvas-stage {
+      width: var(--window-width);
+      display: grid;
+      gap: 14px;
     }
 
     .canvas-header {
@@ -244,19 +321,19 @@
       align-items: end;
       justify-content: space-between;
       gap: 24px;
-      margin: 0 0 16px;
+      margin: 0;
     }
 
     .canvas-header h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.2;
     }
 
     .canvas-header p {
       margin: 5px 0 0;
       color: var(--page-muted);
-      font-size: 13px;
+      font-size: 12.5px;
       line-height: 1.45;
     }
 
@@ -323,18 +400,27 @@
       min-height: 32px;
       border: 0;
       border-radius: 9px;
-      padding: 0 12px;
+      padding: 0 10px;
       color: var(--page-muted);
       background: transparent;
       font-size: 13.5px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
 
     .tab.is-active {
       color: var(--page-text);
       background: var(--control-active);
+    }
+
+    .tab svg,
+    .gear svg,
+    .round-button svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 1.85;
+      flex: 0 0 auto;
     }
 
     .tab.is-accent {
@@ -428,7 +514,7 @@
       min-height: 0;
       padding: 12px 14px;
       font-family: var(--font-code);
-      font-size: 13px;
+      font-size: 13.5px;
       line-height: 1.62;
       overflow: hidden;
       white-space: pre-wrap;
@@ -489,16 +575,15 @@
       font-size: 11px;
     }
 
-    .state-key {
+    .branch-note {
       width: var(--window-width);
-      margin: 14px 0 0;
       border: 1px solid var(--page-border);
       border-radius: 12px;
-      background: var(--page-rail);
-      padding: 10px 12px;
-      color: var(--page-muted);
-      font-family: var(--font-code);
-      font-size: 12px;
+      background: color-mix(in srgb, var(--page-rail), transparent 28%);
+      padding: 8px 11px;
+      color: var(--page-faint);
+      font-size: 11px;
+      line-height: 1.45;
     }
 
     .json-key {
@@ -515,8 +600,8 @@
 
     .tree {
       font-family: var(--font-code);
-      font-size: 13px;
-      line-height: 1.8;
+      font-size: 13.5px;
+      line-height: 1.72;
     }
 
     .tree-row {
@@ -524,7 +609,8 @@
       gap: 8px;
       align-items: center;
       border-radius: 7px;
-      padding: 0 7px;
+      min-height: 28px;
+      padding: 0 8px;
     }
 
     .tree-row:hover {
@@ -765,11 +851,11 @@
     @media (max-width: 1249px) {
       .prototype-shell {
         min-width: 1180px;
-        grid-template-columns: 260px 1fr;
+        grid-template-columns: 196px minmax(984px, 1fr);
       }
 
       .topbar {
-        grid-template-columns: 260px 1fr auto;
+        grid-template-columns: 196px minmax(0, 1fr) auto;
       }
     }
   </style>
@@ -791,11 +877,18 @@
       </div>
     </header>
 
-    <aside class="sidebar" aria-label="State Matrix">
-      <div class="sidebar-section">
-        <h2>State Matrix</h2>
-        <div class="matrix-grid" id="matrix-theme"></div>
+    <aside class="prototype-inspector" aria-label="State Matrix">
+      <div class="inspector-head">
+        <div>
+          <strong>Branch Inspector</strong>
+          <span>Choose one state at a time</span>
+        </div>
+        <button class="reset-button" type="button" id="reset-view">Reset View</button>
       </div>
+      <details class="sidebar-section" data-advanced>
+        <summary>Theme</summary>
+        <div class="matrix-grid" id="matrix-theme"></div>
+      </details>
       <div class="sidebar-section">
         <h2>Shell</h2>
         <div class="matrix-grid" id="matrix-chrome"></div>
@@ -812,37 +905,39 @@
         <h2>Tab</h2>
         <div class="matrix-grid" id="matrix-tab"></div>
       </div>
-      <div class="sidebar-section">
-        <h2>AI Flow</h2>
+      <details class="sidebar-section" data-advanced>
+        <summary>AI Flow</summary>
         <div class="matrix-grid" id="matrix-ai"></div>
-      </div>
-      <div class="sidebar-section">
-        <h2>Settings</h2>
+      </details>
+      <details class="sidebar-section" data-advanced>
+        <summary>Settings</summary>
         <div class="matrix-grid" id="matrix-settings"></div>
-      </div>
-      <div class="sidebar-section">
-        <h2>History</h2>
+      </details>
+      <details class="sidebar-section" data-advanced>
+        <summary>History</summary>
         <div class="matrix-grid" id="matrix-history"></div>
-      </div>
-      <div class="sidebar-section">
-        <h2>Permission</h2>
+      </details>
+      <details class="sidebar-section" data-advanced>
+        <summary>Permission</summary>
         <div class="matrix-grid" id="matrix-permission"></div>
-      </div>
+      </details>
     </aside>
 
     <main class="canvas-region">
-      <div class="canvas-header">
-        <div>
-          <h1 id="canvas-title">Main Window</h1>
-          <p id="canvas-copy">The current branch is rendered at the real app size and is the front-end UI source of truth.</p>
+      <div class="canvas-stage">
+        <div class="canvas-header">
+          <div>
+            <h1 id="canvas-title">Main Window</h1>
+            <p id="canvas-copy">The current branch is rendered at the real app size and is the front-end UI source of truth.</p>
+          </div>
+          <div class="actual-size-badge">Actual size · 860 × 560 · no thumbnails</div>
         </div>
-        <div class="actual-size-badge">Actual size · 860 × 560 · no thumbnails</div>
-      </div>
 
-      <section class="prototype-canvas" aria-label="Hi-fi Prototype Canvas">
-        <div id="prototype-window"></div>
-      </section>
-      <div class="state-key" id="state-key"></div>
+        <section class="prototype-canvas" aria-label="Hi-fi Prototype Canvas">
+          <div id="prototype-window"></div>
+        </section>
+        <div class="branch-note" id="branch-note"></div>
+      </div>
     </main>
   </div>
 
@@ -870,9 +965,9 @@
       permission: [['normal', 'Normal'], ['conflict', 'Conflict'], ['denied', 'Denied'], ['override', 'Override']]
     };
 
-    const state = {
+    const defaultState = {
       page: 'main',
-      theme: localStorage.getItem('jsonita.prototype.theme') || 'light',
+      theme: 'light',
       chrome: 'idle',
       pane: 'dual',
       input: 'valid',
@@ -883,10 +978,15 @@
       permission: 'normal'
     };
 
+    const state = {
+      ...defaultState,
+      theme: localStorage.getItem('jsonita.prototype.theme') || defaultState.theme
+    };
+
     const samples = {
       empty: '',
-      valid: '{"name":"alice","age":30,"items":["a","b","c"]}',
-      invalid: '{"name":"alice", age: 30,}',
+      valid: '{\n  "user": {\n    "name": "alice",\n    "role": "admin"\n  },\n  "active": true,\n  "items": ["a", "b", "c"]\n}',
+      invalid: '{"user":{"name":"alice", role:"admin"},"active":true,}',
       long: '{"event":"deployment.finished","service":"jsonita","trace_id":"01HY6W2K8AVJ2QQZ6M4F1PM9ND","payload":{"duration_ms":248,"region":"ap-southeast-1","notes":"a long compact line should expand the window until the max character threshold is reached"}}',
       nested: '"{\\"request\\":\\"{\\\\\\"id\\\\\\":42,\\\\\\"ok\\\\\\":true}\\",\\"source\\":\\"proto\\"}"'
     };
@@ -921,12 +1021,24 @@
     function statusText() {
       if (state.input === 'empty') return '<span>Ready · Paste JSON to begin</span><span><kbd>⌘K</kbd> Clear</span>';
       if (state.input === 'invalid') return '<span class="status-bad">● Invalid JSON · AI Fix available</span><span><kbd>⌘Y</kbd> History</span>';
-      return '<span class="status-good">● Valid JSON · 5 lines · 76 bytes</span><span><kbd>⌘Y</kbd> History</span>';
+      return '<span class="status-good">● Valid JSON · 8 lines · 92 bytes</span><span><kbd>⌘Y</kbd> History</span>';
     }
+
+    const icons = {
+      format: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>',
+      minify: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>',
+      tree: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>',
+      string: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>',
+      json: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H8a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M15 5h1a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg>',
+      ai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"/><path d="m19 14 .8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z"/></svg>',
+      gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg>',
+      down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>',
+      up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>'
+    };
 
     function tabButton(key, label, extra = '') {
       const active = state.tab === key ? ' is-active' : '';
-      return `<button class="tab${active}${extra}" type="button" data-field="tab" data-value="${key}">${label}</button>`;
+      return `<button class="tab${active}${extra}" type="button" data-field="tab" data-value="${key}">${icons[key] || ''}<span>${label}</span></button>`;
     }
 
     function topChrome() {
@@ -943,7 +1055,7 @@
             ${tabButton('json', '→JSON')}
             ${aiTab}
           </div>
-          <button class="gear" type="button" data-page="settings" aria-label="Settings">⚙</button>
+          <button class="gear" type="button" data-page="settings" aria-label="Settings">${icons.gear}</button>
         </div>
         ${state.chrome === 'search' || state.page === 'editor' ? searchDock() : ''}
       `;
@@ -954,8 +1066,8 @@
         <div class="search-dock">
           <span>Find</span>
           <input class="input" value="alice" aria-label="Find">
-          <button class="round-button" type="button">↓</button>
-          <button class="round-button" type="button">↑</button>
+          <button class="round-button" type="button" aria-label="Next match">${icons.down}</button>
+          <button class="round-button" type="button" aria-label="Previous match">${icons.up}</button>
           <span><kbd>⌘F</kbd></span>
         </div>
       `;
@@ -1001,13 +1113,15 @@
             <div class="pane-head"><span>Tree View</span><span>hover row to copy path</span></div>
             <div class="pane-body">
               <div class="tree">
-                <div class="tree-row">▾ <span class="json-key">$</span> <span>{3}</span></div>
-                <div class="tree-row">├─ <span class="json-key">name</span>: <span class="json-string">"alice"</span><span class="tree-copy">copy $.name</span></div>
-                <div class="tree-row">├─ <span class="json-key">age</span>: <span class="json-number">30</span><span class="tree-copy">copy $.age</span></div>
-                <div class="tree-row">└─ <span class="json-key">items</span>: <span>[3]</span><span class="tree-copy">copy $.items</span></div>
-                <div class="tree-row">&nbsp;&nbsp;&nbsp;├─ <span>[0]</span>: <span class="json-string">"a"</span></div>
-                <div class="tree-row">&nbsp;&nbsp;&nbsp;├─ <span>[1]</span>: <span class="json-string">"b"</span></div>
-                <div class="tree-row">&nbsp;&nbsp;&nbsp;└─ <span>[2]</span>: <span class="json-string">"c"</span></div>
+                <div class="tree-row"><span>▾</span><span class="json-key">$</span><span>{3}</span></div>
+                <div class="tree-row" style="padding-left:24px"><span>▾</span><span class="json-key">user</span><span>{2}</span><span class="tree-copy">copy $.user</span></div>
+                <div class="tree-row" style="padding-left:46px"><span class="json-key">name</span><span>:</span><span class="json-string">"alice"</span><span class="tree-copy">copy $.user.name</span></div>
+                <div class="tree-row" style="padding-left:46px"><span class="json-key">role</span><span>:</span><span class="json-string">"admin"</span></div>
+                <div class="tree-row" style="padding-left:24px"><span class="json-key">active</span><span>:</span><span>true</span></div>
+                <div class="tree-row" style="padding-left:24px"><span>▾</span><span class="json-key">items</span><span>[3]</span><span class="tree-copy">copy $.items</span></div>
+                <div class="tree-row" style="padding-left:46px"><span>[0]</span><span>:</span><span class="json-string">"a"</span></div>
+                <div class="tree-row" style="padding-left:46px"><span>[1]</span><span>:</span><span class="json-string">"b"</span></div>
+                <div class="tree-row" style="padding-left:46px"><span>[2]</span><span>:</span><span class="json-string">"c"</span></div>
               </div>
             </div>
           </article>
@@ -1153,7 +1267,7 @@
 
       const pageTitle = pages.find(([key]) => key === state.page)?.[1] || 'Main Window';
       document.getElementById('canvas-title').textContent = pageTitle;
-      document.getElementById('canvas-copy').textContent = 'This actual-size branch is the front-end UI source of truth; navigation and matrix controls select what the single canvas renders.';
+      document.getElementById('canvas-copy').textContent = 'A single real-size surface. Use navigation for pages and the inspector for state branches.';
 
       const renderers = {
         main: () => renderMainWindow(),
@@ -1180,8 +1294,23 @@
         }
       };
       document.getElementById('prototype-window').innerHTML = renderers[state.page]();
-      document.getElementById('state-key').textContent = Object.entries(state).map(([key, value]) => `${key}=${value}`).join(' ');
+      document.getElementById('branch-note').textContent = branchNote(pageTitle);
       syncButtons();
+    }
+
+    function branchNote(pageTitle) {
+      const parts = [
+        pageTitle,
+        state.theme,
+        state.page === 'main' || state.page === 'editor' ? state.tab : null,
+        state.page === 'main' || state.page === 'editor' ? state.input : null,
+        state.page === 'main' || state.page === 'editor' ? state.pane : null,
+        state.page === 'ai' ? state.ai : null,
+        state.page === 'settings' ? state.settings : null,
+        state.page === 'history' ? state.history : null,
+        state.page === 'permissions' ? state.permission : null
+      ].filter(Boolean);
+      return `Current reference branch: ${parts.join(' / ')}`;
     }
 
     function syncButtons() {
@@ -1224,6 +1353,20 @@
         render();
       }
     });
+
+    document.getElementById('reset-view').addEventListener('click', () => {
+      const theme = state.theme;
+      Object.assign(state, defaultState, { theme });
+      render();
+    });
+
+    const initialParams = new URLSearchParams(window.location.search);
+    if (initialParams.get('theme') === 'dark' || initialParams.get('theme') === 'light') {
+      state.theme = initialParams.get('theme');
+    }
+    if (initialParams.get('page')) {
+      state.page = initialParams.get('page');
+    }
 
     buildControls();
     render();
