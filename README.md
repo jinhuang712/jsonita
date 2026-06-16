@@ -92,7 +92,7 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 | [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束、工作流映射和验证规则 |
 | [`plan/`](plan/) | 产品边界、功能、技术栈、NFR |
 | [`spec/`](spec/) | S/M 核心系统契约、`spec/platform/` I/R 支撑契约与 `spec/appendix/` A/V 明细 |
-| [`design/`](design/) | UI、视觉设计、交互、原型、设计令牌、图标、窗口、菜单栏、编辑器、i18n、a11y |
+| [`design/`](design/) | UI、视觉设计、交互、原型、设计令牌、图标、窗口、菜单栏、编辑器、i18n、a11y；`design/prototype/index.html` 是前端 UI 高保真 source of truth |
 | [`TODO.md`](TODO.md) | 项目级开放 backlog |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史 |
 
@@ -102,7 +102,7 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 
 [`WORKFLOW.md`](WORKFLOW.md) 保持项目无关；Jsonita 专属映射（例如 workflow 中的 `CHANGELOG.md` 在本仓库对应 [`CHANGELIST.md`](CHANGELIST.md)）写在 [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md)。
 
-旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。
+旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。`design/prototype/index.html` 是手写高保真原型例外，用来承载真实尺寸页面导航、状态矩阵、light / dark 和前端交互 reference。
 
 ## 当前进度（agent 实施）
 
