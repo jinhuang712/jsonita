@@ -98,9 +98,9 @@ export function HistoryModal() {
       aria-labelledby="history-modal-title"
       className="jsonita-page jsonita-history-page"
     >
-      <section style={pageStyle}>
-        <header style={headerStyle}>
-          <div id="history-modal-title" style={titleStyle}>
+      <section className="jsonita-history-shell">
+        <header className="jsonita-history-header">
+          <div id="history-modal-title" className="jsonita-history-title">
             {title}
           </div>
           <button
@@ -115,16 +115,16 @@ export function HistoryModal() {
           </button>
         </header>
 
-        <div style={toolbarStyle}>
+        <div className="jsonita-history-toolbar">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('searchPlaceholder')}
             aria-label={t('searchPlaceholder')}
             autoFocus
-            style={searchStyle}
+            className="jsonita-history-search"
           />
-          <div style={filterGroupStyle}>
+          <div className="jsonita-history-filter-group">
             {(['all', 'pinned', 'starred'] as const).map((item) => (
               <button
                 key={item}
@@ -138,7 +138,7 @@ export function HistoryModal() {
           </div>
         </div>
 
-        <div style={listStyle}>
+        <div className="jsonita-history-list">
           {loading ? (
             <div style={emptyStyle}>Loading…</div>
           ) : error ? (
@@ -158,8 +158,8 @@ export function HistoryModal() {
           )}
         </div>
 
-        <footer style={footerStyle}>
-          <div style={{ color: 'var(--text-faint)' }}>
+        <footer className="jsonita-history-footer">
+          <div className="jsonita-history-footer-note">
             Pinned and starred items stay when clearing.
           </div>
           <button type="button" onClick={clearPlainRows} style={clearButtonStyle}>
@@ -255,56 +255,6 @@ function opMeta(opType: OpType): { label: string; color: string; bg: string } {
   }
 }
 
-const pageStyle: React.CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  color: 'var(--text)',
-  fontFamily: 'var(--font-sans)',
-};
-
-const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '10px 14px',
-  borderBottom: '1px solid var(--border)',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: 'var(--fs-md)',
-  fontWeight: 600,
-};
-
-const toolbarStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: 8,
-  alignItems: 'center',
-  padding: '10px 12px',
-  borderBottom: '1px solid var(--border)',
-  background: 'var(--surface-quiet)',
-};
-
-const searchStyle: React.CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  padding: '6px 9px',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--control-border)',
-  background: 'var(--control-bg)',
-  color: 'var(--text)',
-  fontFamily: 'var(--font-mono)',
-  fontSize: 'var(--fs-sm)',
-  outline: 'none',
-};
-
-const filterGroupStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: 5,
-};
-
 const filterButtonStyle: React.CSSProperties = {
   padding: '5px 8px',
   borderRadius: 'var(--radius-sm)',
@@ -321,12 +271,6 @@ const filterActiveStyle: React.CSSProperties = {
   background: 'var(--control-bg-active)',
   color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
   fontWeight: 600,
-};
-
-const listStyle: React.CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  overflow: 'auto',
 };
 
 const emptyStyle: React.CSSProperties = {
@@ -412,17 +356,6 @@ const actionActiveStyle: React.CSSProperties = {
   border: '1px solid var(--primary-edge)',
   background: 'var(--control-bg-active)',
   fontWeight: 600,
-};
-
-const footerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 12,
-  padding: '8px 12px',
-  borderTop: '1px solid var(--border)',
-  background: 'var(--surface-quiet)',
-  fontSize: 'var(--fs-xs)',
 };
 
 const clearButtonStyle: React.CSSProperties = {

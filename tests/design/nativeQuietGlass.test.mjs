@@ -60,6 +60,17 @@ test('history and settings are full-window pages with explicit Esc close actions
   assert.match(styles, /\.jsonita-page-close\b/);
 });
 
+test('history full-window layout keeps the footer pinned to the bottom edge', () => {
+  const history = read('src/history/HistoryModal.tsx');
+
+  assert.match(history, /<section className="jsonita-history-shell">/);
+  assert.match(history, /<header className="jsonita-history-header">/);
+  assert.match(history, /<div className="jsonita-history-toolbar">/);
+  assert.match(history, /<div className="jsonita-history-list">/);
+  assert.match(history, /<footer className="jsonita-history-footer">/);
+  assert.match(history, /<div className="jsonita-history-footer-note">/);
+});
+
 test('native polish separates UI, code, and shortcut typography', () => {
   const tokens = read('src/styles/tokens.css');
   const statusBar = read('src/shell/StatusBar.tsx');

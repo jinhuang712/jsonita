@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · History 全窗口页底栏贴底
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 修正 History 全窗口页仍沿用旧 modal 分段布局的问题：History 现在使用明确的 header / toolbar / list / footer flex shell，列表占满剩余空间并成为唯一滚动区，footer 固定在窗口底部，不再停在页面上半区。 |
+| 影响文档 | `src/history/HistoryModal.tsx`、`src/styles/global.css`、`tests/design/nativeQuietGlass.test.mjs`、`CHANGELIST.md`。 |
+| 关联 | 用户截图反馈 History 虽然已覆盖整窗，但内容区域和底栏没有按全窗口页面布局展开。 |
+
 ### docs · 新增前端高保真原型 SoT
 
 | 字段 | 内容 |
