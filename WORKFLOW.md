@@ -122,12 +122,14 @@ design 不是 source of truth,但它也不是可忽略的草图。它是交互�
 
 | 变更 | design 处理 |
 |---|---|
-| 新增浮层、面板、快捷键、用户可见状态 | 更新对应 `design/*.md`;必要时更新原型 |
-| spec 改了行为 | design 补交互状态、空态、错态、键盘和视觉层级 |
+| 新增浮层、面板、快捷键、用户可见状态 | 更新对应 `design/*.md`;同时更新 `design/prototype/index.html` 的真实尺寸状态分支 |
+| spec 改了行为 | design 补交互状态、空态、错态、键盘和视觉层级;涉及前端 UI 时同步原型 |
 | design 发现实现不可行 | 回写 spec 或 TODO,并记入 CHANGELOG |
-| 原型与 Markdown 不一致 | 以 Markdown 为当前契约,原型需要同步 |
+| 原型与 Markdown 不一致 | 前端 UI 视觉 / 交互以 `design/prototype/index.html` 为准;产品、技术、隐私、发布等非 UI 契约以 plan / spec 为准;冲突需要同步修正 |
 
-Markdown 文档不得超链接到仓库内 `.html`;引用原型只写路径。
+`design/prototype/index.html` 是手写高保真原型,不是生成式文档 HTML。它是 front-end UI 的真实尺寸 source of truth:页面导航、状态矩阵、light / dark、可点击交互和 860 x 560 主窗画布都应在这里维护。
+
+Markdown 文档不得超链接到仓库内 `.html`,但可以用路径文字引用 `design/prototype/index.html`。不要重新引入生成式文档 HTML、CAST JSON 源或 CAST 渲染脚本。
 
 ## TODO 规则
 
@@ -164,7 +166,7 @@ diff -u AGENTS.md CLAUDE.md
 并检查:
 
 - Markdown 内部链接存在。
-- Markdown 不超链接仓库内 `.html`。
+- Markdown 不超链接仓库内 `.html`;`design/prototype/index.html` 只用路径文字引用。
 - 新核心 spec 已进入 README 导航。
 - 新 platform 文档已进入 README 导航。
 - 如果改了 design,对应 spec 有引用或说明。

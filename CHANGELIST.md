@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### docs · 新增前端高保真原型 SoT
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 新增 `design/prototype/index.html` 作为前端 UI 的高保真 source of truth：单文件可直接打开，保留页面导航、状态矩阵、右上角 light / dark 切换、可点击交互分支和真实 860 x 560 主窗口画布；`design/*.md` 保留为说明、契约解释和历史上下文。 |
+| 影响文档 | `design/prototype/index.html`、`tests/design/prototypeReference.test.mjs`、`design/README.md`、`WORKFLOW.md`、`README.md`、`CHANGELIST.md`。 |
+| 关联 | 用户要求 `design/` 保留 Markdown，同时新增 prototype folder，用一个 HTML 串起所有页面和交互，并明确它既是页面导航、状态矩阵，也是前端唯一高保真参考；原型必须是真实大小 UI，不是缩略图。 |
+
 ### feat · History 改为主壳全窗口页面
 
 | 字段 | 内容 |
