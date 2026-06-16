@@ -373,7 +373,98 @@ kbd {
 }
 
 .jsonita-page {
+  flex: 1 1 auto;
+  height: 100%;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.jsonita-history-page {
+  display: flex;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.jsonita-history-shell {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.jsonita-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.jsonita-history-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.jsonita-history-toolbar {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-quiet);
+}
+
+.jsonita-history-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  outline: none;
+}
+
+.jsonita-history-search:focus {
+  border-color: var(--primary-edge);
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-history-filter-group {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.jsonita-history-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.jsonita-history-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-quiet);
+  font-size: var(--fs-xs);
+}
+
+.jsonita-history-footer-note {
+  min-width: 0;
+  color: var(--text-faint);
 }
 
 .jsonita-page-close,
