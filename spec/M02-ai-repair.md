@@ -133,6 +133,8 @@ flowchart TD
 | Frontend | 展示 loading/error/Diff/Accept | AI 结果不自动覆盖。 |
 | Logging | 记录诊断字段 | 不记录 prompt、raw JSON、key。 |
 
+进入 AI Fix tab 后，底部状态栏表达 AI Fix 当前状态：requesting 显示修复中，awaiting-decision / error 显示待用户审查或处理，不继续显示底层 parse error 的 `Invalid JSON` 文案。底层 editor error 仍保留给 lint、prompt context 和返回普通编辑态后的状态栏使用。
+
 ## FAQ
 
 **AI 关闭时为什么 Rust 还要拒绝？**

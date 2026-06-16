@@ -56,7 +56,12 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     closeBrackets(),
     history(),
     drawSelection(),
-    search({ top: true, createPanel: createJsonitaSearchPanel, scrollToMatch: centerSearchMatch }),
+    search({
+      top: true,
+      regexp: true,
+      createPanel: createJsonitaSearchPanel,
+      scrollToMatch: centerSearchMatch,
+    }),
     highlightSelectionMatches(),
     jsonitaSearchGutter,
     indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),

@@ -8,6 +8,8 @@
     "valid": "Valid JSON",
     "empty": "Paste JSON to start",
     "invalid": "Invalid JSON",
+    "aiFixing": "AI Fix in progress",
+    "aiReview": "Review AI Fix result",
     "line": "Line",
     "col": "Col"
   },

@@ -8,6 +8,8 @@
     "valid": "有效 JSON",
     "empty": "粘贴 JSON 开始",
     "invalid": "无效 JSON",
+    "aiFixing": "AI 修复中",
+    "aiReview": "检查 AI 修复结果",
     "line": "行",
     "col": "列"
   },

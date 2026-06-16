@@ -52,7 +52,7 @@ import { foldGutter, codeFolding, bracketMatching, defaultHighlightStyle,
          syntaxHighlighting } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
 import { history, defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { search, highlightSelectionMatches } from '@codemirror/search';
 import { keymap } from '@codemirror/view';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
@@ -62,6 +62,8 @@ import { jsonitaJsonHighlight } from './highlight';
 import { externalLinter, supplementalJsonLinter } from './lint';
 import { createJsonitaSearchPanel } from './searchPanel';
 import { jsonitaSearchGutter } from './searchGutter';
+import { jsonitaSearchKeymap } from './searchKeymap';
+import { centerSearchMatch } from './searchScroll';
 
 export interface EditorConfig {
   theme: 'light' | 'dark';
@@ -85,7 +87,12 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     closeBrackets(),
     history(),
     drawSelection(),
-    search({ top: true, createPanel: createJsonitaSearchPanel }),
+    search({
+      top: true,
+      regexp: true,
+      createPanel: createJsonitaSearchPanel,
+      scrollToMatch: centerSearchMatch,
+    }),
     highlightSelectionMatches(),
     jsonitaSearchGutter,
     indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),
@@ -104,7 +111,7 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     keymap.of([
       ...defaultKeymap,
       ...historyKeymap,
-      ...searchKeymap,
+      ...jsonitaSearchKeymap,
       indentWithTab,
     ]),
   ];
@@ -113,20 +120,22 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
 
 ### 1.3.1 搜索面板契约
 
-`⌘F` 打开的搜索 UI 不使用 CodeMirror 默认底部表单。Jsonita 使用 `search({ top: true, createPanel })` 提供自定义面板，面板 dock 在 TabBar 下方、编辑正文上方，参与布局，不覆盖任何 JSON 文本。`⌘F` 是 toggle：面板关闭时打开，面板打开时再次按下 `⌘F` 关闭；不定义 `⌘R` / `Cmd+R` replace 快捷键。
+`⌘F` 打开的搜索 UI 不使用 CodeMirror 默认底部表单。Jsonita 使用 `search({ top: true, regexp: true, createPanel })` 提供自定义面板，面板 dock 在 TabBar 下方、编辑正文上方，参与布局，不覆盖任何 JSON 文本。`⌘F` 是 toggle：面板关闭时打开，面板打开时再次按下 `⌘F` 关闭；不定义 `⌘R` / `Cmd+R` replace 快捷键。
 
 结构：
 
 | 区域 | 内容 | 交互 |
 | --- | --- | --- |
 | Find row | `Find` label、搜索输入、`x / n` 计数、上一个/下一个、`Aa`、`.*`、`word`、`All`、关闭 | `Enter` 下一项，`Shift+Enter` 上一项，`Esc` 关闭。 |
-| Replace row | `Replace` label、替换输入、`Replace`、`All` | 在替换输入内按 `Enter` 或点击 `Replace` 替换当前匹配；点击 `All` 替换所有匹配。 |
+| Replace row | `Replace` label、替换输入、`.*`、`Replace`、`All` | Replace row 的 `.*` 与 Find row 的 `.*` 控制同一个 regexp 状态；在替换输入内按 `Enter` 或点击 `Replace` 替换当前匹配；点击 `All` 替换所有匹配。 |
 | Shortcut | `⌘F` / `Cmd+F` | 关闭时打开搜索，打开时关闭搜索。 |
 | Match highlight | 文本内 match 背景 | 使用低透明蓝灰 `--primary`，普通命中约 11% tint，当前命中约 18% tint；不使用高饱和黄/青/紫。 |
 | Gutter hint | 行号 gutter 内弱竖线 | 普通命中为 2px 弱竖线，当前命中稍强但不加 glow；不能替换行号数字。 |
 
 视觉边界：
 
+- 搜索默认启用 regular expression 模式，所以 replace 默认支持 regexp replacement；`.*` toggle 必须可见并允许用户关闭正则模式，关闭后按普通文本搜索 / 替换。
+- Replace row 必须提供一个和 Find row `.*` 同类的 regexp toggle；Replace row 的 `Replace` / `All` 必须呈现为可见独立执行按钮，有明确边框和 control surface，但不能使用 active toggle 样式或突兀的 accent 实心色块。
 - 搜索面板只用 `--surface-raised`、`--control-bg`、`--control-bg-hover`、`--control-bg-active`、`--control-border`、`--border`、`--text-muted` 等 token。
 - 不使用大面积蓝色块，不使用高对比文字按钮；上一项/下一项用 `↑` / `↓`。
 - 搜索面板必须暴露 replace 输入、替换当前匹配和替换全部按钮；不通过 `⌘R` / `Cmd+R` 快捷键触发 replace。

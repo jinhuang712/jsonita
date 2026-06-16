@@ -27,6 +27,7 @@
       "next": "Next match",
       "matchCase": "Match case",
       "regexp": "Regular expression",
+      "replaceRegexp": "Regular expression replacement",
       "wordChip": "word",
       "wholeWord": "Whole word",
       "all": "All",

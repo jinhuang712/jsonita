@@ -29,6 +29,7 @@ class JsonitaSearchPanel implements Panel {
   private readonly caseButton: HTMLButtonElement;
   private readonly regexpButton: HTMLButtonElement;
   private readonly wordButton: HTMLButtonElement;
+  private readonly replaceRegexpButton: HTMLButtonElement;
 
   constructor(private readonly view: EditorView) {
     this.query = getSearchQuery(view.state);
@@ -50,6 +51,9 @@ class JsonitaSearchPanel implements Panel {
     this.wordButton = toggleButton(t('actions.wordChip'), t('actions.wholeWord'), () =>
       this.toggle('wholeWord'),
     );
+    this.replaceRegexpButton = toggleButton('.*', t('actions.replaceRegexp'), () =>
+      this.toggle('regexp'),
+    );
 
     this.dom = elt('div', 'jsonita-search-panel');
     this.dom.addEventListener('keydown', (event) => this.keydown(event));
@@ -69,18 +73,19 @@ class JsonitaSearchPanel implements Panel {
       elt('div', 'jsonita-search-row jsonita-search-replace-row', [
         elt('span', 'jsonita-search-label', [t('label.replace')]),
         this.replaceField,
+        this.replaceRegexpButton,
         iconButton(
           t('actions.replace'),
           t('actions.replaceNext'),
           () => replaceNext(this.view),
-          'jsonita-search-replace-button',
+          'jsonita-search-replace-action jsonita-search-replace-current',
           'replace-next',
         ),
         iconButton(
           t('actions.all'),
           t('actions.replaceAll'),
           () => replaceAll(this.view),
-          'jsonita-search-replace-button',
+          'jsonita-search-replace-action jsonita-search-replace-all',
           'replace-all',
         ),
       ]),
@@ -159,9 +164,11 @@ class JsonitaSearchPanel implements Panel {
   private syncDom() {
     this.caseButton.classList.toggle('jsonita-search-toggle-active', this.query.caseSensitive);
     this.regexpButton.classList.toggle('jsonita-search-toggle-active', this.query.regexp);
+    this.replaceRegexpButton.classList.toggle('jsonita-search-toggle-active', this.query.regexp);
     this.wordButton.classList.toggle('jsonita-search-toggle-active', this.query.wholeWord);
     this.caseButton.setAttribute('aria-pressed', String(this.query.caseSensitive));
     this.regexpButton.setAttribute('aria-pressed', String(this.query.regexp));
+    this.replaceRegexpButton.setAttribute('aria-pressed', String(this.query.regexp));
     this.wordButton.setAttribute('aria-pressed', String(this.query.wholeWord));
     this.countLabel.textContent = getMatchCountLabel(this.view, this.query);
   }

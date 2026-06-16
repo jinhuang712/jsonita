@@ -69,14 +69,15 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 
 ### 4.0 EditorSearchPanel + EditorSearchGutter
 
-`EditorSearchPanel` 是 CodeMirror `search({ createPanel })` 的 DOM panel，不是 React 组件。它 dock 在 TabBar 下方、编辑正文上方，打开时只压缩编辑区高度，不覆盖 JSON 文本。
+`EditorSearchPanel` 是 CodeMirror `search({ top: true, regexp: true, createPanel })` 的 DOM panel，不是 React 组件。它 dock 在 TabBar 下方、编辑正文上方，打开时只压缩编辑区高度，不覆盖 JSON 文本。
 
 | 子区 | 规则 |
 | --- | --- |
 | Find row | 搜索输入、match count、上/下一个、`Aa`、`.*`、`word`、`All`、关闭。 |
-| Replace row | 替换输入、`Replace` 当前匹配、`All` 替换全部；按钮低对比，不使用高饱和主按钮。 |
+| Replace row | 替换输入、`.*` regexp toggle、`Replace` 当前匹配、`All` 替换全部；Replace row 的 `.*` 复用 Find row `.*` 的 framed toggle 样式和同一 regexp 状态，执行动作按钮保持普通按钮状态，不能退化成纯文字控件。 |
 | Shortcut | `⌘F` 首次打开搜索；搜索已打开时再次 `⌘F` 关闭搜索，形成快速 toggle。 |
-| Buttons | 使用低对比 chip/icon button，active 用 `--control-bg-active` + `--primary-edge`。 |
+| Regexp | `.*` 默认 active；replace 默认支持 regexp replacement，但用户可以点击 `.*` 关闭正则模式。 |
+| Buttons | 普通搜索控制使用低对比 chip/icon button，active 用 `--control-bg-active` + `--primary-edge`；Find row 和 Replace row 的 `.*` 是同一个 regexp 状态的 toggle，Replace / All 是执行动作，不使用 active toggle 样式或 accent 实心按钮。 |
 | Count | `x / n`，超过计数上限显示 `1000+`。 |
 | i18n | 文案从 `panes.search.*` 读取；不得 hardcode 英文。 |
 
@@ -131,7 +132,7 @@ interface StatusBarProps {
 | status | 左侧文案 |
 | --- | --- |
 | `valid` | "● Valid JSON · X lines · Y bytes" |
-| `error` | "● Invalid JSON"；位置和详细 reason 交给 inline lint tooltip / 局部 gutter marker |
+| `error` | "● Invalid JSON"；位置和详细 reason 交给 inline lint tooltip / 局部 gutter marker。若当前处于 AI Fix tab 且 AI 状态不是 idle，状态栏显示 AI Fix 进行中 / 待审查文案，不继续显示 Invalid JSON。 |
 | `empty` | "—"（无圆点） |
 | `large` | "● Large file · X bytes" |
 

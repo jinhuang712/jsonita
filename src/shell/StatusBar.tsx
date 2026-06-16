@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
+import { useUiStore } from '../store/ui';
 
 /**
  * 底部状态栏 — 4 态文案（valid / error / empty / large）。
@@ -12,9 +14,20 @@ export function StatusBar() {
   const status = useEditorStore((s) => s.status);
   const bytes = useEditorStore((s) => s.bytes);
   const lines = useEditorStore((s) => s.lines);
+  const aiStatus = useAiStore((s) => s.status);
+  const activePane = useUiStore((s) => s.activePane);
 
   let left: React.ReactNode;
-  switch (status) {
+  if (activePane === 'ai-fix' && aiStatus !== 'idle') {
+    const aiLabel =
+      aiStatus === 'requesting' ? t('statusBar.aiFixing') : t('statusBar.aiReview');
+    left = (
+      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+        ● {aiLabel}
+      </span>
+    );
+  } else {
+    switch (status) {
     case 'valid':
       left = (
         <span>
@@ -40,6 +53,7 @@ export function StatusBar() {
       break;
     default:
       left = <span style={{ color: 'var(--text-faint)' }}>— {t('statusBar.empty')}</span>;
+    }
   }
 
   return (
