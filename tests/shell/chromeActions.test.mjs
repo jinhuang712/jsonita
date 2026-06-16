@@ -43,7 +43,8 @@ test('settings page keeps a close button in the top-right corner', () => {
   const settings = read('src/settings/SettingsView.tsx');
 
   assert.match(settings, /aria-label=\{t\('actions\.close'\)\}/);
-  assert.match(settings, /className="jsonita-settings-close"/);
+  assert.match(settings, /className="jsonita-page-close"/);
+  assert.match(settings, /<kbd[^>]*>Esc<\/kbd>/);
   assert.match(settings, /setOpen\(false\)/);
 });
 
