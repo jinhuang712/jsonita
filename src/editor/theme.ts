@@ -158,9 +158,23 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     backgroundColor: 'var(--control-bg-active)',
     color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
   },
-  '.jsonita-search-replace-button': {
+  '.jsonita-search-replace-action': {
+    minWidth: '72px',
+    borderColor: 'var(--control-border)',
+    backgroundColor: 'var(--control-bg)',
+    color: 'var(--text)',
+    fontWeight: 500,
+  },
+  '.jsonita-search-replace-action:hover': {
+    borderColor: 'var(--primary-edge)',
+    backgroundColor: 'var(--control-bg-hover)',
+    color: 'color-mix(in srgb, var(--text) 90%, var(--primary))',
+  },
+  '.jsonita-search-replace-current': {
+    minWidth: '84px',
+  },
+  '.jsonita-search-replace-all': {
     minWidth: '64px',
-    color: 'var(--text-muted)',
   },
   '.jsonita-search-close': {
     minWidth: '27px',

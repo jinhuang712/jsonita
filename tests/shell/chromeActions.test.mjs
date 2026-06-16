@@ -68,3 +68,19 @@ test('top chrome icon actions use app-rendered tooltips with labels and shortcut
   assert.match(enShell, /"settings":\s*"Settings"/);
   assert.match(zhShell, /"settings":\s*"设置"/);
 });
+
+test('status bar suppresses invalid json while AI Fix is active', () => {
+  const statusBar = read('src/shell/StatusBar.tsx');
+  const enShell = read('src/locales/en-US/shell.json');
+  const zhShell = read('src/locales/zh-CN/shell.json');
+
+  assert.match(statusBar, /useAiStore\(\(s\) => s\.status\)/);
+  assert.match(statusBar, /useUiStore\(\(s\) => s\.activePane\)/);
+  assert.match(statusBar, /activePane === 'ai-fix' && aiStatus !== 'idle'/);
+  assert.match(statusBar, /statusBar\.aiFixing/);
+  assert.match(statusBar, /statusBar\.aiReview/);
+  assert.match(enShell, /"aiFixing":\s*"AI Fix in progress"/);
+  assert.match(enShell, /"aiReview":\s*"Review AI Fix result"/);
+  assert.match(zhShell, /"aiFixing":\s*"AI 修复中"/);
+  assert.match(zhShell, /"aiReview":\s*"检查 AI 修复结果"/);
+});

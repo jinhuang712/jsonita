@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · AI Fix 状态栏与搜索正则默认值
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | `⌘F` 搜索面板默认启用 regular expression 模式，replace 默认支持 regexp replacement，同时在 Find row 和 Replace row 都提供同风格 `.*` toggle 让用户关闭正则；Replace row 的 `Replace` / `All` 保持普通执行按钮；AI Fix tab 激活且 AI 状态非 idle 时，底部状态栏改显示 AI Fix 进行中 / 待审查状态，不继续显示底层 `Invalid JSON`。 |
+| 影响文档 | `src/editor/extensions.ts`、`src/editor/searchPanel.ts`、`src/editor/theme.ts`、`src/shell/StatusBar.tsx`、`src/locales/*/shell.json`、`tests/editor/searchPanel.test.mjs`、`tests/shell/chromeActions.test.mjs`、`design/04_components.md`、`design/08_editor.md`、`spec/M02-ai-repair.md`、`TODO.md`、`CHANGELIST.md`。 |
+| 关联 | 用户截图反馈 regexp replace 实际能力应默认打开但可关闭，且 Replace 不应只是纯文字控件；同时 AI Fix 已在执行时左下角不应继续提示 Invalid JSON。本轮仅记录 AI Fix loading 提示太小、无动画、不居中的视觉问题到 TODO，未直接改该 loading 视觉。 |
+
 ### polish · 收敛高保真原型默认视图
 
 | 字段 | 内容 |
