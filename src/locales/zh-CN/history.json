@@ -6,5 +6,8 @@
     "pinned": "置顶",
     "starred": "★"
   },
+  "actions": {
+    "close": "关闭历史"
+  },
   "empty": "暂无历史 · 操作过的 JSON 自动保存"
 }

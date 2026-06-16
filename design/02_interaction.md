@@ -234,7 +234,7 @@ diff 展示修复点 → 接受 / 撤销
 
 ## 6 设置面板交互
 
-打开入口：右上角设置图标、菜单栏 Settings…、或 `⌘,`。Settings 打开时主 Jsonita 卡片从编辑工作区切到设置工作区，并读取 `settings_get_all`、订阅 `settings:changed`；左侧 6 个 nav 项保留为目录索引，右侧是连续滚动配置页。
+打开入口：右上角设置图标、菜单栏 Settings…、或 `⌘,`。Settings 打开时主 Jsonita 卡片从编辑工作区切到设置工作区，并读取 `settings_get_all`、订阅 `settings:changed`；左侧 6 个 nav 项保留为目录索引，右侧是连续滚动配置页。右上角关闭按钮必须显式显示 `Esc` 键帽和关闭图标，让用户知道可点击或按键退出。
 
 | 分组 | 核心交互 | 结果 |
 | --- | --- | --- |
@@ -247,7 +247,13 @@ diff 展示修复点 → 接受 / 撤销
 
 退出方式：`Esc`、Done 或 Settings 页内 `⌘W` 都返回主编辑工作区，不隐藏整个浮窗，也不触发双击 `Esc` 的隐藏窗口逻辑。Reset all 调 `settings_reset` 并广播 `settings:changed`。设置项没有“Apply”步骤，避免用户误以为更改处于未保存状态。
 
-### 6.1 Single-pane status controls
+### 6.1 History 页面
+
+打开入口：右上角 History 图标、状态栏 History 入口或 `⌘Y`。History 打开时和 Settings 一样替换主 Jsonita 卡片内容，而不是叠一张居中 modal；外层窗口圆角、玻璃、阴影和 resize handles 保持不变。页面顶部保留标题、搜索框、All / Pin / Star 筛选和右上关闭按钮，关闭按钮同样显式显示 `Esc` 键帽和关闭图标。
+
+退出方式：`Esc`、再次 `⌘Y`、点击右上关闭按钮、或载入某条历史记录后返回主编辑工作区；不隐藏整个浮窗，也不触发双击 `Esc` 关闭提示。Clear 只清普通历史，pinned / starred 保留。
+
+### 6.2 Single-pane status controls
 
 状态栏 `Switch to [Single / Split] Panel` 控件可即时切换 single-pane / split-pane，快捷键为 `⌘\`。
 
@@ -255,7 +261,7 @@ diff 展示修复点 → 接受 / 撤销
 
 该状态栏控件与 History 一样平时只显文字，hover / 键盘聚焦才浮现键位，详见 [design handoff § 5](HANDOFF.md)。
 
-### 6.2 Single-pane run hint
+### 6.3 Single-pane run hint
 
 非 Tree 功能右下角固定提示 `⌘↵` Run {pane}；运行中 / 成功 / 失败在同一位置短暂反馈。
 

@@ -14,6 +14,7 @@ React WebView 拥有这些可见状态：
 | `error` | `src/store/editor.ts` | `Parse` 映射、清空、成功 preview | Rust error payload 是来源。 |
 | `activePane` | `src/store/ui.ts` | TabBar 和快捷键 | UI 状态，非 durable truth。 |
 | `settingsViewOpen` | `src/store/ui.ts` | 齿轮按钮、tray Settings、`CmdOrCtrl+,`、Done、`Esc` | Settings page 是否替换主 workspace。 |
+| `historyModalOpen` | `src/store/ui.ts` | History 按钮、`CmdOrCtrl+Y`、条目载入、Clear、`Esc` | History page 是否替换主 workspace；历史命名仍保留 `Modal` 以避免无关迁移。 |
 | `escCloseHintVisible` | `src/store/ui.ts` | 非编辑态单击 `Esc`、双击 `Esc`、History / Settings 打开、提示超时 | “双击 Esc 关闭”临时提示是否可见；不持久化。 |
 | `settings` snapshot | `src/store/settings.ts` | `settings_get_all`、`settings:changed` | Rust `settings.json`。 |
 | AI fix state | `src/store/ai.ts`、`src/panes/AiFixPane.tsx` | AI pane request、success、error、Accept/Cancel | 没有 durable truth，Accept 后才进入 editor。 |
@@ -22,18 +23,18 @@ WebView 可以缓存 settings、error 和 preview，但它不能直接写 durabl
 
 ## Shell 页面状态
 
-主窗口只有一张外层卡片。普通 JSON 工作区和 Settings 工作区是同一个 shell 内的两个页面状态：
+主窗口只有一张外层卡片。普通 JSON 工作区、History 工作区和 Settings 工作区是同一个 shell 内的页面状态：
 
 ```mermaid
 stateDiagram-v2
   [*] --> EditorWorkspace
   EditorWorkspace --> SettingsWorkspace: gear / CmdOrCtrl+, / tray Settings
   SettingsWorkspace --> EditorWorkspace: Done / Esc / CmdOrCtrl+W
-  EditorWorkspace --> HistoryModal: CmdOrCtrl+Y / History
-  HistoryModal --> EditorWorkspace: Esc / CmdOrCtrl+Y / backdrop
+  EditorWorkspace --> HistoryWorkspace: CmdOrCtrl+Y / History
+  HistoryWorkspace --> EditorWorkspace: Esc / CmdOrCtrl+Y / row load / close button
 ```
 
-Settings 不使用遮罩、不压暗编辑器、不在主卡片上再套一张卡片。它替换 TabBar、编辑区、状态栏所在内容区域，但保留同一个窗口边界、圆角、阴影和 resize handles。Settings 内部保留左侧目录索引，右侧只有一个滚动容器，所有配置 section 顺序渲染；目录点击只改变 scroll position，不卸载其他 section。History 和快捷键权限恢复仍是 modal overlay，因为它们是临时任务，不是长期工作区。
+History 和 Settings 不使用遮罩、不压暗编辑器、不在主卡片上再套一张卡片。它们替换 TabBar、编辑区、状态栏所在内容区域，但保留同一个窗口边界、圆角、阴影和 resize handles。两个页面右上角都显示包含 `Esc` 键帽的关闭按钮，避免用户只能猜键盘退出。Settings 内部保留左侧目录索引，右侧只有一个滚动容器，所有配置 section 顺序渲染；目录点击只改变 scroll position，不卸载其他 section。快捷键权限恢复仍是 modal overlay，因为它是系统权限恢复任务，不是长期工作区。
 
 ## 一次 preview 如何避免旧结果闪回
 

@@ -372,13 +372,20 @@ kbd {
   }
 }
 
+.jsonita-page {
+  min-width: 0;
+}
+
+.jsonita-page-close,
 .jsonita-settings-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 30px;
+  gap: 6px;
+  min-width: 30px;
   height: 28px;
+  padding: 0 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
@@ -393,6 +400,16 @@ kbd {
     transform var(--dur-fast) var(--ease-out);
 }
 
+.jsonita-page-close kbd {
+  border-color: var(--control-border);
+  background: var(--control-bg);
+  color: var(--text-muted);
+  font-size: calc(var(--fs-xs) - 1px);
+  line-height: 1.35;
+}
+
+.jsonita-page-close:hover,
+.jsonita-page-close:focus-visible,
 .jsonita-settings-close:hover,
 .jsonita-settings-close:focus-visible {
   background: var(--control-bg-hover);
@@ -401,6 +418,12 @@ kbd {
   outline: none;
 }
 
+.jsonita-page-close:hover kbd,
+.jsonita-page-close:focus-visible kbd {
+  color: color-mix(in srgb, var(--primary) 72%, var(--text));
+}
+
+.jsonita-page-close:active,
 .jsonita-settings-close:active {
   transform: translateY(1px);
 }
