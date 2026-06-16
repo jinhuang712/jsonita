@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CloseIcon } from '../components/icons';
 import { history as historyApi } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
@@ -95,16 +96,22 @@ export function HistoryModal() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="history-modal-title"
-      style={overlayStyle}
-      onMouseDown={() => setOpen(false)}
+      className="jsonita-page jsonita-history-page"
     >
-      <section style={modalStyle} onMouseDown={(event) => event.stopPropagation()}>
+      <section style={pageStyle}>
         <header style={headerStyle}>
           <div id="history-modal-title" style={titleStyle}>
             {title}
           </div>
-          <button type="button" onClick={() => setOpen(false)} style={iconButtonStyle} aria-label="Close history">
-            ×
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="jsonita-page-close"
+            aria-label={t('actions.close')}
+            title={t('actions.close')}
+          >
+            <kbd aria-hidden="true">Esc</kbd>
+            <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
           </button>
         </header>
 
@@ -248,27 +255,12 @@ function opMeta(opType: OpType): { label: string; color: string; bg: string } {
   }
 }
 
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 60,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: 'var(--bg-overlay)',
-};
-
-const modalStyle: React.CSSProperties = {
-  width: 620,
-  maxWidth: 'calc(100vw - 28px)',
-  height: 'min(620px, calc(100vh - 40px))',
+const pageStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
-  borderRadius: 'var(--radius-xl)',
-  border: '1px solid var(--glass-border)',
-  background: 'color-mix(in srgb, var(--bg-elevated) 94%, transparent)',
-  boxShadow: 'var(--shadow-lg)',
   color: 'var(--text)',
   fontFamily: 'var(--font-sans)',
 };
@@ -431,15 +423,6 @@ const footerStyle: React.CSSProperties = {
   borderTop: '1px solid var(--border)',
   background: 'var(--surface-quiet)',
   fontSize: 'var(--fs-xs)',
-};
-
-const iconButtonStyle: React.CSSProperties = {
-  border: 'none',
-  background: 'transparent',
-  color: 'var(--text-muted)',
-  fontSize: 'var(--fs-lg)',
-  cursor: 'pointer',
-  padding: '0 4px',
 };
 
 const clearButtonStyle: React.CSSProperties = {

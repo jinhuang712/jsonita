@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### feat · History 改为主壳全窗口页面
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | History 不再作为居中 overlay modal 挂在 App 顶层，而是和 Settings 一样在主 Jsonita 浮窗内替换编辑工作区；History / Settings 右上角关闭按钮都显式显示 `Esc` 键帽和关闭图标，用户可点击或按 `Esc` 返回编辑工作区。 |
+| 影响文档 | `src/App.tsx`、`src/shell/FloatingWindow.tsx`、`src/history/HistoryModal.tsx`、`src/settings/SettingsView.tsx`、`src/styles/global.css`、`src/locales/*/history.json`、`tests/design/nativeQuietGlass.test.mjs`、`design/02_interaction.md`、`design/04_components.md`、`spec/M00-frontend-execution.md`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈 History 当前仍是叠在主窗上的 modal，希望和 Settings 一样全窗口覆盖展示，并要求 Settings / History 都提供可点击的 Esc 退出按钮。 |
+
 ### feat · 非编辑态 Esc 关闭提示
 
 | 字段 | 内容 |

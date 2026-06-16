@@ -6,5 +6,8 @@
     "pinned": "Pin",
     "starred": "★"
   },
+  "actions": {
+    "close": "Close history"
+  },
   "empty": "No history yet · operated JSONs auto-saved"
 }

@@ -138,6 +138,7 @@ export function SettingsView() {
   return (
     <div
       aria-labelledby="settings-page-title"
+      className="jsonita-page jsonita-settings-page"
       style={{
         flex: 1,
         minHeight: 0,
@@ -178,11 +179,12 @@ export function SettingsView() {
           </div>
           <button
             type="button"
-            className="jsonita-settings-close"
+            className="jsonita-page-close"
             onClick={() => setOpen(false)}
             aria-label={t('actions.close')}
             title={t('actions.close')}
           >
+            <kbd aria-hidden="true">Esc</kbd>
             <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
           </button>
         </div>

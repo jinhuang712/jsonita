@@ -10,7 +10,7 @@ shadcn/ui 是源码不是依赖 ── 按需 `npx shadcn@latest add <component>
 
 基元用 shadcn （Button / Input / Select / Switch / Dialog / Tooltip / DropdownMenu / Tabs / ScrollArea）
 
-业务组件自写 （Editor / TreeView / TabBar / StatusBar / SettingsView 等；Toast / HistoryModal 为保留设计）
+业务组件自写 （Editor / TreeView / TabBar / StatusBar / SettingsView / HistoryModal 等；Toast 为保留设计）
 
 不引 antd / Mantine / Chakra ── bundle 太大且风格冲突
 
@@ -58,7 +58,7 @@ variants 用 cva ：每个组件至少有 `variant: default/outline/ghost/danger
 | `EditorSearchGutter` | editor/searchGutter.ts | 行号 gutter 内的低饱和搜索命中提示 |
 | `TreeView` | tree/TreeView.tsx | JSON 树 ── 自渲染递归节点，支持 path / hover 复制 |
 | `DiffView` | panes/DiffView.tsx | AI Fix 接受前的 diff 展示（左原右改） |
-| `HistoryModal` | history/HistoryModal.tsx | 历史列表 Modal：搜索、筛选、载入、Pin / Star / Clear |
+| `HistoryModal` | history/HistoryModal.tsx | 主壳内 History 页面：搜索、筛选、载入、Pin / Star / Clear |
 | `HistoryItem` | history/HistoryModal.tsx | 历史单行 UI：op chip、摘要、Pin / Star 操作 |
 | `SettingsView` | settings/SettingsView.tsx | 主壳内设置页（左侧 nav + 右侧 panel） |
 | `ShortcutInput` | settings/ShortcutInput.tsx | 录入快捷键 + 冲突检测 |
@@ -190,7 +190,7 @@ interface ToastOpts {
 
 ### 4.4 HistoryModal + HistoryItem
 
-`src/history/HistoryModal.tsx` 在 `App.tsx` 中常驻渲染，由 `historyModalOpen` 控制显隐。底部 StatusBar 的 History 按钮或 `⌘Y` 打开 Modal； `Esc`、再次 `⌘Y` 或点击遮罩关闭。Modal 支持列表、搜索、All / Pinned / Starred 筛选、点击条目载入编辑器、Pin / Star，以及 Clear 非 pinned/starred 条目。
+`src/history/HistoryModal.tsx` 由 `FloatingWindow` 在 `historyModalOpen=true` 时渲染为主壳内页面。右上角 History 图标、底部 StatusBar 的 History 按钮或 `⌘Y` 打开页面；`Esc`、再次 `⌘Y`、右上关闭按钮或载入条目都会返回 editor workspace。History 不再使用遮罩、不压暗编辑器、不在主卡片上再套一张居中卡片；它与 Settings 一样继承外层浮窗尺寸、圆角、玻璃、阴影和 resize handles。页面支持列表、搜索、All / Pinned / Starred 筛选、点击条目载入编辑器、Pin / Star，以及 Clear 非 pinned/starred 条目。
 
 ```
 interface HistoryItemProps {
@@ -211,11 +211,13 @@ op-type chip ：每行左侧显示 op_type 的低饱和色彩 chip（format/mini
 
 列表行 hover / focus 只显示弱 surface 背景和左侧细标，不使用整行强色高亮。filter、Pin、Star、Clear、搜索框和 footer 按钮统一走 `--control-*` token。
 
+右上关闭按钮使用共享 `jsonita-page-close` 样式，必须同时显示 `Esc` 键帽和关闭图标，避免用户只能依赖记忆或猜测快捷键。
+
 保留策略 ：Clear 只删除普通条目；pinned / starred 保留，与 SQLite `history_clear` 契约一致
 
 ### 4.6 SettingsView
 
-Settings 是主壳内页面状态，不是 overlay dialog。点击右上角齿轮、tray Settings 或 `⌘,` 后，主 Jsonita 卡片内部从 editor workspace 切换为 Settings workspace；外层圆角、阴影、玻璃背景和窗口尺寸保持同一张卡片。左侧 nav（W 150）是固定目录索引，右侧是单一连续滚动配置页，按 General / Shortcuts / AI / History / JSON Transform / About 从头到尾顺序渲染；点击目录滚动到对应 section，右侧滚动时目录高亮跟随。目录点击触发的 smooth scroll 期间必须锁定被点击的目标项，不允许高亮依次闪到滚动途中经过的 section；滚动到目标附近后再恢复普通 scrollspy。底部 footer（Done / Reset）固定，`Esc`、Done 和 Settings 页内 `⌘W` 都返回 editor workspace。
+Settings 是主壳内页面状态，不是 overlay dialog。点击右上角齿轮、tray Settings 或 `⌘,` 后，主 Jsonita 卡片内部从 editor workspace 切换为 Settings workspace；外层圆角、阴影、玻璃背景和窗口尺寸保持同一张卡片。左侧 nav（W 150）是固定目录索引，右侧是单一连续滚动配置页，按 General / Shortcuts / AI / History / JSON Transform / About 从头到尾顺序渲染；点击目录滚动到对应 section，右侧滚动时目录高亮跟随。目录点击触发的 smooth scroll 期间必须锁定被点击的目标项，不允许高亮依次闪到滚动途中经过的 section；滚动到目标附近后再恢复普通 scrollspy。右上关闭按钮使用共享 `jsonita-page-close` 样式，必须同时显示 `Esc` 键帽和关闭图标。底部 footer（Done / Reset）固定，`Esc`、Done 和 Settings 页内 `⌘W` 都返回 editor workspace。
 
 规则：所有改动 即时生效 （不需要 Done 按钮提交，每个 Switch / Select 变化立刻 `settings_set` ）。Done 仅关闭 Settings 页面。Reset all 直接恢复默认。
 

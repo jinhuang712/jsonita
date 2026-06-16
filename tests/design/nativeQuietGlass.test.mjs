@@ -38,6 +38,28 @@ test('history and settings use shared quiet surface tokens for controls', () => 
   assert.match(settings, /var\(--control-bg-active\)/);
 });
 
+test('history and settings are full-window pages with explicit Esc close actions', () => {
+  const app = read('src/App.tsx');
+  const shell = read('src/shell/FloatingWindow.tsx');
+  const history = read('src/history/HistoryModal.tsx');
+  const settings = read('src/settings/SettingsView.tsx');
+  const styles = read('src/styles/global.css');
+
+  assert.doesNotMatch(app, /<HistoryModal \/>/);
+  assert.match(shell, /const historyOpen = useUiStore\(\(s\) => s\.historyModalOpen\)/);
+  assert.match(shell, /historyOpen \? \(\s*<HistoryModal \/>/);
+  assert.match(history, /className="jsonita-page jsonita-history-page"/);
+  assert.match(settings, /className="jsonita-page jsonita-settings-page"/);
+  assert.match(history, /className="jsonita-page-close"/);
+  assert.match(settings, /className="jsonita-page-close"/);
+  assert.match(history, /<kbd[^>]*>Esc<\/kbd>/);
+  assert.match(settings, /<kbd[^>]*>Esc<\/kbd>/);
+  assert.doesNotMatch(history, /style=\{overlayStyle\}/);
+  assert.doesNotMatch(history, /const overlayStyle/);
+  assert.match(styles, /\.jsonita-page\b/);
+  assert.match(styles, /\.jsonita-page-close\b/);
+});
+
 test('native polish separates UI, code, and shortcut typography', () => {
   const tokens = read('src/styles/tokens.css');
   const statusBar = read('src/shell/StatusBar.tsx');

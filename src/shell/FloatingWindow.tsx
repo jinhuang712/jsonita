@@ -5,6 +5,7 @@ import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
 import { on } from '../ipc/events';
 import { AiFixPane } from '../panes/AiFixPane';
+import { HistoryModal } from '../history/HistoryModal';
 import { SettingsView } from '../settings/SettingsView';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
@@ -29,6 +30,7 @@ export function FloatingWindow() {
   const setContent = useEditorStore((s) => s.setContent);
   const editorError = useEditorStore((s) => s.error);
   const activePane = useUiStore((s) => s.activePane);
+  const historyOpen = useUiStore((s) => s.historyModalOpen);
   const settingsOpen = useUiStore((s) => s.settingsViewOpen);
   const escCloseHintVisible = useUiStore((s) => s.escCloseHintVisible);
   const escCloseHintRenderKey = useUiStore((s) => s.escCloseHintRenderKey);
@@ -101,6 +103,8 @@ export function FloatingWindow() {
     >
       {settingsOpen ? (
         <SettingsView />
+      ) : historyOpen ? (
+        <HistoryModal />
       ) : (
         <>
           <TabBar />

@@ -3,7 +3,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { useLocaleSync } from './i18n/useLocaleSync';
-import { HistoryModal } from './history/HistoryModal';
 import { settings as settingsApi } from './ipc/commands';
 import { ShortcutPermissionModal } from './permissions/ShortcutPermissionModal';
 import { FloatingWindow } from './shell/FloatingWindow';
@@ -72,7 +71,6 @@ export function App() {
   return (
     <>
       <FloatingWindow />
-      <HistoryModal />
       {modalOpen && <ShortcutPermissionModal onClose={() => setModalOpen(false)} />}
     </>
   );
