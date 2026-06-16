@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### polish · 收敛高保真原型默认视图
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 重做 `design/prototype/index.html` 默认入口和视觉层级：默认回到 Main Window / Format / valid JSON / dual pane，主画布居中展示真实尺寸 UI；左侧状态矩阵降级为低权重 Branch Inspector，非当前页高级分支默认折叠；原型控件改用 SVG 图标和当前 app Quiet Glass token，避免落成 debug 面板式画廊。 |
+| 影响文档 | `design/prototype/index.html`、`tests/design/prototypeReference.test.mjs`、`CHANGELIST.md`。 |
+| 关联 | 用户截图反馈上一版原型“太烂”，指出需要真实高保真 UI reference，而不是粗糙状态控制台。 |
+
 ### fix · History 全窗口页底栏贴底
 
 | 字段 | 内容 |
