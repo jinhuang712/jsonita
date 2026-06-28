@@ -12,6 +12,7 @@ import { nodeCopyText, pathToString } from './jsonpath';
 interface Props {
   data: unknown;
   initialExpandDepth?: number;
+  softWrap?: boolean;
 }
 
 type PathSegment = string | number;
@@ -254,7 +255,7 @@ function TreeNode({
   );
 }
 
-export function TreeView({ data, initialExpandDepth = 2 }: Props) {
+export function TreeView({ data, initialExpandDepth = 2, softWrap }: Props) {
   const defaultExpanded = useMemo(
     () => buildDefaultExpanded(data, initialExpandDepth),
     [data, initialExpandDepth],
@@ -317,7 +318,10 @@ export function TreeView({ data, initialExpandDepth = 2 }: Props) {
 
   return (
     <div
-      className="jsonita-tree-container"
+      className={[
+        'jsonita-tree-container',
+        softWrap !== false ? 'jsonita-tree-wrap' : '',
+      ].filter(Boolean).join(' ')}
       tabIndex={0}
       onKeyDownCapture={(event) => {
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {

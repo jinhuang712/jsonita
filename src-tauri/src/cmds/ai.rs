@@ -59,7 +59,11 @@ pub async fn ai_test_connection(
         "stream": false,
     });
 
+    for var in &["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "ALL_PROXY"] {
+        std::env::remove_var(var);
+    }
     let client = reqwest::Client::builder()
+        .no_proxy()
         .timeout(Duration::from_secs(15))
         .build()
         .map_err(|e| JsonitaError::Http {

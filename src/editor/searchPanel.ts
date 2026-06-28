@@ -6,13 +6,13 @@ import {
   getSearchQuery,
   replaceAll,
   replaceNext,
-  selectMatches,
   setSearchQuery,
 } from '@codemirror/search';
 import { runScopeHandlers, type EditorView, type Panel, type ViewUpdate } from '@codemirror/view';
 import i18n from '../i18n';
 
 const MATCH_COUNT_LIMIT = 1000;
+const nonEmptyMatch = (match: string) => match.length > 0;
 
 export function createJsonitaSearchPanel(view: EditorView): Panel {
   return new JsonitaSearchPanel(view);
@@ -26,10 +26,16 @@ class JsonitaSearchPanel implements Panel {
   private readonly searchField: HTMLInputElement;
   private readonly replaceField: HTMLInputElement;
   private readonly countLabel: HTMLSpanElement;
+  private readonly navActions: HTMLSpanElement;
+  private readonly previousButton: HTMLButtonElement;
+  private readonly nextButton: HTMLButtonElement;
   private readonly caseButton: HTMLButtonElement;
   private readonly regexpButton: HTMLButtonElement;
   private readonly wordButton: HTMLButtonElement;
   private readonly replaceRegexpButton: HTMLButtonElement;
+  private readonly replaceNextButton: HTMLButtonElement;
+  private replaceRegexp = true;
+  private readonly replaceAllButton: HTMLButtonElement;
 
   constructor(private readonly view: EditorView) {
     this.query = getSearchQuery(view.state);
@@ -45,14 +51,36 @@ class JsonitaSearchPanel implements Panel {
     this.replaceField.addEventListener('input', () => this.commit());
 
     this.countLabel = elt('span', 'jsonita-search-count');
+    this.previousButton = iconButton('↑', t('actions.previous'), () => findPrevious(this.view));
+    this.nextButton = iconButton('↓', t('actions.next'), () => findNext(this.view));
+    this.navActions = elt('span', 'jsonita-search-nav-actions', [
+      this.previousButton,
+      this.nextButton,
+    ]);
 
     this.caseButton = toggleButton('Aa', t('actions.matchCase'), () => this.toggle('caseSensitive'));
     this.regexpButton = toggleButton('.*', t('actions.regexp'), () => this.toggle('regexp'));
     this.wordButton = toggleButton(t('actions.wordChip'), t('actions.wholeWord'), () =>
       this.toggle('wholeWord'),
     );
-    this.replaceRegexpButton = toggleButton('.*', t('actions.replaceRegexp'), () =>
-      this.toggle('regexp'),
+    this.replaceRegexpButton = iconButton('.*', t('actions.replaceRegexp'), () => {
+      this.replaceRegexp = !this.replaceRegexp;
+      this.syncDom();
+    }, 'jsonita-search-replace-regexp');
+    this.replaceRegexpButton.setAttribute('aria-pressed', 'true');
+    this.replaceNextButton = iconButton(
+      t('actions.replace'),
+      t('actions.replaceNext'),
+      () => this.replaceNext(),
+      'jsonita-search-replace-action jsonita-search-replace-current',
+      'replace-next',
+    );
+    this.replaceAllButton = iconButton(
+      t('actions.all'),
+      t('actions.replaceAll'),
+      () => this.replaceAll(),
+      'jsonita-search-replace-action jsonita-search-replace-all',
+      'replace-all',
     );
 
     this.dom = elt('div', 'jsonita-search-panel');
@@ -61,33 +89,26 @@ class JsonitaSearchPanel implements Panel {
       elt('div', 'jsonita-search-row', [
         elt('span', 'jsonita-search-label', [t('label.find')]),
         this.searchField,
-        this.countLabel,
-        iconButton('↑', t('actions.previous'), () => findPrevious(this.view)),
-        iconButton('↓', t('actions.next'), () => findNext(this.view)),
-        this.caseButton,
-        this.regexpButton,
-        this.wordButton,
-        iconButton(t('actions.all'), t('actions.selectAll'), () => selectMatches(this.view)),
-        iconButton('×', t('actions.close'), () => closeSearchPanel(this.view), 'jsonita-search-close'),
       ]),
       elt('div', 'jsonita-search-row jsonita-search-replace-row', [
         elt('span', 'jsonita-search-label', [t('label.replace')]),
         this.replaceField,
-        this.replaceRegexpButton,
-        iconButton(
-          t('actions.replace'),
-          t('actions.replaceNext'),
-          () => replaceNext(this.view),
-          'jsonita-search-replace-action jsonita-search-replace-current',
-          'replace-next',
-        ),
-        iconButton(
-          t('actions.all'),
-          t('actions.replaceAll'),
-          () => replaceAll(this.view),
-          'jsonita-search-replace-action jsonita-search-replace-all',
-          'replace-all',
-        ),
+      ]),
+      elt('div', 'jsonita-search-row jsonita-search-toolbar-row', [
+        this.countLabel,
+        this.navActions,
+        elt('span', 'jsonita-search-find-options', [
+          this.caseButton,
+          this.regexpButton,
+          this.wordButton,
+        ]),
+        elt('span', 'jsonita-search-toolbar-spacer'),
+        elt('span', 'jsonita-search-replace-actions', [
+          this.replaceNextButton,
+          this.replaceAllButton,
+          this.replaceRegexpButton,
+          iconButton('×', t('actions.close'), () => closeSearchPanel(this.view), 'jsonita-search-close'),
+        ]),
       ]),
     );
 
@@ -120,6 +141,7 @@ class JsonitaSearchPanel implements Panel {
       regexp: this.query.regexp,
       wholeWord: this.query.wholeWord,
       literal: this.query.literal,
+      test: nonEmptyMatch,
     });
     if (!query.eq(this.query)) {
       this.query = query;
@@ -136,6 +158,7 @@ class JsonitaSearchPanel implements Panel {
       regexp: key === 'regexp' ? !this.query.regexp : this.query.regexp,
       wholeWord: key === 'wholeWord' ? !this.query.wholeWord : this.query.wholeWord,
       literal: this.query.literal,
+      test: nonEmptyMatch,
     });
     this.query = query;
     this.view.dispatch({ effects: setSearchQuery.of(query) });
@@ -156,35 +179,83 @@ class JsonitaSearchPanel implements Panel {
 
     if (event.key === 'Enter' && event.target === this.replaceField) {
       event.preventDefault();
-      replaceNext(this.view);
+      this.replaceNext();
       return;
     }
+  }
+
+  private replaceNext() {
+    this.runReplaceCommand(() => replaceNext(this.view));
+  }
+
+  private replaceAll() {
+    this.runReplaceCommand(() => replaceAll(this.view));
+  }
+
+  private runReplaceCommand(command: () => boolean) {
+    if (this.replaceRegexp) {
+      command();
+      return;
+    }
+
+    const original = this.query;
+    const literalQuery = new SearchQuery({
+      search: original.search,
+      replace: literalReplacementText(this.replaceField.value),
+      caseSensitive: original.caseSensitive,
+      regexp: original.regexp,
+      wholeWord: original.wholeWord,
+      literal: original.literal,
+      test: nonEmptyMatch,
+    });
+
+    this.view.dispatch({ effects: setSearchQuery.of(literalQuery) });
+    command();
+    this.query = original;
+    this.view.dispatch({ effects: setSearchQuery.of(original) });
+    this.syncDom();
   }
 
   private syncDom() {
     this.caseButton.classList.toggle('jsonita-search-toggle-active', this.query.caseSensitive);
     this.regexpButton.classList.toggle('jsonita-search-toggle-active', this.query.regexp);
-    this.replaceRegexpButton.classList.toggle('jsonita-search-toggle-active', this.query.regexp);
+    this.replaceRegexpButton.classList.toggle('jsonita-search-toggle-active', this.replaceRegexp);
     this.wordButton.classList.toggle('jsonita-search-toggle-active', this.query.wholeWord);
     this.caseButton.setAttribute('aria-pressed', String(this.query.caseSensitive));
     this.regexpButton.setAttribute('aria-pressed', String(this.query.regexp));
-    this.replaceRegexpButton.setAttribute('aria-pressed', String(this.query.regexp));
+    this.replaceRegexpButton.setAttribute('aria-pressed', String(this.replaceRegexp));
     this.wordButton.setAttribute('aria-pressed', String(this.query.wholeWord));
-    this.countLabel.textContent = getMatchCountLabel(this.view, this.query);
+
+    const status = getMatchStatus(this.view, this.query);
+    this.countLabel.textContent = status.label;
+    this.countLabel.classList.toggle('jsonita-search-count-active', status.hasMatches);
+    this.countLabel.classList.toggle('jsonita-search-count-error', status.isError);
+    this.navActions.hidden = !status.hasMatches;
+    this.replaceNextButton.disabled = !status.hasMatches;
+    this.replaceAllButton.disabled = !status.hasMatches;
   }
 }
 
-function getMatchCountLabel(view: EditorView, query: SearchQuery): string {
-  if (!query.valid) return t('status.noQuery');
+function getMatchStatus(
+  view: EditorView,
+  query: SearchQuery,
+): { label: string; hasMatches: boolean; isError: boolean } {
+  if (!query.search) return { label: t('status.noQuery'), hasMatches: false, isError: false };
+  if (!query.valid) return { label: t('status.invalidRegexp'), hasMatches: false, isError: true };
+
   const matches: Array<{ from: number; to: number }> = [];
   const cursor = query.getCursor(view.state, 0, view.state.doc.length);
   let next = cursor.next();
   while (!next.done) {
-    matches.push(next.value);
-    if (matches.length > MATCH_COUNT_LIMIT) return `${MATCH_COUNT_LIMIT}+`;
+    if (next.value.from !== next.value.to) {
+      matches.push(next.value);
+      if (matches.length > MATCH_COUNT_LIMIT) {
+        return { label: `${MATCH_COUNT_LIMIT}+`, hasMatches: true, isError: false };
+      }
+    }
     next = cursor.next();
   }
-  if (matches.length === 0) return t('status.noMatches');
+  if (matches.length === 0) return { label: t('status.noMatches'), hasMatches: false, isError: false };
 
   const selectedIndex = matches.findIndex((match) =>
     view.state.selection.ranges.some(
@@ -192,7 +263,7 @@ function getMatchCountLabel(view: EditorView, query: SearchQuery): string {
     ),
   );
   const current = selectedIndex >= 0 ? selectedIndex + 1 : 1;
-  return `${current} / ${matches.length}`;
+  return { label: `${current} / ${matches.length}`, hasMatches: true, isError: false };
 }
 
 function t(key: string): string {
@@ -206,6 +277,10 @@ function input(placeholder: string, className: string): HTMLInputElement {
   node.autocomplete = 'off';
   node.spellcheck = false;
   return node;
+}
+
+function literalReplacementText(value: string): string {
+  return value.replace(/[\\$]/g, (match) => `${match}${match}`);
 }
 
 function iconButton(

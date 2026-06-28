@@ -31,7 +31,6 @@
       "wordChip": "word",
       "wholeWord": "整词匹配",
       "all": "全部",
-      "selectAll": "选择全部匹配",
       "replace": "替换",
       "replaceNext": "替换当前匹配",
       "replaceAll": "替换全部匹配",
@@ -39,7 +38,8 @@
     },
     "status": {
       "noQuery": "无查询",
-      "noMatches": "无匹配"
+      "noMatches": "无匹配",
+      "invalidRegexp": "正则无效"
     }
   }
 }

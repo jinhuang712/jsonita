@@ -43,10 +43,21 @@ pub async fn window_resize_for_content(
 ) -> Result<(u32, u32), JsonitaError> {
     let s = settings.get();
     let cur = window_store.get();
+    let real_size = app.get_webview_window(window::MAIN_LABEL).and_then(|win| {
+        let scale = win.scale_factor().ok().filter(|s| *s > 0.0).unwrap_or(1.0);
+        win.outer_size().ok().map(|size| {
+            (
+                (size.width as f64 / scale).round() as u32,
+                (size.height as f64 / scale).round() as u32,
+            )
+        })
+    });
+    let current_width = real_size.map(|s| s.0).unwrap_or(cur.width);
+    let current_height = real_size.map(|s| s.1).unwrap_or(cur.height);
 
     // 用户手动拖边后进入 user-sized 状态：自动缩放暂停，直到 Reset Size 清掉 window.json。
     if should_skip_auto_resize(s.smart_width, cur.user_dragged) {
-        return Ok((cur.width, cur.height));
+        return Ok((current_width, current_height));
     }
 
     // ideal size = content-derived width/height, clamped to sane floating-panel bounds.
@@ -82,30 +93,52 @@ pub async fn window_resize_for_content(
         .unwrap_or(1080);
     let max_w_cap = if s.single_pane_mode { 1200 } else { 1400 };
     let max_w_ratio = if s.single_pane_mode { 0.62 } else { 0.7 };
-    let min_w = 860;
-    let min_h = 560;
+    let min_w = 680;
+    let min_h = 380;
     let max_w = std::cmp::min(max_w_cap, (screen_w as f64 * max_w_ratio) as u32);
     let max_h = std::cmp::min(900, (screen_h as f64 * 0.72) as u32);
     let ideal_w = needed_w.clamp(min_w, max_w);
-    let ideal_h = needed_h.clamp(min_h, max_h);
+    let mut ideal_h = needed_h.clamp(min_h, max_h);
 
-    let new_w = settle_auto_size(cur.width, ideal_w, min_w, max_w);
-    let new_h = settle_auto_size(cur.height, ideal_h, min_h, max_h);
-
-    if metrics.non_whitespace_chars <= 2 && new_w <= cur.width && new_h <= cur.height {
-        return Ok((cur.width, cur.height));
+    // 黄金比例约束：宽高比不超过 1.9（太宽扁 → 拉高；太窄长不强制拉宽，
+    // 因为窄高通常是内容所致，拉宽只是加白边）。
+    let golden_ratio = 1.618;
+    let max_ratio = 1.9;
+    if ideal_w as f64 / ideal_h.max(1) as f64 > max_ratio {
+        ideal_h = ideal_h
+            .max((ideal_w as f64 / golden_ratio).round() as u32)
+            .clamp(min_h, max_h);
     }
 
-    if new_w == cur.width && new_h == cur.height {
-        return Ok((cur.width, cur.height));
+    let new_w = settle_auto_size(current_width, ideal_w, min_w, max_w);
+    let new_h = settle_auto_size(current_height, ideal_h, min_h, max_h);
+
+    if metrics.non_whitespace_chars <= 2 && new_w <= current_width && new_h <= current_height {
+        return Ok((current_width, current_height));
     }
 
-    // 自身 resize ── 不让 Resized handler 错标 userDragged
+    if new_w == current_width && new_h == current_height {
+        return Ok((current_width, current_height));
+    }
+
+    // 自身 resize ── 不让 Resized handler 错标 userDragged；同时保持窗口中心点不漂移。
     window_store.begin_self_resize();
     if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
+        let scale = win.scale_factor().ok().filter(|s| *s > 0.0).unwrap_or(1.0);
+        let position = win.outer_position().ok();
+        let size = win.outer_size().ok();
         let _ = win.set_size(tauri::LogicalSize::new(new_w as f64, new_h as f64));
+        if let (Some(pos), Some(size)) = (position, size) {
+            let left = pos.x as f64 / scale + (size.width as f64 / scale - new_w as f64) / 2.0;
+            let top = pos.y as f64 / scale + (size.height as f64 / scale - new_h as f64) / 2.0;
+            let _ = win.set_position(tauri::LogicalPosition::new(left, top));
+        }
     }
-    window_store.end_self_resize();
+    let resize_guard = window_store.inner().clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        resize_guard.end_self_resize();
+    });
 
     // 保存（不 set userDragged）
     window_store.set(crate::store::WindowState {
@@ -129,14 +162,30 @@ pub async fn window_resize_for_content(
 }
 
 #[tauri::command]
-pub async fn window_reset_size(window_store: State<'_, WindowStore>) -> Result<(), JsonitaError> {
-    window_store.reset()
+pub async fn window_reset_size(
+    app: tauri::AppHandle,
+    window_store: State<'_, WindowStore>,
+) -> Result<(), JsonitaError> {
+    window_store.reset()?;
+    let st = window_store.get();
+    window_store.begin_self_resize();
+    if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
+        let _ = win.set_size(tauri::LogicalSize::new(st.width as f64, st.height as f64));
+    }
+    let resize_guard = window_store.inner().clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        resize_guard.end_self_resize();
+    });
+    Ok(())
 }
 
 fn settle_auto_size(current: u32, ideal: u32, min: u32, max: u32) -> u32 {
     let ideal = ideal.clamp(min, max);
-    let shrink_threshold = 120;
-    let grow_threshold = 72;
+    // 阈值按窗口尺寸缩放，避免小窗口吞掉合理变化、大窗口频繁跳动
+    let width_pct = (current as f64 / 600.0).clamp(0.8, 1.5);
+    let shrink_threshold = (60.0 * width_pct).round() as u32;
+    let grow_threshold = (40.0 * width_pct).round() as u32;
 
     if current < min {
         return min;
@@ -170,23 +219,27 @@ mod tests {
 
     #[test]
     fn restores_size_below_auto_floor() {
-        assert_eq!(settle_auto_size(520, 860, 860, 1400), 860);
+        assert_eq!(settle_auto_size(400, 600, 600, 1400), 600);
     }
 
     #[test]
     fn ignores_small_growth_inside_comfort_band() {
-        assert_eq!(settle_auto_size(860, 900, 860, 1400), 860);
+        // 600 → grow=40, ideal=620 ≤ 640 → 不增长
+        assert_eq!(settle_auto_size(600, 620, 600, 1400), 600);
     }
 
     #[test]
     fn shrinks_only_after_large_gap() {
-        assert_eq!(settle_auto_size(920, 860, 860, 1400), 920);
-        assert_eq!(settle_auto_size(1040, 860, 860, 1400), 860);
+        // 600 → shrink=60, current=650 ≤ 660 → 不收缩
+        assert_eq!(settle_auto_size(650, 600, 600, 1400), 650);
+        // current=680 > 660 → 收缩到 ideal(600)
+        assert_eq!(settle_auto_size(680, 600, 600, 1400), 600);
     }
 
     #[test]
     fn grows_when_content_exceeds_comfort_band() {
-        assert_eq!(settle_auto_size(860, 960, 860, 1400), 960);
+        // 600 → grow=40, ideal=660 > 640 → 增长
+        assert_eq!(settle_auto_size(600, 660, 600, 1400), 660);
     }
 }
 

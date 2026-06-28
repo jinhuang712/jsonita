@@ -642,6 +642,10 @@ kbd {
   min-width: max-content;
 }
 
+.jsonita-tree-wrap .jsonita-tree-item {
+  min-width: 0;
+}
+
 .jsonita-tree-node {
   position: relative;
   display: flex;
@@ -652,6 +656,28 @@ kbd {
   cursor: default;
   outline: none;
   white-space: pre;
+}
+
+.jsonita-tree-wrap .jsonita-tree-node {
+  align-items: flex-start;
+  white-space: unset;
+}
+
+/* 长值元素可换行（key / string / number / bool / null） */
+.jsonita-tree-wrap .jsonita-tree-string,
+.jsonita-tree-wrap .jsonita-tree-number,
+.jsonita-tree-wrap .jsonita-tree-bool,
+.jsonita-tree-wrap .jsonita-tree-null,
+.jsonita-tree-wrap .jsonita-tree-other {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 多行节点时 copy 图标置顶 */
+.jsonita-tree-wrap .tree-copy-icon {
+  top: 0.2em;
+  transform: none;
 }
 
 .jsonita-tree-node:hover,
