@@ -26,6 +26,14 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     fontFamily: 'var(--font-code)',
     lineHeight: 'var(--lh-code)',
   },
+  // 显式补换行样式：EditorView.lineWrapping 在 .cm-content 上加 cm-lineWrapping class，
+  // CodeMirror 内部 CSS 会配 whiteSpace:"break-spaces" + overflowWrap:"anywhere"，
+  // 这里以更高 specificity 兜底。
+  '.cm-content.cm-lineWrapping': {
+    whiteSpace: 'break-spaces',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+  },
   '.cm-line': {
     lineHeight: 'var(--lh-code)',
   },
@@ -76,7 +84,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   '.jsonita-search-panel': {
     display: 'grid',
     gap: '4px',
-    padding: '6px 10px',
+    padding: '6px 10px 0',
     borderBottom: '1px solid var(--border)',
     backgroundColor: 'color-mix(in srgb, var(--bg-code) 82%, var(--surface-raised))',
     backdropFilter: 'var(--glass-blur)',
@@ -93,6 +101,13 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   },
   '.jsonita-search-replace-row': {
     paddingLeft: 0,
+  },
+  '.jsonita-search-toolbar-row': {
+    minHeight: '38px',
+    margin: '0 -10px',
+    padding: '6px 10px',
+    borderTop: '1px solid color-mix(in srgb, var(--border) 72%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--surface-raised) 15%, transparent)',
   },
   '.jsonita-search-label': {
     flex: '0 0 54px',
@@ -125,8 +140,29 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     color: 'var(--text-faint)',
     fontFamily: 'var(--font-mono-ui)',
     fontSize: 'var(--fs-xs)',
-    textAlign: 'center',
+    textAlign: 'left',
     whiteSpace: 'nowrap',
+  },
+  '.jsonita-search-count-active': {
+    color: 'var(--text-muted)',
+  },
+  '.jsonita-search-count-error': {
+    color: 'var(--danger)',
+  },
+  '.jsonita-search-nav-actions, .jsonita-search-find-options, .jsonita-search-replace-actions': {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+  },
+  '.jsonita-search-nav-actions[hidden]': {
+    display: 'none',
+  },
+  '.jsonita-search-toolbar-spacer': {
+    flex: '1 1 auto',
+    minWidth: '10px',
+  },
+  '.jsonita-search-replace-actions': {
+    marginLeft: 'auto',
   },
   '.jsonita-search-button': {
     height: '26px',
@@ -148,12 +184,22 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     boxShadow: 'var(--shadow-focus)',
     outline: 'none',
   },
+  '.jsonita-search-button:disabled': {
+    opacity: 0.42,
+    cursor: 'default',
+  },
+  '.jsonita-search-button:disabled:hover': {
+    backgroundColor: 'transparent',
+    color: 'var(--text-muted)',
+  },
   '.jsonita-search-toggle': {
-    minWidth: '34px',
+    minWidth: 'auto',
+    padding: '0 7px',
     fontFamily: 'var(--font-mono-ui)',
     fontSize: 'var(--fs-xs)',
   },
   '.jsonita-search-toggle-active': {
+    minWidth: '34px',
     borderColor: 'var(--primary-edge)',
     backgroundColor: 'var(--control-bg-active)',
     color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
@@ -170,11 +216,22 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     backgroundColor: 'var(--control-bg-hover)',
     color: 'color-mix(in srgb, var(--text) 90%, var(--primary))',
   },
+  '.jsonita-search-replace-action:disabled:hover': {
+    borderColor: 'var(--control-border)',
+    backgroundColor: 'var(--control-bg)',
+    color: 'var(--text)',
+  },
   '.jsonita-search-replace-current': {
     minWidth: '84px',
   },
   '.jsonita-search-replace-all': {
     minWidth: '64px',
+  },
+  '.jsonita-search-replace-regexp': {
+    minWidth: '34px',
+    marginRight: '16px',
+    fontFamily: 'var(--font-mono-ui)',
+    fontSize: 'var(--fs-xs)',
   },
   '.jsonita-search-close': {
     minWidth: '27px',

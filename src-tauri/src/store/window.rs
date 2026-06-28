@@ -10,10 +10,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::JsonitaError;
 
-const MIN_PERSISTED_WIDTH: u32 = 440;
-const MIN_PERSISTED_HEIGHT: u32 = 340;
-const MIN_AUTO_WIDTH: u32 = 860;
-const MIN_AUTO_HEIGHT: u32 = 560;
+const MIN_PERSISTED_WIDTH: u32 = 680;
+const MIN_PERSISTED_HEIGHT: u32 = 380;
+const MIN_AUTO_WIDTH: u32 = 680;
+const MIN_AUTO_HEIGHT: u32 = 380;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,8 +26,8 @@ pub struct WindowState {
 impl Default for WindowState {
     fn default() -> Self {
         WindowState {
-            width: 860,
-            height: 560,
+            width: 680,
+            height: 380,
             user_dragged: false,
         }
     }
@@ -131,8 +131,8 @@ mod tests {
             user_dragged: false,
         });
 
-        assert_eq!(state.width, 860);
-        assert_eq!(state.height, 560);
+        assert_eq!(state.width, 680);
+        assert_eq!(state.height, 380);
         assert!(!state.user_dragged);
     }
 
@@ -144,8 +144,8 @@ mod tests {
             user_dragged: true,
         });
 
-        assert_eq!(state.width, 440);
-        assert_eq!(state.height, 340);
+        assert_eq!(state.width, 680);
+        assert_eq!(state.height, 380);
         assert!(state.user_dragged);
     }
 }

@@ -31,7 +31,6 @@
       "wordChip": "word",
       "wholeWord": "Whole word",
       "all": "All",
-      "selectAll": "Select all matches",
       "replace": "Replace",
       "replaceNext": "Replace current match",
       "replaceAll": "Replace all matches",
@@ -39,7 +38,8 @@
     },
     "status": {
       "noQuery": "No query",
-      "noMatches": "No matches"
+      "noMatches": "No matches",
+      "invalidRegexp": "Invalid regexp"
     }
   }
 }

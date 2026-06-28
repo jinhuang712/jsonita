@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### polish · 搜索面板、窗口缩放与本地部署
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 重排搜索面板为 Find / Replace / 底部工具栏三段式布局，移除 Select All，修复空查询误报 invalid regexp、replace regexp toggle 联动、零宽正则计数等问题；补齐手动 resize handles、窗口自动缩放阈值、最小窗口尺寸、居中偏上呼出和 auto-resize 中心锚点；新增 `pnpm deploy:local:macos` 本地重部署脚本；AI Fix DeepSeek 请求绕过本地代理环境变量，避免 tunnel refused。 |
+| 影响文档 | `package.json`、`scripts/deploy-local-macos-app.sh`、`src/editor/searchPanel.ts`、`src/editor/theme.ts`、`src/shell/*`、`src/hooks/useSmartWidth.ts`、`src/tree/TreeView.tsx`、`src/styles/global.css`、`src-tauri/src/*`、`src-tauri/tauri.conf.json`、`src/locales/*/panes.json`、`CHANGELIST.md`。 |
+| 关联 | 用户围绕搜索面板三行布局、窗口手动/自动缩放、首次打开尺寸、顶部栏最小宽度、Tree soft wrap 和本地快速部署进行连续截图反馈。 |
+
 ### fix · AI Fix 状态栏与搜索正则默认值
 
 | 字段 | 内容 |

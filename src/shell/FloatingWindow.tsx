@@ -128,7 +128,7 @@ export function FloatingWindow() {
               {singlePaneMode && activePane === 'ai-fix' ? (
                 <AiFixPane />
               ) : showTreeInSinglePane ? (
-                <TreePanel state={treeState} />
+                <TreePanel state={treeState} softWrap={editorSoftWrap} />
               ) : (
                 <EditorFrame>
                   <Editor
@@ -146,7 +146,7 @@ export function FloatingWindow() {
                 {activePane === 'ai-fix' ? (
                   <AiFixPane />
                 ) : activePane === 'tree' ? (
-                  <TreePanel state={treeState} />
+                  <TreePanel state={treeState} softWrap={editorSoftWrap} />
                 ) : (
                   <EditorFrame>
                     <Editor
@@ -205,9 +205,9 @@ type TreePanelState =
   | { kind: 'empty' }
   | { kind: 'invalid' };
 
-function TreePanel({ state }: { state: TreePanelState }) {
+function TreePanel({ state, softWrap }: { state: TreePanelState; softWrap?: boolean }) {
   if (state.kind === 'valid') {
-    return <TreeView data={state.data} />;
+    return <TreeView data={state.data} softWrap={softWrap} />;
   }
 
   return (

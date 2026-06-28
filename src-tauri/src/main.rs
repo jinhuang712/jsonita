@@ -103,6 +103,18 @@ fn main() {
 
             menubar::build(app.handle())?;
             window::setup(app.handle())?;
+            if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
+                let window_store = app.state::<store::WindowStore>();
+                let st = window_store.get();
+                window_store.begin_self_resize();
+                let _ = win.set_size(tauri::LogicalSize::new(st.width as f64, st.height as f64));
+                let _ = win.center();
+                let resize_guard = window_store.inner().clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                    resize_guard.end_self_resize();
+                });
+            }
 
             // tray:toggle event → 浮窗 toggle（M0-N2 emit · M0-N3 接）
             let toggle_app = app.handle().clone();

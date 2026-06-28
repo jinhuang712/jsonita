@@ -127,7 +127,15 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         stream: false,
     };
 
+    // 绕过系统代理：macOS open 命令启动 app 会继承 shell 环境中的
+    // http_proxy/https_proxy/HTTP_PROXY/HTTPS_PROXY，导致 reqwest 走本地代理，
+    // 但 app 进程内代理端口不可达 → Connection refused。
+    // no_proxy() + env var 双重保险。
+    for var in &["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "ALL_PROXY"] {
+        std::env::remove_var(var);
+    }
     let client = reqwest::Client::builder()
+        .no_proxy()
         .timeout(Duration::from_secs(TIMEOUT_SEC))
         .build()
         .map_err(|e| JsonitaError::Http {
