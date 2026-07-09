@@ -467,6 +467,73 @@ kbd {
   color: var(--text-faint);
 }
 
+.jsonita-settings-section {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: 22px 24px 18px;
+  margin-bottom: 14px;
+  scroll-margin-top: 12px;
+}
+.jsonita-settings-section + .jsonita-settings-section {
+  margin-top: 14px;
+}
+.jsonita-settings-section-title {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.jsonita-settings-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 8px;
+  font-size: var(--fs-md);
+  text-align: left;
+  background: transparent;
+  color: var(--text-muted);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 450;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.jsonita-settings-nav-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  opacity: 0.55;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.jsonita-settings-nav-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.jsonita-settings-nav-btn:hover {
+  background: var(--control-bg-hover);
+  color: var(--text);
+}
+.jsonita-settings-nav-btn:hover .jsonita-settings-nav-icon {
+  opacity: 0.85;
+}
+.jsonita-settings-nav-btn[data-active='true'] {
+  background: var(--toggle-on);
+  color: #fff;
+  font-weight: 600;
+}
+.jsonita-settings-nav-btn[data-active='true'] .jsonita-settings-nav-icon {
+  opacity: 1;
+}
+
 .jsonita-page-close,
 .jsonita-settings-close {
   display: inline-flex;

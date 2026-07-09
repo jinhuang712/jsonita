@@ -1,0 +1,138 @@
+<!doctype html>
+<!--
+  Jsonita · Settings nav V4 细化变体（图标 + 文字方向）
+  5 个变体并排，点击切换 active。挑一个落地。
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jsonita · nav V4 variants</title>
+<style>
+  :root {
+    --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", sans-serif;
+    --font-serif: "New York", "Iowan Old Style", Georgia, serif;
+    --text: #20232A;
+    --text-muted: rgba(26,30,40,0.54);
+    --text-faint: rgba(26,30,40,0.36);
+    --border: rgba(20,26,36,0.075);
+    --glass: rgba(255,255,255,0.62);
+    --surface-raised: rgba(255,255,255,0.52);
+    --control-bg-hover: rgba(255,255,255,0.40);
+    --toggle-on: #2f5d50;
+    --toggle-on-soft: rgba(47,93,80,0.10);
+    --shadow-sm: 0 1px 2px rgba(25,31,44,0.06);
+    --radius-md: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 28px 64px;
+    font-family: var(--font-ui); color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(900px 640px at 16% 12%, #e6d9c2 0%, transparent 55%),
+      radial-gradient(820px 580px at 84% 18%, #c8d8d2 0%, transparent 52%),
+      radial-gradient(900px 720px at 72% 88%, #ccc6da 0%, transparent 55%),
+      linear-gradient(135deg, #efe6d8, #dde4dc 48%, #d4d6e0 76%, #ccd5d8);
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-family: var(--font-serif); font-size: 30px; font-weight: 400; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .lede { color: var(--text-muted); font-size: 14px; margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+  @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .card {
+    background: var(--glass); backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 30px -18px rgba(40,30,20,0.22);
+    overflow: hidden;
+  }
+  .card-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
+  .card-head .vname { font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
+  .card-head .vdesc { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
+  .nav { padding: 10px; display: flex; flex-direction: column; gap: 1px; }
+
+  .nav-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; text-align: left; border: 0; cursor: pointer;
+    font: 450 14px/1 var(--font-ui); color: var(--text-muted);
+    padding: 8px 10px; border-radius: var(--radius-md);
+    background: transparent; white-space: nowrap;
+    transition: background 120ms, color 120ms;
+  }
+  .nav-btn .icon-wrap {
+    width: 22px; height: 22px; flex: 0 0 auto;
+    display: grid; place-items: center; border-radius: 5px;
+    transition: background 120ms;
+  }
+  .nav-btn svg { width: 15px; height: 15px; opacity: 0.5; transition: opacity 120ms, color 120ms; }
+  .nav-btn:hover { background: var(--control-bg-hover); color: var(--text); }
+  .nav-btn:hover svg { opacity: 0.85; }
+
+  /* V4a · 极简：active 墨绿文字 + 图标，无背景 */
+  .v4a .nav-btn.on { color: var(--toggle-on); font-weight: 600; }
+  .v4a .nav-btn.on svg { opacity: 1; color: var(--toggle-on); }
+
+  /* V4b · 图标实心方框：active 时图标落在墨绿方框里（白图标），文字深 */
+  .v4b .nav-btn.on { color: var(--text); font-weight: 600; }
+  .v4b .nav-btn.on .icon-wrap { background: var(--toggle-on); }
+  .v4b .nav-btn.on svg { opacity: 1; color: #fff; }
+
+  /* V4c · 整行药丸：active 浮起小块 + 图标文字墨绿 */
+  .v4c .nav-btn.on { background: var(--surface-raised); color: var(--toggle-on); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .v4c .nav-btn.on svg { opacity: 1; color: var(--toggle-on); }
+
+  /* V4d · 左竖线 + 淡墨绿底 */
+  .v4d .nav-btn { border-left: 3px solid transparent; padding-left: 9px; border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .v4d .nav-btn.on { color: var(--text); font-weight: 600; background: var(--toggle-on-soft); border-left-color: var(--toggle-on); }
+  .v4d .nav-btn.on svg { opacity: 1; color: var(--toggle-on); }
+
+  /* V4e · 图标淡墨绿圆：active 图标在淡墨绿圆里，文字深 */
+  .v4e .nav-btn.on { color: var(--text); font-weight: 600; }
+  .v4e .nav-btn.on .icon-wrap { background: var(--toggle-on-soft); border-radius: 50%; }
+  .v4e .nav-btn.on svg { opacity: 1; color: var(--toggle-on); }
+
+  .footnote { margin-top: 24px; font-size: 12.5px; color: rgba(0,0,0,0.42); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>nav V4 细化 · 图标 + 文字</h1>
+  <p class="lede">5 个变体差异在 active 怎么呈现。点击切换 active，挑一个。</p>
+  <div class="grid">
+    <div class="card"><div class="card-head"><div class="vname">V4a 极简</div><div class="vdesc">墨绿文字 + 图标，无背景</div></div><div class="nav v4a" data-nav></div></div>
+    <div class="card"><div class="card-head"><div class="vname">V4b 图标实心方框</div><div class="vdesc">active 图标落墨绿方框</div></div><div class="nav v4b" data-nav></div></div>
+    <div class="card"><div class="card-head"><div class="vname">V4c 整行药丸</div><div class="vdesc">浮起小块 + 图标墨绿</div></div><div class="nav v4c" data-nav></div></div>
+    <div class="card"><div class="card-head"><div class="vname">V4d 左竖线</div><div class="vdesc">墨绿竖线 + 淡底</div></div><div class="nav v4d" data-nav></div></div>
+    <div class="card"><div class="card-head"><div class="vname">V4e 图标圆底</div><div class="vdesc">图标落淡墨绿圆</div></div><div class="nav v4e" data-nav></div></div>
+  </div>
+  <p class="footnote">图标用 SVG 描边，墨绿 #2f5d50。V4b/V4e 让图标本身成为 active 的视觉重点；V4a/V4c/V4d 让整行承担。</p>
+</div>
+
+<script>
+  const GROUPS = ['General','Shortcuts','AI','History','JSON Transform','About'];
+  const ICONS = {
+    General: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg>',
+    Shortcuts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2.5"/><path d="M7 7V5.5M11 7V5.5M15 7V5.5M19 7V5.5"/></svg>',
+    AI: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/></svg>',
+    History: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>',
+    'JSON Transform': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8a3 3 0 0 0-3 3v2a3 3 0 0 1-3 3 3 3 0 0 0 3 3"/><path d="M17 8a3 3 0 0 1 3 3v2a3 3 0 0 0 3 3 3 3 0 0 1-3 3"/></svg>',
+    About: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg>',
+  };
+  document.querySelectorAll('.nav[data-nav]').forEach((nav) => {
+    GROUPS.forEach((g, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'nav-btn' + (i === 0 ? ' on' : '');
+      btn.innerHTML = '<span class="icon-wrap">' + (ICONS[g] || '') + '</span><span>' + g + '</span>';
+      btn.addEventListener('click', () => {
+        nav.querySelectorAll('.nav-btn').forEach((b) => b.classList.remove('on'));
+        btn.classList.add('on');
+      });
+      nav.appendChild(btn);
+    });
+  });
+</script>
+</body>
+</html>
