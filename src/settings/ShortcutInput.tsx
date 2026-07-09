@@ -120,15 +120,15 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
         onBlur={() => setRecording(false)}
         onKeyDown={recording ? handleKeyDown : undefined}
         style={{
-          padding: '4px 10px',
+          padding: '6px 12px',
           background: recording ? 'var(--control-bg-active)' : 'var(--control-bg)',
           border: `1px solid ${recording ? 'var(--primary-edge)' : 'var(--control-border)'}`,
           borderRadius: 'var(--radius-sm)',
           fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--fs-sm)',
+          fontSize: 'var(--fs-md)',
           color: 'var(--text)',
           cursor: 'pointer',
-          minWidth: 140,
+          minWidth: 160,
           outline: 'none',
         }}
         role="button"
@@ -143,7 +143,7 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
       {msg && (
         <div
           style={{
-            fontSize: 'var(--fs-xs)',
+            fontSize: 'var(--fs-sm)',
             color:
               msg.kind === 'ok'
                 ? 'var(--ok)'
@@ -165,7 +165,7 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
                 border: '1px solid color-mix(in srgb, var(--warn) 36%, var(--control-border))',
                 color: 'var(--warn)',
                 borderRadius: 4,
-                fontSize: 'var(--fs-xs)',
+                fontSize: 'var(--fs-sm)',
                 cursor: 'pointer',
               }}
             >

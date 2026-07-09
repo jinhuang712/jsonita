@@ -28,6 +28,27 @@ type Group = 'general' | 'shortcuts' | 'ai' | 'history' | 'jsonTransform' | 'abo
 
 const GROUPS: Group[] = ['general', 'shortcuts', 'ai', 'history', 'jsonTransform', 'about'];
 
+const NAV_ICONS: Record<Group, React.ReactNode> = {
+  general: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z" /></svg>
+  ),
+  shortcuts: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="11" rx="2.5" /><path d="M7 7V5.5M11 7V5.5M15 7V5.5M19 7V5.5" /></svg>
+  ),
+  ai: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" /><circle cx="12" cy="12" r="3.5" /></svg>
+  ),
+  history: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /><path d="M12 8v4l3 2" /></svg>
+  ),
+  jsonTransform: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M7 8a3 3 0 0 0-3 3v2a3 3 0 0 1-3 3 3 3 0 0 0 3 3" /><path d="M17 8a3 3 0 0 1 3 3v2a3 3 0 0 0 3 3 3 3 0 0 1-3 3" /></svg>
+  ),
+  about: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.5v.5" /></svg>
+  ),
+};
+
 export function SettingsView() {
   const { t } = useTranslation('settings');
   const open = useUiStore((s) => s.settingsViewOpen);
@@ -171,8 +192,11 @@ export function SettingsView() {
           <div
             id="settings-page-title"
             style={{
-              fontSize: 'var(--fs-lg)',
-              fontWeight: 600,
+              fontFamily: 'var(--font-serif)',
+              fontSize: '32px',
+              fontWeight: 400,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
             }}
           >
             {t('title')}
@@ -191,10 +215,10 @@ export function SettingsView() {
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <nav
             style={{
-              width: 150,
+              width: 170,
               borderRight: '1px solid var(--border)',
               background: 'var(--bg-elevated-nav)',
-              padding: 'var(--sp-2) 6px',
+              padding: 'var(--sp-3) var(--sp-2)',
             }}
           >
             {GROUPS.map((g) => (
@@ -202,29 +226,10 @@ export function SettingsView() {
                 key={g}
                 onClick={() => scrollToGroup(g)}
                 aria-current={activeGroup === g ? 'page' : undefined}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '6px 10px',
-                  fontSize: 'var(--fs-sm)',
-                  textAlign: 'left',
-                  background:
-                    activeGroup === g ? 'var(--control-bg-active)' : 'transparent',
-                  color:
-                    activeGroup === g
-                      ? 'color-mix(in srgb, var(--primary) 66%, var(--text))'
-                      : 'var(--text-muted)',
-                  border: 'none',
-                  borderLeft: '2px solid transparent',
-                  boxShadow:
-                    activeGroup === g
-                      ? 'inset 2px 0 0 var(--primary-edge)'
-                      : 'none',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontWeight: activeGroup === g ? 560 : 450,
-                }}
+                className="jsonita-settings-nav-btn"
+                data-active={activeGroup === g ? 'true' : undefined}
               >
+                <span className="jsonita-settings-nav-icon">{NAV_ICONS[g]}</span>
                 {t(`groups.${g}` as 'groups.general')}
               </button>
             ))}
@@ -234,9 +239,9 @@ export function SettingsView() {
             ref={scrollRef}
             style={{
               flex: 1,
-              padding: 'var(--sp-5) var(--sp-6)',
+              padding: 'var(--sp-5) var(--sp-5) var(--sp-6)',
               overflow: 'auto',
-              fontSize: 'var(--fs-sm)',
+              fontSize: 'var(--fs-md)',
               position: 'relative',
               scrollBehavior: 'smooth',
             }}
@@ -336,10 +341,9 @@ function SettingsSection({
       ref={(node) => {
         sectionRefs.current[group] = node;
       }}
-      style={settingsSectionStyle}
       aria-labelledby={`settings-section-${group}`}
     >
-      <h2 id={`settings-section-${group}`} style={settingsSectionTitleStyle}>
+      <h2 id={`settings-section-${group}`} className="jsonita-settings-section-title">
         {title}
       </h2>
       {children}
@@ -435,7 +439,7 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
           />
         ))}
       </div>
-      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 8 }}>
+      <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginTop: 8 }}>
         {t('shortcuts.hint', { reserved: reservedExamples })}
       </div>
     </div>
@@ -471,30 +475,26 @@ function GroupGeneral({ settings, patch }: GroupProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={rowStyle}>
         <span>{t('general.language')}</span>
-        <select
+        <SegmentedControl
           value={settings.locale}
-          onChange={(e) => patch({ locale: e.target.value as 'en-US' | 'zh-CN' })}
-          style={inputStyle}
-          aria-label={t('general.language')}
-        >
-          <option value="en-US">English</option>
-          <option value="zh-CN">简体中文</option>
-        </select>
+          options={[
+            { value: 'en-US', label: 'English' },
+            { value: 'zh-CN', label: '中文' },
+          ]}
+          onChange={(v) => patch({ locale: v })}
+        />
       </div>
       <div style={rowStyle}>
         <span>{t('general.theme')}</span>
-        <select
+        <SegmentedControl
           value={settings.theme}
-          onChange={(e) =>
-            patch({ theme: e.target.value as 'system' | 'light' | 'dark' })
-          }
-          style={inputStyle}
-          aria-label={t('general.theme')}
-        >
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
+          options={[
+            { value: 'system', label: 'System' },
+            { value: 'light', label: 'Light' },
+            { value: 'dark', label: 'Dark' },
+          ]}
+          onChange={(v) => patch({ theme: v })}
+        />
       </div>
       <Row
         label={t('general.launchAtLogin')}
@@ -550,16 +550,16 @@ function GroupHistory({ settings, patch }: GroupProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={rowStyle}>
         <span>{t('history.limit')}</span>
-        <select
+        <SegmentedControl
           value={settings.historyLimit}
-          onChange={(e) => patch({ historyLimit: Number(e.target.value) })}
-          style={inputStyle}
-        >
-          <option value={10}>10</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-          <option value={200}>200</option>
-        </select>
+          options={[
+            { value: 10, label: '10' },
+            { value: 50, label: '50' },
+            { value: 100, label: '100' },
+            { value: 200, label: '200' },
+          ]}
+          onChange={(v) => patch({ historyLimit: v })}
+        />
       </div>
     </div>
   );
@@ -626,20 +626,60 @@ function SettingsCheckbox({
         onChange={(e) => onChange(e.target.checked)}
         style={checkboxInputStyle}
       />
-      <span aria-hidden="true" style={checked ? checkboxCheckedStyle : checkboxBoxStyle}>
-        {checked ? (
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              d="M3 6.1 5.1 8.2 9 3.8"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : null}
+      <span
+        aria-hidden="true"
+        style={{
+          width: 40,
+          height: 28,
+          borderRadius: 5,
+          background: checked ? 'var(--toggle-on)' : 'var(--control-bg-hover)',
+          border: `1px solid ${checked ? 'transparent' : 'var(--control-border)'}`,
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: 3,
+          flexShrink: 0,
+          transition:
+            'background var(--dur-base) var(--ease-native), border-color var(--dur-base)',
+        }}
+      >
+        <span
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: 4,
+            background: '#fff',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+            transform: checked ? 'translateX(14px)' : 'translateX(0)',
+            transition: 'transform var(--dur-base) var(--ease-native)',
+          }}
+        />
       </span>
     </span>
+  );
+}
+
+function SegmentedControl<T extends string | number>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div style={segSmStyle}>
+      {options.map((opt) => (
+        <button
+          key={String(opt.value)}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          style={value === opt.value ? segSmOnStyle : segSmOffStyle}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -693,9 +733,8 @@ const rowStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: 16,
-  minHeight: 34,
-  padding: '7px 0',
-  borderBottom: '1px solid var(--border)',
+  minHeight: 40,
+  padding: '9px 0',
 };
 
 const sectionLabelStyle: React.CSSProperties = {
@@ -703,19 +742,6 @@ const sectionLabelStyle: React.CSSProperties = {
   fontSize: 'var(--fs-xs)',
   fontWeight: 600,
   textTransform: 'uppercase',
-  letterSpacing: 0,
-};
-
-const settingsSectionStyle: React.CSSProperties = {
-  padding: '0 0 30px',
-  scrollMarginTop: 8,
-};
-
-const settingsSectionTitleStyle: React.CSSProperties = {
-  margin: '0 0 10px',
-  color: 'var(--text)',
-  fontSize: 'var(--fs-md)',
-  fontWeight: 650,
   letterSpacing: 0,
 };
 
@@ -827,23 +853,51 @@ const keyGroupStyle: React.CSSProperties = {
 };
 
 const keyCapStyle: React.CSSProperties = {
-  padding: '2px 6px',
+  padding: '4px 8px',
   borderRadius: 'var(--radius-sm)',
   border: '1px solid var(--control-border)',
   background: 'var(--control-bg)',
-  color: 'var(--text-muted)',
+  color: 'var(--text)',
   fontFamily: 'var(--font-mono)',
-  fontSize: 'var(--fs-xs)',
+  fontSize: 'var(--fs-sm)',
   lineHeight: 1.2,
 };
 
 const inputStyle: React.CSSProperties = {
-  padding: '2px 8px',
+  padding: '5px 10px',
   background: 'var(--control-bg)',
   border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
+  fontSize: 'var(--fs-md)',
   color: 'var(--text)',
+};
+
+const segSmStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  padding: 2,
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
+  borderRadius: 'var(--radius-md)',
+  flexShrink: 0,
+};
+
+const segSmOffStyle: React.CSSProperties = {
+  border: 0,
+  background: 'transparent',
+  color: 'var(--text-muted)',
+  fontSize: 'var(--fs-base)',
+  fontWeight: 500,
+  padding: '3px 12px',
+  borderRadius: 'var(--radius-sm)',
+  cursor: 'pointer',
+};
+
+const segSmOnStyle: React.CSSProperties = {
+  ...segSmOffStyle,
+  background: 'var(--surface-raised)',
+  color: 'var(--text)',
+  fontWeight: 600,
+  boxShadow: 'var(--shadow-sm)',
 };
 
 const checkboxWrapStyle: React.CSSProperties = {
@@ -851,8 +905,9 @@ const checkboxWrapStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 22,
-  height: 22,
+  width: 40,
+  height: 28,
+  flexShrink: 0,
 };
 
 const checkboxInputStyle: React.CSSProperties = {
@@ -863,44 +918,24 @@ const checkboxInputStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-const checkboxBoxStyle: React.CSSProperties = {
-  width: 15,
-  height: 15,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 4,
-  border: '1px solid var(--control-border)',
-  background: 'var(--control-bg)',
-  boxShadow: 'inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent)',
-  transition:
-    'background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)',
-};
-
-const checkboxCheckedStyle: React.CSSProperties = {
-  ...checkboxBoxStyle,
-  border: '1px solid var(--primary-edge)',
-  background: 'var(--control-bg-active)',
-  color: 'color-mix(in srgb, var(--primary) 78%, var(--text))',
-  boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--primary) 8%, transparent)',
-};
-
 const btnGhost: React.CSSProperties = {
-  padding: '4px 12px',
-  background: 'var(--control-bg)',
+  padding: '8px 18px',
+  background: 'transparent',
   border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
+  borderRadius: 'var(--radius-md)',
+  fontSize: 'var(--fs-md)',
+  fontWeight: 500,
   cursor: 'pointer',
   color: 'var(--text)',
 };
 
 const btnPrimary: React.CSSProperties = {
-  padding: '4px 12px',
-  background: 'var(--control-bg-active)',
-  color: 'color-mix(in srgb, var(--primary) 70%, var(--text))',
-  border: '1px solid var(--primary-edge)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
+  padding: '8px 18px',
+  background: 'var(--primary)',
+  color: '#fff',
+  border: '1px solid var(--primary)',
+  borderRadius: 'var(--radius-md)',
+  fontSize: 'var(--fs-md)',
+  fontWeight: 500,
   cursor: 'pointer',
 };
