@@ -19,6 +19,7 @@ import {
   TreeIcon,
   type IconProps,
 } from '../components/icons';
+import logoMarkUrl from '../../assets/icons/menubar/jsonita-menubar-template-22@3x.png';
 
 /**
  * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
@@ -127,6 +128,27 @@ export function TabBar() {
         userSelect: 'none',
       }}
     >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 30,
+          height: 30,
+          flex: '0 0 auto',
+          marginRight: 8,
+          pointerEvents: 'none',
+          display: 'inline-block',
+          backgroundColor: 'var(--text)',
+          opacity: 0.82,
+          WebkitMaskImage: `url(${logoMarkUrl})`,
+          maskImage: `url(${logoMarkUrl})`,
+          WebkitMaskSize: 'contain',
+          maskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          maskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+          maskPosition: 'center',
+        }}
+      />
       <div
         role="tablist"
         aria-label="Pane tabs"

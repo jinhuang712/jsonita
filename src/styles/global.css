@@ -481,11 +481,11 @@ kbd {
 .jsonita-settings-section-title {
   margin: 0 0 14px;
   color: var(--text);
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  font-family: var(--font-ui);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.25;
 }
 
 .jsonita-settings-nav-btn {

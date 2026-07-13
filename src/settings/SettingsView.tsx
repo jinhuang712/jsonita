@@ -192,11 +192,11 @@ export function SettingsView() {
           <div
             id="settings-page-title"
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontSize: '32px',
-              fontWeight: 400,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.1,
+              fontFamily: 'var(--font-ui)',
+              fontSize: '20px',
+              fontWeight: 600,
+              letterSpacing: '-0.01em',
+              lineHeight: 1.15,
             }}
           >
             {t('title')}
