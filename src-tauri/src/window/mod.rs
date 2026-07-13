@@ -155,10 +155,16 @@ fn install_window_events(win: &WebviewWindow) {
             animated_hide(w.clone());
         }
         tauri::WindowEvent::Resized(size) => {
-            // M1-N9：用户拖动 → mark userDragged；自身 resize（智能缩放）走 begin/end_self_resize 跳过
+            // M1-N9：用户拖动 → mark userDragged；自身 resize（智能缩放）走 begin/end_self_resize 跳过。
+            // Resized 投递物理像素，持久化前须除以 scale_factor 还原逻辑像素，否则 Retina 屏会
+            // 存入 2× 尺寸，下次启动 set_size(LogicalSize) 把窗口撑到全屏。
             if let Some(store) = w.try_state::<crate::store::WindowStore>() {
                 if !store.is_self_resizing() {
-                    let _ = store.mark_user_dragged(size.width, size.height);
+                    let scale = w.scale_factor().ok().filter(|s| *s > 0.0).unwrap_or(1.0);
+                    let _ = store.mark_user_dragged(
+                        (size.width as f64 / scale).round() as u32,
+                        (size.height as f64 / scale).round() as u32,
+                    );
                 }
             }
         }

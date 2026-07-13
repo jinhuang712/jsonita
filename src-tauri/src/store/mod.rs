@@ -12,4 +12,4 @@ pub mod window;
 
 pub use db::Db;
 pub use settings::SettingsStore;
-pub use window::{WindowState, WindowStore};
+pub use window::{clamp_to_screen, WindowState, WindowStore};
