@@ -119,9 +119,22 @@ fn sanitize_loaded_state(state: WindowState) -> WindowState {
     }
 }
 
+/// 持久化尺寸超出屏幕时重置为默认。
+///
+/// 旧版 Resized 事件把物理像素当逻辑像素存入 window.json（Retina 屏存 2× 值，
+/// 如 3804×2410），启动时 `set_size(LogicalSize)` 会把窗口撑到远超屏幕。
+/// 夹到屏幕边仍是"占满全屏"的体验，故超出即重置回默认浮动尺寸。
+/// 屏幕尺寸未知（0）时不干预，交由 `sanitize_loaded_state` 的下限夹取兜底。
+pub fn clamp_to_screen(state: WindowState, screen_w: u32, screen_h: u32) -> WindowState {
+    if screen_w > 0 && screen_h > 0 && (state.width > screen_w || state.height > screen_h) {
+        return WindowState::default();
+    }
+    state
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{sanitize_loaded_state, WindowState};
+    use super::{clamp_to_screen, sanitize_loaded_state, WindowState};
 
     #[test]
     fn resets_old_auto_size_below_comfort_floor() {
@@ -147,5 +160,56 @@ mod tests {
         assert_eq!(state.width, 680);
         assert_eq!(state.height, 380);
         assert!(state.user_dragged);
+    }
+
+    #[test]
+    fn clamp_to_screen_resets_oversized_state() {
+        // 旧版物理/逻辑像素混淆留下的脏值（Retina 2×）：超出屏幕 → 重置默认。
+        let state = clamp_to_screen(
+            WindowState {
+                width: 3804,
+                height: 2410,
+                user_dragged: true,
+            },
+            1440,
+            900,
+        );
+
+        assert_eq!(state.width, 680);
+        assert_eq!(state.height, 380);
+        assert!(!state.user_dragged);
+    }
+
+    #[test]
+    fn clamp_to_screen_keeps_state_within_screen() {
+        let state = clamp_to_screen(
+            WindowState {
+                width: 800,
+                height: 500,
+                user_dragged: true,
+            },
+            1440,
+            900,
+        );
+
+        assert_eq!(state.width, 800);
+        assert_eq!(state.height, 500);
+        assert!(state.user_dragged);
+    }
+
+    #[test]
+    fn clamp_to_screen_ignores_unknown_screen() {
+        // 屏幕尺寸未知时不干预，避免误重置合法值。
+        let state = clamp_to_screen(
+            WindowState {
+                width: 3804,
+                height: 2410,
+                user_dragged: true,
+            },
+            0,
+            0,
+        );
+
+        assert_eq!(state.width, 3804);
     }
 }

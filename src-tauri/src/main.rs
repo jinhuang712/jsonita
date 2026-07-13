@@ -105,7 +105,25 @@ fn main() {
             window::setup(app.handle())?;
             if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
                 let window_store = app.state::<store::WindowStore>();
-                let st = window_store.get();
+                let persisted = window_store.get();
+                // 持久化尺寸可能因旧版物理/逻辑像素混淆而远超屏幕（如 3804×2410）；
+                // 超出主屏逻辑尺寸则重置回默认，并回写 window.json 自愈。
+                let screen = app
+                    .primary_monitor()
+                    .ok()
+                    .flatten()
+                    .map(|m| {
+                        let scale = m.scale_factor();
+                        (
+                            (m.size().width as f64 / scale).round() as u32,
+                            (m.size().height as f64 / scale).round() as u32,
+                        )
+                    })
+                    .unwrap_or((0, 0));
+                let st = store::clamp_to_screen(persisted.clone(), screen.0, screen.1);
+                if st.width != persisted.width || st.height != persisted.height {
+                    let _ = window_store.set(st.clone());
+                }
                 window_store.begin_self_resize();
                 let _ = win.set_size(tauri::LogicalSize::new(st.width as f64, st.height as f64));
                 let _ = win.center();
