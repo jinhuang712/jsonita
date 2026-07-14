@@ -31,9 +31,11 @@ test('permission modal uses shared glass tokens and no legacy hardcoded white ca
 test('history and settings use shared quiet surface tokens for controls', () => {
   const history = read('src/history/HistoryModal.tsx');
   const settings = read('src/settings/SettingsView.tsx');
+  const styles = read('src/styles/global.css');
 
-  assert.match(history, /var\(--control-bg\)/);
-  assert.match(history, /var\(--control-bg-active\)/);
+  assert.match(styles, /\.jsonita-history-document-row\s*\{[^}]*background:\s*var\(--control-bg\)/s);
+  assert.match(styles, /\.jsonita-history-preview-action\s*\{[^}]*background:\s*var\(--surface-raised\)/s);
+  assert.doesNotMatch(history, /<span style=\{\{ \.\.\.chipStyle/);
   assert.match(settings, /var\(--control-bg\)/);
   assert.match(settings, /background: checked \? 'var\(--toggle-on\)' : 'var\(--control-bg-hover\)'/);
   assert.match(settings, /background: 'var\(--surface-raised\)'/);
@@ -67,8 +69,10 @@ test('history full-window layout keeps the footer pinned to the bottom edge', ()
 
   assert.match(history, /<section className="jsonita-history-shell">/);
   assert.match(history, /<header className="jsonita-history-header">/);
-  assert.match(history, /<div className="jsonita-history-toolbar">/);
-  assert.match(history, /<div className="jsonita-history-list">/);
+  assert.match(history, /<div className="jsonita-history-library">/);
+  assert.match(history, /<aside className="jsonita-history-sidebar">/);
+  assert.match(history, /<HistoryDocumentList/);
+  assert.match(history, /<HistoryDocumentPreview/);
   assert.match(history, /<footer className="jsonita-history-footer">/);
   assert.match(history, /<div className="jsonita-history-footer-note">/);
 });

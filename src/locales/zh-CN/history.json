@@ -1,13 +1,21 @@
 {
   "title": "历史",
-  "searchPlaceholder": "搜索…",
-  "filter": {
-    "all": "全部",
-    "pinned": "置顶",
-    "starred": "★"
-  },
+  "searchPlaceholder": "搜索 JSON…",
   "actions": {
-    "close": "关闭历史"
+    "close": "关闭历史",
+    "openInEditor": "打开编辑器",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "star": "收藏",
+    "unstar": "取消收藏",
+    "clear": "清除"
   },
-  "empty": "暂无历史 · 操作过的 JSON 自动保存"
+  "empty": "暂无 JSON 历史",
+  "loading": "正在加载…",
+  "emptyPreview": "选择一段 JSON 以预览",
+  "clearNotice": "清除时会保留已置顶和已收藏的 JSON。",
+  "status": {
+    "pinned": "已置顶",
+    "starred": "已收藏"
+  }
 }

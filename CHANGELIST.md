@@ -22,6 +22,14 @@
 | 影响文档 | `spec/`、`design/`、`PROJECT.md`、`README.md`、`WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`TODO.md`、`docs/superpowers/*`、`CHANGELIST.md`。 |
 | 关联 | 用户指出 `spec` 才是项目设计与架构的通用语义，要求删除重复目录、避免高保真文档原型，并明确要求保留 `docs/`。 |
 
+### feat · History 收敛为本地 JSON 文档库
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 将原本像执行日志的 History 改为 B2 文档库：53:47 的紧凑 JSON 列表与预览、42px 单行条目、只在预览中提供 Pin / Star 和 `Open in editor`；移除操作 chip、派生小标题、All / Pin / Star 筛选与逐行操作。`Cmd/Ctrl+Enter` 只打开当前所选 JSON，Clear 继续保留 pinned / starred 项。 |
+| 影响文档 | `src/history/HistoryModal.tsx`、`src/history/HistoryDocumentList.tsx`、`src/history/HistoryDocumentPreview.tsx`、`src/history/historyPresentation.ts`、`src/components/icons.tsx`、`src/styles/global.css`、`src/locales/*/history.json`、`tests/history/historyLibrary.test.mjs`、`tests/design/nativeQuietGlass.test.mjs`、`docs/superpowers/{specs,plans}/2026-07-14-history-document-library*.md`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈此前列表更像日志 / trace，而目标只是回看和恢复之前用过的 JSON；确认 B2 交互，并要求恢复 History 名称、缩短高度、提升密度、左栏更宽、快捷键只在打开动作中展示，以及用一致的 SVG Pin 状态。 |
+
 ### polish · 收敛 TabBar 品牌标识视觉权重
 
 | 字段 | 内容 |
