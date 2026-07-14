@@ -35,7 +35,9 @@ test('history and settings use shared quiet surface tokens for controls', () => 
   assert.match(history, /var\(--control-bg\)/);
   assert.match(history, /var\(--control-bg-active\)/);
   assert.match(settings, /var\(--control-bg\)/);
-  assert.match(settings, /var\(--control-bg-active\)/);
+  assert.match(settings, /background: checked \? 'var\(--toggle-on\)' : 'var\(--control-bg-hover\)'/);
+  assert.match(settings, /background: 'var\(--surface-raised\)'/);
+  assert.doesNotMatch(settings, /var\(--control-bg-active\)/);
 });
 
 test('history and settings are full-window pages with explicit Esc close actions', () => {

@@ -89,6 +89,8 @@ Jsonita search panel 提供 replace UI，但不提供 `⌘R` / `Cmd+R` replace �
 
 顶部功能区：左侧 5 个基础 Tab（Format / Minify / Tree / →Str / →JSON）+ AI Fix（仅错误态相关）+ 右上设置按钮。视觉见 [design/01 § 1.1-1.5](01_mockups.md) （默认 / 各 Tab 切换 / AI Fix 出现）。
 
+Tab 之前的 Jsonita 装饰标识固定为 `22 × 22px`，与 Format 保留 `6px` 间距；它只承担品牌识别，不得改变 44px 顶栏高度、Tab 尺寸或任一控件的命中区域。
+
 ```
 // src/shell/TabBar.tsx
 export type Pane = 'format' | 'minify' | 'tree' | 'json-to-str' | 'str-to-json' | 'ai-fix';

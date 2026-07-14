@@ -131,10 +131,10 @@ export function TabBar() {
       <span
         aria-hidden="true"
         style={{
-          width: 30,
-          height: 30,
+          width: 22,
+          height: 22,
           flex: '0 0 auto',
-          marginRight: 8,
+          marginRight: 6,
           pointerEvents: 'none',
           display: 'inline-block',
           backgroundColor: 'var(--text)',
