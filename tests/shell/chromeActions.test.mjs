@@ -21,6 +21,17 @@ test('split, history, and settings actions live together in the top chrome', () 
   assert.doesNotMatch(statusBar, /actions\.openHistory/);
 });
 
+test('top chrome keeps the decorative brand mark compact beside tool tabs', () => {
+  const tabBar = read('src/shell/TabBar.tsx');
+
+  assert.match(tabBar, /aria-hidden="true"/);
+  assert.match(tabBar, /width:\s*22,/);
+  assert.match(tabBar, /height:\s*22,/);
+  assert.match(tabBar, /marginRight:\s*6,/);
+  assert.match(tabBar, /WebkitMaskImage:/);
+  assert.match(tabBar, /maskImage:/);
+});
+
 test('single-pane run affordance sits above the status bar instead of touching bottom chrome', () => {
   const hint = read('src/shell/SinglePaneHint.tsx');
 

@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+### polish · 收敛 TabBar 品牌标识视觉权重
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 将 TabBar 左上角 Jsonita 装饰标识从 `30 × 30px` 收敛为 `22 × 22px`，其与 Format 的间距由 `8px` 调整为 `6px`；保留原图形 mask、颜色、透明度、顶栏高度与所有控制项命中区域。 |
+| 影响文档 | `src/shell/TabBar.tsx`、`tests/shell/chromeActions.test.mjs`、`design/04_components.md`、`docs/superpowers/specs/2026-07-14-tabbar-brand-mark-scale-design.md`、`CHANGELIST.md`。 |
+| 关联 | 用户截图反馈左上角 Logo 视觉权重偏高，选择 A 方案。 |
+
+### test · 校准 Settings 与 Replace regexp 的现行 UI 契约
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 更新两项滞后断言：Settings 卡片/开关已采用 `surface-raised`、`toggle-on` 与 `control-bg-hover`，Replace regexp 已采用独立状态，不再与 Find regexp 共用。 |
+| 影响文档 | `tests/design/nativeQuietGlass.test.mjs`、`tests/editor/searchPanel.test.mjs`、`docs/superpowers/plans/2026-07-14-tabbar-brand-mark-scale.md`、`CHANGELIST.md`。 |
+| 关联 | Logo 微调前的全量 Node 测试发现两项源代码已演进、测试仍描述旧交互的失败；用户选择先校准后继续视觉调整。 |
+
 ### polish · 搜索面板、窗口缩放与本地部署
 
 | 字段 | 内容 |

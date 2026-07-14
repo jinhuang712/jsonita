@@ -29,16 +29,17 @@ test('cmd-f search panel defaults regexp on while keeping the regexp toggle reve
   assert.match(panel, /this\.regexpButton\.setAttribute\('aria-pressed', String\(this\.query\.regexp\)\)/);
 });
 
-test('replace row exposes its own regexp toggle aligned with find regexp state', () => {
+test('replace row keeps its regexp toggle independent from find regexp state', () => {
   const panel = read('src/editor/searchPanel.ts');
   const theme = read('src/editor/theme.ts');
 
-  assert.match(panel, /replaceRegexpButton = toggleButton\('\.\*', t\('actions\.replaceRegexp'\)/);
+  assert.match(panel, /private replaceRegexp = true/);
+  assert.match(panel, /replaceRegexpButton = iconButton\('\.\*', t\('actions\.replaceRegexp'\)/);
   assert.match(panel, /this\.replaceRegexpButton/);
   assert.doesNotMatch(panel, /toggleReplace/);
   assert.doesNotMatch(panel, /replaceOpen/);
-  assert.match(panel, /this\.replaceRegexpButton\.classList\.toggle\('jsonita-search-toggle-active', this\.query\.regexp\)/);
-  assert.match(panel, /this\.replaceRegexpButton\.setAttribute\('aria-pressed', String\(this\.query\.regexp\)\)/);
+  assert.match(panel, /this\.replaceRegexpButton\.classList\.toggle\('jsonita-search-toggle-active', this\.replaceRegexp\)/);
+  assert.match(panel, /this\.replaceRegexpButton\.setAttribute\('aria-pressed', String\(this\.replaceRegexp\)\)/);
   assert.match(panel, /'jsonita-search-replace-action jsonita-search-replace-current'/);
   assert.match(panel, /'jsonita-search-replace-action jsonita-search-replace-all'/);
   assert.doesNotMatch(panel, /jsonita-search-replace-primary/);
