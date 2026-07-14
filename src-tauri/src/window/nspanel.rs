@@ -39,10 +39,10 @@ pub fn promote(win: &WebviewWindow) -> tauri::Result<()> {
         hide_standard_window_buttons(ns_window);
 
         // collectionBehavior:
-        // - canJoinAllSpaces: 切 Space 后仍可见
+        // - moveToActiveSpace: 快捷键唤起时移到当前 Space，不跳回旧桌面
         // - stationary: Mission Control 中不被作为窗口堆叠
         // - fullScreenAuxiliary: 在其他 App fullscreen 上方仍可见
-        let collection = NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
+        let collection = NSWindowCollectionBehavior::NSWindowCollectionBehaviorMoveToActiveSpace
             | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary
             | NSWindowCollectionBehavior::NSWindowCollectionBehaviorFullScreenAuxiliary;
         ns_window.setCollectionBehavior_(collection);
