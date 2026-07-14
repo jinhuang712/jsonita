@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · 顶部 Transform Tab 切换稳定性
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 移除 active Tab 独有的字重，保持所有 Tab 的文字几何一致；选中态继续由颜色和滑动 pill 表达，不再在来回切换时推挤相邻 Tab。 |
+| 影响文档 | `src/styles/global.css`、`tests/shell/chromeActions.test.mjs`、`design/overview.md`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈顶部 Tab 来回切换时有微小 jitter；根因是 active Tab 的 `font-weight: 590` 改变了 flex item 宽度。 |
+
 ### fix · 窗口唤起后聚焦输入编辑器
 
 | 字段 | 内容 |

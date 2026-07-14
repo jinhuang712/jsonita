@@ -32,6 +32,14 @@ test('top chrome keeps the decorative brand mark compact beside tool tabs', () =
   assert.match(tabBar, /maskImage:/);
 });
 
+test('active tab styling keeps tab geometry stable while the pill moves', () => {
+  const styles = read('src/styles/global.css');
+  const activeRule = styles.match(/\.jsonita-tab-button-active\s*\{([^}]*)\}/)?.[1] ?? '';
+
+  assert.match(styles, /\.jsonita-tab-active-pill\s*\{[\s\S]*transform 180ms/s);
+  assert.doesNotMatch(activeRule, /font-weight|font-size|letter-spacing|padding|border/);
+});
+
 test('single-pane run affordance sits above the status bar instead of touching bottom chrome', () => {
   const hint = read('src/shell/SinglePaneHint.tsx');
 
