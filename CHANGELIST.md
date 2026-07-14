@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · 窗口唤起后聚焦输入编辑器
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 窗口显示事件发生后，左侧 CodeMirror 输入编辑器在下一帧接收键盘焦点；不再由顶部当前 Transform tab（默认 Format）承接浏览器的初始焦点。 |
+| 影响文档 | `src/editor/Editor.tsx`、`src/shell/FloatingWindow.tsx`、`tests/editor/editorFocus.test.mjs`、`design/screens.md`、`spec/10-behavior.md`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈每次唤起 Jsonita 时焦点都会异常落在 Format；根因是原生窗口只聚焦 WebView，前端没有转交焦点，而 Format 是顶部 tablist 默认的可聚焦元素。 |
+
 ### docs · 删除重复的 PROJECT.md 入口
 
 | 字段 | 内容 |

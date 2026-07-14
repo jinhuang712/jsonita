@@ -31,7 +31,9 @@ replace input. Failure keeps input editable and offers a safe next action.
 `Cmd+Shift+J` and the menu bar show or hide the tool. Hiding preserves the warm
 workspace; quitting ends the process. `Esc` first resolves the active local
 editing state, then may hide the window according to the product behavior.
-Shortcut problems must leave the menu-bar path usable.
+Shortcut problems must leave the menu-bar path usable. When the editor
+workspace is shown, keyboard focus lands in the input editor rather than a
+transform tab, so users can paste or type immediately.
 
 ## Scope Boundary
 
