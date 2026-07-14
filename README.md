@@ -87,12 +87,11 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 
 | 路径 | 内容 |
 |---|---|
-| [`PROJECT.md`](PROJECT.md) | 文档导航入口 |
-| [`WORKFLOW.md`](WORKFLOW.md) | 项目无关的文档与实现协作流程 |
-| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束、工作流映射和验证规则 |
-| [`plan/`](plan/) | 产品边界、功能、技术栈、NFR |
-| [`spec/`](spec/) | S/M 核心系统契约、`spec/platform/` I/R 支撑契约与 `spec/appendix/` A/V 明细 |
-| [`design/`](design/) | UI、视觉设计、交互、原型、设计令牌、图标、窗口、菜单栏、编辑器、i18n、a11y；`design/prototype/index.html` 是前端 UI 高保真 source of truth |
+| [`WORKFLOW.md`](WORKFLOW.md) | 文档与实现协作流程 |
+| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束与验证规则 |
+| [`spec/`](spec/) | 产品范围、行为、架构、运行保障和验证的正式设计来源 |
+| [`design/`](design/) | 简洁的界面意图、屏幕状态与低保真流程原型 |
+| [`docs/`](docs/) | GitHub Pages 发布根目录，以及 Superpowers 设计与实施过程记录 |
 | [`TODO.md`](TODO.md) | 项目级开放 backlog |
 | [`CHANGELIST.md`](CHANGELIST.md) | 变更历史 |
 
@@ -100,9 +99,9 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 
 本仓库使用 Markdown 作为最终文档源。后来者在修改产品范围、技术规格、设计契约、TODO、Changelist 或文档入口时，需要先读 [`AGENTS.md`](AGENTS.md) 或 [`CLAUDE.md`](CLAUDE.md)，再读 [`WORKFLOW.md`](WORKFLOW.md)，并同步更新对应的 Markdown 文件。
 
-[`WORKFLOW.md`](WORKFLOW.md) 保持项目无关；Jsonita 专属映射（例如 workflow 中的 `CHANGELOG.md` 在本仓库对应 [`CHANGELIST.md`](CHANGELIST.md)）写在 [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md)。
+[`spec/`](spec/) 是正式的产品设计与架构来源；[`design/`](design/) 只解释屏幕、状态和交互意图。精确样式、组件、schema、prompt 和发布命令以源码、测试和脚本为准。[`docs/`](docs/) 保留为 GitHub Pages 的非根目录发布位置，并承载 Superpowers 的过程文档。
 
-旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。`design/prototype/index.html` 是手写高保真原型例外，用来承载真实尺寸页面导航、状态矩阵、light / dark 和前端交互 reference。
+旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。`design/prototype/index.html` 只保留简单、可点击的低保真流程说明，不承担高保真视觉交付。
 
 ## 当前进度（agent 实施）
 

@@ -11,30 +11,25 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 5. If a decision is unclear and affects scope, architecture, rewrite depth, implementation order, release, or user-visible behavior, offer concrete options and ask instead of guessing.
 6. Never revert user changes unless the user explicitly asks.
 
-## Jsonita Workflow Mapping
-
-[WORKFLOW.md](WORKFLOW.md) is project-neutral. Apply it to this repository with these Jsonita-specific mappings:
+## Jsonita Documentation Map
 
 | Workflow Term | Jsonita Path |
 | --- | --- |
-| `CHANGELOG.md` | [CHANGELIST.md](CHANGELIST.md) |
-| `spec/Sxx-*.md` | Active system contracts in [spec/](spec/), from [S00](spec/S00-system-architecture.md) through [S07](spec/S07-packaging-distribution.md). |
-| `spec/Mxx-*.md` | Active user-facing capability contracts in [spec/](spec/), currently [M00](spec/M00-frontend-execution.md), [M01](spec/M01-json-engine.md), and [M02](spec/M02-ai-repair.md). |
-| `spec/platform/Ixx-*.md` | Active cross-boundary integration contracts in [spec/platform/](spec/platform/README.md). |
-| `spec/platform/Rxx-*.md` | Active reliability and runtime operations contracts in [spec/platform/](spec/platform/README.md). |
-| `spec/appendix/Axx-*.md` | Numbered implementation details in [spec/appendix/](spec/appendix/README.md). |
-| `spec/appendix/Vxx-*.md` | Numbered verification details in [spec/appendix/](spec/appendix/README.md). |
-| `progress/Pxxx-*.md` | Use durable history in [CHANGELIST.md](CHANGELIST.md); create `progress/` only for substantial archived records that should not stay in TODO. |
+| Formal product and architecture design | [spec/](spec/), using [00-product](spec/00-product.md), [10-behavior](spec/10-behavior.md), [20-architecture](spec/20-architecture.md), [30-operations](spec/30-operations.md), and [40-validation](spec/40-validation.md). |
+| UI and interaction companion | [design/](design/), with a concise overview, screen-state guide, and low-fidelity prototype. |
+| Project history | [CHANGELIST.md](CHANGELIST.md). |
+| Open backlog | [TODO.md](TODO.md). |
+| GitHub Pages and Superpowers process records | [docs/](docs/). Keep `docs/superpowers/` for skill-created design and plan records. |
 
 ## Documentation Source Policy
 
-- Markdown is the final source for project documentation.
-- Do not recreate generated documentation HTML, CAST JSON sources, `.cast-docs/`, or CAST rendering scripts.
-- Runtime HTML files such as `src/index.html` and build artifacts are application files, not documentation sources.
-- [PROJECT.md](PROJECT.md) is the documentation entrypoint.
-- [README.md](README.md) is the product and repository overview.
-- [TODO.md](TODO.md) owns open backlog items only. Completed migrations and historical plans belong in [CHANGELIST.md](CHANGELIST.md), not TODO.
-- [CHANGELIST.md](CHANGELIST.md) owns durable history for meaningful product, implementation, release, and workflow changes.
+- Markdown is the final source for project documentation and `docs/` remains the non-root GitHub Pages publishing location.
+- [README.md](README.md) is the product and repository entrypoint; [spec/README.md](spec/README.md) is the formal documentation entrypoint.
+- [spec/](spec/) is the formal source for enduring product, behavior, architecture, operational, and validation contracts. Do not split these contracts back into `plan/`, `platform/`, or `appendix/` trees.
+- [design/](design/) records screen hierarchy, user-visible state, and interaction intent. The simple `design/prototype/index.html` is a low-fidelity flow companion, not a pixel-level source of truth.
+- Exact CSS, component implementation, schema, SQL, prompt text, and release commands belong to source, tests, or scripts.
+- [TODO.md](TODO.md) owns open backlog items only; completed migrations and historical plans belong in [CHANGELIST.md](CHANGELIST.md), not a `progress/` directory.
+- Do not recreate generated documentation HTML, CAST JSON sources, `.cast-docs/`, or CAST rendering scripts. Runtime HTML files such as `src/index.html` are application files, not documentation sources.
 
 ## Jsonita Product Contracts
 
@@ -49,7 +44,7 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 
 ## Validation
 
-- Follow [WORKFLOW.md](WORKFLOW.md) pre-commit checks, using `CHANGELIST.md` wherever the workflow says `CHANGELOG.md`.
+- Follow [WORKFLOW.md](WORKFLOW.md) pre-commit checks.
 - Documentation-only changes should at least run `git diff --check` and `diff -u AGENTS.md CLAUDE.md`.
 - Implementation or Tauri configuration changes should additionally run the relevant subset of `pnpm build`, `pnpm tsc --noEmit`, `cargo check`, `cargo test`, `cargo build`, or `pnpm tauri dev`.
 - Avoid dependency installation unless the user asks or validation is blocked by missing local dependencies.
