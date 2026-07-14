@@ -10,6 +10,7 @@ readonly APP_NAME="Jsonita.app"
 readonly BUNDLE_ID="com.jsonita.app"
 readonly INSTALL_DIR="${JSONITA_INSTALL_DIR:-/Applications}"
 readonly INSTALL_PATH="$INSTALL_DIR/$APP_NAME"
+readonly APP_EXECUTABLE="$INSTALL_PATH/Contents/MacOS/jsonita"
 
 OPEN_AFTER_INSTALL=1
 TARGET="${TAURI_MAC_TARGET:-}"
@@ -68,6 +69,44 @@ remove_existing_app() {
   rm -rf "$INSTALL_PATH"
 }
 
+running_app_pids() {
+  pgrep -f "^$APP_EXECUTABLE$" || true
+}
+
+wait_for_app_exit() {
+  local timeout_seconds="$1"
+  local deadline=$((SECONDS + timeout_seconds))
+  local pids
+
+  while :; do
+    pids="$(running_app_pids)"
+    [[ -z "$pids" ]] && return 0
+    if (( SECONDS >= deadline )); then
+      return 1
+    fi
+    # Poll for the actual process exit; a fixed sleep can replace the bundle
+    # while the old executable still owns its web assets.
+    sleep 0.1
+  done
+}
+
+quit_existing_app() {
+  local pids
+  pids="$(running_app_pids)"
+  [[ -z "$pids" ]] && return
+
+  log "Quitting existing Jsonita process: $pids"
+  osascript -e "tell application id \"$BUNDLE_ID\" to quit" >/dev/null 2>&1 || true
+  if wait_for_app_exit 3; then
+    return
+  fi
+
+  pids="$(running_app_pids)"
+  log "Graceful quit timed out; terminating lingering Jsonita process: $pids"
+  kill -TERM $pids || true
+  wait_for_app_exit 5 || die "Jsonita did not exit; refusing to replace a bundle still in use."
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --target)
@@ -92,6 +131,7 @@ done
 require_macos
 require_command ditto
 require_command osascript
+require_command pgrep
 
 if [[ -z "$TARGET" ]]; then
   TARGET="$(host_target)"
@@ -103,10 +143,7 @@ TAURI_MAC_TARGET="$TARGET" "$SCRIPT_DIR/release-macos-app.sh"
 readonly BUILT_APP="$REPO_ROOT/release-artifacts/macos-app/$APP_NAME"
 validate_app_bundle "$BUILT_APP"
 
-log "Quitting existing Jsonita if running"
-osascript -e 'tell application "Jsonita" to quit' >/dev/null 2>&1 || true
-sleep 1
-
+quit_existing_app
 remove_existing_app
 
 log "Installing new local app: $INSTALL_PATH"

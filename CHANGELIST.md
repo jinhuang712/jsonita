@@ -22,6 +22,14 @@
 | 影响文档 | `spec/`、`design/`、`PROJECT.md`、`README.md`、`WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`TODO.md`、`docs/superpowers/*`、`CHANGELIST.md`。 |
 | 关联 | 用户指出 `spec` 才是项目设计与架构的通用语义，要求删除重复目录、避免高保真文档原型，并明确要求保留 `docs/`。 |
 
+### fix · 本地覆盖与多 Desktop 唤起可靠性
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 本地 macOS 部署不再在固定等待后直接删除 `/Applications/Jsonita.app`：脚本会按实际进程退出轮询，AppleScript 退出超时后发送 `TERM`，仍未退出则拒绝覆盖，避免旧进程继续显示旧 Web 资源。NSPanel 的 Space 行为由 `canJoinAllSpaces` 改为 `moveToActiveSpace`，全局快捷键唤起时窗口迁移到当前 Desktop。 |
+| 影响文档 | `scripts/deploy-local-macos-app.sh`、`src-tauri/src/window/nspanel.rs`、`tests/runtime/macosRuntime.test.mjs`、`CHANGELIST.md`。 |
+| 关联 | 用户发现本机 App 文件已覆盖但界面仍是旧版，且 `⌘⇧J` 只能在另一个 macOS Desktop 显示窗口。进程 inode 对比确认旧进程没有退出；AppKit 文档规定 `moveToActiveSpace` 在窗口激活时移向当前 Space。 |
+
 ### feat · History 收敛为本地 JSON 文档库
 
 | 字段 | 内容 |
