@@ -11,14 +11,22 @@ import { forceLinting, setDiagnostics } from '@codemirror/lint';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
+import { on } from '../ipc/events';
 import { makeExtensions, type EditorConfig } from './extensions';
 
 interface EditorProps extends EditorConfig {
   value: string;
   onChange?: (v: string) => void;
+  focusOnWindowShown?: boolean;
 }
 
-export function Editor({ value, onChange, theme, ...cfg }: EditorProps) {
+export function Editor({
+  value,
+  onChange,
+  theme,
+  focusOnWindowShown = false,
+  ...cfg
+}: EditorProps) {
   const ref = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const errorRef = useRef(cfg.error ?? null);
@@ -72,6 +80,31 @@ export function Editor({ value, onChange, theme, ...cfg }: EditorProps) {
     });
     return () => window.cancelAnimationFrame(id);
   }, [cfg.error, value]);
+
+  useEffect(() => {
+    if (!focusOnWindowShown) return;
+    let disposed = false;
+    let frameId: number | null = null;
+    let unlisten: (() => void) | undefined;
+
+    on('window:shown', () => {
+      frameId = window.requestAnimationFrame(() => {
+        if (!disposed) viewRef.current?.focus();
+      });
+    }).then((stop) => {
+      if (disposed) {
+        stop();
+      } else {
+        unlisten = stop;
+      }
+    });
+
+    return () => {
+      disposed = true;
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      unlisten?.();
+    };
+  }, [focusOnWindowShown]);
 
   // 外部 setValue（store 调 setContent 用于 AI Fix / 历史恢复 / 上次会话）
   useEffect(() => {

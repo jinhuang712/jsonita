@@ -11,7 +11,9 @@ contracts.
 The global shortcut and menu-bar entry show or hide one compact workspace.
 Hiding is not quitting: current in-memory editing state stays available until
 the user explicitly quits. Settings and History replace the workspace inside
-the same app shell; they are not separate long-lived application windows.
+the same app shell; they are not separate long-lived application windows. When
+the editor workspace is shown, input focus returns to the editable document so
+the active transform tab does not receive focus by default.
 
 ## JSON Work
 

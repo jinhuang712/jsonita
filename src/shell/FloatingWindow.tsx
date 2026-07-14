@@ -132,6 +132,7 @@ export function FloatingWindow() {
               ) : (
                 <EditorFrame>
                   <Editor
+                    focusOnWindowShown
                     theme={effectiveTheme}
                     value={content}
                     onChange={setContent}
