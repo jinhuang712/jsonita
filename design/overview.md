@@ -11,6 +11,8 @@ The UI serves JSON work; it is not a dashboard or a marketing surface.
 - Keep one compact workspace with obvious transform, history, and settings
   entry points.
 - Let the editor and current document remain the visual focus.
+- Keep transform selection feedback stable: the active pill and color may move,
+  but switching tabs must not reflow the surrounding chrome.
 - Keep Settings and History as workspace pages, not cards stacked over the
   editor.
 - Present AI repair as a distinct review flow, never as an automatic rewrite.

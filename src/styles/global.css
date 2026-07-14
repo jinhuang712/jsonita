@@ -202,7 +202,6 @@ kbd {
 
 .jsonita-tab-button-active {
   color: color-mix(in srgb, var(--primary) 68%, var(--text));
-  font-weight: 590;
 }
 
 .jsonita-chrome-actions {
