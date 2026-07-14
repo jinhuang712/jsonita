@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+### docs · 删除重复的 PROJECT.md 入口
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 删除与 README、`spec/README.md` 重复的 `PROJECT.md`；README 继续作为产品与仓库入口，`spec/README.md` 成为正式文档入口。 |
+| 影响文档 | `README.md`、`WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`spec/40-validation.md`、`CHANGELIST.md`。 |
+| 关联 | 文档结构收敛后，独立导航页不再提供独有信息，用户要求移除。 |
+
+### docs · 收敛正式 spec 与轻量 design
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 移除 `plan/` 与 `progress/`，将原有 S/M/I/R/A/V 多层文档收敛为五篇正式 `spec`；`design/` 收敛为视觉方向、屏幕交互意图和低保真可点击流程。`docs/` 保留为 GitHub Pages 发布根目录及 Superpowers 过程记录位置。 |
+| 影响文档 | `spec/`、`design/`、`PROJECT.md`、`README.md`、`WORKFLOW.md`、`AGENTS.md`、`CLAUDE.md`、`TODO.md`、`docs/superpowers/*`、`CHANGELIST.md`。 |
+| 关联 | 用户指出 `spec` 才是项目设计与架构的通用语义，要求删除重复目录、避免高保真文档原型，并明确要求保留 `docs/`。 |
+
 ### polish · 收敛 TabBar 品牌标识视觉权重
 
 | 字段 | 内容 |

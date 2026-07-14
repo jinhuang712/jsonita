@@ -8,71 +8,40 @@ function read(path) {
   return readFileSync(new URL(path, root), 'utf8');
 }
 
-function styleBlock(html) {
-  const match = html.match(/<style>([\s\S]*?)<\/style>/);
-  assert.ok(match, 'expected an inline style block');
-  return match[1];
-}
-
-test('design prototype is the full-size frontend reference surface', () => {
+test('design prototype is a low-fidelity interaction-flow companion', () => {
   const html = read('design/prototype/index.html');
 
-  assert.match(html, /data-prototype-sot="frontend-ui"/);
-  assert.match(html, /Page Navigation/);
-  assert.match(html, /State Matrix/);
-  assert.match(html, /Hi-fi Prototype Canvas/);
-  assert.match(html, /data-theme="light"/);
-  assert.match(html, /data-theme="dark"/);
-  assert.match(html, /id="theme-toggle"/);
-  assert.match(html, /--window-width:\s*860px/);
-  assert.match(html, /--window-height:\s*560px/);
-  assert.doesNotMatch(html, /transform:\s*scale\(/);
-  assert.doesNotMatch(html, /zoom:\s*\d/);
+  assert.match(html, /data-prototype="low-fidelity-flow"/);
+  assert.match(html, /Low fidelity/);
+  assert.match(html, /data-page="editor"/);
+  assert.match(html, /data-page="settings"/);
+  assert.match(html, /data-page="history"/);
+  assert.match(html, /data-page="ai-fix"/);
+  assert.match(html, /const showPage/);
+  assert.doesNotMatch(html, /Hi-fi Prototype Canvas/);
+  assert.doesNotMatch(html, /data-prototype-sot="frontend-ui"/);
 });
 
-test('prototype opens to a polished default branch with centered actual-size canvas', () => {
+test('prototype starts at the editor and offers the main decision paths', () => {
   const html = read('design/prototype/index.html');
 
-  assert.match(html, /class="prototype-inspector"/);
-  assert.match(html, /class="canvas-stage"/);
-  assert.match(html, /<details class="sidebar-section" data-advanced>/);
-  assert.match(html, /justify-content:\s*center/);
-  assert.match(html, /align-items:\s*flex-start/);
-  assert.match(html, /page:\s*'main'/);
-  assert.match(html, /chrome:\s*'idle'/);
-  assert.match(html, /pane:\s*'dual'/);
-  assert.match(html, /input:\s*'valid'/);
-  assert.match(html, /tab:\s*'format'/);
-  assert.match(html, /Reset View/);
-  assert.match(html, /new URLSearchParams\(window\.location\.search\)/);
-  assert.match(html, /gear: '<svg/);
-  assert.match(html, /format: '<svg/);
-  assert.doesNotMatch(html, /id="state-key"/);
-  assert.doesNotMatch(html, /Object\.entries\(state\)\.map/);
-  assert.doesNotMatch(html, />⚙</);
+  assert.match(html, /showPage\('editor'\)/);
+  assert.match(html, /preview never replaces input/);
+  assert.match(html, /only Accept replaces editor input/);
+  assert.match(html, /data-page-button="settings"/);
+  assert.match(html, /data-page-button="history"/);
 });
 
-test('prototype style block has balanced CSS braces', () => {
-  const css = styleBlock(read('design/prototype/index.html'));
-  let depth = 0;
-
-  for (const char of css) {
-    if (char === '{') depth += 1;
-    if (char === '}') depth -= 1;
-    assert.ok(depth >= 0, 'CSS closed more braces than it opened');
-  }
-
-  assert.equal(depth, 0, 'CSS has unclosed braces');
-});
-
-test('design docs point agents to the prototype as UI source of truth', () => {
+test('design docs describe the prototype as a companion, not visual authority', () => {
   const designReadme = read('design/README.md');
   const workflow = read('WORKFLOW.md');
   const readme = read('README.md');
 
   assert.match(designReadme, /design\/prototype\/index\.html/);
-  assert.match(designReadme, /front-end UI source of truth/i);
+  assert.match(designReadme, /low fidelity/i);
+  assert.match(designReadme, /not a full-size canvas or a pixel-level source of truth/i);
   assert.match(workflow, /design\/prototype\/index\.html/);
-  assert.match(workflow, /front-end UI/i);
+  assert.match(workflow, /低保真流程/);
   assert.match(readme, /design\/prototype\/index\.html/);
+  assert.match(readme, /低保真/);
 });

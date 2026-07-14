@@ -1,173 +1,77 @@
 # WORKFLOW · 文档与实现协作流程
 
-本文件定义一个需求从想法进入文档、设计、实现和验收时的更新顺序。它应尽量保持项目无关:项目专属文档地图放在 `README.md`,项目专属 agent 约束放在 `AGENTS.md` / `CLAUDE.md`。
+本文件定义 Jsonita 的需求、设计、实现与验收如何保持一致。它只规定
+文档职责和更新顺序；产品事实由 `spec/`、界面意图由 `design/`、过程记录
+与 GitHub Pages 内容由 `docs/` 承担。
 
-## 总原则
+## 文档职责
 
 ```mermaid
 flowchart LR
-  Idea[需求/反馈] --> Classify[判断影响范围]
-  Classify --> Plan[plan: 产品承诺变化]
-  Classify --> Spec[spec: 核心技术/能力契约变化]
-  Classify --> Platform[spec/platform: 集成/可靠性变化]
-  Classify --> Design[design: 交互/视觉变化]
-  Spec --> Appendix[spec/appendix: schema/event/tool/prompt/verification 明细]
-  Platform --> Appendix
-  Plan --> Readme[README 导航]
-  Spec --> Readme
-  Platform --> Readme
+  Idea[需求或反馈] --> Classify[判断变化类型]
+  Classify --> Spec[spec: 产品与架构契约]
+  Classify --> Design[design: 界面与交互意图]
+  Classify --> Todo[TODO: 未关闭风险]
+  Spec --> Readme[README / spec 导航]
   Design --> Readme
-  Appendix --> Todo[TODO 未决项]
-  Readme --> Change[CHANGELOG]
-  Todo --> Change
+  Todo --> Change[CHANGELIST: 已完成历史]
+  Docs[docs: Pages 与过程记录] --> Readme
 ```
 
-任何显著变更至少判断四件事:
+| 位置 | 负责什么 | 不负责什么 |
+| --- | --- | --- |
+| `spec/` | 产品范围、行为、架构、运行保障、验证门禁 | 像素样式、函数签名、SQL、完整 prompt、命令抄录 |
+| `design/` | 屏幕层级、用户可见状态、交互意图、简单流程原型 | 高保真视觉稿、实现细节、历史探索集 |
+| `docs/` | GitHub Pages 内容与 Superpowers 设计/计划过程记录 | 取代正式 spec 的产品承诺 |
+| `TODO.md` | 尚未关闭的风险、验证与用户待决项 | 已完成事项或旧排期 |
+| `CHANGELIST.md` | 已完成的有意义变更与决策背景 | 开放 backlog |
 
-| 问题 | 更新位置 |
-|---|---|
-| 产品承诺是否变化 | `plan/*.md` |
-| 核心技术行为或能力边界是否变化 | `spec/S*.md` 或 `spec/M*.md` |
-| 集成、恢复、迁移、诊断等支撑契约是否变化 | `spec/platform/*.md` |
-| 用户交互或视觉是否变化 | `design/*.md` 和必要原型 |
-| 是否有未关闭风险或实施前验证 | `TODO.md` |
+## Spec 结构
 
-跨文档变更必须写入 `CHANGELOG.md`。
+`spec/` 是 Jsonita 的正式设计与架构入口：
 
-## 编号体系
+| 文件 | 内容 |
+| --- | --- |
+| `00-product.md` | 产品定位、范围、非目标与权威边界 |
+| `10-behavior.md` | 用户动作、结果与不可突破的行为承诺 |
+| `20-architecture.md` | 模块职责、数据流、边界与不变量 |
+| `30-operations.md` | 本地数据、隐私、可靠性、日志与发布保障 |
+| `40-validation.md` | 文档、前端、Tauri 与发布变更的验证门禁 |
 
-文档编号采用“单字母 + 数字”。字母表示读法,数字表示该类文档内部顺序。
+每篇 spec 必须说明其拥有的决策、依赖关系与失败时的用户结果。代码、测试和
+脚本是精确实现细节的权威；spec 只保留读者理解产品和系统所需的稳定边界。
 
-| 前缀 | 位置 | 含义 | 适用内容 |
-|---|---|---|---|
-| `Sxx` | `spec/` 根层 | System Design | 系统主权、跨层契约、运行时、存储、上下文、底层协议 |
-| `Mxx` | `spec/` 根层 | User-facing Capability | 用户可触发、可感知、可验收的能力闭环 |
-| `Ixx` | `spec/platform/` | Integration Contract | 模型、编辑器、文件系统、导入导出、桌面壳、第三方服务等跨边界接入 |
-| `Rxx` | `spec/platform/` | Reliability / Runtime Operations | 生命周期、备份恢复、迁移升级、索引修复、诊断排障 |
-| `Axx` | `spec/appendix/` | Appendix Implementation Detail | 表结构、schema、事件、工具、prompt、迁移字段等实现明细 |
-| `Vxx` | `spec/appendix/` | Verification Detail | 测试矩阵、golden cases、外部能力 spike、实查记录 |
-| `Pxxx` | `progress/` | Progress Record | 历史进度、迁移记录、复盘归档 |
+## 变更流程
 
-`S/M` 是读者需要主动理解的核心技术文档。`I/R` 是与 appendix 平级的支撑契约,放在 `spec/platform/`。`A/V` 是实现者偶尔查的明细,放在 `spec/appendix/`。`P` 只用于历史档案。
+| 变化 | 更新位置 |
+| --- | --- |
+| 产品范围、用户行为、架构边界、数据或发布承诺 | 对应 `spec/*.md` |
+| 屏幕结构、可见状态、键盘流程或交互意图 | `design/*.md`；必要时更新简单原型 |
+| 精确样式、组件实现、schema、SQL、prompt、命令 | 源码、测试或脚本；仅在 spec 中说明边界 |
+| 未关闭风险或需要验证的事实 | `TODO.md` |
+| 已完成的迁移和决策 | `CHANGELIST.md` |
+| Superpowers 的设计/实施过程或 GitHub Pages 页面 | `docs/` |
 
-## 更新流程
+跨文档变更在 `CHANGELIST.md` 顶部增加一节，至少说明变更、影响文件与原因。
 
-| 变更类型 | 做法 |
-|---|---|
-| 系统主权、核心状态机、跨层失败语义变化 | 更新 `spec/Sxx-*.md` |
-| 用户可感知能力变化 | 新增或更新 `spec/Mxx-*.md` |
-| 跨边界接入变化 | 新增或更新 `spec/platform/Ixx-*.md` |
-| 运行维护、恢复、迁移、诊断变化 | 新增或更新 `spec/platform/Rxx-*.md` |
-| schema / event / tool / prompt / migration 字段变化 | 更新 `spec/appendix/Axx-*.md` |
-| 测试、golden case、外部 spike 或实查记录变化 | 更新 `spec/appendix/Vxx-*.md` |
-| 历史材料迁移或复盘 | 归 `progress/Pxxx-*.md` 或专题 archive |
+## Design 规则
 
-### 核心 Spec 规则
+`design/` 是实现前后的共同语言，不是第二套高保真应用。它应让读者快速理解
+主页面、状态和交互结果；精确颜色、间距、CSS 与组件结构以实际源码为准。
 
-如果一篇文档决定读者理解系统主路径所必需的设计,它应进入 `Sxx` 或 `Mxx`,而不是 appendix。
-
-核心 spec 必须讲清:
-
-- 读者为什么需要这篇文档。
-- 它负责什么、不负责什么。
-- 它拥有哪些主权对象或职责边界。
-- 输入、输出、依赖和下游影响。
-- 关键流程或状态如何流转。
-- 失败事故如何收场。
-- 用户看见什么结果。
-- 哪些支撑契约被后置到 `platform/`,哪些实现明细被后置到 `appendix/`。
-
-核心 spec 应优先用场景、mermaid 图、表格和 FAQ 解释设计。图表用于说明系统关系和状态流转,表格用于对齐边界和取舍,FAQ 用于回答实现者最容易误解的问题。
-
-### Platform 规则
-
-`spec/platform/` 放支撑核心体验但不应打断主阅读路径的工程契约。它不是 appendix,因为它仍然定义行为边界和失败收场;它也不是根层核心 spec,因为读者通常不需要先读它才能理解产品能力。
-
-`Ixx` 文档回答:
-
-- 这个外部/跨边界系统提供什么能力。
-- 接入前必须验证什么。
-- 它的失败如何影响核心路径。
-- 什么时候应降级、阻断或回写 TODO。
-
-`Rxx` 文档回答:
-
-- 某个运维或恢复闭环何时触发。
-- 它保护哪些主权数据或用户结果。
-- 失败时系统停在哪个可解释状态。
-- 哪些修复动作需要用户确认。
-
-### Appendix 规则
-
-appendix 只承接实现者偶尔需要查的机器级明细。读者不需要先读 appendix 才能理解系统。
-
-appendix 可以保存:
-
-- 表结构、字段字典、索引和迁移字段。
-- 完整 JSON Schema / interface / 结构化输出样例。
-- 工具参数、命令清单和事件字段。
-- prompt 模板全文和公共片段。
-- 测试矩阵、golden cases、外部能力实查记录。
-
-appendix 不保存:
-
-- 根层 spec 应讲清的主路径。
-- 平台契约应讲清的接入/恢复失败语义。
-- 历史阶段叙事、旧方案对比和迁移过程流水账。
-- 已关闭问题、旧排期计划、未验证事实伪装成当前契约。
-
-## Design 更新流程
-
-design 不是 source of truth,但它也不是可忽略的草图。它是交互和视觉契约,必须随能力 spec 同步更新。
-
-| 变更 | design 处理 |
-|---|---|
-| 新增浮层、面板、快捷键、用户可见状态 | 更新对应 `design/*.md`;同时更新 `design/prototype/index.html` 的真实尺寸状态分支 |
-| spec 改了行为 | design 补交互状态、空态、错态、键盘和视觉层级;涉及前端 UI 时同步原型 |
-| design 发现实现不可行 | 回写 spec 或 TODO,并记入 CHANGELOG |
-| 原型与 Markdown 不一致 | 前端 UI 视觉 / 交互以 `design/prototype/index.html` 为准;产品、技术、隐私、发布等非 UI 契约以 plan / spec 为准;冲突需要同步修正 |
-
-`design/prototype/index.html` 是手写高保真原型,不是生成式文档 HTML。它是 front-end UI 的真实尺寸 source of truth:页面导航、状态矩阵、light / dark、可点击交互和 860 x 560 主窗画布都应在这里维护。
-
-Markdown 文档不得超链接到仓库内 `.html`,但可以用路径文字引用 `design/prototype/index.html`。不要重新引入生成式文档 HTML、CAST JSON 源或 CAST 渲染脚本。
-
-## TODO 规则
-
-TODO 只放仍开放的问题:
-
-- 未验证外部事实。
-- 需要代码 spike 才能关闭的风险。
-- 已知设计/实现不同步。
-- 用户明确要求之后裁决的问题。
-
-已完成的迁移、历史解释和关闭项写 `CHANGELOG.md` 或 `progress/`,不要留在 TODO 活跃区。
-
-## CHANGELOG 规则
-
-每次跨文档变更都要在顶部新增一节,说明:
-
-| 字段 | 内容 |
-|---|---|
-| 变更 | 做了什么 |
-| 影响文档 | 文件或文档组 |
-| 关联 | 用户反馈、技术风险或设计原因 |
-
-CHANGELOG 不是 TODO,不要把未决问题写成完成事实。
+`design/prototype/index.html` 只承载可点击的低保真流程。它不要求真实窗口尺寸、
+完整状态矩阵、主题切换或与运行时逐像素对齐。Markdown 不得超链接到仓库内
+HTML 文件；如需提及原型，使用路径文字。
 
 ## 提交前验证
 
-文档变更提交前至少跑:
+文档变更至少运行：
 
 ```bash
 git diff --check
 diff -u AGENTS.md CLAUDE.md
 ```
 
-并检查:
-
-- Markdown 内部链接存在。
-- Markdown 不超链接仓库内 `.html`;`design/prototype/index.html` 只用路径文字引用。
-- 新核心 spec 已进入 README 导航。
-- 新 platform 文档已进入 README 导航。
-- 如果改了 design,对应 spec 有引用或说明。
-- 如果有未关闭项,已进入 TODO。
+并检查 Markdown 链接存在、README 与 spec 导航一致、没有将已完成
+事项留在 TODO。若变更涉及原型，运行对应 Node 测试；若涉及实现或 Tauri 配置，
+按 `spec/40-validation.md` 选择验证命令。
