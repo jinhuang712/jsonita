@@ -5,6 +5,8 @@ import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
 import { acceptAiFix } from './aiFixActions';
+import { ActionButton } from '../components/ActionButton';
+import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { DiffView } from './DiffView';
 
 /**
@@ -97,9 +99,9 @@ export function AiFixPane() {
         <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', marginBottom: 8 }}>
           Error · {aiError ?? 'AI Fix failed'}
         </div>
-        <button type="button" onClick={reject} style={btnGhost}>
+        <ActionButton variant="secondary" onClick={reject}>
           Close
-        </button>
+        </ActionButton>
       </div>
     );
   }
@@ -120,13 +122,13 @@ export function AiFixPane() {
             borderTop: '1px solid var(--border)',
           }}
         >
-          <button type="button" onClick={reject} title="Esc" style={btnGhost}>
+          <ActionButton variant="secondary" onClick={reject} title="Esc">
             Cancel
-          </button>
-          <button type="button" onClick={() => acceptAiFix(after, setContent, aiReset, setActivePane)} title="Cmd+Enter" style={btnPrimary}>
-            <span style={kbdStyle}>⌘↵</span>
+          </ActionButton>
+          <ActionButton variant="primary" onClick={() => acceptAiFix(after, setContent, aiReset, setActivePane)} title="Cmd+Enter">
+            <ShortcutGlyph accelerator="Cmd+Enter" decorative />
             Accept
-          </button>
+          </ActionButton>
         </div>
       </div>
     );
@@ -135,35 +137,3 @@ export function AiFixPane() {
   return null;
 }
 
-const btnGhost: React.CSSProperties = {
-  padding: '4px 12px',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border-strong)',
-  color: 'var(--text)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
-  cursor: 'pointer',
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: '4px 12px',
-  background: 'var(--accent)',
-  color: 'white',
-  border: 'none',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 8,
-};
-
-const kbdStyle: React.CSSProperties = {
-  padding: '1px 6px',
-  border: '1px solid rgba(255,255,255,0.45)',
-  borderRadius: 4,
-  fontFamily: 'var(--font-mono)',
-  fontSize: 'calc(var(--fs-xs) - 1px)',
-  lineHeight: 1.2,
-  color: 'white',
-};
