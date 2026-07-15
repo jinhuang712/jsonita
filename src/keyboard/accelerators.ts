@@ -147,6 +147,36 @@ function formatAcceleratorPart(part: string, mac: boolean): string {
   }
 }
 
+export type ShortcutTile = { glyph?: string; text?: string };
+
+const TILE_MAP: Record<string, ShortcutTile> = {
+  'cmdorctrl': { glyph: 'g-cmd' },
+  'cmd': { glyph: 'g-cmd' },
+  'command': { glyph: 'g-cmd' },
+  'meta': { glyph: 'g-cmd' },
+  'shift': { glyph: 'g-shift' },
+  'enter': { glyph: 'g-return' },
+  'return': { glyph: 'g-return' },
+  'escape': { text: 'esc' },
+  'esc': { text: 'esc' },
+  'space': { text: 'space' },
+  'tab': { text: 'tab' },
+  'plus': { text: '+' },
+  'minus': { text: '-' },
+};
+
+export function shortcutTiles(accelerator: string): ShortcutTile[] {
+  return accelerator
+    .split('+')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const mapped = TILE_MAP[part.toLowerCase()];
+      if (mapped) return mapped;
+      return { text: part.length === 1 ? part.toUpperCase() : part };
+    });
+}
+
 function normalizeKey(key: string): string {
   const lower = key.toLowerCase();
   switch (lower) {
