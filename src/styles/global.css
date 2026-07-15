@@ -254,6 +254,12 @@ kbd {
   transform: translateY(1px);
 }
 
+.jsonita-chrome-icon-button.is-selected {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
 .jsonita-chrome-tooltip {
   position: absolute;
   top: calc(100% + 8px);

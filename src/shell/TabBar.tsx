@@ -1,18 +1,18 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEditorStore } from '../store/editor';
 import { settings as settingsApi } from '../ipc/commands';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
-import { formatAccelerator } from '../keyboard/accelerators';
+import { ChromeIconButton } from '../components/ChromeIconButton';
 import {
   FormatIcon,
   GearIcon,
   HistoryIcon,
   JsonBracesIcon,
   MinifyIcon,
+  SinglePanelIcon,
   SplitPanelIcon,
   SparklesIcon,
   ToStringIcon,
@@ -35,11 +35,6 @@ const TABS: { id: Pane; key: string; Icon: (props: IconProps) => JSX.Element }[]
   { id: 'json-to-str', key: 'jsonToStr', Icon: ToStringIcon },
   { id: 'str-to-json', key: 'strToJson', Icon: JsonBracesIcon },
 ];
-
-type ChromeActionTooltip = {
-  label: string;
-  shortcut: string;
-};
 
 export function TabBar() {
   const { t } = useTranslation('panes');
@@ -222,72 +217,51 @@ export function TabBar() {
         </button>
       )}
       <div className="jsonita-chrome-actions" aria-label={tShell('actions.windowActions')}>
-        <ChromeActionButton
-          onClick={toggleSinglePaneMode}
-          aria-label={
-            settings.singlePaneMode
-              ? tShell('actions.switchToSplitPanel')
-              : tShell('actions.switchToSinglePanel')
-          }
+        <ChromeIconButton
+          selected={!settings.singlePaneMode}
+          onClick={() => {
+            if (settings.singlePaneMode) toggleSinglePaneMode();
+          }}
+          aria-label={tShell('actions.switchToSplitPanel')}
           tooltipLabel={tShell('actions.splitPanel')}
-          tooltipShortcut={formatAccelerator(settings.shortcutSplitToggle)}
+          tooltipShortcut={settings.shortcutSplitToggle}
         >
           <SplitPanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
-        </ChromeActionButton>
-        <ChromeActionButton
+        </ChromeIconButton>
+        <ChromeIconButton
+          selected={settings.singlePaneMode}
+          onClick={() => {
+            if (!settings.singlePaneMode) toggleSinglePaneMode();
+          }}
+          aria-label={tShell('actions.switchToSinglePanel')}
+          tooltipLabel={tShell('actions.singlePanel')}
+          tooltipShortcut={settings.shortcutSplitToggle}
+        >
+          <SinglePanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+        </ChromeIconButton>
+        <ChromeIconButton
           onClick={() => {
             setSettingsViewOpen(false);
             setHistoryModalOpen(true);
           }}
           aria-label={tShell('actions.openHistory')}
           tooltipLabel={tShell('actions.history')}
-          tooltipShortcut={formatAccelerator('CmdOrCtrl+Y')}
+          tooltipShortcut="CmdOrCtrl+Y"
         >
           <HistoryIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
-        </ChromeActionButton>
-        <ChromeActionButton
+        </ChromeIconButton>
+        <ChromeIconButton
           onClick={() => {
             setHistoryModalOpen(false);
             setSettingsViewOpen(true);
           }}
           aria-label={tShell('actions.openSettings')}
           tooltipLabel={tShell('actions.settings')}
-          tooltipShortcut={formatAccelerator('CmdOrCtrl+,')}
+          tooltipShortcut="CmdOrCtrl+,"
         >
           <GearIcon width={15} height={15} strokeWidth={1.75} aria-hidden="true" />
-        </ChromeActionButton>
+        </ChromeIconButton>
       </div>
     </div>
-  );
-}
-
-function ChromeActionButton({
-  children,
-  onClick,
-  tooltipLabel,
-  tooltipShortcut,
-  ...buttonProps
-}: PropsWithChildren<
-  Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'type' | 'title'> & {
-    tooltipLabel: ChromeActionTooltip['label'];
-    tooltipShortcut: ChromeActionTooltip['shortcut'];
-  }
->) {
-  const tooltipId = useId();
-
-  return (
-    <button
-      {...buttonProps}
-      type="button"
-      className="jsonita-chrome-icon-button"
-      onClick={onClick}
-      aria-describedby={tooltipId}
-    >
-      {children}
-      <span id={tooltipId} role="tooltip" className="jsonita-chrome-tooltip">
-        <span className="jsonita-chrome-tooltip-label">{tooltipLabel}</span>
-        <kbd className="jsonita-chrome-tooltip-shortcut">{tooltipShortcut}</kbd>
-      </span>
-    </button>
   );
 }
