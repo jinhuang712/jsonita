@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { formatAccelerator } from '../keyboard/accelerators';
+import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane, type SinglePaneApplyState } from '../store/ui';
@@ -76,23 +76,7 @@ export function SinglePaneHint() {
         whiteSpace: 'normal',
       }}
     >
-      <kbd
-        style={{
-          padding: '1px 5px',
-          borderRadius: 'var(--radius-sm)',
-          border: isAiFixPrimary
-            ? '1px solid color-mix(in srgb, var(--accent) 32%, transparent)'
-            : '1px solid var(--control-border)',
-          background: isAiFixPrimary
-            ? 'color-mix(in srgb, var(--accent) 8%, transparent)'
-            : 'var(--control-bg)',
-          color: isAiFixPrimary ? 'var(--accent)' : 'var(--text)',
-          fontFamily: 'var(--font-mono-ui)',
-          fontSize: 'inherit',
-        }}
-      >
-        {formatAccelerator('CmdOrCtrl+Enter')}
-      </kbd>
+      <ShortcutGlyph accelerator="CmdOrCtrl+Enter" />
       <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{label}</span>
     </div>
   );

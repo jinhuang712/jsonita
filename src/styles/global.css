@@ -339,23 +339,6 @@ kbd {
   gap: 5px;
 }
 
-.jsonita-esc-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 31px;
-  height: 22px;
-  padding: 0 7px;
-  border: 1px solid rgba(175, 199, 222, 0.22);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(242, 244, 247, 0.92);
-  font-family: var(--font-mono-ui);
-  font-size: calc(var(--fs-xs) + 0.5px);
-  font-weight: 700;
-  line-height: 1;
-}
-
 @keyframes jsonita-esc-close-hint-lifecycle {
   0% {
     opacity: 0;

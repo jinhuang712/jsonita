@@ -13,6 +13,7 @@ import { useUiStore } from '../store/ui';
 import { useEffectiveTheme } from '../theme/useEffectiveTheme';
 import { TreeView } from '../tree/TreeView';
 import { StatusBar } from './StatusBar';
+import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { SinglePaneHint } from './SinglePaneHint';
 import { TabBar } from './TabBar';
 import { WindowResizeHandles } from './WindowResizeHandles';
@@ -188,8 +189,8 @@ function EscCloseHint({ label }: { label: string }) {
   return (
     <div className="jsonita-esc-close-hint" role="status" aria-live="polite">
       <span className="jsonita-esc-key-combo" aria-hidden="true">
-        <kbd className="jsonita-esc-key">Esc</kbd>
-        <kbd className="jsonita-esc-key">Esc</kbd>
+        <ShortcutGlyph accelerator="Escape" decorative />
+        <ShortcutGlyph accelerator="Escape" decorative />
       </span>
       <span>{label}</span>
     </div>
