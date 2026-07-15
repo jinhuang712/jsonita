@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### feat · 控件语言全面改造（按钮 / 快捷键 / 设置控件）
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 引入统一控件语言：新建 `GlyphSymbols`（⌘⇧↑↓↵ 矢量字形）、`ShortcutGlyph`（磨砂键帽分片）、`ActionButton`（玻璃主/次/危险/文本按钮）、`ChromeIconButton`（34px 玻璃 chrome 动作）；chrome 改为 split/single 双按钮 toggle；dark 去渐变改纯磨砂玻璃；键帽字体换 SF Pro。所有控件面一次性迁移到新原语，移除散落的旧 `<kbd>` 与样式。 |
+| 影响文档 | `design/prototype/controls.html`、`docs/superpowers/specs/2026-07-15-control-language-design.md`、`docs/superpowers/plans/2026-07-15-control-language.md`、`src/components/*`、`src/styles/global.css`、`src/styles/tokens.css`、`src/keyboard/accelerators.ts`、`src/shell/*`、`src/settings/*`、`src/history/*`、`src/panes/AiFixPane.tsx`、`src/permissions/ShortcutPermissionModal.tsx`、`tests/**`。 |
+| 关联 | 此前在 codex 分支尝试引入 Raycast 风格控件失败（实心石墨主按钮、unicode ⌘ 渲染差、dark 渐变显脏）；本次从 main 重写。方向：Raycast 级控件工艺落在 Jsonita 原生玻璃质感上，不抄布局、不做命令面板。 |
+
 ### fix · 顶部 Transform Tab 切换稳定性
 
 | 字段 | 内容 |
