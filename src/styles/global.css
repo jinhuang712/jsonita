@@ -51,17 +51,6 @@ select,
     box-shadow 180ms var(--ease-native) !important;
 }
 
-kbd {
-  display: inline-block;
-  padding: 0 4px;
-  background: var(--bg-code);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono-ui);
-  font-size: var(--fs-xs);
-  color: var(--text);
-}
-
 .jsonita-tab-active-pill {
   position: absolute;
   left: 0;
@@ -290,14 +279,6 @@ kbd {
 
 .jsonita-chrome-tooltip-label {
   white-space: nowrap;
-}
-
-.jsonita-chrome-tooltip-shortcut {
-  flex: 0 0 auto;
-  color: var(--text-muted);
-  background: var(--control-bg);
-  border-color: var(--control-border);
-  font-size: calc(var(--fs-xs) - 1px);
 }
 
 .jsonita-chrome-icon-button:hover .jsonita-chrome-tooltip,
@@ -690,14 +671,6 @@ kbd {
     transform var(--dur-fast) var(--ease-out);
 }
 
-.jsonita-page-close kbd {
-  border-color: var(--control-border);
-  background: var(--control-bg);
-  color: var(--text-muted);
-  font-size: calc(var(--fs-xs) - 1px);
-  line-height: 1.35;
-}
-
 .jsonita-page-close:hover,
 .jsonita-page-close:focus-visible,
 .jsonita-settings-close:hover,
@@ -706,11 +679,6 @@ kbd {
   border-color: var(--control-border);
   color: color-mix(in srgb, var(--primary) 72%, var(--text));
   outline: none;
-}
-
-.jsonita-page-close:hover kbd,
-.jsonita-page-close:focus-visible kbd {
-  color: color-mix(in srgb, var(--primary) 72%, var(--text));
 }
 
 .jsonita-page-close:active,
@@ -1132,6 +1100,3 @@ kbd {
   color: var(--primary);
 }
 
-.jsonita-action-button .kbd-group {
-  margin-left: 2px;
-}
