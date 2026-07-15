@@ -218,8 +218,6 @@ select,
   background: transparent;
   color: var(--text-muted);
   font-family: inherit;
-  font-size: calc(var(--fs-sm) + 4px);
-  font-weight: 650;
   line-height: 1;
   cursor: pointer;
   transition:
@@ -1010,39 +1008,12 @@ select,
   white-space: nowrap;
 }
 
-.jsonita-shortcut-tile--sm {
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  font-size: 11px;
-  border-radius: 4px;
-}
-
-.jsonita-shortcut-tile--lg {
-  min-width: 30px;
-  height: 30px;
-  padding: 0 8px;
-  font-size: 16px;
-  border-radius: 7px;
-}
-
 .jsonita-shortcut-tile .jsonita-shortcut-glyph-icon {
   width: 13px;
   height: 13px;
   display: block;
 }
 
-.jsonita-shortcut-tile--sm .jsonita-shortcut-glyph-icon {
-  width: 10px;
-  height: 10px;
-}
-
-.jsonita-shortcut-tile--lg .jsonita-shortcut-glyph-icon {
-  width: 17px;
-  height: 17px;
-}
-
-/* ── Action buttons (glass commit primitives) ────────── */
 .jsonita-action-button {
   height: 30px;
   padding: 0 13px;

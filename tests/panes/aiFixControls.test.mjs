@@ -8,11 +8,13 @@ test('AiFixPane review actions use ActionButton with correct glass variants', ()
   const src = read('src/panes/AiFixPane.tsx');
   // imports ActionButton
   assert.match(src, /import \{ ActionButton \} from '\.\.\/components\/ActionButton'/);
-  // Accept button uses variant="primary"
+  // Accept button uses variant="primary" with CmdOrCtrl+Enter shortcut
   assert.match(src, /variant="primary"/);
-  // Reject/Cancel buttons use variant="secondary"
-  // Match at least one secondary variant usage (the Cancel button)
-  assert.match(src, /variant="secondary"/);
+  // Accept button must carry CmdOrCtrl+Enter accelerator
+  assert.match(src, /accelerator="CmdOrCtrl\+Enter"/);
+  // Reject/Cancel/Close buttons all use variant="secondary" (at least 2 occurrences)
+  const secondaryMatches = src.match(/variant="secondary"/g) ?? [];
+  assert.ok(secondaryMatches.length >= 2, 'expected at least 2 secondary ActionButtons (Close + Cancel)');
   // No more inline btnGhost / btnPrimary style objects
   assert.doesNotMatch(src, /const btnGhost/);
   assert.doesNotMatch(src, /const btnPrimary/);
@@ -20,10 +22,10 @@ test('AiFixPane review actions use ActionButton with correct glass variants', ()
   assert.doesNotMatch(src, /const kbdStyle/);
 });
 
-test('Accept shortcut uses ShortcutGlyph', () => {
+test('Accept shortcut uses ShortcutGlyph with CmdOrCtrl+Enter', () => {
   const src = read('src/panes/AiFixPane.tsx');
   assert.match(src, /import \{ ShortcutGlyph \} from '\.\.\/components\/ShortcutGlyph'/);
   assert.match(src, /ShortcutGlyph/);
-  // uses accelerator="Cmd+Enter" or similar
-  assert.match(src, /accelerator=.*Cmd.*Enter/);
+  // uses accelerator="CmdOrCtrl+Enter"
+  assert.match(src, /accelerator="CmdOrCtrl\+Enter"/);
 });

@@ -77,6 +77,11 @@ test('split and single view are two separate toggle buttons', () => {
   assert.ok(viewButtons.length >= 2, 'expected split + single toggle buttons');
 });
 
+test('ChromeIconButton renders aria-pressed on toggle buttons', () => {
+  const source = read('src/components/ChromeIconButton.tsx');
+  assert.match(source, /aria-pressed/);
+});
+
 test('settings page keeps a close button in the top-right corner', () => {
   const settings = read('src/settings/SettingsView.tsx');
 

@@ -31,6 +31,7 @@ export function ChromeIconButton({
       type="button"
       className={`jsonita-chrome-icon-button${selected ? ' is-selected' : ''}`}
       aria-describedby={tooltipId}
+      aria-pressed={selected ? 'true' : undefined}
     >
       {children}
       <span id={tooltipId} role="tooltip" className="jsonita-chrome-tooltip">
