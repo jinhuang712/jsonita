@@ -124,12 +124,16 @@ test('floating window renders Esc close hint and localizes the prompt', async ()
   assert.match(hotkeys, /showEscCloseHint\(\)/);
   assert.match(styles, /\.jsonita-esc-close-hint\b/);
   assert.match(styles, /backdrop-filter:\s*blur\(16px\) saturate\(140%\)/);
-  assert.match(styles, /\.jsonita-esc-key\b/);
+  assert.doesNotMatch(styles, /\.jsonita-esc-key\s*\{/);
   assert.match(styles, /jsonita-esc-close-hint-lifecycle 1700ms/);
   assert.doesNotMatch(shell, /x2/);
   assert.match(enShell, /"doubleEscToClose":\s*"Double Esc to close"/);
   assert.match(zhShell, /"doubleEscToClose":\s*"双击 Esc 关闭"/);
   assert.equal(ESC_CLOSE_HINT_MS, 1700);
+	// EscCloseHint uses ShortcutGlyph instead of raw <kbd>
+	assert.match(shell, /import \{ ShortcutGlyph \} from '\.\.\/components\/ShortcutGlyph'/);
+	assert.match(shell, /<ShortcutGlyph accelerator="Escape"/);
+	assert.doesNotMatch(shell, /<kbd className="jsonita-esc-key"/);
 });
 
 test('global hotkeys keep AI Fix Escape ahead of double-Esc close', () => {

@@ -45,6 +45,11 @@ test('single-pane run affordance sits above the status bar instead of touching b
 
   assert.match(hint, /bottom:\s*44/);
   assert.match(hint, /padding:\s*'6px 10px'/);
+	// Uses ShortcutGlyph instead of raw <kbd>
+	assert.match(hint, /import \{ ShortcutGlyph \} from '\.\.\/components\/ShortcutGlyph'/);
+	assert.match(hint, /<ShortcutGlyph accelerator="CmdOrCtrl\+Enter"/);
+	assert.doesNotMatch(hint, /<kbd/);
+	assert.doesNotMatch(hint, /formatAccelerator/);
 });
 
 test('chrome uses ChromeIconButton with vector-glyph tooltips', () => {
