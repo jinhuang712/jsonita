@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ai } from '../ipc/commands';
+import { ActionButton } from '../components/ActionButton';
 
 /**
  * API key 输入 + 测试连接 + 保存。
@@ -74,24 +75,24 @@ export function ApiKeyInput({ modelId }: Props) {
           style={inputStyle}
           autoComplete="off"
         />
-        <button
+        <ActionButton
+          variant="secondary"
           onClick={test}
           disabled={testing || !keyInput}
-          style={btnGhost}
         >
           {testing ? '...' : t('ai.test')}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
+          variant="primary"
           onClick={save}
           disabled={!keyInput}
-          style={btnPrimary}
         >
           {t('ai.save')}
-        </button>
+        </ActionButton>
         {hasKey && (
-          <button onClick={remove} style={btnDanger}>
+          <ActionButton variant="danger" onClick={remove}>
             {t('ai.remove')}
-          </button>
+          </ActionButton>
         )}
       </div>
       {msg && (
@@ -118,32 +119,3 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--text)',
 };
 
-const btnGhost: React.CSSProperties = {
-  padding: '3px 10px',
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-xs)',
-  cursor: 'pointer',
-  color: 'var(--text)',
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: '3px 10px',
-  background: 'var(--control-bg-active)',
-  color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
-  border: '1px solid var(--primary-edge)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-xs)',
-  cursor: 'pointer',
-};
-
-const btnDanger: React.CSSProperties = {
-  padding: '3px 10px',
-  background: 'var(--control-bg)',
-  color: 'var(--danger)',
-  border: '1px solid color-mix(in srgb, var(--danger) 34%, var(--control-border))',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-xs)',
-  cursor: 'pointer',
-};

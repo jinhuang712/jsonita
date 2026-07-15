@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
+import { ActionButton } from '../components/ActionButton';
 
 /**
  * macOS shortcut permission recovery modal.
@@ -93,39 +94,20 @@ export function ShortcutPermissionModal({ onClose }: Props) {
             marginTop: 18,
           }}
         >
-          <button onClick={onClose} style={btnGhost}>
+          <ActionButton variant="secondary" onClick={onClose}>
             {tc('later')}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            variant="primary"
             onClick={async () => {
               await invoke('open_accessibility_settings');
             }}
-            style={btnPrimary}
           >
             {tc('openSystemSettings')}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>
   );
 }
 
-const btnGhost: React.CSSProperties = {
-  padding: '5px 12px',
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  color: 'var(--text)',
-  fontSize: 'var(--fs-sm)',
-  cursor: 'pointer',
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: '5px 12px',
-  background: 'var(--control-bg-active)',
-  color: 'color-mix(in srgb, var(--primary) 72%, var(--text))',
-  border: '1px solid var(--primary-edge)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
-  cursor: 'pointer',
-};
