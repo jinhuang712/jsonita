@@ -34,7 +34,7 @@ test('history and settings use shared quiet surface tokens for controls', () => 
   const styles = read('src/styles/global.css');
 
   assert.match(styles, /\.jsonita-history-document-row\s*\{[^}]*background:\s*var\(--control-bg\)/s);
-  assert.match(styles, /\.jsonita-history-preview-action\s*\{[^}]*background:\s*var\(--surface-raised\)/s);
+  assert.match(styles, /\.jsonita-action-button-secondary\s*\{[^}]*var\(--control-bg\)/s);
   assert.doesNotMatch(history, /<span style=\{\{ \.\.\.chipStyle/);
   assert.match(settings, /var\(--control-bg\)/);
   assert.match(settings, /background: checked \? 'var\(--toggle-on\)' : 'var\(--control-bg-hover\)'/);
@@ -56,7 +56,7 @@ test('history and settings are full-window pages with explicit Esc close actions
   assert.match(settings, /className="jsonita-page jsonita-settings-page"/);
   assert.match(history, /className="jsonita-page-close"/);
   assert.match(settings, /className="jsonita-page-close"/);
-  assert.match(history, /<kbd[^>]*>Esc<\/kbd>/);
+  assert.match(history, /<ShortcutGlyph accelerator="Escape"/);
   assert.match(settings, /<ShortcutGlyph accelerator="Escape"[^>]*>/);
   assert.doesNotMatch(history, /style=\{overlayStyle\}/);
   assert.doesNotMatch(history, /const overlayStyle/);

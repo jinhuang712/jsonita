@@ -585,58 +585,6 @@ kbd {
   flex: 0 0 auto;
 }
 
-.jsonita-history-preview-meta-action,
-.jsonita-history-preview-action,
-.jsonita-history-clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--radius-md);
-  background: var(--control-bg);
-  color: var(--text-muted);
-  font-family: var(--font-ui);
-  font-size: var(--fs-xs);
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-}
-
-.jsonita-history-preview-meta-action {
-  min-width: 28px;
-  height: 28px;
-  padding: 0 7px;
-}
-
-.jsonita-history-preview-meta-action[aria-pressed='true'] {
-  border-color: var(--primary-edge);
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-.jsonita-history-preview-meta-action:hover,
-.jsonita-history-preview-meta-action:focus-visible,
-.jsonita-history-preview-action:hover,
-.jsonita-history-preview-action:focus-visible,
-.jsonita-history-clear:hover,
-.jsonita-history-clear:focus-visible {
-  border-color: var(--control-border);
-  background: var(--control-bg-hover);
-  color: var(--text);
-  outline: none;
-}
-
-.jsonita-history-preview-meta-action:active,
-.jsonita-history-preview-action:active,
-.jsonita-history-clear:active {
-  transform: translateY(1px);
-}
-
 .jsonita-history-preview-code {
   flex: 1 1 auto;
   min-height: 0;
@@ -648,22 +596,6 @@ kbd {
   line-height: var(--lh-code);
   white-space: pre;
   user-select: text;
-}
-
-.jsonita-history-preview-action {
-  align-self: flex-end;
-  flex: 0 0 auto;
-  min-height: 30px;
-  padding: 0 9px;
-  background: var(--surface-raised);
-}
-
-.jsonita-history-preview-action kbd {
-  padding: 1px 4px;
-  border-color: var(--control-border);
-  background: var(--control-bg);
-  color: var(--text-muted);
-  font-size: calc(var(--fs-xs) - 2px);
 }
 
 .jsonita-history-footer {
@@ -682,12 +614,6 @@ kbd {
 .jsonita-history-footer-note {
   min-width: 0;
   color: var(--text-faint);
-}
-
-.jsonita-history-clear {
-  min-height: 28px;
-  padding: 0 10px;
-  color: var(--text);
 }
 
 .jsonita-settings-section {
@@ -1215,6 +1141,12 @@ kbd {
 .jsonita-action-button:focus-visible {
   outline: 0;
   box-shadow: var(--shadow-focus);
+}
+
+.jsonita-action-button[aria-pressed='true'] {
+  border-color: var(--primary-edge);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .jsonita-action-button .kbd-group {

@@ -32,8 +32,10 @@ test('history opens only the selected JSON from its primary action and keyboard 
   assert.match(modal, /event\.key === 'Enter'/);
   assert.match(modal, /event\.metaKey \|\| event\.ctrlKey/);
   assert.match(modal, /applyRow\(selectedRow\)/);
-  assert.match(preview, /formatAccelerator\('CmdOrCtrl\+Enter'\)/);
-  assert.match(preview, /<kbd[^>]*>\{formatAccelerator\('CmdOrCtrl\+Enter'\)\}<\/kbd>/);
+  assert.match(preview, /<ShortcutGlyph[^>]*accelerator="CmdOrCtrl\+Enter"/);
+  assert.match(preview, /<ActionButton[\s\S]*?variant="secondary"[\s\S]*?onClick=\{onOpen\}/);
+  assert.doesNotMatch(preview, /<kbd/);
+  assert.doesNotMatch(preview, /formatAccelerator/);
 });
 
 test('history keeps pin and star as quiet selected-document actions with shared SVG state markers', () => {
@@ -50,6 +52,8 @@ test('history keeps pin and star as quiet selected-document actions with shared 
   assert.doesNotMatch(rail, />⌖</);
   assert.match(preview, /onPin/);
   assert.match(preview, /onStar/);
+  assert.match(preview, /<ActionButton[\s\S]*?variant="secondary"[\s\S]*?aria-pressed=\{row\.pinned\}/);
+  assert.match(preview, /<ActionButton[\s\S]*?variant="secondary"[\s\S]*?aria-pressed=\{row\.starred\}/);
   assert.match(en, /"openInEditor"/);
   assert.match(zh, /"openInEditor"/);
 });

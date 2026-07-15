@@ -1,5 +1,6 @@
+import { ActionButton } from '../components/ActionButton';
 import { PinIcon, StarIcon } from '../components/icons';
-import { formatAccelerator } from '../keyboard/accelerators';
+import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import type { HistoryRow } from '../types/commands';
 import { formatHistoryBytes, formatHistoryDate } from './historyPresentation';
 
@@ -31,9 +32,8 @@ export function HistoryDocumentPreview({ row, locale, labels, onOpen, onPin, onS
       <header className="jsonita-history-preview-header">
         <span className="jsonita-history-preview-meta">{`${formatHistoryDate(row.createdAt, locale)} · ${formatHistoryBytes(row.content)}`}</span>
         <div className="jsonita-history-preview-actions">
-          <button
-            type="button"
-            className="jsonita-history-preview-meta-action"
+          <ActionButton
+            variant="secondary"
             aria-label={row.pinned ? labels.unpin : labels.pin}
             aria-pressed={row.pinned}
             title={row.pinned ? labels.unpin : labels.pin}
@@ -41,10 +41,9 @@ export function HistoryDocumentPreview({ row, locale, labels, onOpen, onPin, onS
           >
             <PinIcon width={14} height={14} strokeWidth={1.75} aria-hidden="true" />
             <span>{row.pinned ? labels.unpin : labels.pin}</span>
-          </button>
-          <button
-            type="button"
-            className="jsonita-history-preview-meta-action"
+          </ActionButton>
+          <ActionButton
+            variant="secondary"
             aria-label={row.starred ? labels.unstar : labels.star}
             aria-pressed={row.starred}
             title={row.starred ? labels.unstar : labels.star}
@@ -52,14 +51,14 @@ export function HistoryDocumentPreview({ row, locale, labels, onOpen, onPin, onS
           >
             <StarIcon width={14} height={14} strokeWidth={1.75} aria-hidden="true" />
             <span>{row.starred ? labels.unstar : labels.star}</span>
-          </button>
+          </ActionButton>
         </div>
       </header>
       <pre className="jsonita-history-preview-code">{row.content}</pre>
-      <button type="button" className="jsonita-history-preview-action" onClick={onOpen}>
-        <kbd>{formatAccelerator('CmdOrCtrl+Enter')}</kbd>
+      <ActionButton variant="secondary" onClick={onOpen}>
+        <ShortcutGlyph accelerator="CmdOrCtrl+Enter" decorative />
         <span>{labels.openInEditor}</span>
-      </button>
+      </ActionButton>
     </section>
   );
 }
