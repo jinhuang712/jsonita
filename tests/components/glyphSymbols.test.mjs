@@ -21,3 +21,12 @@ test('App mounts GlyphSymbols exactly once', () => {
   const app = read('src/App.tsx');
   assert.match(app, /<GlyphSymbols/);
 });
+
+test('shortcutTiles maps mac modifiers to glyph ids', () => {
+  const src = read('src/keyboard/accelerators.ts');
+  assert.match(src, /export type ShortcutTile/);
+  assert.match(src, /'cmdorctrl'|'cmd':\s*\{[^}]*g-cmd/);
+  assert.match(src, /'shift':\s*\{[^}]*g-shift/);
+  assert.match(src, /'enter'|'return':\s*\{[^}]*g-return/);
+  assert.match(src, /'escape':\s*\{[^}]*text:\s*'esc'/);
+});
