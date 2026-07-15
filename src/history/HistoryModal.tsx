@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ActionButton } from '../components/ActionButton';
 import { CloseIcon } from '../components/icons';
+import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { history as historyApi } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
@@ -142,7 +144,7 @@ export function HistoryModal() {
             aria-label={t('actions.close')}
             title={t('actions.close')}
           >
-            <kbd aria-hidden="true">Esc</kbd>
+            <ShortcutGlyph accelerator="Escape" decorative />
             <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
           </button>
         </header>
@@ -193,9 +195,9 @@ export function HistoryModal() {
 
         <footer className="jsonita-history-footer">
           <div className="jsonita-history-footer-note">{t('clearNotice')}</div>
-          <button type="button" onClick={clearPlainRows} className="jsonita-history-clear">
+          <ActionButton variant="danger" onClick={clearPlainRows}>
             {t('actions.clear')}
-          </button>
+          </ActionButton>
         </footer>
       </section>
     </div>
