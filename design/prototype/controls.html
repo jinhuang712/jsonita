@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jsonita · control language</title>
+    <style>
+      /* Tokens lifted verbatim from src/styles/tokens.css so the specimen
+         uses the real product palette, glass, and motion. */
+      :root {
+        --bg-card: rgba(255, 255, 255, 0.62);
+        --surface-quiet: rgba(255, 255, 255, 0.34);
+        --surface-raised: rgba(255, 255, 255, 0.52);
+        --control-bg: rgba(255, 255, 255, 0.24);
+        --control-border: rgba(34, 43, 58, 0.12);
+        --text: #20232A;
+        --text-muted: rgba(26, 30, 40, 0.54);
+        --text-faint: rgba(26, 30, 40, 0.36);
+        --border: rgba(20, 26, 36, 0.075);
+        --border-strong: rgba(20, 26, 36, 0.13);
+        --primary: #436F9F;
+        --accent: #916334;
+        --danger: #A35B56;
+        --glass-blur: blur(42px) saturate(180%);
+        --glass-border: rgba(0, 0, 0, 0.07);
+        --shadow-sm: 0 1px 2px rgba(25, 31, 44, 0.06);
+        --shadow-lg: 0 28px 64px -24px rgba(25, 31, 44, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+        --shadow-focus: 0 0 0 2px rgba(67, 111, 159, 0.2);
+        --commit: #454B55;
+        --commit-hover: #525965;
+        --kbd-hi: rgba(255, 255, 255, 0.9);
+        --kbd-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
+        --kbd-border: rgba(34, 43, 58, 0.12);
+        --backdrop: radial-gradient(120% 80% at 18% 0%, #e7edf5 0%, #f5f3ee 58%, #edeff3 100%);
+        --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", Helvetica, Arial, sans-serif;
+        --font-mono-ui: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+        --ease-native: cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      [data-theme="dark"] {
+        --bg-card: rgba(23, 25, 31, 0.68);
+        --surface-quiet: rgba(255, 255, 255, 0.065);
+        --surface-raised: rgba(255, 255, 255, 0.095);
+        --control-bg: rgba(255, 255, 255, 0.07);
+        --control-border: rgba(255, 255, 255, 0.18);
+        --text: #F2F4F7;
+        --text-muted: rgba(242, 244, 247, 0.72);
+        --text-faint: rgba(242, 244, 247, 0.52);
+        --border: rgba(255, 255, 255, 0.12);
+        --border-strong: rgba(255, 255, 255, 0.2);
+        --primary: #AFC7DE;
+        --accent: #C49A6C;
+        --danger: #D69A96;
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-lg: 0 28px 64px -24px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+        --shadow-focus: 0 0 0 2px rgba(138, 163, 190, 0.22);
+        --commit: #565D67;
+        --commit-hover: #646B76;
+        --kbd-hi: rgba(255, 255, 255, 0.16);
+        --kbd-bg: rgba(255, 255, 255, 0.08);
+        --kbd-border: rgba(255, 255, 255, 0.18);
+        --backdrop: #101218;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: var(--font-ui);
+        color: var(--text);
+        background: var(--backdrop);
+        background-attachment: fixed;
+        -webkit-font-smoothing: antialiased;
+        padding: 48px 20px 72px;
+      }
+      .stage { max-width: 460px; margin: 0 auto; }
+
+      .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+      .topbar h1 { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+      .topbar .sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; max-width: 30ch; }
+
+      .segmented { display: inline-flex; padding: 2px; gap: 2px; background: var(--surface-quiet); border-radius: 9px; border: 1px solid var(--glass-border); }
+      .segmented button { appearance: none; border: 0; background: transparent; color: var(--text-muted); font: 500 12px var(--font-ui); padding: 5px 11px; border-radius: 7px; cursor: pointer; transition: background 120ms var(--ease-native), color 120ms var(--ease-native); }
+      .segmented button[aria-pressed="true"] { background: var(--surface-raised); color: var(--text); box-shadow: var(--shadow-sm); }
+
+      .card {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-lg);
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .eyebrow { font: 500 10.5px/1 var(--font-mono-ui); letter-spacing: 0.1em; text-transform: lowercase; color: var(--text-faint); margin: 2px 2px 12px; }
+
+      /* ── Commit / primary buttons (the simple ⌘+enter hero lives here) ── */
+      .commits { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .btn { height: 30px; padding: 0 13px; border-radius: 7px; font: 510 13px var(--font-ui); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background 120ms var(--ease-native), box-shadow 120ms var(--ease-native); }
+      .btn-primary { background: var(--surface-raised); color: var(--text); border: 1px solid var(--border-strong); }
+      .btn-primary:hover { filter: brightness(0.96); }
+      .btn-secondary { background: var(--control-bg); color: var(--text); border: 1px solid var(--control-border); }
+      .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--control-border); }
+      .btn-danger:hover { background: var(--danger); color: #fff; }
+      .btn-text { background: transparent; color: var(--text-muted); border: 0; padding-left: 4px; }
+      .btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+      .btn .kbd-group { margin-left: 2px; }
+
+      /* ── Chrome icon buttons ─────────────────────────────── */
+      .chrome-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+      .chrome-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .chrome-cell .st { font: 500 10px var(--font-mono-ui); color: var(--text-faint); letter-spacing: 0.04em; }
+      .chrome { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted); cursor: pointer; transition: background 120ms var(--ease-native), color 120ms var(--ease-native); }
+      .chrome svg { width: 18px; height: 18px; }
+      .chrome:hover, .chrome.is-hover { background: var(--surface-raised); color: var(--text); }
+      .chrome.is-selected { background: var(--surface-raised); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
+      .chrome.is-focus { box-shadow: var(--shadow-focus); }
+      .chrome:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+
+      /* ── Keycaps (signature) ─────────────────────────────── */
+      .kbd-group { display: inline-flex; gap: 3px; align-items: center; }
+      .kbd {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 20px; height: 20px; padding: 0 5px; border-radius: 5px;
+        font: 500 13px/1 var(--font-ui); color: var(--text); letter-spacing: 0.01em;
+        background: var(--kbd-bg); border: 1px solid var(--kbd-border);
+        box-shadow: inset 0 1px 0 var(--kbd-hi), 0 1px 1px rgba(20, 26, 36, 0.05);
+        white-space: nowrap;
+      }
+      .kbd--sm { min-width: 16px; height: 16px; padding: 0 4px; font-size: 11px; border-radius: 4px; }
+      .kbd--lg { min-width: 30px; height: 30px; padding: 0 8px; font-size: 16px; border-radius: 7px; }
+      .kbd .glyph { width: 13px; height: 13px; display: block; }
+      .kbd--sm .glyph { width: 10px; height: 10px; }
+      .kbd--lg .glyph { width: 17px; height: 17px; }
+      .kbd-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+      .kbd-scale { display: flex; flex-direction: column; gap: 7px; }
+      .kbd-scale .lbl { font: 500 10px var(--font-mono-ui); color: var(--text-faint); letter-spacing: 0.04em; }
+      /* keycaps ride the graphite selected surface */
+      /* Run is a glass primary — its keycaps use the default themed keycap style */
+
+      /* ── Setting rows ────────────────────────────────────── */
+      .setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 4px; }
+      .setting + .setting { border-top: 1px solid var(--border); }
+      .setting .meta { display: flex; flex-direction: column; gap: 2px; }
+      .setting .label { font-size: 13px; }
+      .setting .hint { font-size: 11.5px; color: var(--text-faint); }
+
+      .footnote { text-align: center; font: 500 11px var(--font-mono-ui); color: var(--text-faint); margin-top: 8px; letter-spacing: 0.02em; }
+
+      @media (prefers-reduced-motion: reduce) {
+        * { transition-duration: 1ms !important; }
+      }
+    </style>
+  </head>
+  <body data-prototype="control-language-specimen">
+    <!-- ⌘ = Apple Command (Bowen knot), single verified path from
+         apple-command-svgrepo-com.svg (viewBox 64). Stroke scales with the
+         keycap; currentColor follows the keycap text color (ink / white). -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden">
+      <symbol id="g-cmd" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/>
+      </symbol>
+      <symbol id="g-shift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/>
+      </symbol>
+      <symbol id="g-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19L12 5M6 11L12 5L18 11"/>
+      </symbol>
+      <symbol id="g-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5L12 19M6 13L12 19L18 13"/>
+      </symbol>
+      <symbol id="g-return" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 19.2811 49.5156 C 20.5233 49.5156 21.3436 48.6719 21.3436 47.4531 C 21.3436 46.8438 21.1561 46.3984 20.7811 46.0234 L 14.0311 39.4375 L 9.5780 35.6406 L 15.0858 35.8750 L 44.9920 35.8750 C 50.4529 35.8750 52.7267 33.3672 52.7267 28.0703 L 52.7267 14.2188 C 52.7267 8.7578 50.4529 6.4844 44.9920 6.4844 L 31.8671 6.4844 C 30.5780 6.4844 29.7342 7.4219 29.7342 8.5703 C 29.7342 9.7188 30.5780 10.6562 31.8671 10.6562 L 44.9920 10.6562 C 47.4764 10.6562 48.5545 11.7344 48.5545 14.2188 L 48.5545 28.0703 C 48.5545 30.6250 47.4764 31.7031 44.9920 31.7031 L 15.0858 31.7031 L 9.5780 31.9375 L 14.0311 28.1406 L 20.7811 21.5547 C 21.1561 21.1797 21.3436 20.7109 21.3436 20.1016 C 21.3436 18.9062 20.5233 18.0391 19.2811 18.0391 C 18.7655 18.0391 18.1561 18.2969 17.7577 18.6953 L 3.9764 32.2188 C 3.5077 32.6640 3.2733 33.2031 3.2733 33.7891 C 3.2733 34.3516 3.5077 34.9140 3.9764 35.3594 L 17.7577 48.8828 C 18.1561 49.2813 18.7655 49.5156 19.2811 49.5156 Z"/>
+      </symbol>
+    </svg>
+
+    <div class="stage">
+      <div class="topbar">
+        <div>
+          <h1>Jsonita · control language</h1>
+          <div class="sub">Raycast-grade control craft on quiet native glass — buttons, keycaps, settings.</div>
+        </div>
+        <div class="segmented" role="group" aria-label="Theme">
+          <button type="button" data-theme-btn="light" aria-pressed="true">Light</button>
+          <button type="button" data-theme-btn="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+
+      <!-- The simple ⌘+enter button, done clean -->
+      <section class="card">
+        <div class="eyebrow">commit · one high-emphasis per region</div>
+        <div class="commits">
+          <button class="btn btn-primary" type="button">Run <span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-cmd"/></svg></span><span class="kbd"><svg class="glyph"><use href="#g-return"/></svg></span></span></button>
+          <button class="btn btn-secondary" type="button">Cancel</button>
+          <button class="btn btn-danger" type="button">Reset</button>
+          <button class="btn btn-text" type="button">Reset all</button>
+        </div>
+      </section>
+
+      <!-- Chrome icon buttons -->
+      <section class="card">
+        <div class="eyebrow">chrome · 34px target</div>
+        <div class="chrome-row">
+          <div class="chrome-cell"><button class="chrome is-selected" aria-label="Split view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="16" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="16" rx="1.6"/></svg>
+          </button><span class="st">selected</span></div>
+          <div class="chrome-cell"><button class="chrome is-rest" aria-label="Single view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          </button><span class="st">rest</span></div>
+          <div class="chrome-cell"><button class="chrome is-hover" aria-label="History">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg>
+          </button><span class="st">hover</span></div>
+          <div class="chrome-cell"><button class="chrome is-focus" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button><span class="st">focus</span></div>
+        </div>
+      </section>
+
+      <!-- Keycaps: the signature -->
+      <section class="card">
+        <div class="eyebrow">keycap · signature · matte tiles, vector glyphs</div>
+        <div class="kbd-row" style="margin-bottom:16px">
+          <div class="kbd-scale"><span class="lbl">row</span><span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-cmd"/></svg></span><span class="kbd"><svg class="glyph"><use href="#g-return"/></svg></span></span></div>
+          <div class="kbd-scale"><span class="lbl">tooltip</span><span class="kbd-group"><span class="kbd kbd--sm">esc</span><span class="kbd kbd--sm">esc</span></span></div>
+          <div class="kbd-scale"><span class="lbl">showcase</span><span class="kbd-group"><span class="kbd kbd--lg"><svg class="glyph"><use href="#g-cmd"/></svg></span><span class="kbd kbd--lg"><svg class="glyph"><use href="#g-return"/></svg></span></span></div>
+        </div>
+        <div class="kbd-row">
+          <span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-cmd"/></svg></span><span class="kbd">K</span></span>
+          <span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-shift"/></svg></span><span class="kbd">tab</span></span>
+          <span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-cmd"/></svg></span><span class="kbd"><svg class="glyph"><use href="#g-shift"/></svg></span><span class="kbd">P</span></span>
+          <span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-up"/></svg></span><span class="kbd"><svg class="glyph"><use href="#g-down"/></svg></span></span>
+          <span class="kbd-group"><span class="kbd">esc</span></span>
+          <span class="kbd-group"><span class="kbd">space</span></span>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="card">
+        <div class="eyebrow">setting · neutral selection surface</div>
+        <div class="setting">
+          <div class="meta"><span class="label">Indent width</span><span class="hint">Used by Format and Minify</span></div>
+          <div class="segmented" role="group" aria-label="Indent width">
+            <button type="button" aria-pressed="false">2</button>
+            <button type="button" aria-pressed="true">4</button>
+            <button type="button" aria-pressed="false">Tab</button>
+          </div>
+        </div>
+        <div class="setting">
+          <div class="meta"><span class="label">Summon window</span><span class="hint">Global hotkey</span></div>
+          <span class="kbd-group"><span class="kbd"><svg class="glyph"><use href="#g-cmd"/></svg></span><span class="kbd"><svg class="glyph"><use href="#g-shift"/></svg></span><span class="kbd">J</span></span>
+        </div>
+      </section>
+
+      <div class="footnote">specimen · not a pixel source of truth · derives from src/styles/tokens.css</div>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      document.querySelectorAll('[data-theme-btn]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          root.setAttribute('data-theme', btn.dataset.themeBtn);
+          document.querySelectorAll('[data-theme-btn]').forEach((b) => {
+            b.setAttribute('aria-pressed', String(b === btn));
+          });
+        });
+      });
+      document.querySelectorAll('.segmented[aria-label="Indent width"] button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          btn.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        });
+      });
+    </script>
+  </body>
+</html>
