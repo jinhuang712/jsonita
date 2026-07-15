@@ -1160,3 +1160,59 @@ kbd {
   width: 17px;
   height: 17px;
 }
+
+/* ── Action buttons (glass commit primitives) ────────── */
+.jsonita-action-button {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 7px;
+  font: 510 13px var(--font-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background 120ms var(--ease-native), box-shadow 120ms var(--ease-native);
+}
+
+.jsonita-action-button-primary {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+.jsonita-action-button-primary:hover {
+  filter: brightness(0.96);
+}
+
+.jsonita-action-button-secondary {
+  background: var(--control-bg);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+}
+
+.jsonita-action-button-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--control-border);
+}
+
+.jsonita-action-button-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.jsonita-action-button-text {
+  background: transparent;
+  color: var(--text-muted);
+  border: 0;
+  padding-left: 4px;
+}
+
+.jsonita-action-button:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-action-button .kbd-group {
+  margin-left: 2px;
+}
