@@ -6,6 +6,7 @@ import { useLocaleSync } from './i18n/useLocaleSync';
 import { settings as settingsApi } from './ipc/commands';
 import { ShortcutPermissionModal } from './permissions/ShortcutPermissionModal';
 import { FloatingWindow } from './shell/FloatingWindow';
+import { GlyphSymbols } from './components/GlyphSymbols';
 import { useSettingsStore } from './store/settings';
 import { useUiStore } from './store/ui';
 
@@ -70,6 +71,7 @@ export function App() {
 
   return (
     <>
+      <GlyphSymbols />
       <FloatingWindow />
       {modalOpen && <ShortcutPermissionModal onClose={() => setModalOpen(false)} />}
     </>
