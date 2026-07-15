@@ -212,10 +212,7 @@ kbd {
 }
 
 .jsonita-chrome-actions .jsonita-chrome-icon-button {
-  width: 30px;
-  height: 28px;
   margin-left: 0;
-  color: color-mix(in srgb, var(--text-muted) 82%, var(--text));
 }
 
 .jsonita-chrome-icon-button {
@@ -224,11 +221,11 @@ kbd {
   justify-content: center;
   flex: 0 0 auto;
   position: relative;
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   margin-left: 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border: 0;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-muted);
   font-family: inherit;
@@ -238,18 +235,19 @@ kbd {
   cursor: pointer;
   transition:
     background var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
     color var(--dur-base) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
 
 .jsonita-chrome-icon-button:hover,
 .jsonita-chrome-icon-button:focus-visible {
-  background: var(--control-bg-hover);
-  border-color: var(--control-border);
-  color: color-mix(in srgb, var(--primary) 72%, var(--text));
-  box-shadow: none;
-  outline: none;
+  background: var(--surface-raised);
+  color: var(--text);
+  outline: 0;
+}
+
+.jsonita-chrome-icon-button:focus-visible {
+  box-shadow: var(--shadow-focus);
 }
 
 .jsonita-chrome-icon-button:active {
