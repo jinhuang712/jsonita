@@ -52,8 +52,8 @@ test('top chrome action icons have visible independent hit targets without a gro
 
   assert.match(styles, /\.jsonita-chrome-actions\b/);
   assert.match(styles, /\.jsonita-chrome-actions\s+\.jsonita-chrome-icon-button\b/);
-  assert.match(styles, /width:\s*30px/);
-  assert.match(styles, /height:\s*28px/);
+  assert.match(styles, /width:\s*34px/);
+  assert.match(styles, /height:\s*34px/);
   assert.doesNotMatch(styles, /\.jsonita-chrome-actions\s*\{[^}]*border:/s);
   assert.doesNotMatch(styles, /\.jsonita-chrome-actions\s*\{[^}]*background:/s);
 });
