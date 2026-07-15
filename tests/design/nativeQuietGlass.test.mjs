@@ -57,7 +57,7 @@ test('history and settings are full-window pages with explicit Esc close actions
   assert.match(history, /className="jsonita-page-close"/);
   assert.match(settings, /className="jsonita-page-close"/);
   assert.match(history, /<kbd[^>]*>Esc<\/kbd>/);
-  assert.match(settings, /<kbd[^>]*>Esc<\/kbd>/);
+  assert.match(settings, /<ShortcutGlyph accelerator="Escape"[^>]*>/);
   assert.doesNotMatch(history, /style=\{overlayStyle\}/);
   assert.doesNotMatch(history, /const overlayStyle/);
   assert.match(styles, /\.jsonita-page\b/);
