@@ -77,6 +77,14 @@ export function SplitPanelIcon(props: IconProps) {
   );
 }
 
+export function SinglePanelIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+    </svg>
+  );
+}
+
 export function HistoryIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}>

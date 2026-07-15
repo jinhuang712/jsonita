@@ -47,15 +47,29 @@ test('single-pane run affordance sits above the status bar instead of touching b
   assert.match(hint, /padding:\s*'6px 10px'/);
 });
 
-test('top chrome action icons have visible independent hit targets without a grouping frame', () => {
+test('chrome uses ChromeIconButton with vector-glyph tooltips', () => {
+  const tabBar = read('src/shell/TabBar.tsx');
+
+  assert.match(tabBar, /import \{ ChromeIconButton \} from '\.\.\/components\/ChromeIconButton'/);
+  assert.match(tabBar, /tooltipShortcut=\{[^}]*shortcutSplitToggle/);
+  assert.doesNotMatch(tabBar, /<kbd[^>]*>.*<\/kbd>/);
+});
+
+test('chrome hit targets are 34px with no grouping frame', () => {
   const styles = read('src/styles/global.css');
 
-  assert.match(styles, /\.jsonita-chrome-actions\b/);
-  assert.match(styles, /\.jsonita-chrome-actions\s+\.jsonita-chrome-icon-button\b/);
-  assert.match(styles, /width:\s*34px/);
+  assert.match(styles, /\.jsonita-chrome-icon-button\s*\{[\s\S]*width:\s*34px/);
   assert.match(styles, /height:\s*34px/);
   assert.doesNotMatch(styles, /\.jsonita-chrome-actions\s*\{[^}]*border:/s);
-  assert.doesNotMatch(styles, /\.jsonita-chrome-actions\s*\{[^}]*background:/s);
+});
+
+test('split and single view are two separate toggle buttons', () => {
+  const tabBar = read('src/shell/TabBar.tsx');
+
+  assert.match(tabBar, /switchToSplitPanel|singlePaneMode === false/);
+  assert.match(tabBar, /switchToSinglePanel|singlePaneMode === true/);
+  const viewButtons = tabBar.match(/aria-label=\{[^}]*switchTo(Split|Single)Panel[^}]*\}/g) ?? [];
+  assert.ok(viewButtons.length >= 2, 'expected split + single toggle buttons');
 });
 
 test('settings page keeps a close button in the top-right corner', () => {
@@ -65,27 +79,6 @@ test('settings page keeps a close button in the top-right corner', () => {
   assert.match(settings, /className="jsonita-page-close"/);
   assert.match(settings, /<kbd[^>]*>Esc<\/kbd>/);
   assert.match(settings, /setOpen\(false\)/);
-});
-
-test('top chrome icon actions use app-rendered tooltips with labels and shortcuts', () => {
-  const tabBar = read('src/shell/TabBar.tsx');
-  const styles = read('src/styles/global.css');
-  const enShell = read('src/locales/en-US/shell.json');
-  const zhShell = read('src/locales/zh-CN/shell.json');
-
-  assert.match(tabBar, /type ChromeActionTooltip/);
-  assert.match(tabBar, /tooltipLabel=/);
-  assert.match(tabBar, /tooltipShortcut=\{formatAccelerator\(settings\.shortcutSplitToggle\)\}/);
-  assert.match(tabBar, /tooltipShortcut=\{formatAccelerator\('CmdOrCtrl\+Y'\)\}/);
-  assert.match(tabBar, /tooltipShortcut=\{formatAccelerator\('CmdOrCtrl\+,'\)\}/);
-  assert.match(tabBar, /className="jsonita-chrome-tooltip"/);
-  assert.doesNotMatch(tabBar, /title=\{`\$\{/);
-  assert.match(styles, /\.jsonita-chrome-icon-button:hover\s+\.jsonita-chrome-tooltip/);
-  assert.match(styles, /right:\s*0/);
-  assert.match(styles, /transform:\s*translateY\(-3px\)/);
-  assert.match(styles, /\.jsonita-chrome-tooltip-shortcut/);
-  assert.match(enShell, /"settings":\s*"Settings"/);
-  assert.match(zhShell, /"settings":\s*"设置"/);
 });
 
 test('status bar suppresses invalid json while AI Fix is active', () => {

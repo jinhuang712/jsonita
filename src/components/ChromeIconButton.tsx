@@ -6,6 +6,7 @@ type Props = PropsWithChildren<
   Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'type' | 'title'> & {
     tooltipLabel: string;
     tooltipShortcut?: string;
+    selected?: boolean;
   }
 >;
 
@@ -19,6 +20,7 @@ export function ChromeIconButton({
   children,
   tooltipLabel,
   tooltipShortcut,
+  selected,
   ...buttonProps
 }: Props) {
   const tooltipId = useId();
@@ -27,7 +29,7 @@ export function ChromeIconButton({
     <button
       {...buttonProps}
       type="button"
-      className={`jsonita-chrome-icon-button`}
+      className={`jsonita-chrome-icon-button${selected ? ' is-selected' : ''}`}
       aria-describedby={tooltipId}
     >
       {children}
