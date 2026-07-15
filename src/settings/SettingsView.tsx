@@ -5,6 +5,8 @@ import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
+import { ActionButton } from '../components/ActionButton';
+import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { CloseIcon } from '../components/icons';
 import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
@@ -208,7 +210,7 @@ export function SettingsView() {
             aria-label={t('actions.close')}
             title={t('actions.close')}
           >
-            <kbd aria-hidden="true">Esc</kbd>
+            <ShortcutGlyph accelerator="Escape" decorative />
             <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
           </button>
         </div>
@@ -300,18 +302,18 @@ export function SettingsView() {
             gap: 6,
           }}
         >
-          <button
+          <ActionButton
+            variant="text"
             onClick={async () => {
               const u = await settingsApi.reset();
               setSettings(u);
             }}
-            style={btnGhost}
           >
             {t('footer.resetAll')}
-          </button>
-          <button onClick={() => setOpen(false)} style={btnPrimary}>
+          </ActionButton>
+          <ActionButton variant="primary" onClick={() => setOpen(false)}>
             {t('footer.done')}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>
@@ -361,43 +363,39 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
   const builtInShortcuts = [
     {
       label: t('shortcuts.builtIn.switchTabs'),
-      keys: ['Tab', formatAccelerator('Shift+Tab')],
+      keys: ['Tab', 'Shift+Tab'],
     },
     {
       label: t('shortcuts.builtIn.exitEditing'),
-      keys: ['Esc'],
+      keys: ['Escape'],
     },
     {
       label: t('shortcuts.builtIn.hideWindow'),
-      keys: ['Esc', 'Esc'],
+      keys: ['Escape', 'Escape'],
     },
     {
       label: t('shortcuts.builtIn.runCurrent'),
-      keys: [formatAccelerator('CmdOrCtrl+Enter')],
+      keys: ['CmdOrCtrl+Enter'],
     },
     {
       label: t('shortcuts.builtIn.aiFixCancel'),
-      keys: ['Esc'],
+      keys: ['Escape'],
     },
     {
       label: t('shortcuts.builtIn.history'),
-      keys: [formatAccelerator('CmdOrCtrl+Y')],
+      keys: ['CmdOrCtrl+Y'],
     },
     {
       label: t('shortcuts.builtIn.settings'),
-      keys: [formatAccelerator('CmdOrCtrl+,')],
+      keys: ['CmdOrCtrl+,'],
     },
     {
       label: t('shortcuts.builtIn.clearInput'),
-      keys: [formatAccelerator('CmdOrCtrl+K')],
+      keys: ['CmdOrCtrl+K'],
     },
     {
       label: t('shortcuts.builtIn.zoom'),
-      keys: [
-        formatAccelerator('CmdOrCtrl+Plus'),
-        formatAccelerator('CmdOrCtrl+Minus'),
-        formatAccelerator('CmdOrCtrl+0'),
-      ],
+      keys: ['CmdOrCtrl+Plus', 'CmdOrCtrl+Minus', 'CmdOrCtrl+0'],
     },
   ];
 
@@ -459,10 +457,8 @@ function ReadonlyShortcutRow({ label, keys }: { label: string; keys: string[] })
     <div style={readonlyShortcutRowStyle}>
       <span>{label}</span>
       <span style={keyGroupStyle}>
-        {keys.map((key, index) => (
-          <kbd key={`${key}-${index}`} style={keyCapStyle}>
-            {key}
-          </kbd>
+        {keys.map((accelerator, index) => (
+          <ShortcutGlyph key={`${accelerator}-${index}`} accelerator={accelerator} />
         ))}
       </span>
     </div>
@@ -852,17 +848,6 @@ const keyGroupStyle: React.CSSProperties = {
   flexWrap: 'wrap',
 };
 
-const keyCapStyle: React.CSSProperties = {
-  padding: '4px 8px',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--control-border)',
-  background: 'var(--control-bg)',
-  color: 'var(--text)',
-  fontFamily: 'var(--font-mono)',
-  fontSize: 'var(--fs-sm)',
-  lineHeight: 1.2,
-};
-
 const inputStyle: React.CSSProperties = {
   padding: '5px 10px',
   background: 'var(--control-bg)',
@@ -915,27 +900,5 @@ const checkboxInputStyle: React.CSSProperties = {
   inset: 0,
   margin: 0,
   opacity: 0,
-  cursor: 'pointer',
-};
-
-const btnGhost: React.CSSProperties = {
-  padding: '8px 18px',
-  background: 'transparent',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--fs-md)',
-  fontWeight: 500,
-  cursor: 'pointer',
-  color: 'var(--text)',
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: '8px 18px',
-  background: 'var(--primary)',
-  color: '#fff',
-  border: '1px solid var(--primary)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--fs-md)',
-  fontWeight: 500,
   cursor: 'pointer',
 };

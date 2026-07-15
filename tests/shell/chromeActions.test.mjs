@@ -77,8 +77,28 @@ test('settings page keeps a close button in the top-right corner', () => {
 
   assert.match(settings, /aria-label=\{t\('actions\.close'\)\}/);
   assert.match(settings, /className="jsonita-page-close"/);
-  assert.match(settings, /<kbd[^>]*>Esc<\/kbd>/);
+  assert.match(settings, /<ShortcutGlyph accelerator="Escape"[^>]*>/);
   assert.match(settings, /setOpen\(false\)/);
+  assert.doesNotMatch(settings, /<kbd[^>]*>Esc<\/kbd>/);
+});
+
+test('settings footer commits via ActionButton primitives', () => {
+  const settings = read('src/settings/SettingsView.tsx');
+
+  assert.match(settings, /import \{ ActionButton \} from '\.\.\/components\/ActionButton'/);
+  assert.match(settings, /<ActionButton[\s\S]*?variant="primary"[\s\S]*?>\s*\{t\('footer\.done'\)\}\s*<\/ActionButton>/);
+  assert.match(settings, /<ActionButton[\s\S]*?variant="text"[\s\S]*?>\s*\{t\('footer\.resetAll'\)\}\s*<\/ActionButton>/);
+  assert.doesNotMatch(settings, /style=\{btnPrimary\}/);
+  assert.doesNotMatch(settings, /style=\{btnGhost\}/);
+});
+
+test('settings shortcut rows render matte ShortcutGlyph tiles instead of inline kbd keycaps', () => {
+  const settings = read('src/settings/SettingsView.tsx');
+
+  assert.match(settings, /import \{ ShortcutGlyph \} from '\.\.\/components\/ShortcutGlyph'/);
+  assert.match(settings, /<ShortcutGlyph[^>]*accelerator=\{accelerator\}/);
+  assert.doesNotMatch(settings, /<kbd[^>]*>\{key\}<\/kbd>/);
+  assert.doesNotMatch(settings, /keyCapStyle/);
 });
 
 test('status bar suppresses invalid json while AI Fix is active', () => {
