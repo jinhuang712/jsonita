@@ -16,10 +16,25 @@ pub async fn json_format(
     opts: FormatOpts,
     settings: State<'_, SettingsStore>,
 ) -> Result<String, JsonitaError> {
-    // settings.auto_unwrap=true 时先 unwrap 再 format。
+    // always_string_to_json=true 时先把顶层 stringified JSON 解成 JSON；
+    // 再按 auto_unwrap(nested) unwrap，最后 format。
     let auto_unwrap = settings.auto_unwrap();
+    let always_string_to_json = settings.get().always_string_to_json;
     let timeout_ms = settings.unwrap_timeout_ms();
     tauri::async_runtime::spawn_blocking(move || {
+        let mut text = text;
+        if always_string_to_json {
+            if let Ok(serde_json::Value::String(inner)) =
+                serde_json::from_str::<serde_json::Value>(&text)
+            {
+                let looks_json = serde_json::from_str::<serde_json::Value>(&inner)
+                    .map(|v| v.is_object() || v.is_array())
+                    .unwrap_or(false);
+                if looks_json {
+                    text = inner;
+                }
+            }
+        }
         let processed = if auto_unwrap {
             engine::unwrap::unwrap(
                 &text,

@@ -41,7 +41,6 @@ fn main() {
             // M1-N1 stubs: history (M1-N6 真实) + M2-N4 history_add
             cmds::history::history_list,
             cmds::history::history_search,
-            cmds::history::history_pin,
             cmds::history::history_star,
             cmds::history::history_clear,
             cmds::history::history_add,

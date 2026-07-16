@@ -37,7 +37,7 @@ test('history and settings use shared quiet surface tokens for controls', () => 
   assert.match(styles, /\.jsonita-action-button-secondary\s*\{[^}]*var\(--control-bg\)/s);
   assert.doesNotMatch(history, /<span style=\{\{ \.\.\.chipStyle/);
   assert.match(settings, /var\(--control-bg\)/);
-  assert.match(settings, /background: checked \? 'var\(--toggle-on\)' : 'var\(--control-bg-hover\)'/);
+  assert.match(settings, /background: checked \? 'var\(--toggle-on\)' : 'transparent'/);
   assert.match(settings, /background: 'var\(--surface-raised\)'/);
   assert.doesNotMatch(settings, /var\(--control-bg-active\)/);
 });

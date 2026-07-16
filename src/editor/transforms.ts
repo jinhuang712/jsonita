@@ -15,8 +15,6 @@ export function paneToOpType(p: Pane): OpType {
       return 'tree';
     case 'json-to-str':
       return 'json-to-str';
-    case 'str-to-json':
-      return 'str-to-json';
     case 'ai-fix':
       return 'ai-fix';
     case 'format':
@@ -31,8 +29,6 @@ export async function runPanePreview(text: string, pane: Pane): Promise<string> 
       return json.minify(text);
     case 'json-to-str':
       return json.stringify(text, { quote: 'double', escapeUnicode: false, minify: true });
-    case 'str-to-json':
-      return json.parse(text);
     case 'format':
     case 'tree':
     case 'ai-fix':

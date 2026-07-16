@@ -4,8 +4,6 @@
   "actions": {
     "close": "Close history",
     "openInEditor": "Open in editor",
-    "pin": "Pin",
-    "unpin": "Unpin",
     "star": "Star",
     "unstar": "Unstar",
     "clear": "Clear"
@@ -13,9 +11,8 @@
   "empty": "No JSON history yet",
   "loading": "Loading…",
   "emptyPreview": "Select JSON to preview",
-  "clearNotice": "Pinned and starred JSON stays when clearing.",
+  "clearNotice": "Starred JSON stays when clearing.",
   "status": {
-    "pinned": "Pinned",
     "starred": "Starred"
   }
 }

@@ -88,16 +88,6 @@ export function HistoryModal() {
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [open, setOpen]);
 
-  const togglePin = async (row: HistoryRow) => {
-    setError(null);
-    try {
-      await historyApi.pin(row.id, !row.pinned);
-      await load();
-    } catch (cause) {
-      setError(String(cause));
-    }
-  };
-
   const toggleStar = async (row: HistoryRow) => {
     setError(null);
     try {
@@ -170,7 +160,6 @@ export function HistoryModal() {
                 rows={rows}
                 selectedId={selectedRow?.id ?? null}
                 locale={i18n.language}
-                pinnedLabel={t('status.pinned')}
                 starredLabel={t('status.starred')}
                 onSelect={setSelectedId}
               />
@@ -182,13 +171,10 @@ export function HistoryModal() {
             labels={{
               emptyPreview: t('emptyPreview'),
               openInEditor: t('actions.openInEditor'),
-              pin: t('actions.pin'),
-              unpin: t('actions.unpin'),
               star: t('actions.star'),
               unstar: t('actions.unstar'),
             }}
             onOpen={() => selectedRow && applyRow(selectedRow)}
-            onPin={() => selectedRow && togglePin(selectedRow)}
             onStar={() => selectedRow && toggleStar(selectedRow)}
           />
         </div>

@@ -6,11 +6,27 @@
 
 ## [Unreleased]
 
+### feat · 设置页重塑 + AI 多协议接入 + JSON 交互精简
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 设置：分组顺序 General→Appearance→AI→History→JSON→Shortcuts→About,新增 Appearance(Language/Theme/Smart width/Single-pane/Editor soft-wrap 归入),JSON Transform 更名 JSON;去卡片外框改连续页 + 分隔线,toggle 改复选框 + 两列网格,行距与字号收紧,只读的 built-in 快捷键与 About 信息统一淡化;移除底部 footer bar 与 Done,Reset all 移入侧栏底部并加危险色悬停。AI:改为 OpenAI 兼容 / Anthropic 双协议(完整 endpoint URL + 模型名 + Form/JSON 双模式 + 只读配置串 + 关闭时正文变灰),Enable AI Fix 移到分区标题栏;secret account 泛化为 `ai_api_key` 并兜底旧 `deepseek_api_key`,Test 显式传参、测通即存、报错只回状态码 + 简短归因(不透传服务端 body);新增 `thinking`(默认关,下发 disabled 关推理)与 `maxTokens`(默认 8192)适配推理模型。历史新增「启用历史记录」开关。JSON:新增「自动解包字符串输入」设置并撤掉 To JSON tab(保留 To String),修复 Format 误把顶层字符串 str 转 json;AI Fix 等待态改为 JSON 重建骨架动画。 |
+| 影响文档 | `src-tauri/src/ai/provider.rs`、`src-tauri/src/types.rs`、`src-tauri/src/cmds/ai.rs`、`src-tauri/src/cmds/json.rs`、`src-tauri/src/engine/unwrap.rs`、`src/settings/*`、`src/shell/*`、`src/panes/AiFixPane.tsx`、`src/store/*`、`src/styles/global.css`、`src/locales/*`、`design/screens.md`、`tests/**`、`CHANGELIST.md`。 |
+| 关联 | 内部小范围测试期与用户逐屏迭代;AI 实测火山方舟 coding plan:Anthropic 走 `/api/coding/v1/messages`、OpenAI 走 `/api/coding/v3/chat/completions`,deepseek-v4-flash 推理模型需关 thinking 并留足 max_tokens。 |
+
+### fix · 历史「收藏」合并「置顶」（移除 pin）
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 历史面板的置顶（pin）与收藏（star）在功能上重叠，合并为单一「收藏」：收藏即留存（手动清除与超限自动 trim 均保留）并在列表置顶排序；移除 pin 按钮、行角标、`history_pin` IPC 命令、`PinIcon` 与数据库 `pinned` 列。新增迁移 `0002_merge_pin_into_star.sql` 先把既有置顶迁移为收藏，再删除 `pinned` 列并换成 `starred DESC, created_at DESC` 索引。 |
+| 影响文档 | `src-tauri/migrations/0002_merge_pin_into_star.sql`、`src-tauri/src/store/db.rs`、`src-tauri/src/store/history.rs`、`src-tauri/src/cmds/history.rs`、`src-tauri/src/main.rs`、`src-tauri/src/types.rs`、`src/types/commands.ts`、`src/ipc/commands.ts`、`src/history/HistoryModal.tsx`、`src/history/HistoryDocumentList.tsx`、`src/history/HistoryDocumentPreview.tsx`、`src/components/icons.tsx`、`src/locales/en-US/history.json`、`src/locales/zh-CN/history.json`、`tests/history/historyLibrary.test.mjs`、`design/screens.md`、`CHANGELIST.md`。 |
+| 关联 | 用户指出 pin 与 star 功能重叠：两者都防清除，仅 pin 额外置顶，而 star 的独立筛选（onlyStarred）从未接入 UI，导致 star 完全被 pin 覆盖。合并方向由用户确认：保留「收藏」语义，行为等同原 pin（留存 + 置顶）。 |
+
 ### feat · 控件语言全面改造（按钮 / 快捷键 / 设置控件）
 
 | 字段 | 内容 |
 | --- | --- |
-| 变更 | 引入统一控件语言：新建 `GlyphSymbols`（⌘⇧↑↓↵ 矢量字形）、`ShortcutGlyph`（磨砂键帽分片）、`ActionButton`（玻璃主/次/危险/文本按钮）、`ChromeIconButton`（34px 玻璃 chrome 动作）；chrome 改为 split/single 双按钮 toggle；dark 去渐变改纯磨砂玻璃；键帽字体换 SF Pro。所有控件面一次性迁移到新原语，移除散落的旧 `<kbd>` 与样式。 |
+| 变更 | 引入统一控件语言：新建 `GlyphSymbols`（⌘⇧↑↓↵ 矢量字形）、`ShortcutGlyph`（磨砂键帽分片）、`ActionButton`（玻璃主/次/危险/文本按钮）、`ChromeIconButton`（34px 玻璃 chrome 动作）；chrome 的 split/single 为单个 toggle 按钮（显示当前模式图标，tooltip 提示切换目标）；dark 去渐变改纯磨砂玻璃；键帽字体换 SF Pro。所有控件面一次性迁移到新原语，移除散落的旧 `<kbd>` 与样式。 |
 | 影响文档 | `design/prototype/controls.html`、`docs/superpowers/specs/2026-07-15-control-language-design.md`、`docs/superpowers/plans/2026-07-15-control-language.md`、`src/components/*`、`src/styles/global.css`、`src/styles/tokens.css`、`src/keyboard/accelerators.ts`、`src/shell/*`、`src/settings/*`、`src/history/*`、`src/panes/AiFixPane.tsx`、`src/permissions/ShortcutPermissionModal.tsx`、`tests/**`。 |
 | 关联 | 此前在 codex 分支尝试引入 Raycast 风格控件失败（实心石墨主按钮、unicode ⌘ 渲染差、dark 渐变显脏）；本次从 main 重写。方向：Raycast 级控件工艺落在 Jsonita 原生玻璃质感上，不抄布局、不做命令面板。 |
 

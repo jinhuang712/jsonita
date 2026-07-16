@@ -32,14 +32,12 @@ export interface HistoryRow {
   summary: string;
   contentHash: string;
   opType: OpType;
-  pinned: boolean;
   starred: boolean;
 }
 
 export interface ListOpts {
   limit?: number;
   offset?: number;
-  onlyPinned?: boolean;
   onlyStarred?: boolean;
 }
 

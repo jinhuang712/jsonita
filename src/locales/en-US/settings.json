@@ -2,41 +2,55 @@
   "title": "Settings",
   "groups": {
     "general": "General",
+    "appearance": "Appearance",
     "shortcuts": "Shortcuts",
     "ai": "AI",
     "history": "History",
-    "jsonTransform": "JSON Transform",
+    "jsonTransform": "JSON",
     "about": "About"
   },
   "actions": {
     "close": "Close settings"
   },
   "general": {
-    "language": "Language",
-    "theme": "Theme",
     "launchAtLogin": "Launch at login",
     "hideOnBlur": "Hide on blur",
+    "autoPasteClipboard": "Auto-paste clipboard"
+  },
+  "appearance": {
+    "language": "Language",
+    "theme": "Theme",
     "smartWidth": "Smart width",
     "singlePaneMode": "Single-pane mode",
-    "autoPasteClipboard": "Auto-paste clipboard"
+    "editorSoftWrap": "Editor soft-wrap"
   },
   "ai": {
     "enabled": "Enable AI Fix",
-    "apiKey": "DeepSeek API Key",
+    "editMode": "Edit mode",
+    "modeForm": "Form",
+    "modeJson": "JSON",
+    "configJson": "Config (JSON)",
+    "invalidProtocol": "protocol must be \"openai\" or \"anthropic\"",
+    "protocol": "Protocol",
+    "apiUrl": "API URL",
+    "model": "Model",
+    "maxTokens": "Max tokens",
+    "thinking": "Enable thinking (reasoning models)",
+    "apiKey": "API Key",
     "apiKeySavedPlaceholder": "•••••••• (saved; enter a new key to replace)",
     "apiKeySaved": "Saved",
-    "apiKeyRemoved": "Removed",
     "test": "Test",
-    "save": "Save",
-    "remove": "Remove"
+    "reset": "Reset",
+    "resetDone": "Reset to defaults"
   },
   "history": {
+    "enabled": "Enable history",
     "limit": "History limit"
   },
   "jsonTransform": {
+    "alwaysStringToJson": "Auto-unwrap stringified input",
     "autoUnwrap": "Auto unwrap nested",
-    "unwrapTimeoutMs": "Unwrap timeout (ms)",
-    "editorSoftWrap": "Editor soft-wrap"
+    "unwrapTimeoutMs": "Unwrap timeout (ms)"
   },
   "shortcuts": {
     "customTitle": "Custom",
@@ -67,7 +81,6 @@
     "overrideButton": "Override"
   },
   "footer": {
-    "resetAll": "Reset all",
-    "done": "Done"
+    "resetAll": "Reset all"
   }
 }

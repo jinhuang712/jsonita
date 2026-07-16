@@ -9,7 +9,10 @@ use r2d2_sqlite::SqliteConnectionManager;
 
 use crate::error::JsonitaError;
 
-const MIGRATIONS: &[(u32, &str)] = &[(1, include_str!("../../migrations/0001_init.sql"))];
+const MIGRATIONS: &[(u32, &str)] = &[
+    (1, include_str!("../../migrations/0001_init.sql")),
+    (2, include_str!("../../migrations/0002_merge_pin_into_star.sql")),
+];
 
 #[derive(Clone)]
 pub struct Db {

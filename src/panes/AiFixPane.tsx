@@ -82,13 +82,23 @@ export function AiFixPane() {
       <div
         className={paneClassName}
         style={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: 24,
-          textAlign: 'center',
-          color: 'var(--text-muted)',
-          fontSize: 'var(--fs-sm)',
         }}
       >
-        AI Fix in progress…
+        <div className="jsonita-aifix-wait" role="status" aria-label="Repairing your JSON">
+          <div className="jsonita-aifix-skeleton" aria-hidden="true">
+            <span className="jsonita-aifix-brace">{'{'}</span>
+            <span className="jsonita-aifix-line" style={{ width: 128 }} />
+            <span className="jsonita-aifix-line" style={{ width: 186, animationDelay: '0.16s' }} />
+            <span className="jsonita-aifix-line" style={{ width: 96, animationDelay: '0.32s' }} />
+            <span className="jsonita-aifix-brace">{'}'}</span>
+          </div>
+          <div className="jsonita-aifix-caption">Repairing your JSON…</div>
+        </div>
       </div>
     );
   }

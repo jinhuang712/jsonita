@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 
-export type Pane = 'format' | 'minify' | 'tree' | 'json-to-str' | 'str-to-json' | 'ai-fix';
+export type Pane = 'format' | 'minify' | 'tree' | 'json-to-str' | 'ai-fix';
 export type SinglePaneApplyState = 'idle' | 'running' | 'success' | 'error';
 
 export const DEFAULT_EDITOR_FONT_SIZE = 15;

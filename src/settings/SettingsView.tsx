@@ -5,7 +5,6 @@ import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
-import { ActionButton } from '../components/ActionButton';
 import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { CloseIcon } from '../components/icons';
 import { ApiKeyInput } from './ApiKeyInput';
@@ -26,13 +25,16 @@ import {
  * 即时生效：onChange 立即 settings_set。
  */
 
-type Group = 'general' | 'shortcuts' | 'ai' | 'history' | 'jsonTransform' | 'about';
+type Group = 'general' | 'appearance' | 'shortcuts' | 'ai' | 'history' | 'jsonTransform' | 'about';
 
-const GROUPS: Group[] = ['general', 'shortcuts', 'ai', 'history', 'jsonTransform', 'about'];
+const GROUPS: Group[] = ['general', 'appearance', 'ai', 'history', 'jsonTransform', 'shortcuts', 'about'];
 
 const NAV_ICONS: Record<Group, React.ReactNode> = {
   general: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z" /></svg>
+  ),
+  appearance: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none" /></svg>
   ),
   shortcuts: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="11" rx="2.5" /><path d="M7 7V5.5M11 7V5.5M15 7V5.5M19 7V5.5" /></svg>
@@ -62,6 +64,7 @@ export function SettingsView() {
   const programmaticScrollRef = useRef<{ group: Group; targetTop: number } | null>(null);
   const sectionRefs = useRef<Record<Group, HTMLElement | null>>({
     general: null,
+    appearance: null,
     shortcuts: null,
     ai: null,
     history: null,
@@ -221,20 +224,55 @@ export function SettingsView() {
               borderRight: '1px solid var(--border)',
               background: 'var(--bg-elevated-nav)',
               padding: 'var(--sp-3) var(--sp-2)',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
-            {GROUPS.map((g) => (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {GROUPS.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => scrollToGroup(g)}
+                  aria-current={activeGroup === g ? 'page' : undefined}
+                  className="jsonita-settings-nav-btn"
+                  data-active={activeGroup === g ? 'true' : undefined}
+                >
+                  <span className="jsonita-settings-nav-icon">{NAV_ICONS[g]}</span>
+                  {t(`groups.${g}` as 'groups.general')}
+                </button>
+              ))}
+            </div>
+            <div
+              style={{
+                marginTop: 'auto',
+                paddingTop: 8,
+                borderTop: '1px solid var(--border)',
+              }}
+            >
               <button
-                key={g}
-                onClick={() => scrollToGroup(g)}
-                aria-current={activeGroup === g ? 'page' : undefined}
-                className="jsonita-settings-nav-btn"
-                data-active={activeGroup === g ? 'true' : undefined}
+                type="button"
+                className="jsonita-settings-reset-btn"
+                onClick={async () => {
+                  const u = await settingsApi.reset();
+                  setSettings(u);
+                }}
               >
-                <span className="jsonita-settings-nav-icon">{NAV_ICONS[g]}</span>
-                {t(`groups.${g}` as 'groups.general')}
+                <span className="jsonita-settings-nav-icon" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.7}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 12a9 9 0 1 0 3-6.7" />
+                    <path d="M3 4v5h5" />
+                  </svg>
+                </span>
+                {t('footer.resetAll')}
               </button>
-            ))}
+            </div>
           </nav>
           <div
             className="jsonita-settings-scroll"
@@ -256,16 +294,23 @@ export function SettingsView() {
               <GroupGeneral settings={settings} patch={patch} />
             </SettingsSection>
             <SettingsSection
-              group="shortcuts"
-              title={t('groups.shortcuts')}
+              group="appearance"
+              title={t('groups.appearance')}
               sectionRefs={sectionRefs}
             >
-              <GroupShortcuts settings={settings} patch={patch} />
+              <GroupAppearance settings={settings} patch={patch} />
             </SettingsSection>
             <SettingsSection
               group="ai"
               title={t('groups.ai')}
               sectionRefs={sectionRefs}
+              headerAction={
+                <CheckItem
+                  label={t('ai.enabled')}
+                  on={settings.aiEnabled}
+                  onChange={(v) => patch({ aiEnabled: v })}
+                />
+              }
             >
               <GroupAi settings={settings} patch={patch} />
             </SettingsSection>
@@ -284,6 +329,13 @@ export function SettingsView() {
               <GroupJsonTransform settings={settings} patch={patch} />
             </SettingsSection>
             <SettingsSection
+              group="shortcuts"
+              title={t('groups.shortcuts')}
+              sectionRefs={sectionRefs}
+            >
+              <GroupShortcuts settings={settings} patch={patch} />
+            </SettingsSection>
+            <SettingsSection
               group="about"
               title={t('groups.about')}
               sectionRefs={sectionRefs}
@@ -291,29 +343,6 @@ export function SettingsView() {
               <GroupAbout />
             </SettingsSection>
           </div>
-        </div>
-        <div
-          style={{
-            padding: '8px 16px',
-            borderTop: '1px solid var(--border)',
-            background: 'var(--surface-quiet)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 6,
-          }}
-        >
-          <ActionButton
-            variant="text"
-            onClick={async () => {
-              const u = await settingsApi.reset();
-              setSettings(u);
-            }}
-          >
-            {t('footer.resetAll')}
-          </ActionButton>
-          <ActionButton variant="primary" onClick={() => setOpen(false)}>
-            {t('footer.done')}
-          </ActionButton>
         </div>
       </div>
     </div>
@@ -329,11 +358,13 @@ function SettingsSection({
   group,
   title,
   sectionRefs,
+  headerAction,
   children,
 }: {
   group: Group;
   title: string;
   sectionRefs: React.MutableRefObject<Record<Group, HTMLElement | null>>;
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -345,9 +376,12 @@ function SettingsSection({
       }}
       aria-labelledby={`settings-section-${group}`}
     >
-      <h2 id={`settings-section-${group}`} className="jsonita-settings-section-title">
-        {title}
-      </h2>
+      <div className="jsonita-settings-section-header">
+        <h2 id={`settings-section-${group}`} className="jsonita-settings-section-title">
+          {title}
+        </h2>
+        {headerAction}
+      </div>
       {children}
     </section>
   );
@@ -468,9 +502,34 @@ function ReadonlyShortcutRow({ label, keys }: { label: string; keys: string[] })
 function GroupGeneral({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <CheckGrid>
+        <CheckItem
+          label={t('general.launchAtLogin')}
+          on={settings.launchAtLogin}
+          onChange={(v) => patch({ launchAtLogin: v })}
+        />
+        <CheckItem
+          label={t('general.hideOnBlur')}
+          on={settings.hideOnBlur}
+          onChange={(v) => patch({ hideOnBlur: v })}
+        />
+        <CheckItem
+          label={t('general.autoPasteClipboard')}
+          on={settings.autoPasteClipboard}
+          onChange={(v) => patch({ autoPasteClipboard: v })}
+        />
+      </CheckGrid>
+    </div>
+  );
+}
+
+function GroupAppearance({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={rowStyle}>
-        <span>{t('general.language')}</span>
+        <span>{t('appearance.language')}</span>
         <SegmentedControl
           value={settings.locale}
           options={[
@@ -481,7 +540,7 @@ function GroupGeneral({ settings, patch }: GroupProps) {
         />
       </div>
       <div style={rowStyle}>
-        <span>{t('general.theme')}</span>
+        <span>{t('appearance.theme')}</span>
         <SegmentedControl
           value={settings.theme}
           options={[
@@ -492,58 +551,232 @@ function GroupGeneral({ settings, patch }: GroupProps) {
           onChange={(v) => patch({ theme: v })}
         />
       </div>
-      <Row
-        label={t('general.launchAtLogin')}
-        on={settings.launchAtLogin}
-        onChange={(v) => patch({ launchAtLogin: v })}
-      />
-      <Row
-        label={t('general.hideOnBlur')}
-        on={settings.hideOnBlur}
-        onChange={(v) => patch({ hideOnBlur: v })}
-      />
-      <Row
-        label={t('general.smartWidth')}
-        on={settings.smartWidth}
-        onChange={(v) => patch({ smartWidth: v })}
-      />
-      <Row
-        label={t('general.singlePaneMode')}
-        on={settings.singlePaneMode}
-        onChange={(v) => patch({ singlePaneMode: v })}
-      />
-      <Row
-        label={t('general.autoPasteClipboard')}
-        on={settings.autoPasteClipboard}
-        onChange={(v) => patch({ autoPasteClipboard: v })}
-      />
+      <CheckGrid>
+        <CheckItem
+          label={t('appearance.smartWidth')}
+          on={settings.smartWidth}
+          onChange={(v) => patch({ smartWidth: v })}
+        />
+        <CheckItem
+          label={t('appearance.singlePaneMode')}
+          on={settings.singlePaneMode}
+          onChange={(v) => patch({ singlePaneMode: v })}
+        />
+        <CheckItem
+          label={t('appearance.editorSoftWrap')}
+          on={settings.editorSoftWrap}
+          onChange={(v) => patch({ editorSoftWrap: v })}
+        />
+      </CheckGrid>
     </div>
+  );
+}
+
+const AI_URL_PLACEHOLDER: Record<Settings['aiProtocol'], string> = {
+  openai: 'https://api.openai.com/v1/chat/completions',
+  anthropic: 'https://api.anthropic.com/v1/messages',
+};
+
+const AI_MODEL_PLACEHOLDER: Record<Settings['aiProtocol'], string> = {
+  openai: 'gpt-4o-mini',
+  anthropic: 'claude-3-5-sonnet-latest',
+};
+
+function aiConfigJson(settings: Settings): string {
+  return JSON.stringify(
+    {
+      protocol: settings.aiProtocol,
+      url: settings.aiBaseUrl,
+      model: settings.aiModelId,
+      thinking: settings.aiThinking,
+      maxTokens: settings.aiMaxTokens,
+    },
+    null,
+    2,
   );
 }
 
 function GroupAi({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
+  const disabled = !settings.aiEnabled;
+  const [mode, setMode] = useState<'form' | 'json'>('form');
+  const [jsonText, setJsonText] = useState(() => aiConfigJson(settings));
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
+  const switchMode = (m: 'form' | 'json') => {
+    if (m === 'json') {
+      // 进 JSON 模式时用当前配置重新种子，避免展示陈旧文本
+      setJsonText(aiConfigJson(settings));
+      setJsonError(null);
+    }
+    setMode(m);
+  };
+
+  const onJsonChange = (v: string) => {
+    setJsonText(v);
+    try {
+      const obj = JSON.parse(v);
+      if (obj.protocol !== 'openai' && obj.protocol !== 'anthropic') {
+        throw new Error(t('ai.invalidProtocol'));
+      }
+      patch({
+        aiProtocol: obj.protocol,
+        aiBaseUrl: String(obj.url ?? ''),
+        aiModelId: String(obj.model ?? ''),
+        aiThinking: Boolean(obj.thinking),
+        aiMaxTokens: Number(obj.maxTokens) || 8192,
+      });
+      setJsonError(null);
+    } catch (e) {
+      setJsonError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <Row
-        label={t('ai.enabled')}
-        on={settings.aiEnabled}
-        onChange={(v) => patch({ aiEnabled: v })}
-      />
-      <div style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginBottom: 4 }}>
-          {t('ai.apiKey')}
-        </div>
-        <ApiKeyInput modelId={settings.aiModelId} />
+    <div
+      aria-disabled={disabled}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        opacity: disabled ? 0.45 : 1,
+        pointerEvents: disabled ? 'none' : 'auto',
+        transition: 'opacity var(--dur-base) var(--ease-out)',
+      }}
+    >
+      <div style={rowStyle}>
+        <span>{t('ai.editMode')}</span>
+        <SegmentedControl
+          value={mode}
+          options={[
+            { value: 'form', label: t('ai.modeForm') },
+            { value: 'json', label: t('ai.modeJson') },
+          ]}
+          onChange={switchMode}
+        />
       </div>
+
+      {mode === 'form' ? (
+        <>
+          <div style={rowStyle}>
+            <span>{t('ai.protocol')}</span>
+            <SegmentedControl
+              value={settings.aiProtocol}
+              options={[
+                { value: 'openai', label: 'OpenAI' },
+                { value: 'anthropic', label: 'Anthropic' },
+              ]}
+              onChange={(v) => patch({ aiProtocol: v })}
+            />
+          </div>
+          <label style={aiFieldStyle}>
+            <span style={aiFieldLabelStyle}>{t('ai.apiUrl')}</span>
+            <input
+              value={settings.aiBaseUrl}
+              onChange={(e) => patch({ aiBaseUrl: e.target.value })}
+              placeholder={AI_URL_PLACEHOLDER[settings.aiProtocol]}
+              style={aiInputStyle}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </label>
+          <label style={aiFieldStyle}>
+            <span style={aiFieldLabelStyle}>{t('ai.model')}</span>
+            <input
+              value={settings.aiModelId}
+              onChange={(e) => patch({ aiModelId: e.target.value })}
+              placeholder={AI_MODEL_PLACEHOLDER[settings.aiProtocol]}
+              style={aiInputStyle}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </label>
+          <label style={aiFieldStyle}>
+            <span style={aiFieldLabelStyle}>{t('ai.maxTokens')}</span>
+            <input
+              type="number"
+              value={settings.aiMaxTokens}
+              onChange={(e) => patch({ aiMaxTokens: Number(e.target.value) || 0 })}
+              placeholder="8192"
+              style={aiInputStyle}
+            />
+          </label>
+          <CheckItem
+            label={t('ai.thinking')}
+            on={settings.aiThinking}
+            onChange={(v) => patch({ aiThinking: v })}
+          />
+        </>
+      ) : (
+        <div style={aiFieldStyle}>
+          <span style={aiFieldLabelStyle}>{t('ai.configJson')}</span>
+          <textarea
+            value={jsonText}
+            onChange={(e) => onJsonChange(e.target.value)}
+            style={aiJsonTextareaStyle}
+            spellCheck={false}
+            autoComplete="off"
+            rows={5}
+          />
+          {jsonError && <div style={aiErrorStyle}>{jsonError}</div>}
+        </div>
+      )}
+
+      <ApiKeyInput
+        settings={settings}
+        patch={patch}
+        blockTest={mode === 'json' && jsonError !== null}
+      />
     </div>
   );
 }
 
+const aiFieldStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+};
+
+const aiFieldLabelStyle: React.CSSProperties = {
+  fontSize: 'var(--fs-xs)',
+  color: 'var(--text-muted)',
+};
+
+const aiInputStyle: React.CSSProperties = {
+  width: '100%',
+  minWidth: 0,
+  padding: '4px 8px',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: 'var(--fs-sm)',
+  color: 'var(--text)',
+};
+
+const aiJsonTextareaStyle: React.CSSProperties = {
+  width: '100%',
+  minWidth: 0,
+  resize: 'vertical',
+  padding: '10px 12px',
+  background: 'var(--control-bg)',
+  border: '1px solid var(--control-border)',
+  borderRadius: 'var(--radius-sm)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--fs-xs)',
+  lineHeight: 1.5,
+  color: 'var(--text)',
+};
+
+const aiErrorStyle: React.CSSProperties = {
+  fontSize: 'var(--fs-xs)',
+  color: 'var(--danger)',
+  wordBreak: 'break-word',
+};
+
 function GroupHistory({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={rowStyle}>
         <span>{t('history.limit')}</span>
         <SegmentedControl
@@ -557,6 +790,11 @@ function GroupHistory({ settings, patch }: GroupProps) {
           onChange={(v) => patch({ historyLimit: v })}
         />
       </div>
+      <CheckItem
+        label={t('history.enabled')}
+        on={settings.historyEnabled}
+        onChange={(v) => patch({ historyEnabled: v })}
+      />
     </div>
   );
 }
@@ -564,12 +802,7 @@ function GroupHistory({ settings, patch }: GroupProps) {
 function GroupJsonTransform({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <Row
-        label={t('jsonTransform.autoUnwrap')}
-        on={settings.autoUnwrap}
-        onChange={(v) => patch({ autoUnwrap: v })}
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={rowStyle}>
         <span>{t('jsonTransform.unwrapTimeoutMs')}</span>
         <input
@@ -581,16 +814,36 @@ function GroupJsonTransform({ settings, patch }: GroupProps) {
           style={{ ...inputStyle, width: 80 }}
         />
       </div>
-      <Row
-        label={t('jsonTransform.editorSoftWrap')}
-        on={settings.editorSoftWrap}
-        onChange={(v) => patch({ editorSoftWrap: v })}
+      <CheckItem
+        label={t('jsonTransform.alwaysStringToJson')}
+        on={settings.alwaysStringToJson}
+        onChange={(v) => patch({ alwaysStringToJson: v })}
+      />
+      <CheckItem
+        label={t('jsonTransform.autoUnwrap')}
+        on={settings.autoUnwrap}
+        onChange={(v) => patch({ autoUnwrap: v })}
       />
     </div>
   );
 }
 
-function Row({
+function CheckGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        columnGap: 20,
+        rowGap: 12,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CheckItem({
   label,
   on,
   onChange,
@@ -600,9 +853,18 @@ function Row({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label style={{ ...rowStyle, cursor: 'pointer' }}>
-      <span>{label}</span>
+    <label
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        minHeight: 24,
+        cursor: 'pointer',
+        fontSize: 'var(--fs-sm)',
+      }}
+    >
       <SettingsCheckbox checked={on} onChange={onChange} />
+      <span>{label}</span>
     </label>
   );
 }
@@ -625,30 +887,33 @@ function SettingsCheckbox({
       <span
         aria-hidden="true"
         style={{
-          width: 40,
-          height: 28,
+          width: 18,
+          height: 18,
           borderRadius: 5,
-          background: checked ? 'var(--toggle-on)' : 'var(--control-bg-hover)',
+          background: checked ? 'var(--toggle-on)' : 'transparent',
           border: `1px solid ${checked ? 'transparent' : 'var(--control-border)'}`,
           display: 'inline-flex',
           alignItems: 'center',
-          padding: 3,
+          justifyContent: 'center',
           flexShrink: 0,
           transition:
             'background var(--dur-base) var(--ease-native), border-color var(--dur-base)',
         }}
       >
-        <span
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: 4,
-            background: '#fff',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-            transform: checked ? 'translateX(14px)' : 'translateX(0)',
-            transition: 'transform var(--dur-base) var(--ease-native)',
-          }}
-        />
+        {checked ? (
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fff"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 12.5l4.5 4.5L19 7" />
+          </svg>
+        ) : null}
       </span>
     </span>
   );
@@ -669,7 +934,9 @@ function SegmentedControl<T extends string | number>({
         <button
           key={String(opt.value)}
           type="button"
-          onClick={() => onChange(opt.value)}
+          onClick={() => {
+            if (opt.value !== value) onChange(opt.value);
+          }}
           style={value === opt.value ? segSmOnStyle : segSmOffStyle}
         >
           {opt.label}
@@ -729,8 +996,9 @@ const rowStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: 16,
-  minHeight: 40,
-  padding: '9px 0',
+  minHeight: 38,
+  padding: '6px 0',
+  fontSize: 'var(--fs-sm)',
 };
 
 const sectionLabelStyle: React.CSSProperties = {
@@ -758,7 +1026,7 @@ const aboutHeaderStyle: React.CSSProperties = {
 };
 
 const aboutTitleStyle: React.CSSProperties = {
-  color: 'var(--text)',
+  color: 'var(--text-faint)',
   fontSize: 'var(--fs-lg)',
   fontWeight: 700,
   lineHeight: 1.15,
@@ -766,7 +1034,7 @@ const aboutTitleStyle: React.CSSProperties = {
 
 const aboutSubtitleStyle: React.CSSProperties = {
   marginTop: 4,
-  color: 'var(--text-muted)',
+  color: 'var(--text-faint)',
   lineHeight: 1.35,
 };
 
@@ -796,12 +1064,12 @@ const aboutMetaStyle: React.CSSProperties = {
 };
 
 const aboutMetaLabelStyle: React.CSSProperties = {
-  color: 'var(--text-muted)',
+  color: 'var(--text-faint)',
   fontSize: 'var(--fs-xs)',
 };
 
 const aboutMetaValueStyle: React.CSSProperties = {
-  color: 'var(--text)',
+  color: 'var(--text-faint)',
   fontWeight: 600,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -819,7 +1087,7 @@ const aboutPathStyle: React.CSSProperties = {
   padding: '5px 8px',
   borderRadius: 'var(--radius-sm)',
   background: 'var(--control-bg)',
-  color: 'var(--text-muted)',
+  color: 'var(--text-faint)',
   fontFamily: 'var(--font-mono)',
   fontSize: 'var(--fs-xs)',
   overflowWrap: 'anywhere',
@@ -837,7 +1105,7 @@ const readonlyShortcutRowStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: 16,
   minHeight: 28,
-  color: 'var(--text)',
+  color: 'var(--text-faint)',
 };
 
 const keyGroupStyle: React.CSSProperties = {
@@ -846,6 +1114,7 @@ const keyGroupStyle: React.CSSProperties = {
   justifyContent: 'flex-end',
   gap: 4,
   flexWrap: 'wrap',
+  opacity: 0.6,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -890,8 +1159,8 @@ const checkboxWrapStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 40,
-  height: 28,
+  width: 18,
+  height: 18,
   flexShrink: 0,
 };
 

@@ -58,12 +58,11 @@ fn row_to_history(r: &rusqlite::Row) -> rusqlite::Result<HistoryRow> {
         summary: r.get("summary")?,
         content_hash: r.get("content_hash")?,
         op_type,
-        pinned: r.get::<_, i64>("pinned")? == 1,
         starred: r.get::<_, i64>("starred")? == 1,
     })
 }
 
-/// 插入 + 去重（UPSERT 走 ON CONFLICT(content_hash)）+ 自动 trim 非 pinned/starred 至 limit 条。
+/// 插入 + 去重（UPSERT 走 ON CONFLICT(content_hash)）+ 自动 trim 非收藏至 limit 条。
 pub fn add(
     db: &Db,
     content: &str,
@@ -94,13 +93,13 @@ pub fn add(
         row_to_history,
     )?;
 
-    // 自动 trim 至 limit 条（pinned/starred 不动）
+    // 自动 trim 至 limit 条（收藏不动）
     if history_limit > 0 {
         conn.execute(
             "DELETE FROM history
              WHERE id IN (
                SELECT id FROM history
-               WHERE pinned = 0 AND starred = 0
+               WHERE starred = 0
                ORDER BY created_at DESC
                LIMIT -1 OFFSET ?1
              )",
@@ -116,18 +115,14 @@ pub fn list(db: &Db, opts: ListOpts) -> Result<Vec<HistoryRow>, JsonitaError> {
     let limit = opts.limit.max(1) as i64;
     let offset = opts.offset as i64;
 
-    // 简化：onlyPinned / onlyStarred 互斥；都为 None 时全列
-    let (sql, args): (&str, Vec<i64>) = match (opts.only_pinned, opts.only_starred) {
-        (Some(true), _) => (
-            "SELECT * FROM history WHERE pinned = 1 ORDER BY created_at DESC LIMIT ?1 OFFSET ?2",
-            vec![limit, offset],
-        ),
-        (_, Some(true)) => (
+    // onlyStarred 时只列收藏；否则全列，收藏置顶。
+    let (sql, args): (&str, Vec<i64>) = match opts.only_starred {
+        Some(true) => (
             "SELECT * FROM history WHERE starred = 1 ORDER BY created_at DESC LIMIT ?1 OFFSET ?2",
             vec![limit, offset],
         ),
         _ => (
-            "SELECT * FROM history ORDER BY pinned DESC, created_at DESC LIMIT ?1 OFFSET ?2",
+            "SELECT * FROM history ORDER BY starred DESC, created_at DESC LIMIT ?1 OFFSET ?2",
             vec![limit, offset],
         ),
     };
@@ -149,7 +144,7 @@ pub fn search(db: &Db, query: &str, limit: u32) -> Result<Vec<HistoryRow>, Jsoni
         "SELECT * FROM history
          WHERE content LIKE ?1 ESCAPE '\\'
             OR summary LIKE ?1 ESCAPE '\\'
-         ORDER BY pinned DESC, created_at DESC
+         ORDER BY starred DESC, created_at DESC
          LIMIT ?2",
     )?;
     let rows = stmt.query_map(params![pattern, limit as i64], row_to_history)?;
@@ -167,15 +162,6 @@ fn escape_like(query: &str) -> String {
         .replace('_', "\\_")
 }
 
-pub fn set_pinned(db: &Db, id: i64, pinned: bool) -> Result<(), JsonitaError> {
-    let conn = db.pool().get()?;
-    conn.execute(
-        "UPDATE history SET pinned = ?1 WHERE id = ?2",
-        params![pinned as i64, id],
-    )?;
-    Ok(())
-}
-
 pub fn set_starred(db: &Db, id: i64, starred: bool) -> Result<(), JsonitaError> {
     let conn = db.pool().get()?;
     conn.execute(
@@ -185,9 +171,9 @@ pub fn set_starred(db: &Db, id: i64, starred: bool) -> Result<(), JsonitaError> 
     Ok(())
 }
 
-/// 清空 history（保留 pinned + starred）── 见 spec/S05-storage-session.md。
+/// 清空 history（保留收藏）── 见 spec/S05-storage-session.md。
 pub fn clear(db: &Db) -> Result<u32, JsonitaError> {
     let conn = db.pool().get()?;
-    let n = conn.execute("DELETE FROM history WHERE pinned = 0 AND starred = 0", [])?;
+    let n = conn.execute("DELETE FROM history WHERE starred = 0", [])?;
     Ok(n as u32)
 }

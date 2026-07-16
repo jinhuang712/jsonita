@@ -68,13 +68,18 @@ test('chrome hit targets are 34px with no grouping frame', () => {
   assert.doesNotMatch(styles, /\.jsonita-chrome-actions\s*\{[^}]*border:/s);
 });
 
-test('split and single view are two separate toggle buttons', () => {
+test('split and single view collapse into one toggle button', () => {
   const tabBar = read('src/shell/TabBar.tsx');
 
-  assert.match(tabBar, /switchToSplitPanel|singlePaneMode === false/);
-  assert.match(tabBar, /switchToSinglePanel|singlePaneMode === true/);
-  const viewButtons = tabBar.match(/aria-label=\{[^}]*switchTo(Split|Single)Panel[^}]*\}/g) ?? [];
-  assert.ok(viewButtons.length >= 2, 'expected split + single toggle buttons');
+  // A single chrome button flips singlePaneMode, showing the current mode's
+  // icon while its tooltip/aria label announces the target mode.
+  assert.match(tabBar, /switchToSplitPanel/);
+  assert.match(tabBar, /switchToSinglePanel/);
+  assert.match(tabBar, /onClick=\{toggleSinglePaneMode\}/);
+
+  const viewButtons =
+    tabBar.match(/aria-label=\{\s*settings\.singlePaneMode[^}]*switchTo(Split|Single)Panel[\s\S]*?\}/g) ?? [];
+  assert.equal(viewButtons.length, 1, 'expected a single split/single toggle button');
 });
 
 test('ChromeIconButton renders aria-pressed on toggle buttons', () => {
@@ -92,14 +97,15 @@ test('settings page keeps a close button in the top-right corner', () => {
   assert.doesNotMatch(settings, /<kbd[^>]*>Esc<\/kbd>/);
 });
 
-test('settings footer commits via ActionButton primitives', () => {
+test('settings drops the footer bar; Reset all is a sidebar action, close is Esc-only', () => {
   const settings = read('src/settings/SettingsView.tsx');
+  const styles = read('src/styles/global.css');
 
-  assert.match(settings, /import \{ ActionButton \} from '\.\.\/components\/ActionButton'/);
-  assert.match(settings, /<ActionButton[\s\S]*?variant="primary"[\s\S]*?>\s*\{t\('footer\.done'\)\}\s*<\/ActionButton>/);
-  assert.match(settings, /<ActionButton[\s\S]*?variant="text"[\s\S]*?>\s*\{t\('footer\.resetAll'\)\}\s*<\/ActionButton>/);
-  assert.doesNotMatch(settings, /style=\{btnPrimary\}/);
-  assert.doesNotMatch(settings, /style=\{btnGhost\}/);
+  // Reset all sits in the nav as a dedicated button; no footer, no Done, no primary button.
+  assert.match(settings, /className="jsonita-settings-reset-btn"[\s\S]*?\{t\('footer\.resetAll'\)\}/);
+  assert.match(styles, /\.jsonita-settings-reset-btn:hover\s*\{[^}]*var\(--danger\)/s);
+  assert.doesNotMatch(settings, /footer\.done/);
+  assert.doesNotMatch(settings, /variant="primary"/);
 });
 
 test('settings shortcut rows render matte ShortcutGlyph tiles instead of inline kbd keycaps', () => {

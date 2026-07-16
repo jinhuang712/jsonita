@@ -16,8 +16,9 @@ stale data. Search keeps Find and Replace in the same docked panel.
 Settings and History replace the editor workspace inside the same shell; they
 are not nested modal cards. Closing either returns to editing. Settings presents
 the durable state reported by the host. History remains local and makes its
-empty, search, and pinned states understandable without exposing document
-contents in logs or unrelated UI.
+empty, search, and starred states understandable without exposing document
+contents in logs or unrelated UI. A single Star marks a document to keep: it
+survives Clear and the size-limit trim, and floats to the top of the list.
 
 ## AI Fix
 
