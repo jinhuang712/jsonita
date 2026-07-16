@@ -39,11 +39,15 @@ fn walk(
     }
     match v {
         Value::String(s) => {
-            if let Ok(parsed) = serde_json::from_str::<Value>(s) {
-                // 只解 object/array；纯数字/bool/null 字符串保留原值
-                if matches!(parsed, Value::Object(_) | Value::Array(_)) {
-                    *v = parsed;
-                    walk(v, deadline, max_depth, depth + 1)?;
+            // 只解「嵌套」的 stringified JSON：顶层(depth 0)字符串保持原样，
+            // 否则在 Format 时会把一个字符串输入直接 str→json（见交互 bug）。
+            if depth > 0 {
+                if let Ok(parsed) = serde_json::from_str::<Value>(s) {
+                    // 只解 object/array；纯数字/bool/null 字符串保留原值
+                    if matches!(parsed, Value::Object(_) | Value::Array(_)) {
+                        *v = parsed;
+                        walk(v, deadline, max_depth, depth + 1)?;
+                    }
                 }
             }
         }
@@ -97,6 +101,15 @@ mod tests {
         let out = unwrap(input, opts(200, None)).unwrap();
         assert!(out.contains("\"x\": 1"));
         assert!(out.contains("\"x\": 2"));
+    }
+
+    #[test]
+    fn top_level_string_stays_a_string() {
+        // 顶层就是一个内容为 JSON 的字符串 —— Format 不应把它 str→json，仍是字符串。
+        let input = r#""{\"a\":1}""#;
+        let out = unwrap(input, opts(200, None)).unwrap();
+        let parsed: Value = serde_json::from_str(&out).unwrap();
+        assert!(parsed.is_string(), "top-level string must stay a string, got: {out}");
     }
 
     #[test]

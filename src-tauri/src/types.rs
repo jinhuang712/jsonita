@@ -139,7 +139,6 @@ pub struct HistoryRow {
     pub summary: String,
     pub content_hash: String,
     pub op_type: OpType,
-    pub pinned: bool,
     pub starred: bool,
 }
 
@@ -150,8 +149,6 @@ pub struct ListOpts {
     pub limit: u32,
     #[serde(default)]
     pub offset: u32,
-    #[serde(default)]
-    pub only_pinned: Option<bool>,
     #[serde(default)]
     pub only_starred: Option<bool>,
 }
@@ -201,6 +198,23 @@ pub struct WindowResizedPayload {
 
 // ──────────── § 3.3 设置（M2-N1 真实化前 default） ────────────
 
+/// AI 服务协议 ── openai = OpenAI 兼容 chat/completions（含 DeepSeek 等）；
+/// anthropic = Anthropic Messages。决定请求体 / 鉴权头 / 响应解析。
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AiProtocol {
+    OpenAi,
+    Anthropic,
+}
+
+fn default_ai_protocol() -> AiProtocol {
+    AiProtocol::OpenAi
+}
+
+fn default_ai_max_tokens() -> u32 {
+    8192
+}
+
 /// Settings 全字段权威定义见 spec/appendix/A00-schemas.md。
 /// M1-N8 仅以 default 形态注入 SettingsStore；M2-N1 起从 settings.json 加载 + patch + 落盘。
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -221,11 +235,27 @@ pub struct Settings {
     #[serde(default = "default_shortcut_split_toggle")]
     pub shortcut_split_toggle: String,
     pub ai_enabled: bool,
+    #[serde(default = "default_ai_protocol")]
+    pub ai_protocol: AiProtocol,
+    #[serde(default)]
+    pub ai_base_url: String,
     pub ai_model_id: String,
+    #[serde(default)]
+    pub ai_thinking: bool,
+    #[serde(default = "default_ai_max_tokens")]
+    pub ai_max_tokens: u32,
     pub history_limit: u32,
+    #[serde(default = "default_history_enabled")]
+    pub history_enabled: bool,
     pub auto_unwrap: bool,
+    #[serde(default)]
+    pub always_string_to_json: bool,
     pub unwrap_timeout_ms: u64,
     pub editor_soft_wrap: bool,
+}
+
+fn default_history_enabled() -> bool {
+    true
 }
 
 impl Default for Settings {
@@ -245,9 +275,15 @@ impl Default for Settings {
             shortcut_restore_last: "CmdOrCtrl+Shift+L".to_string(),
             shortcut_split_toggle: "CmdOrCtrl+\\".to_string(),
             ai_enabled: false,
-            ai_model_id: "deepseek-chat".to_string(),
+            ai_protocol: AiProtocol::OpenAi,
+            ai_base_url: String::new(),
+            ai_model_id: String::new(),
+            ai_thinking: false,
+            ai_max_tokens: 8192,
             history_limit: 100,
+            history_enabled: true,
             auto_unwrap: true,
+            always_string_to_json: false,
             unwrap_timeout_ms: 200,
             editor_soft_wrap: true,
         }

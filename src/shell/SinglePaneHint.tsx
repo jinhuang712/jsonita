@@ -9,7 +9,6 @@ const PANE_LABEL_KEY: Record<Pane, string> = {
   minify: 'minify',
   tree: 'tree',
   'json-to-str': 'jsonToStr',
-  'str-to-json': 'strToJson',
   'ai-fix': 'aiFix',
 };
 

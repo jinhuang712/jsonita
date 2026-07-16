@@ -38,24 +38,27 @@ test('history opens only the selected JSON from its primary action and keyboard 
   assert.doesNotMatch(preview, /formatAccelerator/);
 });
 
-test('history keeps pin and star as quiet selected-document actions with shared SVG state markers', () => {
+test('history keeps star as the sole quiet selected-document keep action with a shared SVG marker', () => {
   const rail = read('src/history/HistoryDocumentList.tsx');
   const preview = read('src/history/HistoryDocumentPreview.tsx');
   const icons = read('src/components/icons.tsx');
   const en = read('src/locales/en-US/history.json');
   const zh = read('src/locales/zh-CN/history.json');
 
-  assert.match(icons, /export function PinIcon/);
+  // Pin folded into star: star (收藏) both keeps from clear and floats to top.
   assert.match(icons, /export function StarIcon/);
-  assert.match(rail, /<PinIcon width=\{12\}/);
+  assert.doesNotMatch(icons, /export function PinIcon/);
   assert.match(rail, /<StarIcon width=\{12\}/);
+  assert.doesNotMatch(rail, /PinIcon/);
   assert.doesNotMatch(rail, />⌖</);
-  assert.match(preview, /onPin/);
   assert.match(preview, /onStar/);
-  assert.match(preview, /<ActionButton[\s\S]*?variant="secondary"[\s\S]*?aria-pressed=\{row\.pinned\}/);
+  assert.doesNotMatch(preview, /onPin/);
   assert.match(preview, /<ActionButton[\s\S]*?variant="secondary"[\s\S]*?aria-pressed=\{row\.starred\}/);
+  assert.doesNotMatch(preview, /aria-pressed=\{row\.pinned\}/);
   assert.match(en, /"openInEditor"/);
   assert.match(zh, /"openInEditor"/);
+  assert.doesNotMatch(en, /"pin"/);
+  assert.doesNotMatch(zh, /"pin"/);
 });
 
 test('history retains the selected id across reloads and routes mutations through the existing IPC API', () => {
@@ -64,8 +67,8 @@ test('history retains the selected id across reloads and routes mutations throug
   assert.match(modal, /const selectedRow = useMemo\(/);
   assert.match(modal, /rows\.find\(\(row\) => row\.id === selectedId\)/);
   assert.match(modal, /setSelectedId\(rows\[0\]\?\.id \?\? null\)/);
-  assert.match(modal, /await historyApi\.pin\(row\.id, !row\.pinned\)/);
   assert.match(modal, /await historyApi\.star\(row\.id, !row\.starred\)/);
+  assert.doesNotMatch(modal, /historyApi\.pin\(/);
   assert.match(modal, /await historyApi\.clear\(\)/);
   assert.doesNotMatch(modal, /type Filter/);
   assert.doesNotMatch(modal, /applyFilter\(/);

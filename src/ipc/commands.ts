@@ -38,11 +38,10 @@ export const history = {
   list: (opts: ListOpts) => invoke<HistoryRow[]>('history_list', { opts }),
   search: (query: string, limit: number) =>
     invoke<HistoryRow[]>('history_search', { query, limit }),
-  pin: (id: number, pinned: boolean) => invoke<void>('history_pin', { id, pinned }),
   star: (id: number, starred: boolean) => invoke<void>('history_star', { id, starred }),
   clear: () => invoke<number>('history_clear'),
   add: (content: string, opType: OpType) =>
-    invoke<HistoryRow>('history_add', { content, opType }),
+    invoke<HistoryRow | null>('history_add', { content, opType }),
 };
 
 // ──────────── session ────────────
@@ -115,8 +114,13 @@ export interface AiFixResp {
 export const ai = {
   setApiKey: (apiKey: string) => invoke<void>('ai_set_api_key', { apiKey }),
   deleteApiKey: () => invoke<void>('ai_delete_api_key'),
-  testConnection: (apiKey: string, modelId: string) =>
-    invoke<TestConnectionResp>('ai_test_connection', { apiKey, modelId }),
+  testConnection: (
+    apiKey: string,
+    protocol: 'openai' | 'anthropic',
+    baseUrl: string,
+    modelId: string,
+  ) =>
+    invoke<TestConnectionResp>('ai_test_connection', { apiKey, protocol, baseUrl, modelId }),
   hasApiKey: () => invoke<boolean>('ai_has_api_key'),
   fix: (req: AiFixReq) => invoke<AiFixResp>('ai_fix', { req }),
 };

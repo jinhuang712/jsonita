@@ -19,7 +19,7 @@ import { useSettingsStore } from '../store/settings';
 import { EDITOR_FONT_ZOOM_STEP, useUiStore, type Pane } from '../store/ui';
 import { decideEscClose, ESC_CLOSE_HINT_MS } from './escCloseHint';
 
-const PANE_ORDER: Pane[] = ['format', 'minify', 'tree', 'json-to-str', 'str-to-json'];
+const PANE_ORDER: Pane[] = ['format', 'minify', 'tree', 'json-to-str'];
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;

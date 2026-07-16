@@ -579,18 +579,24 @@ select,
 }
 
 .jsonita-settings-section {
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
-  padding: 22px 24px 18px;
-  margin-bottom: 14px;
+  max-width: 560px;
+  padding: 2px 0 14px;
   scroll-margin-top: 12px;
 }
 .jsonita-settings-section + .jsonita-settings-section {
   margin-top: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.jsonita-settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 12px;
 }
 .jsonita-settings-section-title {
-  margin: 0 0 14px;
+  margin: 0;
   color: var(--text);
   font-family: var(--font-ui);
   font-size: var(--fs-lg);
@@ -624,6 +630,97 @@ select,
   place-items: center;
   opacity: 0.55;
   transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-settings-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 8px;
+  font-size: var(--fs-md);
+  font-weight: 450;
+  text-align: left;
+  background: transparent;
+  color: var(--text-muted);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.jsonita-settings-reset-btn:hover {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger);
+}
+.jsonita-settings-reset-btn:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+.jsonita-settings-reset-btn .jsonita-settings-nav-icon {
+  opacity: 0.5;
+}
+.jsonita-settings-reset-btn:hover .jsonita-settings-nav-icon {
+  opacity: 1;
+}
+
+/* AI Fix — "repairing" skeleton: braces framing shimmering code-line bars */
+.jsonita-aifix-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.jsonita-aifix-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 220px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-lg);
+  line-height: 1;
+  color: var(--text-faint);
+}
+.jsonita-aifix-line {
+  height: 10px;
+  margin-left: 24px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--control-bg) 0%,
+    var(--control-bg-hover) 50%,
+    var(--control-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: jsonita-aifix-shimmer 1.4s linear infinite;
+}
+.jsonita-aifix-caption {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+@keyframes jsonita-aifix-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jsonita-aifix-line {
+    animation: jsonita-aifix-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes jsonita-aifix-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 0.85;
+    }
+  }
 }
 .jsonita-settings-nav-icon svg {
   width: 15px;

@@ -2,20 +2,23 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ai } from '../ipc/commands';
 import { ActionButton } from '../components/ActionButton';
+import type { Settings } from '../store/settings';
 
 /**
- * API key 输入 + 测试连接 + 保存。
+ * API key 输入 + Test + Reset。两种编辑模式共用。
  *
- * 视觉锚：design/01_mockups.md § 6 Settings AI 分组
- * Spec ref: design/04_components.md ApiKeyInput · spec/M02-ai-repair.md 测试连接
- * 关键：key 直接传给 ai_test_connection（不先存 secrets.json），test 通过后 set。
+ * Test：用当前编辑中的 protocol/url/model + 输入的 key 实打探活；成功后落盘 key。
+ * Reset：protocol/url/model 复位默认 + 删除已存 key（含旧 deepseek_api_key）。
+ * key 直接传给 ai_test_connection，不先存 secrets，避免污染已有 key。
  */
 
 interface Props {
-  modelId: string;
+  settings: Settings;
+  patch: (p: Partial<Settings>) => void | Promise<void>;
+  blockTest?: boolean;
 }
 
-export function ApiKeyInput({ modelId }: Props) {
+export function ApiKeyInput({ settings, patch, blockTest }: Props) {
   const { t } = useTranslation('settings');
   const [hasKey, setHasKey] = useState(false);
   const [keyInput, setKeyInput] = useState('');
@@ -30,9 +33,17 @@ export function ApiKeyInput({ modelId }: Props) {
     setTesting(true);
     setMsg(null);
     try {
-      const r = await ai.testConnection(keyInput, modelId);
+      const r = await ai.testConnection(
+        keyInput,
+        settings.aiProtocol,
+        settings.aiBaseUrl,
+        settings.aiModelId,
+      );
       if (r.ok) {
-        setMsg({ kind: 'ok', text: `OK · ${r.modelEchoed}` });
+        await ai.setApiKey(keyInput);
+        setKeyInput('');
+        setHasKey(true);
+        setMsg({ kind: 'ok', text: `${t('ai.apiKeySaved')} · ${r.modelEchoed}` });
       } else {
         setMsg({ kind: 'err', text: r.modelEchoed });
       }
@@ -43,63 +54,43 @@ export function ApiKeyInput({ modelId }: Props) {
     }
   };
 
-  const save = async () => {
-    try {
-      await ai.setApiKey(keyInput);
-      setKeyInput('');
-      setHasKey(true);
-      setMsg({ kind: 'ok', text: t('ai.apiKeySaved') });
-    } catch (e) {
-      setMsg({ kind: 'err', text: String(e) });
-    }
-  };
-
-  const remove = async () => {
+  const reset = async () => {
     try {
       await ai.deleteApiKey();
+      patch({ aiProtocol: 'openai', aiBaseUrl: '', aiModelId: '' });
+      setKeyInput('');
       setHasKey(false);
-      setMsg({ kind: 'ok', text: t('ai.apiKeyRemoved') });
+      setMsg({ kind: 'ok', text: t('ai.resetDone') });
     } catch (e) {
       setMsg({ kind: 'err', text: String(e) });
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={fieldLabelStyle}>{t('ai.apiKey')}</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <input
           type="password"
           value={keyInput}
           onChange={(e) => setKeyInput(e.target.value)}
-          placeholder={hasKey ? t('ai.apiKeySavedPlaceholder') : 'sk-...'}
+          placeholder={hasKey ? t('ai.apiKeySavedPlaceholder') : '••••••••'}
           style={inputStyle}
           autoComplete="off"
         />
-        <ActionButton
-          variant="secondary"
-          onClick={test}
-          disabled={testing || !keyInput}
-        >
-          {testing ? '...' : t('ai.test')}
+        <ActionButton variant="secondary" onClick={test} disabled={testing || !keyInput || blockTest}>
+          {testing ? '…' : t('ai.test')}
         </ActionButton>
-        <ActionButton
-          variant="primary"
-          onClick={save}
-          disabled={!keyInput}
-        >
-          {t('ai.save')}
+        <ActionButton variant="secondary" onClick={reset}>
+          {t('ai.reset')}
         </ActionButton>
-        {hasKey && (
-          <ActionButton variant="danger" onClick={remove}>
-            {t('ai.remove')}
-          </ActionButton>
-        )}
       </div>
       {msg && (
         <div
           style={{
             fontSize: 'var(--fs-xs)',
             color: msg.kind === 'ok' ? 'var(--ok)' : 'var(--danger)',
+            wordBreak: 'break-word',
           }}
         >
           {msg.text}
@@ -109,13 +100,18 @@ export function ApiKeyInput({ modelId }: Props) {
   );
 }
 
+const fieldLabelStyle: React.CSSProperties = {
+  fontSize: 'var(--fs-xs)',
+  color: 'var(--text-muted)',
+};
+
 const inputStyle: React.CSSProperties = {
   flex: 1,
-  padding: '3px 8px',
+  minWidth: 0,
+  padding: '4px 8px',
   background: 'var(--control-bg)',
   border: '1px solid var(--control-border)',
   borderRadius: 'var(--radius-sm)',
   fontSize: 'var(--fs-sm)',
   color: 'var(--text)',
 };
-

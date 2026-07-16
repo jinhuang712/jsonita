@@ -95,14 +95,6 @@ export function HistoryIcon(props: IconProps) {
   );
 }
 
-export function PinIcon(props: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M8 4h8M9.5 4l.7 6-3.2 3.2v1.3h10v-1.3L13.8 10l.7-6M12 14.5V21" />
-    </svg>
-  );
-}
-
 export function StarIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}>

@@ -10,7 +10,6 @@ import {
   FormatIcon,
   GearIcon,
   HistoryIcon,
-  JsonBracesIcon,
   MinifyIcon,
   SinglePanelIcon,
   SplitPanelIcon,
@@ -33,7 +32,6 @@ const TABS: { id: Pane; key: string; Icon: (props: IconProps) => JSX.Element }[]
   { id: 'minify', key: 'minify', Icon: MinifyIcon },
   { id: 'tree', key: 'tree', Icon: TreeIcon },
   { id: 'json-to-str', key: 'jsonToStr', Icon: ToStringIcon },
-  { id: 'str-to-json', key: 'strToJson', Icon: JsonBracesIcon },
 ];
 
 export function TabBar() {
@@ -218,26 +216,24 @@ export function TabBar() {
       )}
       <div className="jsonita-chrome-actions" aria-label={tShell('actions.windowActions')}>
         <ChromeIconButton
-          selected={!settings.singlePaneMode}
-          onClick={() => {
-            if (settings.singlePaneMode) toggleSinglePaneMode();
-          }}
-          aria-label={tShell('actions.switchToSplitPanel')}
-          tooltipLabel={tShell('actions.splitPanel')}
+          onClick={toggleSinglePaneMode}
+          aria-label={
+            settings.singlePaneMode
+              ? tShell('actions.switchToSplitPanel')
+              : tShell('actions.switchToSinglePanel')
+          }
+          tooltipLabel={
+            settings.singlePaneMode
+              ? tShell('actions.switchToSplitPanel')
+              : tShell('actions.switchToSinglePanel')
+          }
           tooltipShortcut={settings.shortcutSplitToggle}
         >
-          <SplitPanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
-        </ChromeIconButton>
-        <ChromeIconButton
-          selected={settings.singlePaneMode}
-          onClick={() => {
-            if (!settings.singlePaneMode) toggleSinglePaneMode();
-          }}
-          aria-label={tShell('actions.switchToSinglePanel')}
-          tooltipLabel={tShell('actions.singlePanel')}
-          tooltipShortcut={settings.shortcutSplitToggle}
-        >
-          <SinglePanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+          {settings.singlePaneMode ? (
+            <SinglePanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+          ) : (
+            <SplitPanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+          )}
         </ChromeIconButton>
         <ChromeIconButton
           onClick={() => {

@@ -35,14 +35,6 @@ pub async fn history_search(
 }
 
 #[tauri::command]
-pub async fn history_pin(id: i64, pinned: bool, db: State<'_, Db>) -> Result<(), JsonitaError> {
-    let db = db.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || h::set_pinned(&db, id, pinned))
-        .await
-        .map_err(|e| JsonitaError::Io(e.to_string()))?
-}
-
-#[tauri::command]
 pub async fn history_star(id: i64, starred: bool, db: State<'_, Db>) -> Result<(), JsonitaError> {
     let db = db.inner().clone();
     tauri::async_runtime::spawn_blocking(move || h::set_starred(&db, id, starred))
@@ -77,10 +69,15 @@ pub async fn history_add(
     op_type: OpType,
     db: State<'_, Db>,
     settings: State<'_, SettingsStore>,
-) -> Result<HistoryRow, JsonitaError> {
+) -> Result<Option<HistoryRow>, JsonitaError> {
+    let cfg = settings.get();
+    if !cfg.history_enabled {
+        return Ok(None);
+    }
     let db = db.inner().clone();
-    let limit = settings.get().history_limit;
+    let limit = cfg.history_limit;
     tauri::async_runtime::spawn_blocking(move || h::add(&db, &content, op_type, limit))
         .await
         .map_err(|e| JsonitaError::Io(e.to_string()))?
+        .map(Some)
 }

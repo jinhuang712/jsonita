@@ -26,9 +26,15 @@ export interface Settings {
   shortcutRestoreLast: string;
   shortcutSplitToggle: string;
   aiEnabled: boolean;
+  aiProtocol: 'openai' | 'anthropic';
+  aiBaseUrl: string;
   aiModelId: string;
+  aiThinking: boolean;
+  aiMaxTokens: number;
   historyLimit: number;
+  historyEnabled: boolean;
   autoUnwrap: boolean;
+  alwaysStringToJson: boolean;
   unwrapTimeoutMs: number;
   editorSoftWrap: boolean;
 }
@@ -48,9 +54,15 @@ const DEFAULT_SETTINGS: Settings = {
   shortcutRestoreLast: 'CmdOrCtrl+Shift+L',
   shortcutSplitToggle: 'CmdOrCtrl+\\',
   aiEnabled: false,
-  aiModelId: 'deepseek-chat',
+  aiProtocol: 'openai',
+  aiBaseUrl: '',
+  aiModelId: '',
+  aiThinking: false,
+  aiMaxTokens: 8192,
   historyLimit: 100,
+  historyEnabled: true,
   autoUnwrap: true,
+  alwaysStringToJson: false,
   unwrapTimeoutMs: 200,
   editorSoftWrap: true,
 };
