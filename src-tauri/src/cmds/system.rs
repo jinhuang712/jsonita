@@ -1,22 +1,8 @@
-//! system 分组 stubs ── 全局快捷键 / 剪贴板 / Finder 打开，见 spec/S02-ipc-boundary.md。
-//!
-//! M1-N1：clipboard_read 走 tauri-plugin-clipboard-manager（v2）→ 留 M1-N2 加；
-//! 当前返回空 sniff。open_log_dir / open_db_path 走 std::process::Command spawn。
-//! shortcut_register 由 M2-N5 真实化（M0-N4 已有 retry/status/open_accessibility 三命令）。
+//! system 分组 ── Finder 打开 / GitHub / 退出，见 spec/S02-ipc-boundary.md。
 
 use crate::error::JsonitaError;
-use crate::types::ClipboardSniff;
 
 const GITHUB_URL: &str = "https://github.com/jinhuang712/jsonita";
-
-#[tauri::command]
-pub async fn clipboard_read() -> Result<ClipboardSniff, JsonitaError> {
-    // M1-N2 替换：tauri-plugin-clipboard-manager read_text + sniff JSON
-    Ok(ClipboardSniff {
-        text: String::new(),
-        looks_like_json: false,
-    })
-}
 
 #[tauri::command]
 pub fn open_log_dir() -> Result<(), JsonitaError> {

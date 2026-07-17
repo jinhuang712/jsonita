@@ -57,19 +57,21 @@ impl WindowStore {
     }
 
     pub fn get(&self) -> WindowState {
-        self.state.read().expect("window store poisoned").clone()
+        self.state.read().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     pub fn set(&self, st: WindowState) -> Result<(), JsonitaError> {
         {
-            let mut w = self.state.write().expect("window store poisoned");
+            let mut w = self.state.write().unwrap_or_else(|e| e.into_inner());
             *w = st.clone();
         }
         if let Some(path) = &self.path {
             if let Some(dir) = path.parent() {
                 let _ = std::fs::create_dir_all(dir);
             }
-            std::fs::write(path, serde_json::to_string_pretty(&st).unwrap_or_default())?;
+            let json = serde_json::to_string_pretty(&st)
+                .map_err(|e| JsonitaError::Io(e.to_string()))?;
+            std::fs::write(path, json)?;
         }
         Ok(())
     }
@@ -86,7 +88,7 @@ impl WindowStore {
         if let Some(p) = &self.path {
             let _ = std::fs::remove_file(p);
         }
-        let mut w = self.state.write().expect("window store poisoned");
+        let mut w = self.state.write().unwrap_or_else(|e| e.into_inner());
         *w = WindowState::default();
         Ok(())
     }

@@ -18,7 +18,7 @@ use super::error_loc;
 pub fn unwrap(text: &str, opts: UnwrapOpts) -> Result<String, JsonitaError> {
     let deadline = Instant::now() + Duration::from_millis(opts.timeout_ms);
     let mut v: Value = serde_json::from_str(text).map_err(error_loc::map)?;
-    walk(&mut v, deadline, opts.max_depth, 0)?;
+    walk(&mut v, deadline, opts.timeout_ms, opts.max_depth, 0)?;
     serde_json::to_string_pretty(&v).map_err(|e| JsonitaError::Io(e.to_string()))
 }
 
@@ -26,11 +26,12 @@ pub fn unwrap(text: &str, opts: UnwrapOpts) -> Result<String, JsonitaError> {
 fn walk(
     v: &mut Value,
     deadline: Instant,
+    timeout_ms: u64,
     max_depth: Option<u32>,
     depth: u32,
 ) -> Result<(), JsonitaError> {
     if Instant::now() >= deadline {
-        return Err(JsonitaError::UnwrapTimeout { ms: 0, depth });
+        return Err(JsonitaError::UnwrapTimeout { ms: timeout_ms, depth });
     }
     if let Some(md) = max_depth {
         if depth > md {
@@ -46,19 +47,19 @@ fn walk(
                     // 只解 object/array；纯数字/bool/null 字符串保留原值
                     if matches!(parsed, Value::Object(_) | Value::Array(_)) {
                         *v = parsed;
-                        walk(v, deadline, max_depth, depth + 1)?;
+                        walk(v, deadline, timeout_ms, max_depth, depth + 1)?;
                     }
                 }
             }
         }
         Value::Object(map) => {
             for (_, child) in map.iter_mut() {
-                walk(child, deadline, max_depth, depth + 1)?;
+                walk(child, deadline, timeout_ms, max_depth, depth + 1)?;
             }
         }
         Value::Array(arr) => {
             for child in arr.iter_mut() {
-                walk(child, deadline, max_depth, depth + 1)?;
+                walk(child, deadline, timeout_ms, max_depth, depth + 1)?;
             }
         }
         _ => {}

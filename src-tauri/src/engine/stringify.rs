@@ -83,14 +83,33 @@ fn unescape(s: &str) -> Result<String, JsonitaError> {
             Some('b') => out.push('\u{0008}'),
             Some('f') => out.push('\u{000C}'),
             Some('u') => {
-                let hex: String = chars.by_ref().take(4).collect();
-                let code = u32::from_str_radix(&hex, 16).map_err(|_| JsonitaError::Parse {
-                    line: 0,
-                    col: 0,
-                    msg: format!("invalid \\u{}", hex),
-                })?;
-                if let Some(ch) = char::from_u32(code) {
+                let code = read_hex4(&mut chars)?;
+                if (0xD800..=0xDBFF).contains(&code) {
+                    // 高代理：JSON 里非 BMP 字符（如 emoji）编码为一对 \uXXXX，
+                    // 必须紧跟一个低代理合成一个 code point，否则报错而非静默丢字符。
+                    if chars.next() != Some('\\') || chars.next() != Some('u') {
+                        return Err(surrogate_err());
+                    }
+                    let low = read_hex4(&mut chars)?;
+                    if !(0xDC00..=0xDFFF).contains(&low) {
+                        return Err(surrogate_err());
+                    }
+                    let combined = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
+                    match char::from_u32(combined) {
+                        Some(ch) => out.push(ch),
+                        None => return Err(surrogate_err()),
+                    }
+                } else if (0xDC00..=0xDFFF).contains(&code) {
+                    // 落单低代理 → 非法
+                    return Err(surrogate_err());
+                } else if let Some(ch) = char::from_u32(code) {
                     out.push(ch);
+                } else {
+                    return Err(JsonitaError::Parse {
+                        line: 0,
+                        col: 0,
+                        msg: format!("invalid \\u{:04x}", code),
+                    });
                 }
             }
             None => {
@@ -108,6 +127,24 @@ fn unescape(s: &str) -> Result<String, JsonitaError> {
         }
     }
     Ok(out)
+}
+
+/// 从 `\uXXXX` 后续字符流读 4 位 hex 组成一个 UTF-16 code unit。
+fn read_hex4(chars: &mut std::str::Chars<'_>) -> Result<u32, JsonitaError> {
+    let hex: String = chars.by_ref().take(4).collect();
+    u32::from_str_radix(&hex, 16).map_err(|_| JsonitaError::Parse {
+        line: 0,
+        col: 0,
+        msg: format!("invalid \\u{}", hex),
+    })
+}
+
+fn surrogate_err() -> JsonitaError {
+    JsonitaError::Parse {
+        line: 0,
+        col: 0,
+        msg: "invalid UTF-16 surrogate pair".into(),
+    }
 }
 
 #[cfg(test)]
@@ -155,6 +192,23 @@ mod tests {
         let input = r#"{\"a\":1}"#;
         let out = string_to_json(input).unwrap();
         assert!(out.contains("\"a\""));
+    }
+
+    #[test]
+    fn string_to_json_surrogate_pair_roundtrip() {
+        // 非 BMP（emoji）经 escape_unicode 编成代理对后往返不丢字符
+        let input = r#"{"e":"😀"}"#;
+        let escaped = json_to_string(input, opts(QuoteStyle::Double, true, true)).unwrap();
+        assert!(escaped.to_lowercase().contains("\\ud83d"));
+        let back = string_to_json(&escaped).unwrap();
+        assert!(back.contains('😀'));
+    }
+
+    #[test]
+    fn string_to_json_lone_surrogate_errors() {
+        // 落单高代理 / 落单低代理都应报错而非静默丢字符
+        assert!(string_to_json(r#""\ud83d""#).is_err());
+        assert!(string_to_json(r#""\ude00""#).is_err());
     }
 
     #[test]

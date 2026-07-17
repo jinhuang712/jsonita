@@ -39,6 +39,17 @@ pub fn is_repair_failed_sentinel(value: &serde_json::Value) -> bool {
         .unwrap_or(false)
 }
 
+/// 取 repair-failed 哨兵里模型给的 `reason`（trim 后非空才返回）。
+pub fn repair_failed_reason(value: &serde_json::Value) -> Option<String> {
+    value
+        .as_object()
+        .and_then(|obj| obj.get("reason"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -79,5 +90,14 @@ mod tests {
         assert!(is_repair_failed_sentinel(&value));
         assert!(!is_repair_failed_sentinel(&serde_json::json!({ "ok": true })));
         assert!(!is_repair_failed_sentinel(&serde_json::json!([1, 2, 3])));
+    }
+
+    #[test]
+    fn extracts_repair_failed_reason() {
+        let value = serde_json::json!({ "_jsonita_repair_failed": true, "reason": "not JSON" });
+        assert_eq!(repair_failed_reason(&value).as_deref(), Some("not JSON"));
+        // 空 / 缺失 reason → None
+        assert_eq!(repair_failed_reason(&serde_json::json!({ "reason": "  " })), None);
+        assert_eq!(repair_failed_reason(&serde_json::json!({ "_jsonita_repair_failed": true })), None);
     }
 }

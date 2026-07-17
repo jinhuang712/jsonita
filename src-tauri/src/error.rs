@@ -28,6 +28,9 @@ pub enum JsonitaError {
     #[error("AI returned invalid JSON")]
     AiInvalidJson { raw: String },
 
+    #[error("AI could not repair this input: {reason}")]
+    AiCannotRepair { reason: String },
+
     #[error("Rate limited; retry after {retry_after_sec}s")]
     #[serde(rename_all = "camelCase")]
     RateLimit { retry_after_sec: u64 },

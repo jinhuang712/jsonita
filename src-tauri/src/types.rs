@@ -49,23 +49,12 @@ pub enum Locale {
     ZhCn,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum RestoreWindow {
-    Off,
-    Min1,
-    Min5,
-    Min15,
-    Hour1,
-}
-
 /// Shortcut action conformance；M2-N5 接快捷键用 String 而非 enum，留作 future。
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ShortcutAction {
     ToggleWindow,
-    RestoreLast,
 }
 
 fn default_shortcut_split_toggle() -> String {
@@ -157,22 +146,7 @@ fn default_list_limit() -> u32 {
     50
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LastSession {
-    pub content: String,
-    pub op_type: OpType,
-    pub saved_at: i64,
-}
-
 // ──────────── § 3.5 窗口 / 系统 ────────────
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClipboardSniff {
-    pub text: String,
-    pub looks_like_json: bool,
-}
 
 /// ContentMetrics ── line_count + bytes 字段为 TS mirror 保留
 /// （前端计算后传过来；后端 4 层逻辑消费结构宽度、行数和字号）。
@@ -222,16 +196,13 @@ fn default_ai_max_tokens() -> u32 {
 pub struct Settings {
     pub launch_at_login: bool,
     pub show_in_menubar: bool,
-    pub auto_paste_clipboard: bool,
     pub hide_on_blur: bool,
     pub single_pane_mode: bool,
     pub theme: ThemeMode,
     pub locale: Locale,
-    pub restore_window: RestoreWindow,
     pub initial_width: InitialWidth,
     pub smart_width: bool,
     pub shortcut_toggle: String,
-    pub shortcut_restore_last: String,
     #[serde(default = "default_shortcut_split_toggle")]
     pub shortcut_split_toggle: String,
     pub ai_enabled: bool,
@@ -263,16 +234,13 @@ impl Default for Settings {
         Settings {
             launch_at_login: true,
             show_in_menubar: true,
-            auto_paste_clipboard: true,
             hide_on_blur: true,
             single_pane_mode: false,
             theme: ThemeMode::System,
             locale: Locale::EnUs,
-            restore_window: RestoreWindow::Min5,
             initial_width: InitialWidth::W920,
             smart_width: true,
             shortcut_toggle: "CmdOrCtrl+Shift+J".to_string(),
-            shortcut_restore_last: "CmdOrCtrl+Shift+L".to_string(),
             shortcut_split_toggle: "CmdOrCtrl+\\".to_string(),
             ai_enabled: false,
             ai_protocol: AiProtocol::OpenAi,

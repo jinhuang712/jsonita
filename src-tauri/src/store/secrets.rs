@@ -49,18 +49,18 @@ fn save(map: &SecretsMap) -> Result<(), JsonitaError> {
 }
 
 pub fn set(account: &str, value: &str) -> Result<(), JsonitaError> {
-    let mut map = cell().lock().expect("secrets lock poisoned");
+    let mut map = cell().lock().unwrap_or_else(|e| e.into_inner());
     map.insert(account.to_string(), value.to_string());
     save(&map)
 }
 
 pub fn get(account: &str) -> Result<Option<String>, JsonitaError> {
-    let map = cell().lock().expect("secrets lock poisoned");
+    let map = cell().lock().unwrap_or_else(|e| e.into_inner());
     Ok(map.get(account).cloned())
 }
 
 pub fn delete(account: &str) -> Result<(), JsonitaError> {
-    let mut map = cell().lock().expect("secrets lock poisoned");
+    let mut map = cell().lock().unwrap_or_else(|e| e.into_inner());
     map.remove(account);
     save(&map)
 }

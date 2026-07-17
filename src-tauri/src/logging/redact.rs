@@ -1,9 +1,13 @@
-//! RedactLayer — 隐私字段脱敏 layer 占位。
+//! RedactLayer — 隐私字段脱敏 layer 占位（spec/30-operations.md § 日志与隐私）。
 //!
-//! Spec ref: `spec/S06-logging-observability.md` 与 `spec/appendix/A03-logging-details.md`。
-//! M0 阶段为 placeholder：规则表为空，仅在 subscriber chain 中占位。
-//! M2-N3 接 API key 时填入黑名单（`api_key` / `access_token` / `password` 等
-//! → 完全拒绝；`content` / `text` / `body` / `raw` → 改记 `len + sha256[:8]`）。
+//! 当前为 placeholder：on_event 不做任何变换。隐私保护完全依赖调用点自律
+//! （经审核，现有 9 个 tracing 调用点全部只记元数据，无文档内容 / key）。
+//!
+//! TODO（独立聚焦任务，非本轮）：实现字段名黑名单脱敏。需注意 tracing Layer
+//! 的 on_event 无法改写已记录的字段值 —— 要实现真正的脱敏须走包装型
+//! MakeWriter 或 fmt-layer 的字段过滤器，而非在此 on_event 内替换。
+//! 规则：`api_key` / `access_token` / `password` → 完全拒绝；
+//! `content` / `text` / `body` / `raw` → 改记 `len + sha256[:8]`。
 
 use tracing::{Event, Subscriber};
 use tracing_subscriber::layer::{Context, Layer};
@@ -16,7 +20,6 @@ where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
     fn on_event(&self, _event: &Event<'_>, _ctx: Context<'_, S>) {
-        // M0 placeholder：通过 on_event 但不变换。
-        // M2-N3 填入字段名匹配 → DENY 列表替换 "[REDACTED]" / HASH 列表改 "len=X sha256=YY"。
+        // placeholder：不变换。见模块文档 TODO。
     }
 }

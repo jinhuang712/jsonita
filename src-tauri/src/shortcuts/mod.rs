@@ -81,13 +81,12 @@ pub fn register_defaults(app: &AppHandle) -> Result<(), String> {
     register_all(app, &settings)
 }
 
-/// 注册全部快捷键（toggle + restore_last） ── 用户改 settings 后调。
+/// 注册全部快捷键（toggle） ── 用户改 settings 后调。
 pub fn register_all(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     // 先全部 unregister（覆盖式更新）
     let _ = app.global_shortcut().unregister_all();
 
     register_one(app, "toggle-window", &settings.shortcut_toggle)?;
-    register_one(app, "restore-last", &settings.shortcut_restore_last)?;
     Ok(())
 }
 
@@ -101,10 +100,6 @@ fn register_one(app: &AppHandle, action: &str, accelerator: &str) -> Result<(), 
                 match action_str.as_str() {
                     "toggle-window" => {
                         let _ = window::toggle(&app_clone);
-                    }
-                    "restore-last" => {
-                        let _ = window::toggle_show_only(&app_clone);
-                        let _ = app_clone.emit("shortcut:restore_last", ());
                     }
                     _ => {}
                 }
@@ -147,7 +142,7 @@ pub fn open_accessibility_settings() {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShortcutRegisterReq {
-    pub action: String, // "toggle-window" | "restore-last"
+    pub action: String, // "toggle-window"
     pub accelerator: String,
     #[serde(default)]
     pub force_override: bool,
@@ -175,7 +170,6 @@ pub async fn shortcut_register(app: AppHandle, req: ShortcutRegisterReq) -> Shor
 
     let field = match req.action.as_str() {
         "toggle-window" => "shortcutToggle",
-        "restore-last" => "shortcutRestoreLast",
         _ => {
             return ShortcutRegisterResp::InvalidAccelerator {
                 reason: "unknown action".into(),
@@ -203,14 +197,9 @@ pub async fn shortcut_register(app: AppHandle, req: ShortcutRegisterReq) -> Shor
     if let Err(_e) = register_all(&app, &new_settings) {
         // 回滚 SettingsStore + 重新注册旧的
         let mut revert = serde_json::Map::new();
-        let old_value = if field == "shortcutToggle" {
-            &old_settings.shortcut_toggle
-        } else {
-            &old_settings.shortcut_restore_last
-        };
         revert.insert(
             field.to_string(),
-            serde_json::Value::String(old_value.clone()),
+            serde_json::Value::String(old_settings.shortcut_toggle.clone()),
         );
         let _ = store.patch(revert);
         let _ = register_all(&app, &old_settings);

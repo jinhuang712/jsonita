@@ -44,10 +44,6 @@ fn main() {
             cmds::history::history_star,
             cmds::history::history_clear,
             cmds::history::history_add,
-            // M1-N1 stubs: session
-            cmds::session::session_save_last,
-            cmds::session::session_load_last,
-            cmds::session::session_clear_last,
             // M1-N1 stubs: window
             cmds::window::window_show,
             cmds::window::window_hide,
@@ -56,7 +52,6 @@ fn main() {
             cmds::window::window_reset_size,
             cmds::window::window_set_theme,
             // M1-N1 stubs: system
-            cmds::system::clipboard_read,
             cmds::system::open_log_dir,
             cmds::system::open_db_path,
             cmds::system::open_github,
@@ -81,18 +76,26 @@ fn main() {
                 let _ = app.set_activation_policy(ActivationPolicy::Accessory);
             }
 
-            // SQLite store ── M1-N6 起注入 Db state（cmds 走 State<Db>）
-            if let Some(db_path) = store::db::default_db_path() {
-                match store::Db::open(&db_path) {
+            // SQLite store ── 注入 Option<Db>：打开失败或 data dir 不可用时降级为 None，
+            // history/session 命令返回可读的 Sqlite 错误，而非让 State<Db> 提取 panic
+            // 使相关命令整体假死。核心 JSON 功能不依赖 DB。
+            let db: Option<store::Db> = match store::db::default_db_path() {
+                Some(db_path) => match store::Db::open(&db_path) {
                     Ok(db) => {
-                        app.manage(db);
                         tracing::info!(path = %db_path.display(), "db.open");
+                        Some(db)
                     }
                     Err(e) => {
                         tracing::error!(error = %e, path = %db_path.display(), "db.open.failed");
+                        None
                     }
+                },
+                None => {
+                    tracing::error!("db.open.failed: data dir unavailable");
+                    None
                 }
-            }
+            };
+            app.manage(db);
 
             // Settings store ── M1-N8 起 default 占位；M2-N1 加 load(settings.json)
             app.manage(store::SettingsStore::load());
