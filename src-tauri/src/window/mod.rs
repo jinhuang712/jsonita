@@ -1,6 +1,6 @@
 //! Window runtime — NSPanel-like 浮窗管理。
 //!
-//! Spec ref: `design/06_window.md` § 2-5 生命周期 / § 9 多屏定位
+//! Spec ref: `design/overview.md` § 2-5 生命周期 / § 9 多屏定位
 //! 当前范围：promote 主窗口为 NSPanel + 原生 vibrancy + 失焦 hide + close intercept
 //! + 多屏定位；智能缩放在 cmds::window 中实现。
 

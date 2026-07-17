@@ -1,6 +1,6 @@
 //! 数据模型 ── 8 个 enum + IPC payload structs。
 //!
-//! Spec ref: `spec/appendix/A00-schemas.md` 枚举与 IPC payload structs。
+//! Spec ref: `spec/20-architecture.md` 枚举与 IPC payload structs。
 //! 所有 enum 用 `kebab-case`；所有 struct 用 `camelCase`。
 
 use serde::{Deserialize, Serialize};
@@ -189,7 +189,7 @@ fn default_ai_max_tokens() -> u32 {
     8192
 }
 
-/// Settings 全字段权威定义见 spec/appendix/A00-schemas.md。
+/// Settings 全字段权威定义见 spec/20-architecture.md。
 /// M1-N8 仅以 default 形态注入 SettingsStore；M2-N1 起从 settings.json 加载 + patch + 落盘。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

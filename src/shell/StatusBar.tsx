@@ -6,8 +6,8 @@ import { useUiStore } from '../store/ui';
 /**
  * 底部状态栏 — 4 态文案（valid / error / empty / large）。
  *
- * 视觉锚：design/01_mockups.md § 2 状态栏 4 态对照
- * Spec ref: design/04_components.md § 4.2 StatusBar
+ * 视觉锚：design/screens.md § 2 状态栏 4 态对照
+ * Spec ref: design/overview.md § 4.2 StatusBar
  */
 export function StatusBar() {
   const { t } = useTranslation('shell');

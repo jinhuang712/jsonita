@@ -1,6 +1,6 @@
 //! serde_json::Error → `JsonitaError::Parse` 映射。
 //!
-//! Spec ref: `spec/M01-json-engine.md` 与 `spec/S03-error-model.md`。
+//! Spec ref: `spec/20-architecture.md` 与 `spec/20-architecture.md`。
 //! 关键：1-indexed line/col 与用户视角一致 ── CodeMirror linter 喂数据靠这个。
 
 use crate::error::JsonitaError;

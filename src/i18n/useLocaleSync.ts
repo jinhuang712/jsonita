@@ -1,7 +1,7 @@
 /**
  * settings.locale 变化 → i18n.changeLanguage 自动同步（M3-N2）。
  *
- * Spec ref: design/14_i18n_a11y.md § 2.3 locale 检测与切换
+ * Spec ref: design/overview.md § 2.3 locale 检测与切换
  */
 
 import { useEffect } from 'react';

@@ -6,7 +6,7 @@
     <title>Jsonita</title>
     <script>
       // M3-N1 FOUC 防止：先于 React bundle 读 localStorage 设 data-theme
-      // design/03 § 11.3
+      // design/overview.md § 11.3
       (function () {
         try {
           var t = localStorage.getItem('jsonita.theme.effective') || 'light';

@@ -1,6 +1,6 @@
 //! window 分组 ── show/hide/toggle 接 M0-N3 模块；resize/reset 接 M1-N9 智能缩放。
 //!
-//! Spec ref: design/06_window.md 智能缩放与 spec/S01-runtime-lifecycle.md。
+//! Spec ref: design/overview.md 智能缩放与 spec/20-architecture.md。
 
 use tauri::{Manager, State};
 
@@ -33,7 +33,7 @@ pub async fn window_toggle(app: tauri::AppHandle) -> Result<(), JsonitaError> {
     Ok(())
 }
 
-/// 智能缩放 ── design/06 § 7.1 4 层逻辑。
+/// 智能缩放 ── design/overview.md § 7.1 4 层逻辑。
 #[tauri::command]
 pub async fn window_resize_for_content(
     app: tauri::AppHandle,
@@ -246,7 +246,7 @@ mod tests {
     }
 }
 
-/// 主题解析 + 原生 vibrancy 材质 / 窗口 appearance 跟随（design/06 § 2.6 · design/03 § 11）。
+/// 主题解析 + 原生 vibrancy 材质 / 窗口 appearance 跟随（design/overview.md § 2.6 · design/overview.md § 11）。
 /// 前端 useEffectiveTheme 在挂载与每次切换时调用，传 mode = "light" | "dark" | "system"。
 /// system 由原生读 `NSApp.effectiveAppearance` 解析（权威，不靠 webview matchMedia），
 /// 返回解析后的 effective = "light" | "dark" 给前端作为唯一权威值。

@@ -1,6 +1,6 @@
 //! 多屏定位 — 浮窗呼出到鼠标所在屏的中央。
 //!
-//! Spec ref: `design/06_window.md` § 4 多屏定位
+//! Spec ref: `design/overview.md` § 4 多屏定位
 //! - 走 cursor → find monitor → center
 //! - 鼠标在屏外 / 单屏断开 → fallback primary monitor
 //! - 用 PhysicalPosition 统一 ── monitor.position() 与 cursor_position() 都是 physical

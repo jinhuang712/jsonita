@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { computeDiff } from './diff';
 
 /**
- * AI Fix 接受前 diff 显示 — 左右合并行式（unified diff，design/01 § 8 视觉锚）。
+ * AI Fix 接受前 diff 显示 — 左右合并行式（unified diff，design/screens.md § 8 视觉锚）。
  */
 
 interface Props {

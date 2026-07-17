@@ -1,6 +1,6 @@
 //! AI 分组 ── 多协议 HTTP + 本地 secrets.json 存 key。
 //!
-//! Spec ref: spec/M02-ai-repair.md 与 spec/S02-ipc-boundary.md。
+//! Spec ref: spec/20-architecture.md。
 
 use tauri::State;
 

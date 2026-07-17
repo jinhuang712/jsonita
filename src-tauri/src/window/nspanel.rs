@@ -1,6 +1,6 @@
 //! cocoa unsafe — 把 NSWindow 升级为 NSPanel-like 行为。
 //!
-//! Spec ref: `design/06_window.md` § 3 NSPanel 标志位详解
+//! Spec ref: `design/overview.md` § 3 NSPanel 标志位详解
 //! 关键 3 个 setter：styleMask / collectionBehavior / level
 //!
 //! cocoa 0.26 已全面 deprecated（建议改 objc2-app-kit），但 Tauri 2.11 内部

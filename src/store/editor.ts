@@ -1,7 +1,7 @@
 /**
  * Editor store slice — 编辑器输入 / 输出 / 错误位置 / 解析状态。
  *
- * Spec ref: spec/M00-frontend-execution.md + design/08_editor.md。
+ * Spec ref: spec/20-architecture.md + design/screens.md。
  * M1-N1: 仅 input/output 基础字段；M1-N3 CodeMirror 接入后 onChange 触发 debounce + IPC。
  */
 

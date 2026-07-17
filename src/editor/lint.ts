@@ -1,7 +1,7 @@
 /**
  * JSON lint helpers — 把 Rust 端 EditorError 和前端辅助检查转 CodeMirror Diagnostic。
  *
- * Spec ref: design/08 § 2.2 合并策略
+ * Spec ref: design/screens.md § 2.2 合并策略
  * - jsonParseLinter() 在 extensions 里实时 squiggle（CM 自带）
  * - supplemental linter 标出 parser 停下后仍肉眼可见的常见非法 JSON token
  * - external linter 收到 store.error 后绘更精确的 line/col 标注

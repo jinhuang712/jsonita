@@ -1,4 +1,4 @@
-//! system 分组 ── Finder 打开 / GitHub / 退出，见 spec/S02-ipc-boundary.md。
+//! system 分组 ── Finder 打开 / GitHub / 退出，见 spec/20-architecture.md。
 
 use crate::error::JsonitaError;
 
