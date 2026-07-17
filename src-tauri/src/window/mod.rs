@@ -8,7 +8,6 @@ mod locate;
 #[cfg(target_os = "macos")]
 mod nspanel;
 
-use tauri::Emitter;
 use tauri::{
     webview::Color,
     window::{Effect, EffectState, EffectsBuilder},
@@ -19,19 +18,55 @@ use tauri::{
 use crate::types::ThemeMode;
 
 pub const MAIN_LABEL: &str = "main";
-const HIDE_ANIMATION_MS: u64 = 140;
+// 离场比召唤快 40ms：窗口已完成使命，利落让路而非拖泥带水。
+const SUMMON_MS: u64 = 150;
+const DISMISS_MS: u64 = 110;
 const VIBRANCY_RADIUS: f64 = 16.0;
 
 fn emit_window_shown(app: &AppHandle) {
     let _ = tauri::Emitter::emit(app, "window:shown", ());
 }
 
+/// 整窗 alpha 淡出后再 hide()。原生 vibrancy + webview 内容作为单一合成单元一起淡出，
+/// 不会出现「内容先消失、空玻璃框再消失」的两段式。reduce-motion 时直接 hide。
 pub fn animated_hide(win: WebviewWindow) {
-    let _ = win.emit("window:will-hide", ());
-    tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(std::time::Duration::from_millis(HIDE_ANIMATION_MS)).await;
+    #[cfg(target_os = "macos")]
+    {
+        if nspanel::reduce_motion() {
+            let _ = win.hide();
+            return;
+        }
+        let _ = nspanel::fade(&win, 0.0, DISMISS_MS as f64 / 1000.0, nspanel::FadeCurve::EaseIn);
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(DISMISS_MS)).await;
+            let _ = win.hide();
+            // 复位 alpha，让下次 show（若跳过淡入路径）不至于停在 0。
+            let _ = nspanel::set_alpha(&win, 1.0);
+        });
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
         let _ = win.hide();
-    });
+    }
+}
+
+/// 定位 → alpha 0 → show → 淡入到 1，整窗单段浮现。reduce-motion 时直接满 alpha show。
+#[cfg(target_os = "macos")]
+fn animated_show(win: &WebviewWindow) -> tauri::Result<()> {
+    if nspanel::reduce_motion() {
+        let _ = nspanel::set_alpha(win, 1.0);
+        win.show()?;
+        return Ok(());
+    }
+    let _ = nspanel::set_alpha(win, 0.0);
+    win.show()?;
+    let _ = nspanel::fade(win, 1.0, SUMMON_MS as f64 / 1000.0, nspanel::FadeCurve::EaseOut);
+    Ok(())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn animated_show(win: &WebviewWindow) -> tauri::Result<()> {
+    win.show()
 }
 
 /// 启动时调一次：把主窗口转为 NSPanel + 装事件钩子。
@@ -116,7 +151,7 @@ pub fn toggle(app: &AppHandle) -> tauri::Result<()> {
         tracing::info!(action = "hide", "window.toggle");
     } else {
         let _ = locate::position_for_cursor(&win);
-        win.show()?;
+        animated_show(&win)?;
         win.set_focus()?;
         emit_window_shown(app);
         tracing::info!(action = "show", "window.toggle");
@@ -131,7 +166,7 @@ pub fn toggle_show_only(app: &AppHandle) -> tauri::Result<()> {
     };
     if !win.is_visible()? {
         let _ = locate::position_for_cursor(&win);
-        win.show()?;
+        animated_show(&win)?;
     }
     win.set_focus()?;
     emit_window_shown(app);
