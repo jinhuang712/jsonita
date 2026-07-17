@@ -8,8 +8,6 @@ test('GlyphSymbols declares the vector glyph set with verified paths', () => {
   const src = read('src/components/GlyphSymbols.tsx');
   assert.match(src, /id="g-cmd"/);
   assert.match(src, /id="g-shift"/);
-  assert.match(src, /id="g-up"/);
-  assert.match(src, /id="g-down"/);
   assert.match(src, /id="g-return"/);
   // ⌘ = Apple Bowen-knot path (viewBox 64)
   assert.match(src, /viewBox="0 0 64 64"[^>]*fill="none"[^>]*stroke="currentColor"/);

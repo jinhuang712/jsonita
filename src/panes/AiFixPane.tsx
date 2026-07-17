@@ -50,7 +50,6 @@ export function AiFixPane() {
         errorLine: editorError?.line,
         errorCol: editorError?.col,
         errorMsg: editorError?.msg,
-        requestId: crypto.randomUUID(),
       })
       .then((resp) => {
         if (useEditorStore.getState().content !== requestedFor) return;

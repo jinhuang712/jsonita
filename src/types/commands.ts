@@ -50,9 +50,3 @@ export interface ContentMetrics {
   softWrapOn: boolean;
   fontSize: number;
 }
-
-export interface WindowResizedPayload {
-  width: number;
-  height: number;
-  source: 'user' | 'auto';
-}

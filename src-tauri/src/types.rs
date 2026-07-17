@@ -49,14 +49,6 @@ pub enum Locale {
     ZhCn,
 }
 
-/// Shortcut action conformance；M2-N5 接快捷键用 String 而非 enum，留作 future。
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum ShortcutAction {
-    ToggleWindow,
-}
-
 fn default_shortcut_split_toggle() -> String {
     "CmdOrCtrl+\\".to_string()
 }
@@ -139,26 +131,18 @@ fn default_list_limit() -> u32 {
 
 // ──────────── § 3.5 窗口 / 系统 ────────────
 
-/// ContentMetrics ── line_count + bytes 字段为 TS mirror 保留
-/// （前端计算后传过来；后端 4 层逻辑消费结构宽度、行数和字号）。
-#[allow(dead_code)]
+/// ContentMetrics ── 前端计算后传过来；后端 4 层缩放逻辑消费结构宽度、行数、字号等。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContentMetrics {
     pub max_line_chars: u32,
     pub line_count: u32,
+    /// TS mirror 保留：前端仍上报，但后端缩放逻辑当前不消费。
+    #[allow(dead_code)]
     pub bytes: u64,
     pub non_whitespace_chars: u32,
     pub soft_wrap_on: bool,
     pub font_size: f64,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WindowResizedPayload {
-    pub width: u32,
-    pub height: u32,
-    pub source: &'static str, // "user" | "auto"
 }
 
 // ──────────── § 3.3 设置（M2-N1 真实化前 default） ────────────

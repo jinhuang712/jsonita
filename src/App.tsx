@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { useLocaleSync } from './i18n/useLocaleSync';
-import { settings as settingsApi } from './ipc/commands';
+import { settings as settingsApi, shortcuts } from './ipc/commands';
 import { on } from './ipc/events';
 import { ShortcutPermissionModal } from './permissions/ShortcutPermissionModal';
 import { FloatingWindow } from './shell/FloatingWindow';
@@ -46,7 +45,8 @@ export function App() {
 
   // 首次 mount：查 ⌘⇧J 注册状态 + listen 后续 event
   useEffect(() => {
-    invoke<boolean>('shortcut_status')
+    shortcuts
+      .status()
       .then((ok) => {
         if (!ok) setModalOpen(true);
       })
@@ -55,15 +55,7 @@ export function App() {
       });
 
     let disposed = false;
-    let unlisten1: UnlistenFn | null = null;
-    let unlisten2: UnlistenFn | null = null;
-    listen('permission:accessibility_missing', () => setModalOpen(true)).then((fn) => {
-      if (disposed) {
-        fn();
-        return;
-      }
-      unlisten1 = fn;
-    });
+    let unlisten: UnlistenFn | null = null;
     // tray Settings 项 / ⌘, 触发：切到 Settings 页
     listen('tray:open-settings', () => {
       setHistoryModalOpen(false);
@@ -74,14 +66,13 @@ export function App() {
           fn();
           return;
         }
-        unlisten2 = fn;
+        unlisten = fn;
       })
       .catch(() => {});
 
     return () => {
       disposed = true;
-      if (unlisten1) unlisten1();
-      if (unlisten2) unlisten2();
+      unlisten?.();
     };
   }, [setHistoryModalOpen, setSettingsViewOpen]);
 
@@ -90,7 +81,7 @@ export function App() {
     if (!modalOpen) return;
     const id = setInterval(async () => {
       try {
-        const ok = await invoke<boolean>('shortcut_retry');
+        const ok = await shortcuts.retry();
         if (ok) setModalOpen(false);
       } catch (_) {
         /* ignore */

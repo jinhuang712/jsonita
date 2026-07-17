@@ -12,7 +12,6 @@ import type {
   HistoryRow,
   ListOpts,
   StringifyOpts,
-  UnwrapOpts,
 } from '../types/commands';
 
 // ──────────── json_ops ────────────
@@ -21,16 +20,13 @@ export const json = {
   format: (text: string, opts: FormatOpts) =>
     invoke<string>('json_format', { text, opts }),
   minify: (text: string) => invoke<string>('json_minify', { text }),
-  unwrapStringified: (text: string, opts: UnwrapOpts) =>
-    invoke<string>('json_unwrap_stringified', { text, opts }),
   stringify: (text: string, opts: StringifyOpts) =>
     invoke<string>('json_stringify', { text, opts }),
-  parse: (text: string) => invoke<string>('json_parse', { text }),
 };
 
 // ──────────── history ────────────
 
-import type { OpType } from '../types/enums';
+import type { OpType, ShortcutAction } from '../types/enums';
 
 export const history = {
   list: (opts: ListOpts) => invoke<HistoryRow[]>('history_list', { opts }),
@@ -45,12 +41,9 @@ export const history = {
 // ──────────── window ────────────
 
 export const win = {
-  show: () => invoke<void>('window_show'),
   hide: () => invoke<void>('window_hide'),
-  toggle: () => invoke<void>('window_toggle'),
   resizeForContent: (metrics: ContentMetrics) =>
     invoke<[number, number]>('window_resize_for_content', { metrics }),
-  resetSize: () => invoke<void>('window_reset_size'),
   // 传 mode（含 system）；原生读 OS effectiveAppearance 解析后回传 effective light|dark（权威）。
   setTheme: (mode: 'light' | 'dark' | 'system') =>
     invoke<'light' | 'dark'>('window_set_theme', { mode }),
@@ -59,10 +52,7 @@ export const win = {
 // ──────────── system ────────────
 
 export const system = {
-  openLogDir: () => invoke<void>('open_log_dir'),
-  openDbPath: () => invoke<void>('open_db_path'),
   openGithub: () => invoke<void>('open_github'),
-  quitApp: () => invoke<void>('quit_app'),
 };
 
 // ──────────── settings (M2-N1) ────────────
@@ -89,7 +79,6 @@ export interface AiFixReq {
   errorLine?: number;
   errorCol?: number;
   errorMsg?: string;
-  requestId: string;
 }
 
 export interface AiFixResp {
@@ -116,7 +105,7 @@ export const ai = {
 
 // ──────────── shortcuts (M2-N5) ────────────
 
-export type ShortcutAction = 'toggle-window';
+export type { ShortcutAction };
 
 export type ShortcutRegisterResp =
   | { kind: 'ok' }
