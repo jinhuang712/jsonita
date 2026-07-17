@@ -1,6 +1,6 @@
 //! tracing 日志初始化。
 //!
-//! Spec ref: `spec/30-operations.md`（日志与隐私）。
+//! Spec ref: `CLAUDE.md 契约段`（日志与隐私）。
 //! 范围：daily rolling + 0600 (umask) + 7 天 purge + RedactLayer 占位
 //! 不含：5 MB 单文件分片 / WebView IPC log_write 合流 / 导出 zip
 
@@ -55,17 +55,17 @@ pub fn init() -> Option<WorkerGuard> {
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("jsonita=info,warn"));
 
+    // 写出层脱敏：非机制自律的隐私兜底，即便误把敏感字段塞进日志也不落明文。
     let fmt_layer = tracing_subscriber::fmt::layer()
         .json()
         .with_target(true)
         .with_current_span(false)
         .with_span_list(false)
         .flatten_event(true)
-        .with_writer(non_blocking);
+        .with_writer(redact::RedactWriter(non_blocking));
 
     tracing_subscriber::registry()
         .with(env_filter)
-        .with(redact::RedactLayer)
         .with(fmt_layer)
         .init();
 
