@@ -48,3 +48,35 @@ jobs:
 
       - name: Rust build
         run: cargo build --release --manifest-path src-tauri/Cargo.toml
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6.0.3
+
+      - uses: pnpm/action-setup@v6.0.8
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+      - name: Node tests
+        run: pnpm test:node
+
+      - name: Rust check (native MSVC)
+        run: cargo check --manifest-path src-tauri/Cargo.toml
