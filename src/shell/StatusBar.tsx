@@ -32,8 +32,8 @@ export function StatusBar() {
       left = (
         <span>
           <span style={{ color: 'var(--ok)' }}>●</span> {t('statusBar.valid')} ·{' '}
-          <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{lines}</span> lines ·{' '}
-          <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{bytes}</span> bytes
+          <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{lines}</span> {t('statusBar.lines')} ·{' '}
+          <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{bytes}</span> {t('statusBar.bytes')}
         </span>
       );
       break;
@@ -47,7 +47,7 @@ export function StatusBar() {
     case 'large':
       left = (
         <span style={{ color: 'var(--warn)', fontWeight: 600 }}>
-          ● Large file · <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{bytes}</span> bytes
+          ● {t('statusBar.largeFile')} · <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{bytes}</span> {t('statusBar.bytes')}
         </span>
       );
       break;

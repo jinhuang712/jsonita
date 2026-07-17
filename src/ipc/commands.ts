@@ -7,11 +7,9 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import type {
-  ClipboardSniff,
   ContentMetrics,
   FormatOpts,
   HistoryRow,
-  LastSession,
   ListOpts,
   StringifyOpts,
   UnwrapOpts,
@@ -44,14 +42,6 @@ export const history = {
     invoke<HistoryRow | null>('history_add', { content, opType }),
 };
 
-// ──────────── session ────────────
-
-export const session = {
-  saveLast: (s: LastSession) => invoke<void>('session_save_last', { s }),
-  loadLast: () => invoke<LastSession | null>('session_load_last'),
-  clearLast: () => invoke<void>('session_clear_last'),
-};
-
 // ──────────── window ────────────
 
 export const win = {
@@ -69,7 +59,6 @@ export const win = {
 // ──────────── system ────────────
 
 export const system = {
-  clipboardRead: () => invoke<ClipboardSniff>('clipboard_read'),
   openLogDir: () => invoke<void>('open_log_dir'),
   openDbPath: () => invoke<void>('open_db_path'),
   openGithub: () => invoke<void>('open_github'),
@@ -127,7 +116,7 @@ export const ai = {
 
 // ──────────── shortcuts (M2-N5) ────────────
 
-export type ShortcutAction = 'toggle-window' | 'restore-last';
+export type ShortcutAction = 'toggle-window';
 
 export type ShortcutRegisterResp =
   | { kind: 'ok' }

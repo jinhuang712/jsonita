@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shortcuts, type ShortcutAction, type ShortcutRegisterResp } from '../ipc/commands';
+import { formatError } from '../ipc/error';
 import { formatAccelerator } from '../keyboard/accelerators';
 
 /**
@@ -32,6 +33,13 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
     e.stopPropagation();
     // 忽略单独按 modifier 键
     if (['Control', 'Meta', 'Alt', 'Shift'].includes(e.key)) return;
+
+    // 至少一个非 Shift 修饰键：否则裸键（如 "A"）或纯 Shift 组合会在编辑器打字时被误触发。
+    if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+      setRecording(false);
+      setMsg({ kind: 'err', text: t('shortcuts.needModifier') });
+      return;
+    }
 
     const parts: string[] = [];
     if (e.metaKey) parts.push('Cmd');
@@ -94,7 +102,7 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
           break;
       }
     } catch (e) {
-      setMsg({ kind: 'err', text: String(e) });
+      setMsg({ kind: 'err', text: formatError(e) });
     }
   };
 

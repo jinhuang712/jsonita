@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEditorStore } from '../store/editor';
 import { settings as settingsApi } from '../ipc/commands';
+import { useAiStore } from '../store/ai';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore, type Pane } from '../store/ui';
 import { ChromeIconButton } from '../components/ChromeIconButton';
@@ -45,8 +46,13 @@ export function TabBar() {
   const settings = useSettingsStore((s) => s.settings);
   const setSettings = useSettingsStore((s) => s.setSettings);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
+  const aiStatus = useAiStore((s) => s.status);
+  const retryAi = useAiStore((s) => s.retry);
   const editorStatus = useEditorStore((s) => s.status);
-  const showAiFixPrompt = showAiFix && editorStatus === 'error' && !aiEnabled;
+  // 有 parse error 且 showAiFix 时都露出 AI Fix 入口：AI 开启则可点击进入并触发修复，
+  // 未开启则灰显 + 引导 tooltip（此前 aiEnabled 时无任何可点击入口，只能靠键盘）。
+  const showAiFixEntry = showAiFix && editorStatus === 'error';
+  const aiFixDisabled = !aiEnabled;
   const tabListRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Partial<Record<Pane, HTMLButtonElement | null>>>({});
   const [activeRect, setActiveRect] = useState<{ left: number; width: number } | null>(null);
@@ -80,7 +86,7 @@ export function TabBar() {
 
   useLayoutEffect(() => {
     measureActiveTab();
-  }, [measureActiveTab, t, showAiFixPrompt]);
+  }, [measureActiveTab, t, showAiFixEntry]);
 
   useEffect(() => {
     if (typeof ResizeObserver === 'undefined') return;
@@ -90,7 +96,7 @@ export function TabBar() {
       if (tab) observer.observe(tab);
     });
     return () => observer.disconnect();
-  }, [measureActiveTab, showAiFixPrompt]);
+  }, [measureActiveTab, showAiFixEntry]);
 
   const startDragging = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
@@ -184,13 +190,21 @@ export function TabBar() {
         })}
       </div>
       <div style={{ flex: 1 }} />
-      {showAiFixPrompt && (
+      {showAiFixEntry && (
         <button
-          aria-disabled="true"
-          tabIndex={-1}
+          aria-disabled={aiFixDisabled ? 'true' : undefined}
+          aria-pressed={!aiFixDisabled && active === 'ai-fix' ? 'true' : undefined}
+          tabIndex={aiFixDisabled ? -1 : 0}
           className="jsonita-ai-fix-entry"
-          onClick={() => undefined}
-          title={t('tab.aiFixDisabledTooltip')}
+          onClick={
+            aiFixDisabled
+              ? () => undefined
+              : () => {
+                  if (aiStatus !== 'requesting' && aiStatus !== 'awaiting-decision') retryAi();
+                  setActive('ai-fix');
+                }
+          }
+          title={aiFixDisabled ? t('tab.aiFixDisabledTooltip') : t('tab.aiFix')}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -204,8 +218,8 @@ export function TabBar() {
             color: 'var(--accent)',
             border: '1px solid color-mix(in srgb, var(--accent) 24%, transparent)',
             borderRadius: 'var(--radius-sm)',
-            cursor: 'not-allowed',
-            opacity: 0.55,
+            cursor: aiFixDisabled ? 'not-allowed' : 'pointer',
+            opacity: aiFixDisabled ? 0.55 : active === 'ai-fix' ? 1 : 0.9,
             transition:
               'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)',
           }}

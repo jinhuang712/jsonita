@@ -27,6 +27,7 @@ export function SinglePaneHint() {
   const state = useUiStore((s) => s.singlePaneApplyState);
 
   if (!settings.singlePaneMode || activePane === 'tree' || activePane === 'ai-fix') return null;
+  if (editorStatus === 'empty') return null;
   if (editorStatus === 'error' && !settings.aiEnabled) return null;
 
   const isAiFixPrimary = editorStatus === 'error' && settings.aiEnabled;

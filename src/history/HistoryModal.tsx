@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActionButton } from '../components/ActionButton';
 import { CloseIcon } from '../components/icons';
 import { ShortcutGlyph } from '../components/ShortcutGlyph';
 import { history as historyApi } from '../ipc/commands';
+import { formatError } from '../ipc/error';
 import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
 import type { HistoryRow } from '../types/commands';
@@ -23,23 +23,35 @@ export function HistoryModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadSeqRef = useRef(0);
+
   const load = useCallback(async () => {
     if (!open) return;
+    const seq = ++loadSeqRef.current;
     setLoading(true);
     setError(null);
     try {
       const q = query.trim();
-      setRows(q ? await historyApi.search(q, LIST_LIMIT) : await historyApi.list({ limit: LIST_LIMIT, offset: 0 }));
+      const next = q
+        ? await historyApi.search(q, LIST_LIMIT)
+        : await historyApi.list({ limit: LIST_LIMIT, offset: 0 });
+      if (seq !== loadSeqRef.current) return; // 更晚的请求已发出 → 丢弃这次陈旧结果
+      setRows(next);
     } catch (cause) {
+      if (seq !== loadSeqRef.current) return;
       setRows([]);
-      setError(String(cause));
+      setError(formatError(cause));
     } finally {
-      setLoading(false);
+      if (seq === loadSeqRef.current) setLoading(false);
     }
   }, [open, query]);
 
+  // 键入即搜：debounce 180ms + 上面的 seq 守卫，避免慢的旧请求覆盖新结果。
   useEffect(() => {
-    load();
+    const timer = window.setTimeout(() => {
+      void load();
+    }, 180);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   useEffect(() => {
@@ -94,7 +106,7 @@ export function HistoryModal() {
       await historyApi.star(row.id, !row.starred);
       await load();
     } catch (cause) {
-      setError(String(cause));
+      setError(formatError(cause));
     }
   };
 
@@ -104,7 +116,7 @@ export function HistoryModal() {
       await historyApi.clear();
       await load();
     } catch (cause) {
-      setError(String(cause));
+      setError(formatError(cause));
     }
   };
 
@@ -127,16 +139,26 @@ export function HistoryModal() {
           <div id="history-modal-title" className="jsonita-history-title">
             {title}
           </div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="jsonita-page-close"
-            aria-label={t('actions.close')}
-            title={t('actions.close')}
-          >
-            <ShortcutGlyph accelerator="Escape" decorative />
-            <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
-          </button>
+          <div className="jsonita-history-header-actions">
+            <button
+              type="button"
+              onClick={clearPlainRows}
+              className="jsonita-history-clear-btn"
+              title={t('clearNotice')}
+            >
+              {t('actions.clear')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="jsonita-page-close"
+              aria-label={t('actions.close')}
+              title={t('actions.close')}
+            >
+              <ShortcutGlyph accelerator="Escape" decorative />
+              <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
+            </button>
+          </div>
         </header>
 
         <div className="jsonita-history-library">
@@ -178,13 +200,6 @@ export function HistoryModal() {
             onStar={() => selectedRow && toggleStar(selectedRow)}
           />
         </div>
-
-        <footer className="jsonita-history-footer">
-          <div className="jsonita-history-footer-note">{t('clearNotice')}</div>
-          <ActionButton variant="danger" onClick={clearPlainRows}>
-            {t('actions.clear')}
-          </ActionButton>
-        </footer>
       </section>
     </div>
   );

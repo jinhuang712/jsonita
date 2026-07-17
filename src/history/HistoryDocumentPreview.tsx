@@ -42,7 +42,7 @@ export function HistoryDocumentPreview({ row, locale, labels, onOpen, onStar }: 
         </div>
       </header>
       <pre className="jsonita-history-preview-code">{row.content}</pre>
-      <ActionButton variant="secondary" onClick={onOpen}>
+      <ActionButton variant="secondary" onClick={onOpen} style={{ alignSelf: 'flex-start' }}>
         <ShortcutGlyph accelerator="CmdOrCtrl+Enter" decorative />
         <span>{labels.openInEditor}</span>
       </ActionButton>

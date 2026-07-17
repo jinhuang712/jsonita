@@ -14,6 +14,5 @@ export interface EventMap {
   'window:shown': Record<string, never>;
   'window:will-hide': Record<string, never>;
   'window:resized': WindowResizedPayload;
-  'shortcut:restore_last': Record<string, never>;
   'settings:changed': Settings;
 }

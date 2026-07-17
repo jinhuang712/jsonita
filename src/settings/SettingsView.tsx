@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getVersion } from '@tauri-apps/api/app';
 import { useTranslation } from 'react-i18next';
 import { settings as settingsApi, system as systemApi } from '../ipc/commands';
 import { on } from '../ipc/events';
@@ -445,14 +446,6 @@ function GroupShortcuts({ settings, patch }: GroupProps) {
         />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{t('shortcuts.restoreLast')}</span>
-        <ShortcutInput
-          action="restore-last"
-          value={settings.shortcutRestoreLast}
-          onChange={(v) => patch({ shortcutRestoreLast: v })}
-        />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>{t('shortcuts.splitToggle')}</span>
         <ShortcutInput
           ariaLabel={t('shortcuts.splitToggle')}
@@ -513,11 +506,6 @@ function GroupGeneral({ settings, patch }: GroupProps) {
           label={t('general.hideOnBlur')}
           on={settings.hideOnBlur}
           onChange={(v) => patch({ hideOnBlur: v })}
-        />
-        <CheckItem
-          label={t('general.autoPasteClipboard')}
-          on={settings.autoPasteClipboard}
-          onChange={(v) => patch({ autoPasteClipboard: v })}
         />
       </CheckGrid>
     </div>
@@ -691,21 +679,6 @@ function GroupAi({ settings, patch }: GroupProps) {
               spellCheck={false}
             />
           </label>
-          <label style={aiFieldStyle}>
-            <span style={aiFieldLabelStyle}>{t('ai.maxTokens')}</span>
-            <input
-              type="number"
-              value={settings.aiMaxTokens}
-              onChange={(e) => patch({ aiMaxTokens: Number(e.target.value) || 0 })}
-              placeholder="8192"
-              style={aiInputStyle}
-            />
-          </label>
-          <CheckItem
-            label={t('ai.thinking')}
-            on={settings.aiThinking}
-            onChange={(v) => patch({ aiThinking: v })}
-          />
         </>
       ) : (
         <div style={aiFieldStyle}>
@@ -814,16 +787,18 @@ function GroupJsonTransform({ settings, patch }: GroupProps) {
           style={{ ...inputStyle, width: 80 }}
         />
       </div>
-      <CheckItem
-        label={t('jsonTransform.alwaysStringToJson')}
-        on={settings.alwaysStringToJson}
-        onChange={(v) => patch({ alwaysStringToJson: v })}
-      />
-      <CheckItem
-        label={t('jsonTransform.autoUnwrap')}
-        on={settings.autoUnwrap}
-        onChange={(v) => patch({ autoUnwrap: v })}
-      />
+      <CheckGrid>
+        <CheckItem
+          label={t('jsonTransform.alwaysStringToJson')}
+          on={settings.alwaysStringToJson}
+          onChange={(v) => patch({ alwaysStringToJson: v })}
+        />
+        <CheckItem
+          label={t('jsonTransform.autoUnwrap')}
+          on={settings.autoUnwrap}
+          onChange={(v) => patch({ autoUnwrap: v })}
+        />
+      </CheckGrid>
     </div>
   );
 }
@@ -947,6 +922,12 @@ function SegmentedControl<T extends string | number>({
 }
 
 function GroupAbout() {
+  const { t } = useTranslation('settings');
+  const [version, setVersion] = useState('');
+  useEffect(() => {
+    getVersion().then(setVersion).catch(() => setVersion(''));
+  }, []);
+
   return (
     <div style={aboutStyle}>
       <div style={aboutHeaderStyle}>
@@ -964,9 +945,9 @@ function GroupAbout() {
       </div>
 
       <div style={aboutMetaGridStyle}>
-        <AboutMeta label="Version" value="1.0.0-beta.2" />
-        <AboutMeta label="License" value="MIT" />
-        <AboutMeta label="Author" value="Jin Huang" />
+        <AboutMeta label={t('about.version')} value={version || '—'} />
+        <AboutMeta label={t('about.license')} value="MIT" />
+        <AboutMeta label={t('about.author')} value="Jin Huang" />
       </div>
 
       <div style={aboutPathsStyle}>

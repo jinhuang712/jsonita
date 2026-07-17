@@ -11,6 +11,7 @@ export type JsonitaError =
   | { kind: 'Secrets'; data: string }
   | { kind: 'Http'; data: { status: number; body: string } }
   | { kind: 'AiInvalidJson'; data: { raw: string } }
+  | { kind: 'AiCannotRepair'; data: { reason: string } }
   | { kind: 'RateLimit'; data: { retryAfterSec: number } }
   | { kind: 'Io'; data: string }
   | { kind: 'AiDisabled' };

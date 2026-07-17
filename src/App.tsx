@@ -34,22 +34,30 @@ export function App() {
         /* 命令不可用 ── 老版本 / dev 阶段 */
       });
 
+    let disposed = false;
     let unlisten1: UnlistenFn | null = null;
     let unlisten2: UnlistenFn | null = null;
-    listen('permission:accessibility_missing', () => setModalOpen(true)).then(
-      (fn) => {
-        unlisten1 = fn;
-      },
-    );
+    listen('permission:accessibility_missing', () => setModalOpen(true)).then((fn) => {
+      if (disposed) {
+        fn();
+        return;
+      }
+      unlisten1 = fn;
+    });
     // tray Settings 项 / ⌘, 触发：切到 Settings 页
     listen('tray:open-settings', () => {
       setHistoryModalOpen(false);
       setSettingsViewOpen(true);
     }).then((fn) => {
+      if (disposed) {
+        fn();
+        return;
+      }
       unlisten2 = fn;
     });
 
     return () => {
+      disposed = true;
       if (unlisten1) unlisten1();
       if (unlisten2) unlisten2();
     };
