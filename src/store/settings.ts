@@ -5,19 +5,14 @@
  */
 
 import { create } from 'zustand';
-import type {
-  InitialWidth,
-  ThemeMode,
-} from '../types/enums';
+import type { ThemeMode } from '../types/enums';
 
 export interface Settings {
   launchAtLogin: boolean;
-  showInMenubar: boolean;
   hideOnBlur: boolean;
   singlePaneMode: boolean;
   theme: ThemeMode;
   locale: 'en-US' | 'zh-CN';
-  initialWidth: InitialWidth;
   smartWidth: boolean;
   shortcutToggle: string;
   shortcutSplitToggle: string;
@@ -37,12 +32,10 @@ export interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   launchAtLogin: true,
-  showInMenubar: true,
   hideOnBlur: true,
   singlePaneMode: false,
   theme: 'system',
   locale: 'en-US',
-  initialWidth: 'w-920',
   smartWidth: true,
   shortcutToggle: 'CmdOrCtrl+Shift+J',
   shortcutSplitToggle: 'CmdOrCtrl+\\',
