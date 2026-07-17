@@ -129,6 +129,9 @@ fn main() {
                 window_store.begin_self_resize();
                 let _ = win.set_size(tauri::LogicalSize::new(st.width as f64, st.height as f64));
                 let _ = win.center();
+                // Windows：托盘型悬浮窗不应出现在任务栏 / Alt+Tab；macOS 是 LSUIElement 自动隐藏 Dock 图标。
+                #[cfg(target_os = "windows")]
+                let _ = win.set_skip_taskbar(true);
                 let resize_guard = window_store.inner().clone();
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(std::time::Duration::from_millis(250)).await;
