@@ -19,15 +19,15 @@
 | **JSON 格式化** | 缩进 2 / 4 / Tab · sort keys · trailing newline 可配 |
 | **Minify** | 单行压缩 |
 | **Tree 视图** | JSON 树展开折叠 · 类型染色 |
-| **String ↔ JSON 互转** | 4 层嵌套转义往返一致 |
-| **嵌套 stringified 解开** | Golang proto 多层 wrap 一键展开（200 ms 全局超时兜底） |
-| **AI Auto-Fix** | 粘非法 JSON → ✨ AI Fix tab → DiffView → Accept（DeepSeek，需用户自带 API key） |
-| **历史记录** | SQLite FTS5 · 自动去重 · pin / star · 100 条上限 |
+| **JSON → String** | 4 层嵌套转义往返一致 · 可选 Unicode 转义 |
+| **嵌套 stringified 解开** | Golang proto 多层 wrap 一键展开（200 ms 全局超时兜底）· 可在 Settings 开启「自动解包字符串输入」 |
+| **AI Auto-Fix** | 粘非法 JSON → ✨ AI Fix tab → DiffView → Accept（OpenAI 兼容 / Anthropic 双协议，需用户自带 API key） |
+| **历史记录** | SQLite · 自动去重 · star 收藏 · 100 条上限 |
 | **会话保留** | 合法 transform 成功后保存上次会话 · `⌘⇧L` 手动找回 · `⌘K` 清空 |
 | **自定义快捷键** | 默认 `⌘⇧J` 呼出 / `⌘⇧L` 恢复；可改 + 冲突检测 + override 二次确认 |
 | **智能宽度** | 粘长行自动扩宽（4 层逻辑：手动拖锁定 / soft-wrap 跳过 / smartWidth 开关 / max-chars 阈值） |
 | **i18n** | English / 简体中文；默认 English，可在 Settings 切换 |
-| **隐私** | SQLite / settings / window state / `secrets.json` 本地保存 · DeepSeek API key 存用户数据目录并限制文件权限 · 日志不记 JSON 内容 · AI Fix 只在用户主动触发时发送当前文本与 parse context |
+| **隐私** | SQLite / settings / window state / `secrets.json` 本地保存 · AI API key 存用户数据目录并限制文件权限 · 日志不记 JSON 内容 · AI Fix 只在用户主动触发时发送当前文本与 parse context |
 
 ## 系统需求
 
@@ -78,8 +78,8 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 1. 装入 `/Applications/Jsonita.app`，启动。Dock 不出图标，菜单栏右上出现单色 `J` 图标
 2. 任何前台 App 下按 `⌘⇧J` → 浮窗居中弹出（不抢焦点）
 3. 粘 JSON → 右侧 300 ms 内出现格式化输出 · StatusBar `● Valid JSON`
-4. 切 Tab：Format / Minify / Tree / →Str / →JSON
-5. 粘**非法** JSON → AI Fix tab 出现 → 点击触发 DeepSeek 修复 → DiffView → Accept
+4. 切 Tab：Format / Minify / Tree / →Str（String → JSON 方向由 Settings 的「自动解包字符串输入」接管）
+5. 粘**非法** JSON → AI Fix tab 出现 → 点击触发 AI 修复 → DiffView → Accept
 6. `⌘K` 清空 / `⌘⇧L` 恢复 / `Esc` / `⌘W` 关闭
 7. `⚙` 打开 Settings → 改语言、主题、快捷键、AI key
 
