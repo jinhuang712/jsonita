@@ -12,6 +12,7 @@ use crate::error::JsonitaError;
 const MIGRATIONS: &[(u32, &str)] = &[
     (1, include_str!("../../migrations/0001_init.sql")),
     (2, include_str!("../../migrations/0002_merge_pin_into_star.sql")),
+    (3, include_str!("../../migrations/0003_drop_last_session.sql")),
 ];
 
 #[derive(Clone)]

@@ -69,7 +69,7 @@ pub fn add(
     op: OpType,
     history_limit: u32,
 ) -> Result<HistoryRow, JsonitaError> {
-    let conn = db.pool().get()?;
+    let mut conn = db.pool().get()?;
     let hash = content_hash(content);
     let s = summary(content);
     let op_str = op_type_str(op);
@@ -78,7 +78,10 @@ pub fn add(
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0);
 
-    conn.execute(
+    // UPSERT → 读回 → trim 三步同一事务：并发 add 下 trim 不会删掉刚插入的行。
+    let tx = conn.transaction()?;
+
+    tx.execute(
         "INSERT INTO history (created_at, content, summary, content_hash, op_type)
          VALUES (?1, ?2, ?3, ?4, ?5)
          ON CONFLICT(content_hash) DO UPDATE SET
@@ -87,7 +90,7 @@ pub fn add(
         params![now, content, s, hash, op_str],
     )?;
 
-    let row: HistoryRow = conn.query_row(
+    let row: HistoryRow = tx.query_row(
         "SELECT * FROM history WHERE content_hash = ?1",
         params![hash],
         row_to_history,
@@ -95,7 +98,7 @@ pub fn add(
 
     // 自动 trim 至 limit 条（收藏不动）
     if history_limit > 0 {
-        conn.execute(
+        tx.execute(
             "DELETE FROM history
              WHERE id IN (
                SELECT id FROM history
@@ -107,12 +110,14 @@ pub fn add(
         )?;
     }
 
+    tx.commit()?;
     Ok(row)
 }
 
 pub fn list(db: &Db, opts: ListOpts) -> Result<Vec<HistoryRow>, JsonitaError> {
     let conn = db.pool().get()?;
-    let limit = opts.limit.max(1) as i64;
+    // clamp 上限，防前端传超大 limit 触发 Vec::with_capacity 超大预分配。
+    let limit = opts.limit.clamp(1, 1000) as i64;
     let offset = opts.offset as i64;
 
     // onlyStarred 时只列收藏；否则全列，收藏置顶。
@@ -138,6 +143,8 @@ pub fn list(db: &Db, opts: ListOpts) -> Result<Vec<HistoryRow>, JsonitaError> {
 
 pub fn search(db: &Db, query: &str, limit: u32) -> Result<Vec<HistoryRow>, JsonitaError> {
     let conn = db.pool().get()?;
+    // clamp 上限，防前端传超大 limit 触发 Vec::with_capacity 超大预分配。
+    let limit = limit.min(1000);
     let pattern = format!("%{}%", escape_like(query.trim()));
 
     let mut stmt = conn.prepare(

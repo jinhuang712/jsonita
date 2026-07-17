@@ -152,7 +152,11 @@ pub struct ShortcutRegisterReq {
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum ShortcutRegisterResp {
     Ok,
-    Conflict { with_app: Option<String> },
+    // 变体名走 kebab-case，但 struct-variant 字段不受其影响 → 显式 camelCase 对齐前端 `withApp`。
+    Conflict {
+        #[serde(rename = "withApp")]
+        with_app: Option<String>,
+    },
     Reserved,
     InvalidAccelerator { reason: String },
 }

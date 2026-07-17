@@ -15,10 +15,14 @@ use crate::types::UnwrapOpts;
 
 use super::error_loc;
 
+/// 超时上限：settings.json / 前端传入的超大值会让 `Instant::now() + Duration` 溢出 panic，clamp 兜底。
+const MAX_TIMEOUT_MS: u64 = 60_000;
+
 pub fn unwrap(text: &str, opts: UnwrapOpts) -> Result<String, JsonitaError> {
-    let deadline = Instant::now() + Duration::from_millis(opts.timeout_ms);
+    let timeout_ms = opts.timeout_ms.min(MAX_TIMEOUT_MS);
+    let deadline = Instant::now() + Duration::from_millis(timeout_ms);
     let mut v: Value = serde_json::from_str(text).map_err(error_loc::map)?;
-    walk(&mut v, deadline, opts.timeout_ms, opts.max_depth, 0)?;
+    walk(&mut v, deadline, timeout_ms, opts.max_depth, 0)?;
     serde_json::to_string_pretty(&v).map_err(|e| JsonitaError::Io(e.to_string()))
 }
 
