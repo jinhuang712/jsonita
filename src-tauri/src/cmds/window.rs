@@ -11,25 +11,32 @@ use crate::window;
 
 #[tauri::command]
 pub async fn window_show(app: tauri::AppHandle) -> Result<(), JsonitaError> {
-    if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
-        win.show()?;
-        win.set_focus()?;
-        let _ = tauri::Emitter::emit(&app, "window:shown", ());
-    }
+    // 复用 toggle_show_only（定位 + animated_show：含 alpha 复位 + 代际自增作废未决 hide + focus + emit）。
+    // 触及裸 AppKit，且本 command 跑在 async worker，marshal 回主线程执行。
+    let app2 = app.clone();
+    app.run_on_main_thread(move || {
+        let _ = window::toggle_show_only(&app2);
+    })?;
     Ok(())
 }
 
 #[tauri::command]
 pub async fn window_hide(app: tauri::AppHandle) -> Result<(), JsonitaError> {
     if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
-        window::animated_hide(win);
+        // animated_hide 触及裸 AppKit（reduce_motion / fade），必须在主线程；本 command 跑 async worker。
+        let w = win.clone();
+        win.run_on_main_thread(move || window::animated_hide(w))?;
     }
     Ok(())
 }
 
 #[tauri::command]
 pub async fn window_toggle(app: tauri::AppHandle) -> Result<(), JsonitaError> {
-    window::toggle(&app)?;
+    // toggle 触及裸 AppKit（show/hide 淡变），必须在主线程；本 command 跑 async worker。
+    let app2 = app.clone();
+    app.run_on_main_thread(move || {
+        let _ = window::toggle(&app2);
+    })?;
     Ok(())
 }
 
@@ -273,6 +280,13 @@ pub async fn window_set_theme(
         let dark = window::apply_glass_mode(&w, mode);
         let _ = tx.send(dark);
     })?;
-    let dark = rx.await.unwrap_or(false);
+    let dark = match rx.await {
+        Ok(v) => v,
+        Err(e) => {
+            // 主线程闭包未回传（极少：tx 被 drop）── 退回 light 但记一条，避免静默误解析。
+            tracing::warn!(error = %e, "window.set_theme: main-thread resolution dropped, defaulting light");
+            false
+        }
+    };
     Ok(if dark { "dark" } else { "light" }.to_string())
 }

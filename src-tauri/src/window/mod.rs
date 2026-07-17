@@ -17,11 +17,19 @@ use tauri::{
 // 主题模式单一权威：crate::types::ThemeMode（serde kebab-case）。
 use crate::types::ThemeMode;
 
+#[cfg(target_os = "macos")]
+use std::sync::atomic::{AtomicU64, Ordering};
+
 pub const MAIN_LABEL: &str = "main";
 // 离场比召唤快 40ms：窗口已完成使命，利落让路而非拖泥带水。
 const SUMMON_MS: u64 = 150;
 const DISMISS_MS: u64 = 110;
 const VIBRANCY_RADIUS: f64 = 16.0;
+
+/// 单窗显隐代际：每次 animated_hide / animated_show 自增。延迟 hide 定时器捕获自增后的值，
+/// 触发时若代际已变（期间发生新的 show/hide）则放弃隐藏，避免把刚重新显示的窗口藏回去。
+#[cfg(target_os = "macos")]
+static WINDOW_GEN: AtomicU64 = AtomicU64::new(0);
 
 fn emit_window_shown(app: &AppHandle) {
     let _ = tauri::Emitter::emit(app, "window:shown", ());
@@ -32,6 +40,7 @@ fn emit_window_shown(app: &AppHandle) {
 pub fn animated_hide(win: WebviewWindow) {
     #[cfg(target_os = "macos")]
     {
+        let generation = WINDOW_GEN.fetch_add(1, Ordering::SeqCst) + 1;
         if nspanel::reduce_motion() {
             let _ = win.hide();
             return;
@@ -39,9 +48,17 @@ pub fn animated_hide(win: WebviewWindow) {
         let _ = nspanel::fade(&win, 0.0, DISMISS_MS as f64 / 1000.0, nspanel::FadeCurve::EaseIn);
         tauri::async_runtime::spawn(async move {
             tokio::time::sleep(std::time::Duration::from_millis(DISMISS_MS)).await;
-            let _ = win.hide();
-            // 复位 alpha，让下次 show（若跳过淡入路径）不至于停在 0。
-            let _ = nspanel::set_alpha(&win, 1.0);
+            // 期间若发生新的 show/hide，代际不符 → 放弃这次隐藏（否则会藏掉刚显示的窗口）。
+            if WINDOW_GEN.load(Ordering::SeqCst) != generation {
+                return;
+            }
+            // hide() 与 set_alpha 触及 AppKit，必须回主线程（本 spawn 跑在 async worker）。
+            let native = win.clone();
+            let _ = win.run_on_main_thread(move || {
+                let _ = native.hide();
+                // 复位 alpha，让下次 show（若跳过淡入路径）不至于停在 0。
+                let _ = nspanel::set_alpha(&native, 1.0);
+            });
         });
     }
     #[cfg(not(target_os = "macos"))]
@@ -53,6 +70,8 @@ pub fn animated_hide(win: WebviewWindow) {
 /// 定位 → alpha 0 → show → 淡入到 1，整窗单段浮现。reduce-motion 时直接满 alpha show。
 #[cfg(target_os = "macos")]
 fn animated_show(win: &WebviewWindow) -> tauri::Result<()> {
+    // 自增代际，作废任何未决的延迟 hide 定时器（避免召唤后立刻被上一轮 hide 藏回去）。
+    WINDOW_GEN.fetch_add(1, Ordering::SeqCst);
     if nspanel::reduce_motion() {
         let _ = nspanel::set_alpha(win, 1.0);
         win.show()?;
