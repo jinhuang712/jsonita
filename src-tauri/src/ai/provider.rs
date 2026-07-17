@@ -67,7 +67,6 @@ pub struct AiFixReq {
     pub error_line: Option<u32>,
     pub error_col: Option<u32>,
     pub error_msg: Option<String>,
-    pub request_id: String,
 }
 
 #[derive(Debug, Clone, Serialize)]

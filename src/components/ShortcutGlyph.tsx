@@ -36,8 +36,6 @@ function accessibleLabel(tile: ShortcutTile): string {
       'g-cmd': 'command',
       'g-shift': 'shift',
       'g-return': 'return',
-      'g-up': 'up',
-      'g-down': 'down',
     }[tile.glyph!] ?? ''
   );
 }

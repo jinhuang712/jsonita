@@ -9,10 +9,6 @@ export function isMacPlatform(): boolean {
   return /mac|iphone|ipad|ipod/i.test(navigator.platform);
 }
 
-export function primaryHotkeyPrefix(): 'meta' | 'ctrl' {
-  return isMacPlatform() ? 'meta' : 'ctrl';
-}
-
 export function hasPrimaryModifier(event: ModifierEvent): boolean {
   if (isMacPlatform()) return event.metaKey && !event.ctrlKey;
   return event.ctrlKey && !event.metaKey;

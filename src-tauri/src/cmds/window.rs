@@ -150,23 +150,12 @@ pub async fn window_resize_for_content(
         resize_guard.end_self_resize();
     });
 
-    // 保存（不 set userDragged）
+    // 保存（不 set userDragged）；新尺寸经本 command 返回值回传前端，无需再 emit 冗余事件。
     window_store.set(crate::store::WindowState {
         width: new_w,
         height: new_h,
         user_dragged: false,
     })?;
-
-    // 通知前端
-    let _ = tauri::Emitter::emit(
-        &app,
-        "window:resized",
-        crate::types::WindowResizedPayload {
-            width: new_w,
-            height: new_h,
-            source: "auto",
-        },
-    );
 
     Ok((new_w, new_h))
 }
