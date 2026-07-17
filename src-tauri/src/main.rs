@@ -77,7 +77,7 @@ fn main() {
             }
 
             // SQLite store ── 注入 Option<Db>：打开失败或 data dir 不可用时降级为 None，
-            // history/session 命令返回可读的 Sqlite 错误，而非让 State<Db> 提取 panic
+            // history 命令返回可读的 Sqlite 错误，而非让 State<Db> 提取 panic
             // 使相关命令整体假死。核心 JSON 功能不依赖 DB。
             let db: Option<store::Db> = match store::db::default_db_path() {
                 Some(db_path) => match store::Db::open(&db_path) {

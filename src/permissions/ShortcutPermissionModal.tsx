@@ -6,7 +6,7 @@ import { ActionButton } from '../components/ActionButton';
  * macOS shortcut permission recovery modal.
  *
  * 视觉锚：design/screens.md § 9 macOS 权限引导 Modal。
- * 触发：App.tsx 检测 shortcut_status === false / 收到 `permission:accessibility_missing` event。
+ * 触发：App.tsx 检测 shortcut_status === false；Modal 打开期间轮询 shortcut_retry，授权后自动关闭。
  * M0-N6：文案全走 i18n（errors + common namespace）。
  */
 

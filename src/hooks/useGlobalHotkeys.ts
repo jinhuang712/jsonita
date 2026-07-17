@@ -1,5 +1,5 @@
 /**
- * 浮窗内 hotkeys ── Tab 切功能 / 双击 Esc 隐藏 / ⌘K 清空 / ⌘⇧L 恢复上次会话 / ⌘W 关。
+ * 浮窗内 hotkeys ── Tab 切功能 / 双击 Esc 隐藏 / ⌘K 清空 / ⌘\ 单窗⇄双栏 / ⌘↩ 应用 / ⌘W 关。
  *
  * Spec ref: design/overview.md § 4 In-app 快捷键。
  */
@@ -395,7 +395,7 @@ export function useGlobalHotkeys() {
     return () => window.clearTimeout(timer);
   }, [setSinglePaneApplyState, singlePaneApplyState]);
 
-  // ⌘K 清空 + 不污染 last_session。用 window capture 手工监听，编辑器聚焦（contentEditable）时也生效。
+  // ⌘K 清空。用 window capture 手工监听，编辑器聚焦（contentEditable）时也生效。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (

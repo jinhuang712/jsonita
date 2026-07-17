@@ -30,7 +30,7 @@ fn is_reserved(acc: &str) -> bool {
     RESERVED.iter().any(|r| acc.eq_ignore_ascii_case(r))
 }
 
-/// 解析 "CmdOrCtrl+Shift+J" 风格字符串为 Shortcut。design/overview.md § 2.2
+/// 解析 "CmdOrCtrl+Shift+J" 风格字符串为 Shortcut。design/overview.md 快捷键解析
 pub fn parse_accelerator(s: &str) -> Result<Shortcut, String> {
     let mut mods = Modifiers::empty();
     let mut code: Option<Code> = None;

@@ -1,4 +1,4 @@
-//! 数据模型 ── 8 个 enum + IPC payload structs。
+//! 数据模型 ── 枚举 + IPC payload structs。
 //!
 //! Spec ref: `CLAUDE.md 契约段` 枚举与 IPC payload structs。
 //! 所有 enum 用 `kebab-case`；所有 struct 用 `camelCase`。

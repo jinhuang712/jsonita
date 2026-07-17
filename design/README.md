@@ -13,6 +13,8 @@ explorations.
    constraints.
 3. `design/prototype/index.html` for a simple clickable flow through the four
    main workspace states.
+4. `design/prototype/controls.html` for the control-language visual reference
+   (button, input, and toggle styling samples).
 
 ## Authority
 

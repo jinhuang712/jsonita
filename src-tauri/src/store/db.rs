@@ -88,7 +88,7 @@ pub fn default_db_path() -> Option<PathBuf> {
     Some(base.join("Jsonita").join("history.db"))
 }
 
-/// history/session 命令共用：DB 未成功注入（打开失败 / data dir 不可用）时
+/// history 命令用：DB 未成功注入（打开失败 / data dir 不可用）时
 /// 返回可读的 Sqlite 错误，而非让 `State<Db>` 提取 panic 使相关命令整体假死。
 pub fn require_db(db: &Option<Db>) -> Result<Db, JsonitaError> {
     db.as_ref()
