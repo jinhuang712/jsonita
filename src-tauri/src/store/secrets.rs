@@ -30,8 +30,11 @@ fn load() -> SecretsMap {
 }
 
 fn save(map: &SecretsMap) -> Result<(), JsonitaError> {
+    // 路径不可解析 → 无法持久化，必须报错而非静默成功（否则重启后 key 消失、上游却以为写入了）。
     let Some(p) = path() else {
-        return Ok(());
+        return Err(JsonitaError::Secrets(
+            "secrets path unavailable (data dir not resolvable)".into(),
+        ));
     };
     if let Some(parent) = p.parent() {
         let _ = std::fs::create_dir_all(parent);
@@ -50,8 +53,20 @@ fn save(map: &SecretsMap) -> Result<(), JsonitaError> {
 
 pub fn set(account: &str, value: &str) -> Result<(), JsonitaError> {
     let mut map = cell().lock().unwrap_or_else(|e| e.into_inner());
-    map.insert(account.to_string(), value.to_string());
-    save(&map)
+    let previous = map.insert(account.to_string(), value.to_string());
+    if let Err(e) = save(&map) {
+        // 落盘失败 → 回滚内存，保持内存与磁盘一致（避免 ai_has_api_key 当场 true、重启后落空）。
+        match previous {
+            Some(prev) => {
+                map.insert(account.to_string(), prev);
+            }
+            None => {
+                map.remove(account);
+            }
+        }
+        return Err(e);
+    }
+    Ok(())
 }
 
 pub fn get(account: &str) -> Result<Option<String>, JsonitaError> {
@@ -61,6 +76,13 @@ pub fn get(account: &str) -> Result<Option<String>, JsonitaError> {
 
 pub fn delete(account: &str) -> Result<(), JsonitaError> {
     let mut map = cell().lock().unwrap_or_else(|e| e.into_inner());
-    map.remove(account);
-    save(&map)
+    let previous = map.remove(account);
+    if let Err(e) = save(&map) {
+        // 落盘失败 → 回滚内存删除，保持一致。
+        if let Some(prev) = previous {
+            map.insert(account.to_string(), prev);
+        }
+        return Err(e);
+    }
+    Ok(())
 }
