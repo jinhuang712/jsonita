@@ -57,7 +57,6 @@ export function useGlobalHotkeys() {
   const setStatus = useEditorStore((s) => s.setStatus);
   const setError = useEditorStore((s) => s.setError);
   const editorStatus = useEditorStore((s) => s.status);
-  const editorError = useEditorStore((s) => s.error);
   const clearEditor = useEditorStore((s) => s.clear);
   const activePane = useUiStore((s) => s.activePane);
   const showAiFix = useUiStore((s) => s.showAiFix);
@@ -75,6 +74,7 @@ export function useGlobalHotkeys() {
   const resetEditorFontSize = useUiStore((s) => s.resetEditorFontSize);
   const aiStatus = useAiStore((s) => s.status);
   const aiAfter = useAiStore((s) => s.after);
+  const aiBefore = useAiStore((s) => s.before);
   const resetAi = useAiStore((s) => s.reset);
   const retryAi = useAiStore((s) => s.retry);
   const aiEnabled = useSettingsStore((s) => s.settings.aiEnabled);
@@ -218,7 +218,8 @@ export function useGlobalHotkeys() {
   // Esc 在 ai-fix 态退回编辑区。
   useEffect(() => {
     const applySinglePane = () => {
-      if (content.trim() === '') {
+      const snapshot = content;
+      if (snapshot.trim() === '') {
         setStatus('empty');
         setOutput('');
         setError(null);
@@ -226,8 +227,13 @@ export function useGlobalHotkeys() {
         return;
       }
       setSinglePaneApplyState('running');
-      runPaneApply(content, activePane)
+      runPaneApply(snapshot, activePane)
         .then((result) => {
+          // 用户在 IPC 返回前继续输入 → 输入已偏离快照，丢弃陈旧结果不覆盖新输入。
+          if (useEditorStore.getState().content !== snapshot) {
+            setSinglePaneApplyState('idle');
+            return;
+          }
           setContent(result);
           setOutput(result);
           setStatus('valid');
@@ -262,7 +268,7 @@ export function useGlobalHotkeys() {
         // 优先级：接受 AI 修复 → 触发 AI 修复（存在 parse error）→ 单窗 apply
         if (activePane === 'ai-fix' && aiStatus === 'awaiting-decision') {
           consume(event);
-          acceptAiFix(aiAfter, setContent, resetAi, setActivePane).catch(() => {});
+          acceptAiFix(aiAfter, aiBefore, setContent, resetAi, setActivePane).catch(() => {});
           return;
         }
         if (
@@ -303,10 +309,10 @@ export function useGlobalHotkeys() {
   }, [
     activePane,
     aiAfter,
+    aiBefore,
     aiEnabled,
     aiStatus,
     content,
-    editorError,
     editorStatus,
     historyModalOpen,
     resetAi,
@@ -379,7 +385,7 @@ export function useGlobalHotkeys() {
         escCloseHintTimerRef.current = null;
       }
     };
-  }, [activePane, aiStatus, historyModalOpen, setEscCloseHintVisible, settingsViewOpen, showEscCloseHint]);
+  }, [activePane, historyModalOpen, setEscCloseHintVisible, settingsViewOpen, showEscCloseHint]);
 
   useEffect(() => {
     if (singlePaneApplyState !== 'success' && singlePaneApplyState !== 'error') return;
@@ -408,7 +414,7 @@ export function useGlobalHotkeys() {
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [clearEditor, historyModalOpen, settingsViewOpen]);
 
-  // ⌘W 关闭浮窗；Settings 页内先返回编辑工作区。window capture，编辑器聚焦时也生效。
+  // ⌘W 关闭浮窗；Settings / History 打开时先返回编辑工作区。window capture，编辑器聚焦时也生效。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
@@ -424,11 +430,15 @@ export function useGlobalHotkeys() {
         setSettingsViewOpen(false);
         return;
       }
+      if (historyModalOpen) {
+        setHistoryModalOpen(false);
+        return;
+      }
       win.hide().catch(() => {});
     };
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [setSettingsViewOpen, settingsViewOpen]);
+  }, [historyModalOpen, setHistoryModalOpen, setSettingsViewOpen, settingsViewOpen]);
 
   // ⌘+ / ⌘- / ⌘0 调整编辑器与树视图字体大小。
   useEffect(() => {

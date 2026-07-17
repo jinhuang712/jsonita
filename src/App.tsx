@@ -4,6 +4,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
 import { useLocaleSync } from './i18n/useLocaleSync';
 import { settings as settingsApi } from './ipc/commands';
+import { on } from './ipc/events';
 import { ShortcutPermissionModal } from './permissions/ShortcutPermissionModal';
 import { FloatingWindow } from './shell/FloatingWindow';
 import { GlyphSymbols } from './components/GlyphSymbols';
@@ -22,6 +23,25 @@ export function App() {
   // 把 aiEnabled 当 false（哪怕 settings.json 里其实是 true）
   useEffect(() => {
     settingsApi.getAll().then(setSettings).catch(() => {});
+  }, [setSettings]);
+
+  // settings:changed：后端任意来源 patch 后同步到 store（单一权威），不依赖 Settings 页是否挂载。
+  useEffect(() => {
+    let disposed = false;
+    let unlisten: (() => void) | null = null;
+    on('settings:changed', (payload) => setSettings(payload))
+      .then((fn) => {
+        if (disposed) {
+          fn();
+          return;
+        }
+        unlisten = fn;
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
   }, [setSettings]);
 
   // 首次 mount：查 ⌘⇧J 注册状态 + listen 后续 event
@@ -48,13 +68,15 @@ export function App() {
     listen('tray:open-settings', () => {
       setHistoryModalOpen(false);
       setSettingsViewOpen(true);
-    }).then((fn) => {
-      if (disposed) {
-        fn();
-        return;
-      }
-      unlisten2 = fn;
-    });
+    })
+      .then((fn) => {
+        if (disposed) {
+          fn();
+          return;
+        }
+        unlisten2 = fn;
+      })
+      .catch(() => {});
 
     return () => {
       disposed = true;
