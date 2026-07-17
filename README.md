@@ -31,9 +31,9 @@
 
 ## 系统需求
 
-- macOS 11 Big Sur 及以上
-- arm64 (Apple Silicon) 或 x86_64 (Intel)
-- 安装体积 < 15 MB（dmg）· 内存稳态 < 80 MB
+- macOS 11 Big Sur 及以上（arm64 / x86_64）
+- Windows 10 及以上（x86_64，NSIS 安装包；无代码签名，v1 beta 小范围内测）
+- 安装体积 < 15 MB（macOS dmg）· 内存稳态 < 80 MB
 
 ## 安装
 
@@ -65,11 +65,11 @@ pnpm release:macos:dmg                    # 生产 dmg（未签名或按本机�
 ```bash
 pnpm release:macos:dmg      # macOS：构建 .dmg → release-artifacts/macos-dmg/
 pnpm release:macos:app      # macOS：构建 .app → release-artifacts/macos-app/
-pnpm release:windows:exe    # Windows/MSVC：脚本支持，v1 beta 非主发布链路
+pnpm release:windows:exe    # Windows：在 Windows + MSVC 环境构建 NSIS .exe → release-artifacts/windows-exe/
 pnpm release:all            # 当前平台可构建的全部发布产物
 ```
 
-Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 macOS `.dmg`。后续 Windows 对外发送的是 NSIS 安装包 `.exe`，不是构建目录里的裸 `Jsonita.exe`。
+v1 beta 主产物是 macOS `.dmg`；Windows NSIS 安装包可从 Windows 机器本地构建产出，但未签名，适合小范围内测分发，不是公开 release 链路。CI 在 `windows-latest` runner 上跑 `cargo check` 保证 Windows cfg 分支持续编译。
 
 全局快捷键注册失败时，仍可从菜单栏打开 Jsonita；权限或系统保留组合会在浮窗内提示并引导到 macOS 隐私设置。macOS 13+ 可能出现 Input Monitoring 提示；当前 v1 不把 Accessibility 授权作为启动前置条件。
 

@@ -31,9 +31,9 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 
 ## Jsonita Product Contracts
 
-- Product scope: a tiny macOS menu-bar JSON toolkit invoked with `Cmd+Shift+J`. Format, minify, tree view, JSON/string conversion, local history, and optional user-triggered AI repair. Not a browser product, general editor, or cloud/collaboration tool.
-- v1 beta release path: GitHub Releases plus `.dmg` for small internal testing.
-- Homebrew Cask, updater, npm wrapper, and broader distribution stay v1.1+ work until release artifacts, stable URLs, and `sha256` values exist.
+- Product scope: a tiny menu-bar JSON toolkit invoked with `Cmd+Shift+J` (macOS) / `Ctrl+Shift+J` (Windows/Linux). Format, minify, tree view, JSON/string conversion, local history, and optional user-triggered AI repair. Not a browser product, general editor, or cloud/collaboration tool. macOS is the primary v1 target; Windows is a secondary unsigned beta build.
+- v1 beta release path: GitHub Releases plus `.dmg` (macOS, primary) and NSIS `.exe` (Windows, unsigned) for small internal testing.
+- Homebrew Cask, updater, npm wrapper, Windows code signing/EV, and broader distribution stay v1.1+ work until release artifacts, stable URLs, and `sha256` values exist.
 - API key storage is the app data directory `secrets.json` file with restricted file permissions. Do not reintroduce system Keychain as the product storage path.
 - Local data stays local by default: SQLite, settings, window state, and `secrets.json`. Local data and secrets do not cross the process boundary unless the user starts a permitted operation.
 - Logs must not record JSON document content, API keys, or raw AI prompts and responses.
