@@ -37,6 +37,7 @@ export function useDebouncedTransform() {
     }
     if (content.length > LARGE_THRESHOLD) {
       setStatus('large');
+      setOutput('');
       return;
     }
 
@@ -56,8 +57,9 @@ export function useDebouncedTransform() {
           setError({ line: e.data.line, col: e.data.col, msg: e.data.msg });
           setShowAiFix(true);
         } else {
-          // Io / 其他 ── 退回 empty 不闪屏；未来可接统一错误 UI。
+          // Io / 其他 ── 退回 empty 不闪屏；清掉上一份 preview 避免双栏右侧显示陈旧输出。
           setStatus('empty');
+          setOutput('');
         }
       }
     }, 300);

@@ -155,7 +155,7 @@ export function AiFixPane() {
           <ActionButton variant="secondary" onClick={reject} title="Esc">
             Cancel
           </ActionButton>
-          <ActionButton variant="primary" onClick={() => acceptAiFix(after, setContent, aiReset, setActivePane)} title="Cmd+Enter">
+          <ActionButton variant="primary" onClick={() => acceptAiFix(after, before, setContent, aiReset, setActivePane)} title="Cmd+Enter">
             <ShortcutGlyph accelerator="CmdOrCtrl+Enter" decorative />
             Accept
           </ActionButton>

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { getVersion } from '@tauri-apps/api/app';
 import { useTranslation } from 'react-i18next';
 import { settings as settingsApi, system as systemApi } from '../ipc/commands';
-import { on } from '../ipc/events';
 import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
@@ -81,19 +80,6 @@ export function SettingsView() {
       .then(setSettings)
       .catch(() => {});
   }, [open, setSettings]);
-
-  // 监听 settings:changed event（其他窗口 patch 后同步）
-  useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    on('settings:changed', (payload) => {
-      setSettings(payload);
-    }).then((fn) => {
-      unlisten = fn;
-    });
-    return () => {
-      unlisten?.();
-    };
-  }, [setSettings]);
 
   const patch = async (p: Partial<Settings>) => {
     try {

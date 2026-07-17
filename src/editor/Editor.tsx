@@ -91,13 +91,15 @@ export function Editor({
       frameId = window.requestAnimationFrame(() => {
         if (!disposed) viewRef.current?.focus();
       });
-    }).then((stop) => {
-      if (disposed) {
-        stop();
-      } else {
-        unlisten = stop;
-      }
-    });
+    })
+      .then((stop) => {
+        if (disposed) {
+          stop();
+        } else {
+          unlisten = stop;
+        }
+      })
+      .catch(() => {});
 
     return () => {
       disposed = true;
