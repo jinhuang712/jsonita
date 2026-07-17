@@ -16,7 +16,7 @@
     "release:all": "bash scripts/release-all.sh",
     "tauri": "tauri",
     "tsc": "tsc --noEmit",
-    "test:node": "node --test tests/**/*.test.mjs"
+    "test:node": "find tests -name '*.test.mjs' -print0 | xargs -0 node --test"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.0",
