@@ -9,6 +9,8 @@
 //!   → 值整体替换为 `"[redacted]"`
 //! - hashlist（`content` / `text` / `body` / `raw` / `document` / `json` / `payload`）
 //!   → 字符串值改记 `len=N sha256=XX`（前 8 hex），不落原文
+//! - `message` / `msg`（tracing 格式消息字段）兜底：仅当值本身解析为 JSON object/array 时
+//!   hash（防 `tracing::error!("{}", raw_json)` 绕过字段名匹配），普通短消息（"window.toggle"）保留可读
 
 use std::io::{self, Write};
 
@@ -52,6 +54,17 @@ fn redact_value(v: &mut Value) {
                     } else {
                         redact_value(val);
                     }
+                } else if key == "message" || key == "msg" {
+                    // tracing 格式消息字段兜底：若值本身是 JSON object/array，视为误录原文 → hash。
+                    if let Some(s) = val.as_str() {
+                        if let Ok(parsed) = serde_json::from_str::<Value>(s) {
+                            if parsed.is_object() || parsed.is_array() {
+                                *val = Value::String(hash_summary(s));
+                                continue;
+                            }
+                        }
+                    }
+                    redact_value(val);
                 } else {
                     redact_value(val);
                 }
@@ -171,5 +184,18 @@ mod tests {
     #[test]
     fn non_json_passthrough() {
         assert_eq!(redact_line("not json"), "not json");
+    }
+
+    #[test]
+    fn message_field_json_payload_hashed() {
+        // tracing::error!("{}", raw_json) 会把原文放进 message 字段；是 JSON object 时兜底 hash。
+        let line = r#"{"level":"error","message":"{\"a\":1,\"secret\":2}"}"#;
+        let out = redact_line(line);
+        assert!(out.contains("len=") && out.contains("sha256="));
+        assert!(!out.contains("\"secret\":2"));
+        // 普通短消息保留可读
+        let line2 = r#"{"level":"info","message":"window.toggle"}"#;
+        let out2 = redact_line(line2);
+        assert!(out2.contains("window.toggle"));
     }
 }
