@@ -75,7 +75,8 @@
     "invalid": "Invalid: {{reason}}",
     "overrideConfirm": "{{accelerator}} conflicts with a system shortcut. Bind anyway?",
     "overrideButton": "Override",
-    "needModifier": "Include ⌘, Ctrl, or Alt"
+    "needModifier": "Include ⌘, Ctrl, or Alt",
+    "needModifierNonMac": "Include Ctrl or Alt"
   },
   "footer": {
     "resetAll": "Reset all"

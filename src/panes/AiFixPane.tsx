@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { ai as aiApi } from '../ipc/commands';
+import { isMacPlatform } from '../keyboard/accelerators';
 import { isJsonitaError } from '../ipc/error';
 import { useAiStore } from '../store/ai';
 import { useEditorStore } from '../store/editor';
@@ -154,7 +155,7 @@ export function AiFixPane() {
           <ActionButton variant="secondary" onClick={reject} title="Esc">
             Cancel
           </ActionButton>
-          <ActionButton variant="primary" onClick={() => acceptAiFix(after, before, setContent, aiReset, setActivePane)} title="Cmd+Enter">
+          <ActionButton variant="primary" onClick={() => acceptAiFix(after, before, setContent, aiReset, setActivePane)} title={isMacPlatform() ? 'Cmd+Enter' : 'Ctrl+Enter'}>
             <ShortcutGlyph accelerator="CmdOrCtrl+Enter" decorative />
             Accept
           </ActionButton>

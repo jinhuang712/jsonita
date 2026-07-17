@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shortcuts, type ShortcutAction, type ShortcutRegisterResp } from '../ipc/commands';
 import { formatError } from '../ipc/error';
-import { formatAccelerator } from '../keyboard/accelerators';
+import { formatAccelerator, isMacPlatform } from '../keyboard/accelerators';
 
 /**
  * ShortcutInput — 录入快捷键，调 shortcut_register 验 + 注册。
@@ -37,7 +37,11 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
     // 至少一个非 Shift 修饰键：否则裸键（如 "A"）或纯 Shift 组合会在编辑器打字时被误触发。
     if (!e.metaKey && !e.ctrlKey && !e.altKey) {
       setRecording(false);
-      setMsg({ kind: 'err', text: t('shortcuts.needModifier') });
+      // macOS 文案保留原 ⌘ 字符；Windows/Linux 用 Ctrl 表述，避免出现不认识的 ⌘ 符号。
+      const modifierHint = isMacPlatform()
+        ? t('shortcuts.needModifier')
+        : t('shortcuts.needModifierNonMac');
+      setMsg({ kind: 'err', text: modifierHint });
       return;
     }
 

@@ -257,6 +257,7 @@ export function useGlobalHotkeys() {
 
       const isCmdEnter =
         event.key === 'Enter' && hasPrimaryModifier(event) && !event.altKey && !event.shiftKey;
+      // Ctrl+Esc 在 Windows 是系统保留（开开始菜单）；平台一致排除，macOS 上 Ctrl+Esc 无绑定，零影响。
       const isPlainEsc =
         event.key === 'Escape' &&
         !event.altKey &&

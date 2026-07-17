@@ -75,7 +75,8 @@
     "invalid": "非法：{{reason}}",
     "overrideConfirm": "{{accelerator}} 与系统快捷键冲突，仍要绑定？",
     "overrideButton": "Override",
-    "needModifier": "需包含 ⌘ / Ctrl / Alt"
+    "needModifier": "需包含 ⌘ / Ctrl / Alt",
+    "needModifierNonMac": "需包含 Ctrl / Alt"
   },
   "footer": {
     "resetAll": "全部重置"
