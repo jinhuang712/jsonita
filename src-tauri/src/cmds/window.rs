@@ -251,31 +251,50 @@ pub async fn window_set_theme(
     app: tauri::AppHandle,
     mode: ThemeMode,
 ) -> Result<String, JsonitaError> {
-    let Some(win) = app.get_webview_window(window::MAIN_LABEL) else {
-        // 无主窗口（极少）：退回粗解析，system 当 light。
-        return Ok(if matches!(mode, ThemeMode::Dark) {
-            "dark"
-        } else {
-            "light"
+    // 非 macOS：无 vibrancy / NSAppearance 权威解析；System 模式交给前端 matchMedia，
+    // 显式 light/dark 直接返回（无原生材质需要应用）。
+    #[cfg(not(target_os = "macos"))]
+    {
+        match mode {
+            ThemeMode::Dark => return Ok("dark".to_string()),
+            ThemeMode::Light => return Ok("light".to_string()),
+            ThemeMode::System => {
+                // 让前端 useEffectiveTheme 的 catch 分支走 matchMedia('(prefers-color-scheme: dark)')。
+                return Err(JsonitaError::Io(
+                    "system theme resolved by frontend matchMedia on non-macOS".into(),
+                ));
+            }
         }
-        .to_string());
-    };
-    let w = win.clone();
-    let (tx, rx) = tokio::sync::oneshot::channel();
-    // AppKit（setAppearance / effectiveAppearance / set_effects）必须在主线程；本 command 跑在
-    // async worker 线程，直接调会闪退（切主题崩溃的根因）。marshal 回主线程执行并 await 回传值，
-    // 用 oneshot 让 worker 在等待期间不被同步阻塞。
-    win.run_on_main_thread(move || {
-        let dark = window::apply_glass_mode(&w, mode);
-        let _ = tx.send(dark);
-    })?;
-    let dark = match rx.await {
-        Ok(v) => v,
-        Err(e) => {
-            // 主线程闭包未回传（极少：tx 被 drop）── 退回 light 但记一条，避免静默误解析。
-            tracing::warn!(error = %e, "window.set_theme: main-thread resolution dropped, defaulting light");
-            false
-        }
-    };
-    Ok(if dark { "dark" } else { "light" }.to_string())
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let Some(win) = app.get_webview_window(window::MAIN_LABEL) else {
+            // 无主窗口（极少）：退回粗解析，system 当 light。
+            return Ok(if matches!(mode, ThemeMode::Dark) {
+                "dark"
+            } else {
+                "light"
+            }
+            .to_string());
+        };
+        let w = win.clone();
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        // AppKit（setAppearance / effectiveAppearance / set_effects）必须在主线程；本 command 跑在
+        // async worker 线程，直接调会闪退（切主题崩溃的根因）。marshal 回主线程执行并 await 回传值，
+        // 用 oneshot 让 worker 在等待期间不被同步阻塞。
+        win.run_on_main_thread(move || {
+            let dark = window::apply_glass_mode(&w, mode);
+            let _ = tx.send(dark);
+        })?;
+        let dark = match rx.await {
+            Ok(v) => v,
+            Err(e) => {
+                // 主线程闭包未回传（极少：tx 被 drop）── 退回 light 但记一条，避免静默误解析。
+                tracing::warn!(error = %e, "window.set_theme: main-thread resolution dropped, defaulting light");
+                false
+            }
+        };
+        Ok(if dark { "dark" } else { "light" }.to_string())
+    }
 }
