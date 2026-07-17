@@ -73,13 +73,20 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     outline: '1px solid var(--primary-edge)',
   },
   '.cm-searchMatch': {
-    backgroundColor: 'color-mix(in srgb, var(--primary) 11%, transparent)',
-    outline: '1px solid color-mix(in srgb, var(--primary) 13%, transparent)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 22%, transparent)',
+    outline: '1px solid color-mix(in srgb, var(--primary) 34%, transparent)',
     borderRadius: '2px',
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: 'color-mix(in srgb, var(--primary) 18%, transparent)',
-    outlineColor: 'color-mix(in srgb, var(--primary) 23%, transparent)',
+    // 当前匹配换暖色 accent + 实底 + 强描边，从一片蓝色普通匹配里一眼跳出（dark 下尤其）。
+    backgroundColor: 'color-mix(in srgb, var(--accent) 46%, transparent)',
+    outline: '1.5px solid var(--accent)',
+    borderRadius: '2px',
+  },
+  // 双击选词后同词高亮：CM 默认色在玻璃深色下几乎不可见，与搜索普通匹配对齐同一档。
+  '.cm-selectionMatch': {
+    backgroundColor: 'color-mix(in srgb, var(--primary) 20%, transparent)',
+    borderRadius: '2px',
   },
   '.jsonita-search-panel': {
     display: 'grid',
