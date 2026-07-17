@@ -1,8 +1,6 @@
 {
   "empty": {
-    "title": "粘贴 JSON 开始",
-    "shortcutLabel": "⌘V",
-    "phaseLabel": "M0-N3 NSPanel POC"
+    "title": "粘贴 JSON 开始"
   },
   "tab": {
     "format": "格式化",

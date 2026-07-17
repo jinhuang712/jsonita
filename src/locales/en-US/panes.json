@@ -1,8 +1,6 @@
 {
   "empty": {
-    "title": "Paste JSON to start",
-    "shortcutLabel": "⌘V",
-    "phaseLabel": "M0-N3 NSPanel POC"
+    "title": "Paste JSON to start"
   },
   "tab": {
     "format": "Format",
