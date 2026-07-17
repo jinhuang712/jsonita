@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,13 +9,6 @@
 <link rel="icon" type="image/png" href="assets/img/logo.png">
 <link rel="alternate" hreflang="zh-CN" href="zh-CN/">
 <link rel="alternate" hreflang="en" href="./">
-<style>
-  /* Inline a mini font stack that mirrors app tokens; JetBrains Mono loaded for big hotkey kbd only */
-  @font-face {
-    font-family: "JBM";
-    src: local("JetBrains Mono"), local("SF Mono"), local("Menlo");
-  }
-</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -72,10 +65,69 @@
       <a class="btn btn-ghost" href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener">View on GitHub ↗</a>
     </div>
 
+    <!-- hero = the real Jsonita window, rendered (Format tab, split panes) -->
     <div class="hero-stage">
-      <span class="sig-brace left">{</span>
-      <span class="sig-brace right">}</span>
-      <img class="hero-shot" src="assets/img/hero.png" alt="Jsonita window showing formatted JSON" width="805" height="606" loading="eager">
+      <div class="appwin appwin--hero" data-active-tab="format">
+        <div class="appwin-tabbar">
+          <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+          <div class="appwin-tabs">
+            <span class="appwin-pill" aria-hidden="true"></span>
+            <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>Format</span>
+            <span class="appwin-tab" data-tab="minify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>Minify</span>
+            <span class="appwin-tab" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>Tree</span>
+            <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>To String</span>
+          </div>
+          <span class="appwin-spacer"></span>
+          <div class="appwin-chrome">
+            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
+            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
+            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+          </div>
+        </div>
+        <div class="appwin-body appwin-body--split">
+          <div class="appwin-pane">
+            <div class="appwin-gutter">1
+2
+3
+4
+5
+6
+7
+8
+9</div>
+            <pre class="appwin-code"><span class="t-punc">{</span>
+  <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span>
+  <span class="t-key">"region"</span><span class="t-punc">:</span> <span class="t-str">"us-west-2"</span><span class="t-punc">,</span>
+  <span class="t-key">"version"</span><span class="t-punc">:</span> <span class="t-str">"1.0.0-beta.2"</span><span class="t-punc">,</span>
+  <span class="t-key">"replicas"</span><span class="t-punc">:</span> <span class="t-num">3</span><span class="t-punc">,</span>
+  <span class="t-key">"features"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
+    <span class="t-key">"aiFix"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
+    <span class="t-key">"telemetry"</span><span class="t-punc">:</span> <span class="t-bool">false</span>
+  <span class="t-punc">},</span>
+  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">]</span><span class="caret"></span>
+<span class="t-punc">}</span></pre>
+          </div>
+          <div class="appwin-pane appwin-pane--bare">
+            <pre class="appwin-code"><span class="t-punc">{</span>
+  <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span>
+  <span class="t-key">"region"</span><span class="t-punc">:</span> <span class="t-str">"us-west-2"</span><span class="t-punc">,</span>
+  <span class="t-key">"version"</span><span class="t-punc">:</span> <span class="t-str">"1.0.0-beta.2"</span><span class="t-punc">,</span>
+  <span class="t-key">"replicas"</span><span class="t-punc">:</span> <span class="t-num">3</span><span class="t-punc">,</span>
+  <span class="t-key">"features"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
+    <span class="t-key">"aiFix"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
+    <span class="t-key">"autoUnwrap"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
+    <span class="t-key">"telemetry"</span><span class="t-punc">:</span> <span class="t-bool">false</span>
+  <span class="t-punc">},</span>
+  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">,</span> <span class="t-str">"native"</span><span class="t-punc">]</span><span class="t-punc">,</span>
+  <span class="t-key">"deployedAt"</span><span class="t-punc">:</span> <span class="t-str">"2026-07-18T09:30:00Z"</span>
+<span class="t-punc">}</span></pre>
+          </div>
+        </div>
+        <div class="appwin-statusbar">
+          <span class="appwin-status"><span class="dot ok"></span>valid · <span class="mono">9</span> lines · <span class="mono">284</span> bytes</span>
+          <span class="right">format <kbd>⌘ ↵</kbd> copy</span>
+        </div>
+      </div>
     </div>
 
     <!-- stats -->
@@ -107,7 +159,40 @@
         </ul>
       </div>
       <div class="feature-visual">
-        <img class="feature-shot" src="assets/img/hero.png" alt="Format tab" width="805" height="606">
+        <div class="appwin" data-active-tab="minify">
+          <div class="appwin-tabbar">
+            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <div class="appwin-tabs">
+              <span class="appwin-pill" aria-hidden="true"></span>
+              <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>Format</span>
+              <span class="appwin-tab is-active" data-tab="minify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>Minify</span>
+              <span class="appwin-tab" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>Tree</span>
+              <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>To String</span>
+            </div>
+            <span class="appwin-spacer"></span>
+            <div class="appwin-chrome">
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+            </div>
+          </div>
+          <div class="appwin-body appwin-body--split">
+            <div class="appwin-pane appwin-pane--bare">
+              <pre class="appwin-code"><span class="t-punc">{</span><span class="t-key">"service"</span><span class="t-punc">:</span><span class="t-str">"jsonita-api"</span><span class="t-punc">,</span><span class="t-key">"region"</span><span class="t-punc">:</span><span class="t-str">"us-west-2"</span><span class="t-punc">,</span><span class="t-key">"replicas"</span><span class="t-punc">:</span><span class="t-num">3</span><span class="t-punc">,</span><span class="t-key">"features"</span><span class="t-punc">:</span><span class="t-punc">{</span><span class="t-key">"aiFix"</span><span class="t-punc">:</span><span class="t-bool">true</span><span class="t-punc">},</span><span class="t-key">"tags"</span><span class="t-punc">:[</span><span class="t-str">"json"</span><span class="t-punc">,</span><span class="t-str">"menu-bar"</span><span class="t-punc">]}</span><span class="caret"></span></pre>
+            </div>
+            <div class="appwin-pane appwin-pane--bare">
+              <pre class="appwin-code appwin-code--sm"><span class="t-punc">{</span>
+  <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span>
+  <span class="t-key">"region"</span><span class="t-punc">:</span> <span class="t-str">"us-west-2"</span><span class="t-punc">,</span>
+  <span class="t-key">"replicas"</span><span class="t-punc">:</span> <span class="t-num">3</span>
+<span class="t-punc">}</span></pre>
+            </div>
+          </div>
+          <div class="appwin-statusbar">
+            <span class="appwin-status"><span class="dot ok"></span>valid · <span class="mono">198</span> bytes minified</span>
+            <span class="right">indent 2 · sort keys off</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -123,7 +208,45 @@
         </ul>
       </div>
       <div class="feature-visual">
-        <img class="feature-shot" src="assets/img/feature-tree.png" alt="Tree view" width="805" height="606">
+        <div class="appwin" data-active-tab="tree">
+          <div class="appwin-tabbar">
+            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <div class="appwin-tabs">
+              <span class="appwin-pill" aria-hidden="true"></span>
+              <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>Format</span>
+              <span class="appwin-tab" data-tab="minify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>Minify</span>
+              <span class="appwin-tab is-active" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>Tree</span>
+              <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>To String</span>
+            </div>
+            <span class="appwin-spacer"></span>
+            <div class="appwin-chrome">
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+            </div>
+          </div>
+          <div class="appwin-body appwin-body--single">
+            <div class="appwin-pane appwin-pane--bare">
+              <div class="appwin-tree">
+                <div class="row"><span class="toggle">▾</span><span class="key">root</span> <span class="summary">{9}</span></div>
+                <div class="row indent-1"><span class="key">service</span><span class="punc">: </span><span class="v-str">"jsonita-api"</span></div>
+                <div class="row indent-1"><span class="key">region</span><span class="punc">: </span><span class="v-str">"us-west-2"</span></div>
+                <div class="row indent-1"><span class="key">version</span><span class="punc">: </span><span class="v-str">"1.0.0-beta.2"</span></div>
+                <div class="row indent-1"><span class="key">replicas</span><span class="punc">: </span><span class="v-num">3</span></div>
+                <div class="row indent-1"><span class="toggle">▾</span><span class="key">features</span> <span class="summary">{3}</span></div>
+                <div class="row indent-2"><span class="key">aiFix</span><span class="punc">: </span><span class="v-bool">true</span></div>
+                <div class="row indent-2"><span class="key">autoUnwrap</span><span class="punc">: </span><span class="v-bool">true</span></div>
+                <div class="row indent-2"><span class="key">telemetry</span><span class="punc">: </span><span class="v-bool">false</span></div>
+                <div class="row indent-1"><span class="toggle">▾</span><span class="key">tags</span> <span class="summary">[3]</span></div>
+                <div class="row indent-2"><span class="v-str">"json"</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="appwin-statusbar">
+            <span class="appwin-status"><span class="dot ok"></span>valid · tree of 9 keys</span>
+            <span class="right">click a node to copy path</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -139,24 +262,37 @@
         </ul>
       </div>
       <div class="feature-visual">
-        <div class="mock">
-          <div class="diff">
-            <div class="diff-bar">
-              <span>AI Fix · diff preview</span>
-              <span>Accept to replace input</span>
+        <div class="appwin" data-active-tab="ai">
+          <div class="appwin-tabbar">
+            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <div class="appwin-tabs">
+              <span class="appwin-pill" aria-hidden="true"></span>
+              <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>Format</span>
+              <span class="appwin-tab" data-tab="minify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>Minify</span>
+              <span class="appwin-tab" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>Tree</span>
+              <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>To String</span>
             </div>
-            <div class="diff-body">
-<span class="diff-minus">- "name": "Jin</span>
-<span class="diff-plus">+ "name": "Jin",</span>
-<span>  "plan": "pro",</span>
-<span>  "tags": ["founder",</span>
-<span class="diff-plus">+   "early-adopter",</span>
-<span>  ],</span>
+            <span class="appwin-spacer"></span>
+            <span class="appwin-tab" style="background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 24%, transparent);font-weight:580;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"/></svg>AI Fix</span>
+          </div>
+          <div class="appwin-body appwin-body--single">
+            <div class="appwin-pane appwin-pane--bare">
+              <div class="appwin-diff">
+                <div class="appwin-diff-bar">
+                  <span>AI Fix · diff preview</span>
+                  <span>Accept to replace input</span>
+                </div>
+                <div class="appwin-diff-body"><span class="ctx">  <span class="t-punc">{</span></span><span class="minus">-   <span class="t-key">service</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span></span><span class="plus">+   <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span></span><span class="ctx">  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">,</span></span><span class="plus">+   <span class="t-str">"native"</span></span><span class="minus">-   <span class="t-str">"native"</span><span class="t-punc">,]</span></span><span class="plus">+   <span class="t-str">"native"</span></span><span class="ctx">  <span class="t-punc">]</span></span></div>
+                <div class="appwin-diff-cta">
+                  <span class="b b-cancel">Cancel</span>
+                  <span class="b b-accept">Accept</span>
+                </div>
+              </div>
             </div>
-            <div class="diff-cta">
-              <span class="b b-cancel">Cancel</span>
-              <span class="b b-accept">Accept</span>
-            </div>
+          </div>
+          <div class="appwin-statusbar">
+            <span class="appwin-status"><span class="dot warn" style="background:var(--accent)"></span>AI repair · 2 fixes · validated</span>
+            <span class="right">nothing sent until Accept</span>
           </div>
         </div>
       </div>
@@ -174,12 +310,37 @@
         </ul>
       </div>
       <div class="feature-visual">
-        <div class="privacy">
-          <div class="privacy-lock">🔒</div>
-          <div class="privacy-item"><b>Local SQLite</b> · history + settings</div>
-          <div class="privacy-item"><b>secrets.json</b> · key stored on disk, restricted perms</div>
-          <div class="privacy-item"><b>Logs redacted</b> · no JSON, no keys, no AI I/O</div>
-          <div class="privacy-item"><b>Opt-in AI</b> · fires only when you click</div>
+        <div class="appwin" data-active-tab="format">
+          <div class="appwin-tabbar">
+            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <div class="appwin-tabs">
+              <span class="appwin-pill" aria-hidden="true"></span>
+              <span class="appwin-tab is-active" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>Format</span>
+              <span class="appwin-tab" data-tab="minify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>Minify</span>
+              <span class="appwin-tab" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>Tree</span>
+              <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>To String</span>
+            </div>
+            <span class="appwin-spacer"></span>
+            <div class="appwin-chrome">
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
+              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+            </div>
+          </div>
+          <div class="appwin-body appwin-body--single">
+            <div class="appwin-pane appwin-pane--bare">
+              <div class="appwin-privacy">
+                <div class="appwin-privacy-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+                <div class="appwin-privacy-item"><b>Local SQLite</b> · history + settings</div>
+                <div class="appwin-privacy-item"><b>secrets.json</b> · key on disk, restricted perms</div>
+                <div class="appwin-privacy-item"><b>Logs redacted</b> · no JSON, no keys, no AI I/O</div>
+                <div class="appwin-privacy-item"><b>Opt-in AI</b> · fires only when you click</div>
+              </div>
+            </div>
+          </div>
+          <div class="appwin-statusbar">
+            <span class="appwin-status"><span class="dot ok"></span>local · nothing leaves this machine</span>
+          </div>
         </div>
       </div>
     </div>
@@ -228,7 +389,7 @@
       </div>
     </div>
 
-    <p class="reveal" style="text-align:center;color:var(--text-faint);font-size:13px;margin-top:36px;font-family:'SF Mono',ui-monospace,monospace;">
+    <p class="reveal" style="text-align:center;color:var(--text-faint);font-size:13px;margin-top:36px;font-family:var(--font-mono-ui);">
       Or build from source: <code style="background:var(--surface-quiet);padding:4px 10px;border-radius:5px;border:1px solid var(--border);">git clone https://github.com/jinhuang712/jsonita &amp;&amp; cd jsonita &amp;&amp; pnpm install &amp;&amp; pnpm tauri dev</code>
     </p>
   </div>
