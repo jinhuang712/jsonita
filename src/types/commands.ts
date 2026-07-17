@@ -24,7 +24,7 @@ export interface StringifyOpts {
   minify?: boolean;
 }
 
-// § 3.2 history / session
+// § 3.2 history
 export interface HistoryRow {
   id: number;
   createdAt: number;

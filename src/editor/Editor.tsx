@@ -108,7 +108,7 @@ export function Editor({
     };
   }, [focusOnWindowShown]);
 
-  // 外部 setValue（store 调 setContent 用于 AI Fix / 历史恢复 / 上次会话）
+  // 外部 setValue（store 调 setContent 用于 AI Fix / 历史恢复）
   useEffect(() => {
     const v = viewRef.current;
     if (!v) return;

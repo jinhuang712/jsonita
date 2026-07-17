@@ -1,7 +1,7 @@
 //! tracing 日志初始化。
 //!
 //! Spec ref: `CLAUDE.md 契约段`（日志与隐私）。
-//! 范围：daily rolling + 0600 (umask) + 7 天 purge + RedactLayer 占位
+//! 范围：daily rolling + 0600 (umask) + 7 天 purge + 写出层 RedactWriter 脱敏
 //! 不含：5 MB 单文件分片 / WebView IPC log_write 合流 / 导出 zip
 
 pub mod redact;

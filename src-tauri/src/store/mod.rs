@@ -1,7 +1,7 @@
 //! SQLite store — connection pool + migration + 业务模块。
 //!
 //! Spec ref: CLAUDE.md 契约段。
-//! M1-N6 完成 history；M1-N7 加 session；M2 加 settings。
+//! M1-N6 完成 history；M2 加 settings。
 
 pub mod db;
 pub mod history;

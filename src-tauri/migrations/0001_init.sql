@@ -1,4 +1,4 @@
--- M1-N6 initial schema — spec/13 § 4 + spec/10 § 4
+-- M1-N6 initial schema — 见 CLAUDE.md 契约段（历史存储 / 迁移）
 -- Tables: history / history_fts / last_session / app_meta / schema_version
 
 CREATE TABLE IF NOT EXISTS schema_version (
