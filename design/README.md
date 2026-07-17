@@ -1,8 +1,9 @@
 # Jsonita Design Companion
 
-`design/` is a small companion to the formal specifications in `../spec/`.
-It explains user-visible screen structure and interaction intent; it does not
-duplicate CSS, component internals, or visual explorations.
+`design/` is a small companion to the product contracts in
+[../CLAUDE.md](../CLAUDE.md). It explains user-visible screen structure and
+interaction intent; it does not duplicate CSS, component internals, or visual
+explorations.
 
 ## Read in This Order
 
@@ -20,5 +21,6 @@ state changes; it is not a full-size canvas or a pixel-level source of truth.
 Exact tokens, styles, component structure, localization, and accessibility
 implementation live in the application source and tests.
 
-When a behavior changes, update `../spec/10-behavior.md` first, then update
-this companion only if the user-visible screen or flow changes.
+When a behavior changes, update the contract sections in
+[../CLAUDE.md](../CLAUDE.md) first, then update this companion only if the
+user-visible screen or flow changes.

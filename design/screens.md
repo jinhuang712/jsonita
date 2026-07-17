@@ -39,5 +39,5 @@ transform tab, so users can paste or type immediately.
 ## Scope Boundary
 
 This guide owns visible intent, not CSS or component implementation. Product
-behavior lives in [../spec/10-behavior.md](../spec/10-behavior.md); architecture
-and privacy boundaries live in the other formal specifications.
+behavior, architecture, and privacy boundaries live in the contract sections of
+[../CLAUDE.md](../CLAUDE.md).

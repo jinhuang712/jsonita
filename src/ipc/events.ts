@@ -1,7 +1,7 @@
 /**
  * 类型化 Tauri event listen 封装。
  *
- * Spec ref: spec/20-architecture.md event 方向性。
+ * Spec ref: CLAUDE.md 契约段 event 方向性。
  */
 
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';

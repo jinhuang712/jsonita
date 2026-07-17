@@ -1,6 +1,6 @@
 //! window.json 持久化 ── width / height / userDragged。
 //!
-//! Spec ref: design/overview.md 与 spec/30-operations.md。
+//! Spec ref: design/overview.md 与 CLAUDE.md 契约段。
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};

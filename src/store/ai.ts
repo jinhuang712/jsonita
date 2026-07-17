@@ -1,7 +1,7 @@
 /**
  * AI Fix store slice — 状态机 idle/requesting/awaiting-decision/error。
  *
- * Spec ref: spec/20-architecture.md。
+ * Spec ref: CLAUDE.md 契约段。
  */
 
 import { create } from 'zustand';

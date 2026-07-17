@@ -88,18 +88,17 @@ Windows 脚本只表示构建链路已预留；v1 beta 对外主产物仍是 mac
 | 路径 | 内容 |
 |---|---|
 | [`WORKFLOW.md`](WORKFLOW.md) | 文档与实现协作流程 |
-| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束与验证规则 |
-| [`spec/`](spec/) | 产品范围、行为、架构、运行保障和验证的正式设计来源 |
+| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束、产品契约、行为不变量与验证规则 |
 | [`design/`](design/) | 简洁的界面意图、屏幕状态与低保真流程原型 |
 | [`docs/`](docs/) | GitHub Pages 发布根目录，以及 Superpowers 设计与实施过程记录 |
-| [`TODO.md`](TODO.md) | 项目级开放 backlog |
-| [`CHANGELIST.md`](CHANGELIST.md) | 变更历史 |
+
+变更历史与未关闭事项由 git 提交历史承载，不再单独维护 changelog / backlog / spec 文件。
 
 ## 文档约定
 
-本仓库使用 Markdown 作为最终文档源。后来者在修改产品范围、技术规格、设计契约、TODO、Changelist 或文档入口时，需要先读 [`AGENTS.md`](AGENTS.md) 或 [`CLAUDE.md`](CLAUDE.md)，再读 [`WORKFLOW.md`](WORKFLOW.md)，并同步更新对应的 Markdown 文件。
+本仓库使用 Markdown 作为最终文档源。后来者在修改产品范围、契约、设计意图或文档入口时，需要先读 [`AGENTS.md`](AGENTS.md) 或 [`CLAUDE.md`](CLAUDE.md)，再读 [`WORKFLOW.md`](WORKFLOW.md)，并同步更新对应的 Markdown 文件。
 
-[`spec/`](spec/) 是正式的产品设计与架构来源；[`design/`](design/) 只解释屏幕、状态和交互意图。精确样式、组件、schema、prompt 和发布命令以源码、测试和脚本为准。[`docs/`](docs/) 保留为 GitHub Pages 的非根目录发布位置，并承载 Superpowers 的过程文档。
+产品契约与行为不变量以 [`CLAUDE.md`](CLAUDE.md) 为准；[`design/`](design/) 只解释屏幕、状态和交互意图。精确样式、组件、schema、prompt 和发布命令以源码、测试和脚本为准。[`docs/`](docs/) 保留为 GitHub Pages 的非根目录发布位置，并承载 Superpowers 的过程文档。
 
 旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。`design/prototype/index.html` 只保留简单、可点击的低保真流程说明，不承担高保真视觉交付。
 

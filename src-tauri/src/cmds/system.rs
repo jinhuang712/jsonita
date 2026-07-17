@@ -1,4 +1,4 @@
-//! system 分组 ── Finder 打开 / GitHub / 退出，见 spec/20-architecture.md。
+//! system 分组 ── Finder 打开 / GitHub / 退出，见 CLAUDE.md 契约段。
 
 use crate::error::JsonitaError;
 

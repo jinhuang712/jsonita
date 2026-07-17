@@ -1,4 +1,4 @@
-//! settings 分组 ── JSON 文件持久化，见 spec/30-operations.md。
+//! settings 分组 ── JSON 文件持久化，见 CLAUDE.md 契约段。
 //!
 //! M2-N1 真实化：读 / patch / 重置 走 SettingsStore；改后 emit `settings:changed` 广播。
 

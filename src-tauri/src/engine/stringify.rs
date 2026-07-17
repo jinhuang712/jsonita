@@ -1,4 +1,4 @@
-//! JSON ↔ String 互转 ── 见 spec/20-architecture.md。
+//! JSON ↔ String 互转 ── 见 CLAUDE.md 契约段。
 //!
 //! - `json_to_string`: JSON → 转义 quote 包裹字面量（适合嵌入 JS / SQL / YAML）
 //! - `string_to_json`: 去外层 quote + 反转义 + 美化输出（4 层嵌套互逆）
@@ -213,7 +213,7 @@ mod tests {
 
     #[test]
     fn nested_escape_4_levels_roundtrip() {
-        // plan/01 F3.2: 4 层嵌套转义往返一致
+        // 4 层嵌套转义往返一致
         let original = r#"{"a":1}"#;
         let mut s = original.to_string();
         // forward 4 次

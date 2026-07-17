@@ -15,32 +15,38 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 
 | Workflow Term | Jsonita Path |
 | --- | --- |
-| Formal product and architecture design | [spec/](spec/), using [00-product](spec/00-product.md), [10-behavior](spec/10-behavior.md), [20-architecture](spec/20-architecture.md), [30-operations](spec/30-operations.md), and [40-validation](spec/40-validation.md). |
+| Product contracts and architecture boundaries | This file's contract sections below; source, tests, and scripts are the authority on exact implementation. |
 | UI and interaction companion | [design/](design/), with a concise overview, screen-state guide, and low-fidelity prototype. |
-| Project history | [CHANGELIST.md](CHANGELIST.md). |
-| Open backlog | [TODO.md](TODO.md). |
+| Project history and open work | git commit history (no separate changelog or backlog file). |
 | GitHub Pages and Superpowers process records | [docs/](docs/). Keep `docs/superpowers/` for skill-created design and plan records. |
 
 ## Documentation Source Policy
 
 - Markdown is the final source for project documentation and `docs/` remains the non-root GitHub Pages publishing location.
-- [README.md](README.md) is the product and repository entrypoint; [spec/README.md](spec/README.md) is the formal documentation entrypoint.
-- [spec/](spec/) is the formal source for enduring product, behavior, architecture, operational, and validation contracts. Do not split these contracts back into `plan/`, `platform/`, or `appendix/` trees.
+- [README.md](README.md) is the product and repository entrypoint.
+- The enduring product, behavior, architecture, operational, and release contracts live in this file's contract sections below. Do not recreate a separate `spec/`, `plan/`, `platform/`, or `appendix/` tree for them.
 - [design/](design/) records screen hierarchy, user-visible state, and interaction intent. The simple `design/prototype/index.html` is a low-fidelity flow companion, not a pixel-level source of truth.
 - Exact CSS, component implementation, schema, SQL, prompt text, and release commands belong to source, tests, or scripts.
-- [TODO.md](TODO.md) owns open backlog items only; completed migrations and historical plans belong in [CHANGELIST.md](CHANGELIST.md), not a `progress/` directory.
 - Do not recreate generated documentation HTML, CAST JSON sources, `.cast-docs/`, or CAST rendering scripts. Runtime HTML files such as `src/index.html` are application files, not documentation sources.
 
 ## Jsonita Product Contracts
 
-- Product scope: a tiny macOS menu-bar JSON toolkit invoked with `Cmd+Shift+J`.
+- Product scope: a tiny macOS menu-bar JSON toolkit invoked with `Cmd+Shift+J`. Format, minify, tree view, JSON/string conversion, local history, and optional user-triggered AI repair. Not a browser product, general editor, or cloud/collaboration tool.
 - v1 beta release path: GitHub Releases plus `.dmg` for small internal testing.
 - Homebrew Cask, updater, npm wrapper, and broader distribution stay v1.1+ work until release artifacts, stable URLs, and `sha256` values exist.
 - API key storage is the app data directory `secrets.json` file with restricted file permissions. Do not reintroduce system Keychain as the product storage path.
-- Local data stays local by default: SQLite, settings, window state, and `secrets.json`.
-- Logs must not record JSON document content or API keys.
+- Local data stays local by default: SQLite, settings, window state, and `secrets.json`. Local data and secrets do not cross the process boundary unless the user starts a permitted operation.
+- Logs must not record JSON document content, API keys, or raw AI prompts and responses.
 - Version markers must stay aligned across `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, and the About panel.
 - Packaging scripts remain separate entrypoints for macOS DMG, macOS app, Windows NSIS installer, and all-platform builds.
+
+## Jsonita Behavior Invariants
+
+- User input is the visible editing truth. Preview, stale async responses, transport errors, and invalid AI output must never overwrite it. Only an explicit user action replaces input: applying a single-pane result, accepting AI output, or clearing.
+- AI repair is optional and user-triggered: it needs enabled AI, a stored key, and current input, and sends only the requested document to the configured provider. The response passes local JSON validation and is shown for review; only Accept may replace input. Cancel, provider failure, rate limiting, or invalid output keep the original text.
+- Never report success when a transform, storage write, or AI request failed; never expose JSON text or API keys in messages or logs.
+- Hide is not quit: hiding preserves the in-memory workspace; quit ends the process and later restoration uses only durable data. A shortcut or permission failure must leave the menu-bar path usable.
+- Tree view is a read-only view of current input and must not show stale data after input becomes invalid.
 
 ## Validation
 

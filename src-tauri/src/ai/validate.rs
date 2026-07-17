@@ -1,4 +1,4 @@
-//! AI 响应抽取 + 验证 — spec/20-architecture.md 三层 fallback。
+//! AI 响应抽取 + 验证 — CLAUDE.md 契约段 三层 fallback。
 
 /// 从 AI raw 文本抽取 JSON 子串 ── 三 case fallback。
 pub fn extract_json(raw: &str) -> Option<String> {
