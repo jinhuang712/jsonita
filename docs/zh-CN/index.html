@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jsonita · 常驻菜单栏的轻量 JSON 工具集</title>
+<meta name="description" content="Jsonita 是一款常驻 macOS / Windows 菜单栏的轻量 JSON 工具集。任何位置按 ⌘⇧J 即可格式化、压缩、树形浏览、转字符串、多层解包、AI 修复 JSON，浮窗 P95 小于 500 ms，默认全部本地。">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" type="image/png" href="../assets/img/logo.png">
+<link rel="alternate" hreflang="zh-CN" href="./">
+<link rel="alternate" hreflang="en" href="../">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<div class="ambient"></div>
+
+<!-- nav -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="./">
+      <img class="brand-logo" src="../assets/img/logo.png" alt="" width="28" height="28">
+      <span>Jsonita</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#install" class="hide-sm">下载</a>
+      <a href="#features" class="hide-sm">功能</a>
+      <a href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener" class="hide-sm">GitHub ↗</a>
+      <span class="lang-switch">
+        <a href="../">EN</a>
+        <a href="./" class="active" aria-current="page">中文</a>
+      </span>
+      <a href="#install" class="nav-cta">下载 <span style="opacity:.7">↓</span></a>
+    </nav>
+  </div>
+</header>
+
+<!-- hero -->
+<section class="hero">
+  <div class="container">
+    <span class="hero-eyebrow">菜单栏 · JSON 工具集</span>
+    <h1>粘贴。<br>格式化。<br>修复。复制。</h1>
+    <p class="lede">
+      常驻 macOS 与 Windows 菜单栏的极简 JSON 工具集——格式化、压缩、树形展开、转字符串、多层解包、AI 修复坏掉的 JSON,全程不离开键盘。
+    </p>
+
+    <div class="hotkey">
+      <div class="hotkey-combo">
+        <span class="kbd-tile"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></span>
+        <span class="kbd-plus">+</span>
+        <span class="kbd-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></span>
+        <span class="kbd-plus">+</span>
+        <span class="kbd-tile">J</span>
+      </div>
+      <div class="hotkey-label"><b>任意应用,一键呼出。</b>按下组合键,Jsonita 立刻出现。</div>
+    </div>
+
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#install">下载 macOS 版 ↓</a>
+      <a class="btn btn-secondary" href="#install">Windows (beta)</a>
+      <a class="btn btn-ghost" href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+
+    <div class="hero-stage">
+      <span class="sig-brace left">{</span>
+      <span class="sig-brace right">}</span>
+      <img class="hero-shot" src="../assets/img/hero.png" alt="Jsonita 窗口" width="805" height="606" loading="eager">
+    </div>
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="stat"><div class="stat-num">&lt; 500 ms</div><div class="stat-label">浮窗 P95</div></div>
+      <div class="stat"><div class="stat-num">&lt; 80 MB</div><div class="stat-label">稳态内存</div></div>
+      <div class="stat"><div class="stat-num">&lt; 15 MB</div><div class="stat-label">安装体积</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">本地 · AI 主动触发</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- features -->
+<section id="features">
+  <div class="container">
+    <span class="section-eyebrow reveal">功能</span>
+    <h2 class="section-title reveal">你每天重复的那 9 个 JSON 琐事——一键搞定。</h2>
+    <p class="section-lede reveal">不用打开编辑器、不用开浏览器标签、不用敲 CLI 管道。Jsonita 把那些无聊但高频的转换做干净,然后立刻退场。</p>
+
+    <!-- format / minify -->
+    <div class="feature reveal">
+      <div class="feature-text">
+        <h3>格式化与压缩,随心所欲。</h3>
+        <p>缩进 2 / 4 / Tab、按 key 排序、行尾换行——全部可配。粘贴长行时浮窗自动加宽,让你真的能看清内容,而不是盯着被折行的一整段。</p>
+        <ul class="feature-list">
+          <li>缩进 2 / 4 / Tab、按 key 排序、行尾换行开关</li>
+          <li>智能宽度:长行自动扩窗,短行缩回到舒适尺寸</li>
+          <li>⌘ ↵ 复制结果;⌘ \ 单栏 / 双栏切换</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <img class="feature-shot" src="../assets/img/hero.png" alt="格式化标签页" width="805" height="606">
+      </div>
+    </div>
+
+    <!-- tree / unwrap -->
+    <div class="feature reverse reveal">
+      <div class="feature-text">
+        <h3>树形视图 + 多层字符串解包。</h3>
+        <p>折叠数组、一眼看清类型。粘进被 Go / Python / Java proto 包了两三层的 escape 字符串,Jsonita 一次解开所有包裹层——全局 60 秒超时兜底,永远不会把你卡死。</p>
+        <ul class="feature-list">
+          <li>只读树形视图,值按类型染色</li>
+          <li>一键解开多层转义 / stringify 包裹的 payload</li>
+          <li>可配置:粘贴字符串时自动解包</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <img class="feature-shot" src="../assets/img/feature-tree.png" alt="树视图" width="805" height="606">
+      </div>
+    </div>
+
+    <!-- ai fix -->
+    <div class="feature reveal">
+      <div class="feature-text">
+        <h3>AI 自动修复——只在你按下时才发生。</h3>
+        <p>粘到一段几乎是 JSON 的日志或 Slack 片段?Jsonita 会显示 AI Fix 标签,你点击后会先看 diff,再决定是否 Accept。在你点那个按钮之前,任何东西都不会离开你的机器。</p>
+        <ul class="feature-list">
+          <li>OpenAI 兼容 + Anthropic 双协议,用你自己的 API key</li>
+          <li>展示前会先过本地 JSON 校验</li>
+          <li>Diff 预览 · Cancel 一字不动保留你的原文</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="mock">
+          <div class="diff">
+            <div class="diff-bar">
+              <span>AI Fix · diff 预览</span>
+              <span>Accept 才会替换输入</span>
+            </div>
+            <div class="diff-body">
+<span class="diff-minus">- "name": "Jin</span>
+<span class="diff-plus">+ "name": "Jin",</span>
+<span>  "plan": "pro",</span>
+<span>  "tags": ["founder",</span>
+<span class="diff-plus">+   "early-adopter",</span>
+<span>  ],</span>
+            </div>
+            <div class="diff-cta">
+              <span class="b b-cancel">取消</span>
+              <span class="b b-accept">接受</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- privacy -->
+    <div class="feature reverse reveal">
+      <div class="feature-text">
+        <h3>默认私密。无账号,无云。</h3>
+        <p>所有东西都在你本机:历史、设置、窗口状态、API key。AI 只在你点 AI Fix 时触发,而且只会发送你正在看的那一段文本。</p>
+        <ul class="feature-list">
+          <li>SQLite 存历史,设置本地保存——没有任何同步</li>
+          <li>API key 存在 <code>secrets.json</code>,限制文件权限(不走 Keychain)</li>
+          <li>日志自动打码:不记 JSON 内容、API key、AI 收发原文</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="privacy">
+          <div class="privacy-lock">🔒</div>
+          <div class="privacy-item"><b>本地 SQLite</b> · 历史 + 设置</div>
+          <div class="privacy-item"><b>secrets.json</b> · 密钥存盘,文件权限受限</div>
+          <div class="privacy-item"><b>日志已脱敏</b> · 无 JSON、无 key、无 AI 原文</div>
+          <div class="privacy-item"><b>AI 主动触发</b> · 只有你点的时候才发送</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- install -->
+<section id="install">
+  <div class="container">
+    <span class="section-eyebrow reveal">下载</span>
+    <h2 class="section-title reveal">开始用 Jsonita。</h2>
+    <p class="section-lede reveal">v1.0 beta · macOS 为主,Windows 为 beta。macOS 签名包与 Homebrew 会在 v1.1 提供。</p>
+
+    <div class="install-grid">
+      <div class="install-card mac reveal">
+        <div class="install-head">
+          <div class="install-os"><span class="ic"> </span>macOS</div>
+        </div>
+        <ol class="install-steps">
+          <li>从 GitHub Releases 下载最新的 <code>.dmg</code>。</li>
+          <li>打开后将 <strong>Jsonita.app</strong> 拖到 <code>/Applications</code>。</li>
+          <li>启动一次,然后任意位置按 <kbd><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></kbd><kbd class="sep">+</kbd><kbd><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></kbd><kbd class="sep">+</kbd><kbd>J</kbd>。</li>
+        </ol>
+        <a class="btn btn-primary" href="https://github.com/jinhuang712/jsonita/releases/latest" target="_blank" rel="noopener">下载 macOS .dmg ↓</a>
+        <div class="install-note" style="margin-top:16px;">
+          macOS 11 Big Sur 及以上 · arm64 与 x86_64 · 约 15 MB<br>
+          brew cask 将在 v1.1 提供
+        </div>
+      </div>
+
+      <div class="install-card win reveal">
+        <div class="install-head">
+          <div class="install-os"><span class="ic">⊞</span>Windows</div>
+        </div>
+        <ol class="install-steps">
+          <li>从 GitHub Releases 下载 <code>.exe</code> 安装包。</li>
+          <li>直接运行——当前用户安装,无 UAC 弹窗,不需要管理员权限。</li>
+          <li>任意应用中按 <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>J</kbd> 呼出。</li>
+        </ol>
+        <a class="btn btn-secondary" href="https://github.com/jinhuang712/jsonita/releases/latest" target="_blank" rel="noopener">下载 Windows .exe ↓</a>
+        <div class="install-note" style="margin-top:16px;">
+          Windows 10 及以上 · x86_64 · 未签名 beta ·<br>
+          GitHub Actions CI 持续编译验证
+        </div>
+      </div>
+    </div>
+
+    <p class="reveal" style="text-align:center;color:var(--text-faint);font-size:13px;margin-top:36px;font-family:'SF Mono',ui-monospace,monospace;">
+      或从源码构建:<code style="background:var(--surface-quiet);padding:4px 10px;border-radius:5px;border:1px solid var(--border);">git clone https://github.com/jinhuang712/jsonita &amp;&amp; cd jsonita &amp;&amp; pnpm install &amp;&amp; pnpm tauri dev</code>
+    </p>
+  </div>
+</section>
+
+<!-- footer -->
+<footer class="foot">
+  <div class="container foot-inner">
+    <span>© 2026 Jin Huang · MIT 许可证</span>
+    <div class="foot-links">
+      <a href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/jinhuang712/jsonita/releases" target="_blank" rel="noopener">发布</a>
+      <a href="https://github.com/jinhuang712/jsonita/commits/main" target="_blank" rel="noopener">变更日志</a>
+      <a href="../">English</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jsonita · Tiny menu-bar JSON toolkit</title>
+<meta name="description" content="Jsonita is a tiny menu-bar JSON toolkit for macOS and Windows. Press ⌘⇧J from anywhere to format, minify, traverse, stringify, unwrap, and AI-fix JSON. P95 under 500 ms, local by default.">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" type="image/png" href="assets/img/logo.png">
+<link rel="alternate" hreflang="zh-CN" href="zh-CN/">
+<link rel="alternate" hreflang="en" href="./">
+<style>
+  /* Inline a mini font stack that mirrors app tokens; JetBrains Mono loaded for big hotkey kbd only */
+  @font-face {
+    font-family: "JBM";
+    src: local("JetBrains Mono"), local("SF Mono"), local("Menlo");
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<div class="ambient"></div>
+
+<!-- nav -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="./">
+      <img class="brand-logo" src="assets/img/logo.png" alt="" width="28" height="28">
+      <span>Jsonita</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#install" class="hide-sm">Download</a>
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener" class="hide-sm">GitHub ↗</a>
+      <span class="lang-switch">
+        <a href="./" class="active" aria-current="page">EN</a>
+        <a href="zh-CN/">中文</a>
+      </span>
+      <a href="#install" class="nav-cta">Download <span style="opacity:.7">↓</span></a>
+    </nav>
+  </div>
+</header>
+
+<!-- hero -->
+<section class="hero">
+  <div class="container">
+    <span class="hero-eyebrow">Menu-bar · JSON toolkit</span>
+    <h1>Paste.<br>Format.<br>Fix. Copy.</h1>
+    <p class="lede">
+      A tiny macOS &amp; Windows utility that lives in your menu bar —
+      format, minify, traverse, unwrap nested strings, and AI-fix invalid JSON
+      without ever leaving your keyboard.
+    </p>
+
+    <div class="hotkey">
+      <div class="hotkey-combo">
+        <span class="kbd-tile"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></span>
+        <span class="kbd-plus">+</span>
+        <span class="kbd-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></span>
+        <span class="kbd-plus">+</span>
+        <span class="kbd-tile">J</span>
+      </div>
+      <div class="hotkey-label"><b>From any app.</b> Press the combo and Jsonita is there.</div>
+    </div>
+
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#install">Download for macOS ↓</a>
+      <a class="btn btn-secondary" href="#install">Windows (beta)</a>
+      <a class="btn btn-ghost" href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener">View on GitHub ↗</a>
+    </div>
+
+    <div class="hero-stage">
+      <span class="sig-brace left">{</span>
+      <span class="sig-brace right">}</span>
+      <img class="hero-shot" src="assets/img/hero.png" alt="Jsonita window showing formatted JSON" width="805" height="606" loading="eager">
+    </div>
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="stat"><div class="stat-num">&lt; 500 ms</div><div class="stat-label">P95 show</div></div>
+      <div class="stat"><div class="stat-num">&lt; 80 MB</div><div class="stat-label">Memory steady</div></div>
+      <div class="stat"><div class="stat-num">&lt; 15 MB</div><div class="stat-label">Install size</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Local · AI opt-in</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- features -->
+<section id="features">
+  <div class="container">
+    <span class="section-eyebrow reveal">Features</span>
+    <h2 class="section-title reveal">The nine JSON chores you do every day — done.</h2>
+    <p class="section-lede reveal">No editors, no browser tabs, no CLI detours. Jsonita handles the boring transforms and gets out of the way.</p>
+
+    <!-- format / minify -->
+    <div class="feature reveal">
+      <div class="feature-text">
+        <h3>Format &amp; minify, the way you want them.</h3>
+        <p>Indent 2 / 4 / tab, sort keys, trailing newline — configurable. Long lines auto-widen the panel so you actually read what you pasted.</p>
+        <ul class="feature-list">
+          <li>Indent 2, 4, or tab; sort keys; trailing newline toggle</li>
+          <li>Smart-width: the panel expands for long lines, collapses for short ones</li>
+          <li>⌘ ↵ copies the result; ⌘ \ toggles single-pane focus</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <img class="feature-shot" src="assets/img/hero.png" alt="Format tab" width="805" height="606">
+      </div>
+    </div>
+
+    <!-- tree / unwrap -->
+    <div class="feature reverse reveal">
+      <div class="feature-text">
+        <h3>Tree view &amp; nested unwrap.</h3>
+        <p>Collapse arrays, spot types at a glance. Paste the Go/Python/Java proto double-wrap and Jsonita unwraps every layer in one shot — with a 60 s hard timeout so it can never hang you.</p>
+        <ul class="feature-list">
+          <li>Read-only tree view with type-colored values</li>
+          <li>One-click unwrap of multiply-escaped stringified payloads</li>
+          <li>Optional auto-unwrap on paste for stringified input</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <img class="feature-shot" src="assets/img/feature-tree.png" alt="Tree view" width="805" height="606">
+      </div>
+    </div>
+
+    <!-- ai fix -->
+    <div class="feature reveal">
+      <div class="feature-text">
+        <h3>AI Auto-Fix, only when you ask for it.</h3>
+        <p>Pasted something almost-JSON from a log or a Slack snippet? Jsonita shows the AI Fix tab — you click, it shows a diff, and you Accept. Nothing leaves your machine without you pressing that button.</p>
+        <ul class="feature-list">
+          <li>OpenAI-compatible and Anthropic providers, your own API key</li>
+          <li>Local JSON validation before anything is shown to you</li>
+          <li>Diff preview · Cancel leaves your original text untouched</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="mock">
+          <div class="diff">
+            <div class="diff-bar">
+              <span>AI Fix · diff preview</span>
+              <span>Accept to replace input</span>
+            </div>
+            <div class="diff-body">
+<span class="diff-minus">- "name": "Jin</span>
+<span class="diff-plus">+ "name": "Jin",</span>
+<span>  "plan": "pro",</span>
+<span>  "tags": ["founder",</span>
+<span class="diff-plus">+   "early-adopter",</span>
+<span>  ],</span>
+            </div>
+            <div class="diff-cta">
+              <span class="b b-cancel">Cancel</span>
+              <span class="b b-accept">Accept</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- privacy -->
+    <div class="feature reverse reveal">
+      <div class="feature-text">
+        <h3>Private by default. No accounts. No cloud.</h3>
+        <p>Everything lives on your machine: history, settings, window state, and your API key. AI only fires when you click AI Fix — and only sends the document you are looking at.</p>
+        <ul class="feature-list">
+          <li>SQLite history, local settings — nothing synced</li>
+          <li>API key in <code>secrets.json</code> with restricted permissions (no Keychain)</li>
+          <li>Logs redact JSON content, API keys, and AI prompts/responses</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="privacy">
+          <div class="privacy-lock">🔒</div>
+          <div class="privacy-item"><b>Local SQLite</b> · history + settings</div>
+          <div class="privacy-item"><b>secrets.json</b> · key stored on disk, restricted perms</div>
+          <div class="privacy-item"><b>Logs redacted</b> · no JSON, no keys, no AI I/O</div>
+          <div class="privacy-item"><b>Opt-in AI</b> · fires only when you click</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- install -->
+<section id="install">
+  <div class="container">
+    <span class="section-eyebrow reveal">Install</span>
+    <h2 class="section-title reveal">Get Jsonita.</h2>
+    <p class="section-lede reveal">v1.0 beta · macOS primary, Windows beta. Signed macOS builds and Homebrew land in v1.1.</p>
+
+    <div class="install-grid">
+      <div class="install-card mac reveal">
+        <div class="install-head">
+          <div class="install-os"><span class="ic"> </span>macOS</div>
+        </div>
+        <ol class="install-steps">
+          <li>Download the latest <code>.dmg</code> from GitHub Releases.</li>
+          <li>Open it and drag <strong>Jsonita.app</strong> into <code>/Applications</code>.</li>
+          <li>Launch once, then press <kbd><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></kbd><kbd class="sep">+</kbd><kbd><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></kbd><kbd class="sep">+</kbd><kbd>J</kbd> anywhere.</li>
+        </ol>
+        <a class="btn btn-primary" href="https://github.com/jinhuang712/jsonita/releases/latest" target="_blank" rel="noopener">Download macOS .dmg ↓</a>
+        <div class="install-note" style="margin-top:16px;">
+          macOS 11 Big Sur or later · arm64 &amp; x86_64 · ~15 MB<br>
+          brew cask coming in v1.1
+        </div>
+      </div>
+
+      <div class="install-card win reveal">
+        <div class="install-head">
+          <div class="install-os"><span class="ic">⊞</span>Windows</div>
+        </div>
+        <ol class="install-steps">
+          <li>Download the <code>.exe</code> installer from GitHub Releases.</li>
+          <li>Run it — per-user install, no UAC, no admin needed.</li>
+          <li>Press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>J</kbd> from any app.</li>
+        </ol>
+        <a class="btn btn-secondary" href="https://github.com/jinhuang712/jsonita/releases/latest" target="_blank" rel="noopener">Download Windows .exe ↓</a>
+        <div class="install-note" style="margin-top:16px;">
+          Windows 10 or later · x86_64 · unsigned beta ·<br>
+          compiled and verified on GitHub Actions CI
+        </div>
+      </div>
+    </div>
+
+    <p class="reveal" style="text-align:center;color:var(--text-faint);font-size:13px;margin-top:36px;font-family:'SF Mono',ui-monospace,monospace;">
+      Or build from source: <code style="background:var(--surface-quiet);padding:4px 10px;border-radius:5px;border:1px solid var(--border);">git clone https://github.com/jinhuang712/jsonita &amp;&amp; cd jsonita &amp;&amp; pnpm install &amp;&amp; pnpm tauri dev</code>
+    </p>
+  </div>
+</section>
+
+<!-- footer -->
+<footer class="foot">
+  <div class="container foot-inner">
+    <span>© 2026 Jin Huang · MIT License</span>
+    <div class="foot-links">
+      <a href="https://github.com/jinhuang712/jsonita" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/jinhuang712/jsonita/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/jinhuang712/jsonita/commits/main" target="_blank" rel="noopener">Changelog</a>
+      <a href="zh-CN/">中文</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/site.js"></script>
+</body>
+</html>
