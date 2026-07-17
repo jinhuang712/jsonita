@@ -64,7 +64,7 @@ test('history and settings are full-window pages with explicit Esc close actions
   assert.match(styles, /\.jsonita-page-close\b/);
 });
 
-test('history full-window layout keeps the footer pinned to the bottom edge', () => {
+test('history full-window layout puts Clear in the header actions', () => {
   const history = read('src/history/HistoryModal.tsx');
 
   assert.match(history, /<section className="jsonita-history-shell">/);
@@ -73,8 +73,10 @@ test('history full-window layout keeps the footer pinned to the bottom edge', ()
   assert.match(history, /<aside className="jsonita-history-sidebar">/);
   assert.match(history, /<HistoryDocumentList/);
   assert.match(history, /<HistoryDocumentPreview/);
-  assert.match(history, /<footer className="jsonita-history-footer">/);
-  assert.match(history, /<div className="jsonita-history-footer-note">/);
+  // Clear 按钮已并入 header，底部 footer 已移除
+  assert.match(history, /jsonita-history-header-actions/);
+  assert.match(history, /jsonita-history-clear-btn/);
+  assert.doesNotMatch(history, /jsonita-history-footer/);
 });
 
 test('native polish separates UI, code, and shortcut typography', () => {
@@ -123,5 +125,5 @@ test('dark theme keeps text and controls bright enough to avoid a dull gray UI',
   assert.match(tokens, /--control-bg-hover:\s*rgba\(255,\s*255,\s*255,\s*0\.12\)/);
   assert.match(tokens, /--glass-bg:\s*rgba\(28,\s*32,\s*40,\s*0\.9\)/);
   assert.match(tokens, /--glass-border:\s*rgba\(255,\s*255,\s*255,\s*0\.2\)/);
-  assert.match(tokens, /--primary:\s*#AFC7DE/);
+  assert.match(tokens, /--primary:\s*#B2C7DB/);
 });

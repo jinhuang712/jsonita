@@ -141,7 +141,7 @@ test('global hotkeys keep AI Fix Escape ahead of double-Esc close', () => {
 
   assert.match(
     hotkeys,
-    /activePane === 'ai-fix' && \(aiStatus === 'awaiting-decision' \|\| aiStatus === 'error'\)/,
+    /activePane === 'ai-fix' &&\s*\(aiStatus === 'awaiting-decision' \|\| aiStatus === 'error'\)/,
   );
   assert.match(hotkeys, /lastExitEscAtRef\.current = 0;\n\s*setEscCloseHintVisible\(false\);\n\s*resetAi\(\)/);
   assert.match(hotkeys, /isBlocked:[\s\S]*activePane === 'ai-fix'/);
