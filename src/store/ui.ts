@@ -1,7 +1,7 @@
 /**
  * UI store slice — 浮窗活跃 tab / overlay/page 状态 / AI Fix Tab 可见性。
  *
- * Spec ref: spec/M00-frontend-execution.md。
+ * Spec ref: spec/20-architecture.md。
  */
 
 import { create } from 'zustand';

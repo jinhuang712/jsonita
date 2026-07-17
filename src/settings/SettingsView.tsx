@@ -19,8 +19,8 @@ import {
 /**
  * 设置页 — 左侧目录索引 + 右侧连续滚动配置文档。
  *
- * 视觉锚：design/jsonita-settings-detail.md
- * Spec ref: design/04 § 4.6 SettingsView
+ * 视觉锚：design/overview.md
+ * Spec ref: design/overview.md § 4.6 SettingsView
  * M2-N1 minimal：General + AI + JSON Transform + History 4 组（Shortcuts M2-N5；About M3）；
  * 字段：launchAtLogin / hideOnBlur / autoUnwrap / aiEnabled / historyLimit / smartWidth / editorSoftWrap。
  * 即时生效：onChange 立即 settings_set。

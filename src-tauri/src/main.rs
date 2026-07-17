@@ -69,7 +69,7 @@ fn main() {
             cmds::ai::ai_fix,
         ])
         .setup(|app| {
-            // macOS: 让 Dock 不出现图标（design/07 § 1.4 等效 LSUIElement）
+            // macOS: 让 Dock 不出现图标（design/overview.md § 1.4 等效 LSUIElement）
             #[cfg(target_os = "macos")]
             {
                 use tauri::ActivationPolicy;

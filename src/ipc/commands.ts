@@ -1,7 +1,7 @@
 /**
  * 类型化 IPC invoke 封装 — Rust 端 `#[tauri::command]` snake_case 入口。
  *
- * Spec ref: spec/S02-ipc-boundary.md 与 spec/platform/I01-ipc-api.md。
+ * Spec ref: spec/20-architecture.md。
  * 每组一个 namespace 对象（json / history / session / window / system）。
  */
 

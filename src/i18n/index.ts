@@ -1,7 +1,7 @@
 /**
  * i18n 初始化 — react-i18next + browser language detector。
  *
- * Spec ref: design/14_i18n_a11y.md § 3 lib 选型 / § 5 namespace 拆分 / § 6 locale 检测 3 层 fallback。
+ * Spec ref: design/overview.md § 3 lib 选型 / § 5 namespace 拆分 / § 6 locale 检测 3 层 fallback。
  * M0 阶段仅 en-US；M3-N2 解锁 zh-CN 时只需补 `src/locales/zh-CN/*.json`
  * + 改 `supportedLngs` + `<Select>` 选项。
  */
@@ -69,7 +69,7 @@ export async function initI18n() {
       },
     });
 
-  // <html lang="..."> 跟随 i18n.language（design/14 § 9 a11y "语言声明"）
+  // <html lang="..."> 跟随 i18n.language（design/overview.md § 9 a11y "语言声明"）
   i18n.on('languageChanged', (lng) => {
     document.documentElement.lang = lng;
   });

@@ -1,7 +1,7 @@
 /**
- * 设计令牌 — design/03_design_tokens.md
+ * 设计令牌 — design/overview.md
  *
- * 玻璃视觉 token（见 design/HANDOFF.md §2/§3）。
+ * 玻璃视觉 token（见 design/overview.md §2/§3）。
  * light = `:root`; dark via `[data-theme="dark"]` 覆盖。
  */
 

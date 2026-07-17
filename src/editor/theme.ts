@@ -1,5 +1,5 @@
 /**
- * CodeMirror theme extension — 全走 CSS variables（design/08 § 1.5）。
+ * CodeMirror theme extension — 全走 CSS variables（design/screens.md § 1.5）。
  *
  * data-theme attr 切换时所有变量随之换；CM6 instance 不需销毁重建
  * （M3-N1 polish 时引入 Compartment 即可热切）。但仍维持 light/dark

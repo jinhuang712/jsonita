@@ -24,8 +24,8 @@ import logoMarkUrl from '../../assets/icons/menubar/jsonita-menubar-template-22@
 /**
  * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
  *
- * 视觉锚：design/01_mockups.md § 1.1-1.5
- * Spec ref: design/04_components.md § 4.1 TabBar
+ * 视觉锚：design/screens.md § 1.1-1.5
+ * Spec ref: design/overview.md § 4.1 TabBar
  */
 
 const TABS: { id: Pane; key: string; Icon: (props: IconProps) => JSX.Element }[] = [

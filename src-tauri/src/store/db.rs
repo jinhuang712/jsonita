@@ -1,6 +1,6 @@
 //! SQLite Connection Pool + migrations。
 //!
-//! Spec ref: spec/S05-storage-session.md 与 spec/appendix/A01-storage-details.md。
+//! Spec ref: spec/30-operations.md。
 
 use std::path::{Path, PathBuf};
 

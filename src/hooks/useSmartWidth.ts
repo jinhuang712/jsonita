@@ -1,7 +1,7 @@
 /**
  * 智能缩放 hook ── 内容 / 字号 / transform 输出变化 → 计算 ContentMetrics → 调 window_resize_for_content。
  *
- * Spec ref: design/06 § 7 智能缩放 4 层逻辑（前端只负责计算 metrics，决策在 Rust）
+ * Spec ref: design/overview.md § 7 智能缩放 4 层逻辑（前端只负责计算 metrics，决策在 Rust）
  * M1-N9：内容 / 字号变化后自动缩放；手动尺寸仅作为下次呼出的记忆值。
  */
 

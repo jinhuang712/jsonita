@@ -1,7 +1,7 @@
 /**
  * 浮窗内 hotkeys ── Tab 切功能 / 双击 Esc 隐藏 / ⌘K 清空 / ⌘⇧L 恢复上次会话 / ⌘W 关。
  *
- * Spec ref: design/07 § 4 In-app 快捷键。
+ * Spec ref: design/overview.md § 4 In-app 快捷键。
  */
 
 import { useEffect, useRef } from 'react';
