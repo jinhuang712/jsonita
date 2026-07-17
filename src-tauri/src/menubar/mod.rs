@@ -15,8 +15,12 @@ use tauri::{
 };
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
-    // macOS template @2x PNG 编译期 PNG → RGBA decode 嵌入（Tauri 2 include_image! 宏处理）
+    // macOS template @2x PNG（纯黑透明底，由系统按深浅托盘自动着色）。
+    // Windows/Linux 不走 template mode，用独立的彩色/描边图标适配浅色通知区。
+    #[cfg(target_os = "macos")]
     let icon = tauri::include_image!("../assets/icons/menubar/jsonita-menubar-template-22@2x.png");
+    #[cfg(not(target_os = "macos"))]
+    let icon = tauri::include_image!("../assets/icons/menubar/jsonita-menubar-light-22@2x.png");
 
     let menu = build_menu(app)?;
 
