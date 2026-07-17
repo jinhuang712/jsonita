@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Editor } from '../editor/Editor';
 import { useDebouncedTransform } from '../hooks/useDebouncedTransform';
 import { useSmartWidth } from '../hooks/useSmartWidth';
-import { on } from '../ipc/events';
 import { AiFixPane } from '../panes/AiFixPane';
 import { HistoryModal } from '../history/HistoryModal';
 import { SettingsView } from '../settings/SettingsView';
@@ -39,37 +38,14 @@ export function FloatingWindow() {
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const editorSoftWrap = useSettingsStore((s) => s.settings.editorSoftWrap);
   const effectiveTheme = useEffectiveTheme();
-  const [motionPhase, setMotionPhase] = useState<'shown' | 'hiding'>('shown');
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
   // 智能缩放：内容 / 字号变化后自动调整窗口（design/overview.md § 7）
   useSmartWidth();
 
-  useEffect(() => {
-    let disposed = false;
-    let unlistenShown: (() => void) | undefined;
-    let unlistenHide: (() => void) | undefined;
-    on('window:shown', () => setMotionPhase('shown')).then((fn) => {
-      if (disposed) {
-        fn();
-        return;
-      }
-      unlistenShown = fn;
-    });
-    on('window:will-hide', () => setMotionPhase('hiding')).then((fn) => {
-      if (disposed) {
-        fn();
-        return;
-      }
-      unlistenHide = fn;
-    });
-    return () => {
-      disposed = true;
-      unlistenShown?.();
-      unlistenHide?.();
-    };
-  }, []);
+  // 窗口显隐动画走原生 NSWindow.alphaValue（见 window/mod.rs animated_show/hide），
+  // 整窗（vibrancy + webview）作为单一合成单元淡变，前端不再做窗口级 opacity 动画。
 
   // Tree 是当前输入内容的视图；不依赖 output preview，避免非法状态时静默退回编辑器。
   const shouldRenderTree = activePane === 'tree';
@@ -89,11 +65,7 @@ export function FloatingWindow() {
 
   return (
     <div
-      className={
-        motionPhase === 'hiding'
-          ? 'jsonita-floating-window jsonita-floating-window-hiding'
-          : 'jsonita-floating-window jsonita-floating-window-shown'
-      }
+      className="jsonita-floating-window"
       style={{
         height: '100%',
         background: 'var(--glass-bg)',

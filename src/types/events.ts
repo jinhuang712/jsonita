@@ -12,7 +12,6 @@ export interface EventMap {
   'tray:open-settings': Record<string, never>;
   'permission:accessibility_missing': Record<string, never>;
   'window:shown': Record<string, never>;
-  'window:will-hide': Record<string, never>;
   'window:resized': WindowResizedPayload;
   'settings:changed': Settings;
 }

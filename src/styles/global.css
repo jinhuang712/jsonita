@@ -97,20 +97,9 @@ select,
   opacity: 0.88;
 }
 
-.jsonita-floating-window {
-  opacity: 1;
-  transform: translateY(0);
-  transform-origin: 50% 0;
-  will-change: opacity, transform;
-}
-
-.jsonita-floating-window-shown {
-  animation: jsonita-window-summon var(--dur-base) var(--ease-native) both;
-}
-
-.jsonita-floating-window-hiding {
-  animation: jsonita-window-dismiss 140ms var(--ease-in) both;
-}
+/* 窗口显隐动画由原生 NSWindow.alphaValue 承担（window/mod.rs animated_show/hide）：
+   整窗（vibrancy 材质 + webview 内容 + 投影）作为单一合成单元淡变，避免 CSS 层
+   opacity 动画只作用 webview、露出空原生玻璃框的两段式。此处不再做窗口级动画。 */
 
 .jsonita-pane-transition {
   animation: jsonita-pane-in var(--dur-fast) var(--ease-native) both;
@@ -119,28 +108,6 @@ select,
 .jsonita-ai-fix-entry,
 .jsonita-ai-fix-pane {
   animation: jsonita-ai-fix-enter var(--dur-base) var(--ease-native) both;
-}
-
-@keyframes jsonita-window-summon {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes jsonita-window-dismiss {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
 }
 
 @keyframes jsonita-pane-in {
@@ -160,24 +127,6 @@ select,
   to {
     opacity: 1;
     transform: translateX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .jsonita-floating-window-shown,
-  .jsonita-floating-window-hiding {
-    animation-name: jsonita-window-opacity-only;
-  }
-}
-
-@keyframes jsonita-window-opacity-only {
-  from {
-    opacity: 0;
-    transform: none;
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 

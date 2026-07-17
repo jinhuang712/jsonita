@@ -133,3 +133,67 @@ pub fn os_is_dark() -> bool {
         contains == YES
     }
 }
+
+/// 系统「减弱动态效果」开关（辅助功能）。为 true 时跳过淡变直接 show/hide。
+/// 主线程调用。
+pub fn reduce_motion() -> bool {
+    unsafe {
+        let ws: id = msg_send![class!(NSWorkspace), sharedWorkspace];
+        if ws == nil {
+            return false;
+        }
+        let reduce: BOOL = msg_send![ws, accessibilityDisplayShouldReduceMotion];
+        reduce == YES
+    }
+}
+
+/// 缓动曲线 ── 映射到 CAMediaTimingFunction 内置曲线，性格与 tokens.css 同源。
+#[derive(Clone, Copy)]
+pub enum FadeCurve {
+    /// 入场：强 ease-out，快速可见后沉稳落定（对应 `--ease-native`）。
+    EaseOut,
+    /// 离场：ease-in，先稳住再加速抽离（对应 `--ease-in`）。
+    EaseIn,
+}
+
+impl FadeCurve {
+    /// kCAMediaTimingFunction* 常量名。objc 0.2 的 msg_send! 只支持单关键字选择器，
+    /// 故用 functionWithName:（内置曲线）而非 functionWithControlPoints:::（4 匿名冒号，宏不支持）。
+    fn timing_name(self) -> &'static str {
+        match self {
+            FadeCurve::EaseOut => "easeOut",
+            FadeCurve::EaseIn => "easeIn",
+        }
+    }
+}
+
+/// 原生整窗 alpha 淡变：NSVisualEffect 材质 + webview 内容 + 投影作为单一合成单元一起淡入/淡出，
+/// 物理上不可能分层。用 NSAnimationContext grouping + CAMediaTimingFunction 控时长与曲线，
+/// 不依赖 completion block（避开 deprecated 的 block crate）。主线程调用。
+pub fn fade(win: &WebviewWindow, to: f64, duration_s: f64, curve: FadeCurve) -> tauri::Result<()> {
+    let raw = win.ns_window()?;
+    let ns_window = raw as id;
+    unsafe {
+        let name = NSString::alloc(nil).init_str(curve.timing_name());
+        let timing: id = msg_send![class!(CAMediaTimingFunction), functionWithName: name];
+        let ctx_class = class!(NSAnimationContext);
+        let _: () = msg_send![ctx_class, beginGrouping];
+        let ctx: id = msg_send![ctx_class, currentContext];
+        let _: () = msg_send![ctx, setDuration: duration_s];
+        let _: () = msg_send![ctx, setTimingFunction: timing];
+        let animator: id = msg_send![ns_window, animator];
+        let _: () = msg_send![animator, setAlphaValue: to];
+        let _: () = msg_send![ctx_class, endGrouping];
+    }
+    Ok(())
+}
+
+/// 立即设 alpha（不动画）── 用于召唤前先置 0，或 reduce-motion 直接回满。主线程调用。
+pub fn set_alpha(win: &WebviewWindow, alpha: f64) -> tauri::Result<()> {
+    let raw = win.ns_window()?;
+    let ns_window = raw as id;
+    unsafe {
+        let _: () = msg_send![ns_window, setAlphaValue: alpha];
+    }
+    Ok(())
+}

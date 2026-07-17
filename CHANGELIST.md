@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### fix · 窗口显隐改原生 alpha 淡变（消除两段式渲染）
+
+| 字段 | 内容 |
+| --- | --- |
+| 变更 | 呼出/关闭窗口的两段式渲染根因有二：① CSS opacity 动画只作用 webview 层，原生 NSVisualEffect vibrancy 材质不参与，关闭时内容淡掉后露出空玻璃框再消失；② `win.show()` 早于 `window:shown` IPC 事件，加上 dismiss 动画 `both` fill 把内容钉在 opacity:0，呼出时先现空框再淡入内容。改为原生 `NSWindow.alphaValue` 整窗淡变：vibrancy + webview 内容 + 投影作为单一合成单元一起淡入/淡出，物理上不可能分层。召唤 setAlpha(0)→定位→show()→fade(1) 150ms ease-out（快速可见后沉稳落定）；离场 fade(0) 110ms ease-in（先稳再加速抽离，比召唤快 40ms 利落让路）。用 NSAnimationContext grouping + CAMediaTimingFunction 控时长/曲线，不碰 deprecated completion block。尊重系统「减弱动态效果」（NSWorkspace accessibilityDisplayShouldReduceMotion）→ 跳过淡变直接 show/hide。净删前端窗口级动画：CSS `jsonita-window-summon`/`dismiss` keyframes + `.jsonita-floating-window-shown`/`-hiding` 类 + reduce-motion block、FloatingWindow 的 `motionPhase` state 和 `window:will-hide` 监听、Rust 的 `window:will-hide` emit 与其事件类型（`window:shown` 保留，管输入框聚焦）。动画权威从「Rust 定时器 + IPC 事件 + CSS keyframes」三方赛跑收敛为单一 AppKit。 |
+| 影响文档 | `src-tauri/src/window/nspanel.rs`（新增 fade/set_alpha/reduce_motion + FadeCurve）、`src-tauri/src/window/mod.rs`（animated_show/hide 走原生 alpha）、`src/shell/FloatingWindow.tsx`、`src/styles/global.css`、`src/types/events.ts`、`CHANGELIST.md`。 |
+| 关联 | 用户反馈「呼出和关闭像是样式消失后空窗口再消失一次」。设计方向：一天召唤几十次的工具，动效应克制到用久了不再注意；原地淡变（非下坠位移，那是 borrowed 的下拉菜单隐喻）+ 入场/离场非对称缓动，性格曲线与 tokens.css 的 `--ease-native`/`--ease-in` 同源，跨原生/webview 统一运动手感。 |
+
 ### fix · 全仓审核修复（High / Medium / Low + 文档）
 
 | 字段 | 内容 |
