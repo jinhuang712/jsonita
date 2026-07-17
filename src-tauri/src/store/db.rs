@@ -1,6 +1,6 @@
 //! SQLite Connection Pool + migrations。
 //!
-//! Spec ref: spec/30-operations.md。
+//! Spec ref: CLAUDE.md 契约段。
 
 use std::path::{Path, PathBuf};
 

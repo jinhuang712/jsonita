@@ -1,7 +1,7 @@
 /**
  * IPC 错误类型入口 — 调用方按错误契约决定处理方式。
  *
- * Spec ref: spec/20-architecture.md。
+ * Spec ref: CLAUDE.md 契约段。
  * 这里只提供 type guard 与 narrow helpers；当前没有全局 Toast/Modal dispatcher。
  */
 

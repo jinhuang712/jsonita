@@ -1,8 +1,8 @@
 //! `JsonitaError` — 全局单一错误枚举。
 //!
-//! Spec ref: `spec/20-architecture.md`
+//! Spec ref: `CLAUDE.md 契约段`
 //! 跨 IPC 序列化为 `{"kind": "...", "data": ...}` (tag/content)
-//! 调用方错误契约见 `spec/20-architecture.md`
+//! 调用方错误契约见 `CLAUDE.md 契约段`
 
 use serde::Serialize;
 use thiserror::Error;

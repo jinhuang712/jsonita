@@ -1,7 +1,7 @@
 /**
  * Tauri event 名 → payload 类型映射（用于 typed listen）。
  *
- * Spec ref: spec/20-architecture.md。
+ * Spec ref: CLAUDE.md 契约段。
  */
 
 import type { Settings } from '../store/settings';

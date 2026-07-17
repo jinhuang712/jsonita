@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default window permissions for the main window (spec/20-architecture.md § packaging boundary).",
+  "description": "Default window permissions for the main window (CLAUDE.md 契约段 § packaging boundary).",
   "windows": ["main"],
   "permissions": [
     "core:default",

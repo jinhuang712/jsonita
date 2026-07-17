@@ -1,4 +1,4 @@
-//! history 分组 ── SQLite history 表，见 spec/30-operations.md。
+//! history 分组 ── SQLite history 表，见 CLAUDE.md 契约段。
 //!
 //! M1-N6：真实实现走 `crate::store::history`；M2 起接 settings.history_limit。
 

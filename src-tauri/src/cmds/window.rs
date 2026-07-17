@@ -1,6 +1,6 @@
 //! window 分组 ── show/hide/toggle 接 M0-N3 模块；resize/reset 接 M1-N9 智能缩放。
 //!
-//! Spec ref: design/overview.md 智能缩放与 spec/20-architecture.md。
+//! Spec ref: design/overview.md 智能缩放与 CLAUDE.md 契约段。
 
 use tauri::{Manager, State};
 

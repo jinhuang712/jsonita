@@ -1,6 +1,6 @@
 //! AI 分组 ── 多协议 HTTP + 本地 secrets.json 存 key。
 //!
-//! Spec ref: spec/20-architecture.md。
+//! Spec ref: CLAUDE.md 契约段。
 
 use tauri::State;
 

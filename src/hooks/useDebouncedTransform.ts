@@ -1,7 +1,7 @@
 /**
  * Editor onChange → debounce 300 ms → Rust engine 调用 → 更新 store output / error。
  *
- * Spec ref: spec/20-architecture.md / design/screens.md 状态栏联动。
+ * Spec ref: CLAUDE.md 契约段 / design/screens.md 状态栏联动。
  * 大文件 > 5 MB 直接标 `large` 不调 engine（design/screens.md § 3.1）。
  */
 

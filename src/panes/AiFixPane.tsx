@@ -12,7 +12,7 @@ import { DiffView } from './DiffView';
 /**
  * AI Fix orchestrator — tab 切换到 ai-fix 时自动触发 ai_fix，loading → DiffView → Accept/Reject。
  *
- * Spec ref: spec/20-architecture.md 状态机 · design/screens.md DiffView 视觉
+ * Spec ref: CLAUDE.md 契约段 状态机 · design/screens.md DiffView 视觉
  */
 export function AiFixPane() {
   const status = useAiStore((s) => s.status);

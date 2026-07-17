@@ -1,6 +1,6 @@
 //! format + minify + sort_keys ── serde_json::Value 中转 + PrettyFormatter。
 //!
-//! Spec ref: `spec/20-architecture.md` format 与 sort_keys。
+//! Spec ref: `CLAUDE.md 契约段` format 与 sort_keys。
 //! preserve_order feature 必开（保留用户输入 key 顺序）。
 
 use serde::Serialize;
