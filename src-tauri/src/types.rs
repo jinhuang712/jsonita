@@ -61,15 +61,6 @@ fn default_shortcut_split_toggle() -> String {
     "CmdOrCtrl+\\".to_string()
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum InitialWidth {
-    W720,
-    W860,
-    W920,
-    W1080,
-}
-
 // ──────────── § 3.1 json_ops 选项 ────────────
 
 #[derive(Debug, Clone, Deserialize)]
@@ -195,12 +186,10 @@ fn default_ai_max_tokens() -> u32 {
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub launch_at_login: bool,
-    pub show_in_menubar: bool,
     pub hide_on_blur: bool,
     pub single_pane_mode: bool,
     pub theme: ThemeMode,
     pub locale: Locale,
-    pub initial_width: InitialWidth,
     pub smart_width: bool,
     pub shortcut_toggle: String,
     #[serde(default = "default_shortcut_split_toggle")]
@@ -233,12 +222,10 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             launch_at_login: true,
-            show_in_menubar: true,
             hide_on_blur: true,
             single_pane_mode: false,
             theme: ThemeMode::System,
             locale: Locale::EnUs,
-            initial_width: InitialWidth::W920,
             smart_width: true,
             shortcut_toggle: "CmdOrCtrl+Shift+J".to_string(),
             shortcut_split_toggle: "CmdOrCtrl+\\".to_string(),
