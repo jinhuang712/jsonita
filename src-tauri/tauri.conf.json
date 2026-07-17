@@ -61,7 +61,6 @@
     "macOS": {
       "minimumSystemVersion": "11.0",
       "frameworks": [],
-      "exceptionDomain": "api.deepseek.com",
       "signingIdentity": null,
       "providerShortName": null,
       "entitlements": "entitlements.plist",

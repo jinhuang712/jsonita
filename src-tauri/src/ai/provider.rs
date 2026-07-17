@@ -193,13 +193,9 @@ struct Completion {
 // ── client ──────────────────────────────────────────────────────
 
 /// 绕过系统代理：macOS `open` 启动 app 会继承 shell 的 *_proxy 变量，
-/// 但 app 进程内代理端口不可达 → Connection refused。no_proxy() + 清 env 双保险。
+/// 但 app 进程内代理端口不可达 → Connection refused。reqwest 的 no_proxy() 已足够；
+/// 不再改进程 env（多线程下 remove_var 与并发 getenv 有数据竞争，且 no_proxy 已覆盖）。
 fn build_client(timeout_sec: u64) -> Result<reqwest::Client, JsonitaError> {
-    for var in &[
-        "http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "ALL_PROXY",
-    ] {
-        std::env::remove_var(var);
-    }
     reqwest::Client::builder()
         .no_proxy()
         .timeout(Duration::from_secs(timeout_sec))
@@ -255,7 +251,8 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
     let value = serde_json::from_str::<serde_json::Value>(&extracted)
         .map_err(|_| JsonitaError::AiInvalidJson { raw: completion.content.clone() })?;
     if validate::is_repair_failed_sentinel(&value) {
-        return Err(JsonitaError::AiInvalidJson { raw: completion.content });
+        let reason = validate::repair_failed_reason(&value).unwrap_or_default();
+        return Err(JsonitaError::AiCannotRepair { reason });
     }
 
     Ok(AiFixResp {
@@ -371,8 +368,11 @@ async fn check_status(resp: reqwest::Response) -> Result<reqwest::Response, Json
         return Err(JsonitaError::RateLimit { retry_after_sec });
     }
     if !status.is_success() {
-        let body = resp.text().await.unwrap_or_default();
-        return Err(JsonitaError::Http { status: status.as_u16(), body });
+        // 不透传上游原始 body（可能含 request id、回显的用户文档、鉴权字样）；
+        // 与 test_connection 一致，只回状态码 + 简短归因。
+        let code = status.as_u16();
+        let _ = resp.text().await;
+        return Err(JsonitaError::Http { status: code, body: http_hint(code).to_string() });
     }
     Ok(resp)
 }
@@ -454,17 +454,21 @@ pub async fn test_connection(
     }
 }
 
-/// 状态码 → 简短、不泄露细节的归因。
-fn http_reason(status: u16) -> String {
-    let hint = match status {
+/// 状态码 → 简短、不泄露细节的归因短语（不含状态码本身）。
+fn http_hint(status: u16) -> &'static str {
+    match status {
         401 | 403 => "authentication failed",
         404 => "endpoint or model not found",
         408 => "request timed out",
         429 => "rate limited",
         500..=599 => "server error",
         _ => "request failed",
-    };
-    format!("HTTP {status} · {hint}")
+    }
+}
+
+/// 状态码 → 简短、不泄露细节的归因。
+fn http_reason(status: u16) -> String {
+    format!("HTTP {status} · {}", http_hint(status))
 }
 
 fn fail(msg: &str) -> TestConnectionResp {

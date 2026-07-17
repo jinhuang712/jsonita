@@ -79,18 +79,21 @@ pub async fn window_resize_for_content(
         .saturating_mul(line_px)
         .saturating_add(120);
 
-    let screen_w = app
+    // primary_monitor().size() 是物理像素；除以 scale_factor 换成逻辑像素，
+    // 否则 Retina 上按物理宽算的 max_w_ratio 上限永不生效（与 main.rs 启动夹取一致）。
+    let (screen_w, screen_h) = app
         .primary_monitor()
         .ok()
         .flatten()
-        .map(|m| m.size().width)
-        .unwrap_or(1920);
-    let screen_h = app
-        .primary_monitor()
-        .ok()
-        .flatten()
-        .map(|m| m.size().height)
-        .unwrap_or(1080);
+        .map(|m| {
+            let scale = m.scale_factor();
+            let scale = if scale > 0.0 { scale } else { 1.0 };
+            (
+                (m.size().width as f64 / scale).round() as u32,
+                (m.size().height as f64 / scale).round() as u32,
+            )
+        })
+        .unwrap_or((1920, 1080));
     let max_w_cap = if s.single_pane_mode { 1200 } else { 1400 };
     let max_w_ratio = if s.single_pane_mode { 0.62 } else { 0.7 };
     let min_w = 680;
@@ -262,13 +265,14 @@ pub async fn window_set_theme(
         .to_string());
     };
     let w = win.clone();
-    let (tx, rx) = std::sync::mpsc::channel();
+    let (tx, rx) = tokio::sync::oneshot::channel();
     // AppKit（setAppearance / effectiveAppearance / set_effects）必须在主线程；本 command 跑在
-    // async worker 线程，直接调会闪退（切主题崩溃的根因）。marshal 回主线程执行并回传解析值。
+    // async worker 线程，直接调会闪退（切主题崩溃的根因）。marshal 回主线程执行并 await 回传值，
+    // 用 oneshot 让 worker 在等待期间不被同步阻塞。
     win.run_on_main_thread(move || {
         let dark = window::apply_glass_mode(&w, mode);
         let _ = tx.send(dark);
     })?;
-    let dark = rx.recv().unwrap_or(false);
+    let dark = rx.await.unwrap_or(false);
     Ok(if dark { "dark" } else { "light" }.to_string())
 }

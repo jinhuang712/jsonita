@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "M0-N1 scaffold default permissions. Extended by later phases (M0-N2 tray / M0-N3 window / M0-N4 shortcut / etc.) per spec/S07 packaging boundary.",
+  "description": "Default window permissions for the main window (spec/20-architecture.md § packaging boundary).",
   "windows": ["main"],
   "permissions": [
     "core:default",

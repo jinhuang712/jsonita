@@ -31,20 +31,20 @@ impl SettingsStore {
     }
 
     pub fn get(&self) -> Settings {
-        self.inner.read().expect("settings lock poisoned").clone()
+        self.inner.read().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     pub fn auto_unwrap(&self) -> bool {
         self.inner
             .read()
-            .expect("settings lock poisoned")
+            .unwrap_or_else(|e| e.into_inner())
             .auto_unwrap
     }
 
     pub fn unwrap_timeout_ms(&self) -> u64 {
         self.inner
             .read()
-            .expect("settings lock poisoned")
+            .unwrap_or_else(|e| e.into_inner())
             .unwrap_timeout_ms
     }
 
@@ -53,7 +53,7 @@ impl SettingsStore {
         &self,
         patch: serde_json::Map<String, serde_json::Value>,
     ) -> Result<Settings, JsonitaError> {
-        let mut current = self.inner.write().expect("settings lock poisoned");
+        let mut current = self.inner.write().unwrap_or_else(|e| e.into_inner());
         let mut as_value =
             serde_json::to_value(&*current).map_err(|e| JsonitaError::Io(e.to_string()))?;
         let obj = as_value
@@ -69,10 +69,9 @@ impl SettingsStore {
             if let Some(dir) = path.parent() {
                 let _ = std::fs::create_dir_all(dir);
             }
-            std::fs::write(
-                path,
-                serde_json::to_string_pretty(&updated).unwrap_or_default(),
-            )?;
+            let json = serde_json::to_string_pretty(&updated)
+                .map_err(|e| JsonitaError::Io(e.to_string()))?;
+            std::fs::write(path, json)?;
         }
         Ok(updated)
     }
@@ -81,14 +80,13 @@ impl SettingsStore {
     pub fn reset(&self) -> Result<Settings, JsonitaError> {
         let updated = Settings::default();
         {
-            let mut current = self.inner.write().expect("settings lock poisoned");
+            let mut current = self.inner.write().unwrap_or_else(|e| e.into_inner());
             *current = updated.clone();
         }
         if let Some(path) = &self.path {
-            std::fs::write(
-                path,
-                serde_json::to_string_pretty(&updated).unwrap_or_default(),
-            )?;
+            let json = serde_json::to_string_pretty(&updated)
+                .map_err(|e| JsonitaError::Io(e.to_string()))?;
+            std::fs::write(path, json)?;
         }
         Ok(updated)
     }
