@@ -41,18 +41,7 @@ export interface ListOpts {
   onlyStarred?: boolean;
 }
 
-export interface LastSession {
-  content: string;
-  opType: OpType;
-  savedAt: number;
-}
-
 // § 3.5 window / system
-export interface ClipboardSniff {
-  text: string;
-  looksLikeJson: boolean;
-}
-
 export interface ContentMetrics {
   maxLineChars: number;
   lineCount: number;

@@ -2,8 +2,7 @@
  * Pane -> JSON operation mapping shared by live preview and single-pane apply.
  */
 
-import { ai, json } from '../ipc/commands';
-import type { EditorError } from '../store/editor';
+import { json } from '../ipc/commands';
 import type { Pane } from '../store/ui';
 import type { OpType } from '../types/enums';
 
@@ -41,21 +40,11 @@ export async function runPanePreview(text: string, pane: Pane): Promise<string> 
   }
 }
 
-export async function runPaneApply(
-  text: string,
-  pane: Pane,
-  error: EditorError | null,
-): Promise<string> {
-  if (pane !== 'ai-fix') {
-    return runPanePreview(text, pane);
-  }
-
-  const resp = await ai.fix({
-    text,
-    errorLine: error?.line,
-    errorCol: error?.col,
-    errorMsg: error?.msg,
-    requestId: crypto.randomUUID(),
-  });
-  return resp.fixed;
+/**
+ * 单窗模式 ⌘Enter 应用当前功能的结果回输入编辑器。
+ * ai-fix pane 的 Cmd+Enter 由 useGlobalHotkeys 的统一分发器单独处理（accept AI fix），
+ * 调用方已排除 ai-fix，因此这里与 preview 等价。
+ */
+export async function runPaneApply(text: string, pane: Pane): Promise<string> {
+  return runPanePreview(text, pane);
 }

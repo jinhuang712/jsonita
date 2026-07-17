@@ -8,10 +8,16 @@
     "valid": "Valid JSON",
     "empty": "Paste JSON to start",
     "invalid": "Invalid JSON",
+    "largeFile": "Large file",
+    "lines": "lines",
+    "bytes": "bytes",
     "aiFixing": "AI Fix in progress",
-    "aiReview": "Review AI Fix result",
-    "line": "Line",
-    "col": "Col"
+    "aiReview": "Review AI Fix result"
+  },
+  "tree": {
+    "unavailable": "Tree unavailable",
+    "fixToView": "Fix JSON to view the tree",
+    "pasteToView": "Paste JSON to view the tree"
   },
   "editor": {
     "inputEmptyTitle": "Paste JSON",

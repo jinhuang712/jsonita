@@ -14,8 +14,7 @@
   },
   "general": {
     "launchAtLogin": "Launch at login",
-    "hideOnBlur": "Hide on blur",
-    "autoPasteClipboard": "Auto-paste clipboard"
+    "hideOnBlur": "Hide on blur"
   },
   "appearance": {
     "language": "Language",
@@ -34,8 +33,6 @@
     "protocol": "Protocol",
     "apiUrl": "API URL",
     "model": "Model",
-    "maxTokens": "Max tokens",
-    "thinking": "Enable thinking (reasoning models)",
     "apiKey": "API Key",
     "apiKeySavedPlaceholder": "•••••••• (saved; enter a new key to replace)",
     "apiKeySaved": "Saved",
@@ -56,7 +53,6 @@
     "customTitle": "Custom",
     "builtInTitle": "Built-in",
     "toggle": "Toggle window",
-    "restoreLast": "Restore last session",
     "splitToggle": "Switch single / split panel",
     "hint": "Click a custom shortcut, then press the combo. System-reserved combos ({{reserved}} ...) are blocked by default; use [Override] to force-bind.",
     "builtIn": {
@@ -78,9 +74,15 @@
     "conflictWithApp": "Conflict (in use by {{app}})",
     "invalid": "Invalid: {{reason}}",
     "overrideConfirm": "{{accelerator}} conflicts with a system shortcut. Bind anyway?",
-    "overrideButton": "Override"
+    "overrideButton": "Override",
+    "needModifier": "Include ⌘, Ctrl, or Alt"
   },
   "footer": {
     "resetAll": "Reset all"
+  },
+  "about": {
+    "version": "Version",
+    "license": "License",
+    "author": "Author"
   }
 }

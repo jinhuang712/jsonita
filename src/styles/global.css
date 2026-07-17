@@ -295,7 +295,7 @@ select,
   gap: 8px;
   max-width: min(360px, calc(100% - 32px));
   padding: 9px 12px;
-  border: 1px solid rgba(175, 199, 222, 0.22);
+  border: 1px solid rgba(178, 199, 219, 0.22);
   border-radius: var(--radius-lg);
   background: rgba(20, 24, 31, 0.66);
   color: rgba(242, 244, 247, 0.94);
@@ -560,22 +560,41 @@ select,
   user-select: text;
 }
 
-.jsonita-history-footer {
+.jsonita-history-header-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   flex: 0 0 auto;
-  gap: 12px;
-  min-height: 48px;
-  padding: 0 12px;
-  border-top: 1px solid var(--border);
-  background: var(--surface-quiet);
-  font-size: var(--fs-xs);
 }
 
-.jsonita-history-footer-note {
-  min-width: 0;
-  color: var(--text-faint);
+.jsonita-history-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-history-clear-btn:hover {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
+  color: var(--danger);
+}
+
+.jsonita-history-clear-btn:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
 }
 
 .jsonita-settings-section {
@@ -967,6 +986,7 @@ select,
 }
 
 .jsonita-tree-toggle {
+  flex: none;
   width: 20px;
   padding: 0;
   color: var(--text-faint);
@@ -984,6 +1004,7 @@ select,
 
 .jsonita-tree-key,
 .jsonita-tree-index {
+  flex: none;
   padding: 0;
   color: var(--json-key);
   font-weight: 600;
@@ -1023,6 +1044,7 @@ select,
 }
 
 .jsonita-tree-punc {
+  flex: none;
   color: var(--json-punc);
 }
 

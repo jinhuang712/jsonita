@@ -47,15 +47,25 @@ export function FloatingWindow() {
   useSmartWidth();
 
   useEffect(() => {
+    let disposed = false;
     let unlistenShown: (() => void) | undefined;
     let unlistenHide: (() => void) | undefined;
     on('window:shown', () => setMotionPhase('shown')).then((fn) => {
+      if (disposed) {
+        fn();
+        return;
+      }
       unlistenShown = fn;
     });
     on('window:will-hide', () => setMotionPhase('hiding')).then((fn) => {
+      if (disposed) {
+        fn();
+        return;
+      }
       unlistenHide = fn;
     });
     return () => {
+      disposed = true;
       unlistenShown?.();
       unlistenHide?.();
     };
@@ -208,6 +218,7 @@ type TreePanelState =
   | { kind: 'invalid' };
 
 function TreePanel({ state, softWrap }: { state: TreePanelState; softWrap?: boolean }) {
+  const { t } = useTranslation('shell');
   if (state.kind === 'valid') {
     return <TreeView data={state.data} softWrap={softWrap} />;
   }
@@ -225,10 +236,10 @@ function TreePanel({ state, softWrap }: { state: TreePanelState; softWrap?: bool
     >
       <div>
         <div style={{ fontSize: 'calc(var(--fs-tree) + 8px)', marginBottom: 6 }}>
-          {state.kind === 'invalid' ? 'Tree unavailable' : '{ }'}
+          {state.kind === 'invalid' ? t('tree.unavailable') : '{ }'}
         </div>
         <div style={{ color: 'var(--text-muted)' }}>
-          {state.kind === 'invalid' ? 'Fix JSON to view the tree' : 'Paste JSON to view the tree'}
+          {state.kind === 'invalid' ? t('tree.fixToView') : t('tree.pasteToView')}
         </div>
       </div>
     </div>

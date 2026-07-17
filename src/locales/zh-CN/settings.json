@@ -14,8 +14,7 @@
   },
   "general": {
     "launchAtLogin": "开机自启动",
-    "hideOnBlur": "失焦自动隐藏",
-    "autoPasteClipboard": "自动粘贴剪贴板"
+    "hideOnBlur": "失焦自动隐藏"
   },
   "appearance": {
     "language": "语言",
@@ -34,8 +33,6 @@
     "protocol": "协议",
     "apiUrl": "API 地址",
     "model": "模型",
-    "maxTokens": "最大 tokens",
-    "thinking": "开启 thinking(推理模型)",
     "apiKey": "API Key",
     "apiKeySavedPlaceholder": "••••••••（已保存，可输入新 key 覆盖）",
     "apiKeySaved": "已保存",
@@ -56,7 +53,6 @@
     "customTitle": "可自定义",
     "builtInTitle": "内置快捷键",
     "toggle": "呼出浮窗",
-    "restoreLast": "恢复上次会话",
     "splitToggle": "切换单窗 / 双栏",
     "hint": "点可自定义快捷键后按目标组合键。系统保留组合（{{reserved}} 等）默认阻塞；如需强制绑定走 [Override]。",
     "builtIn": {
@@ -78,9 +74,15 @@
     "conflictWithApp": "冲突（已被 {{app}} 占用）",
     "invalid": "非法：{{reason}}",
     "overrideConfirm": "{{accelerator}} 与系统快捷键冲突，仍要绑定？",
-    "overrideButton": "Override"
+    "overrideButton": "Override",
+    "needModifier": "需包含 ⌘ / Ctrl / Alt"
   },
   "footer": {
     "resetAll": "全部重置"
+  },
+  "about": {
+    "version": "版本",
+    "license": "许可证",
+    "author": "作者"
   }
 }

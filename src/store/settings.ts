@@ -7,23 +7,19 @@
 import { create } from 'zustand';
 import type {
   InitialWidth,
-  RestoreWindow,
   ThemeMode,
 } from '../types/enums';
 
 export interface Settings {
   launchAtLogin: boolean;
   showInMenubar: boolean;
-  autoPasteClipboard: boolean;
   hideOnBlur: boolean;
   singlePaneMode: boolean;
   theme: ThemeMode;
   locale: 'en-US' | 'zh-CN';
-  restoreWindow: RestoreWindow;
   initialWidth: InitialWidth;
   smartWidth: boolean;
   shortcutToggle: string;
-  shortcutRestoreLast: string;
   shortcutSplitToggle: string;
   aiEnabled: boolean;
   aiProtocol: 'openai' | 'anthropic';
@@ -42,16 +38,13 @@ export interface Settings {
 const DEFAULT_SETTINGS: Settings = {
   launchAtLogin: true,
   showInMenubar: true,
-  autoPasteClipboard: true,
   hideOnBlur: true,
   singlePaneMode: false,
   theme: 'system',
   locale: 'en-US',
-  restoreWindow: 'min-5',
   initialWidth: 'w-920',
   smartWidth: true,
   shortcutToggle: 'CmdOrCtrl+Shift+J',
-  shortcutRestoreLast: 'CmdOrCtrl+Shift+L',
   shortcutSplitToggle: 'CmdOrCtrl+\\',
   aiEnabled: false,
   aiProtocol: 'openai',
@@ -69,10 +62,13 @@ const DEFAULT_SETTINGS: Settings = {
 
 interface SettingsState {
   settings: Settings;
+  /** 是否已从后端加载过真实 settings（区别于启动期的 DEFAULT_SETTINGS 占位）。 */
+  loaded: boolean;
   setSettings: (s: Settings) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: DEFAULT_SETTINGS,
-  setSettings: (s) => set({ settings: s }),
+  loaded: false,
+  setSettings: (s) => set({ settings: s, loaded: true }),
 }));

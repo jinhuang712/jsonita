@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ai } from '../ipc/commands';
+import { formatError } from '../ipc/error';
 import { ActionButton } from '../components/ActionButton';
 import type { Settings } from '../store/settings';
 
@@ -48,7 +49,7 @@ export function ApiKeyInput({ settings, patch, blockTest }: Props) {
         setMsg({ kind: 'err', text: r.modelEchoed });
       }
     } catch (e) {
-      setMsg({ kind: 'err', text: String(e) });
+      setMsg({ kind: 'err', text: formatError(e) });
     } finally {
       setTesting(false);
     }
@@ -62,7 +63,7 @@ export function ApiKeyInput({ settings, patch, blockTest }: Props) {
       setHasKey(false);
       setMsg({ kind: 'ok', text: t('ai.resetDone') });
     } catch (e) {
-      setMsg({ kind: 'err', text: String(e) });
+      setMsg({ kind: 'err', text: formatError(e) });
     }
   };
 

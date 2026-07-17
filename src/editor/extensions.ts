@@ -64,7 +64,11 @@ export function makeExtensions(cfg: EditorConfig): Extension[] {
     }),
     highlightSelectionMatches(),
     jsonitaSearchGutter,
-    indentationMarkers({ thickness: 1, hideFirstIndent: true, colors: { light: 'var(--editor-indent-guide)' } }),
+    indentationMarkers({
+      thickness: 1,
+      hideFirstIndent: true,
+      colors: { light: 'var(--editor-indent-guide)', dark: 'var(--editor-indent-guide)' },
+    }),
     EditorState.allowMultipleSelections.of(true),
     cfg.softWrap !== false ? EditorView.lineWrapping : [],
     json(),

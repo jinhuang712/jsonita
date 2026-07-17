@@ -5,12 +5,10 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { paneToOpType, runPaneApply } from '../editor/transforms';
-import { history as historyApi, session, settings as settingsApi, win } from '../ipc/commands';
+import { history as historyApi, settings as settingsApi, win } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
-import { on } from '../ipc/events';
-import { eventMatchesAccelerator, hasPrimaryModifier, primaryHotkeyPrefix } from '../keyboard/accelerators';
+import { eventMatchesAccelerator, hasPrimaryModifier } from '../keyboard/accelerators';
 import { acceptAiFix } from '../panes/aiFixActions';
 import { shouldCloseSettingsOnKeyDown } from '../settings/settingsKeymap';
 import { useAiStore } from '../store/ai';
@@ -83,17 +81,6 @@ export function useGlobalHotkeys() {
   const singlePaneMode = useSettingsStore((s) => s.settings.singlePaneMode);
   const shortcutSplitToggle = useSettingsStore((s) => s.settings.shortcutSplitToggle);
   const setSettings = useSettingsStore((s) => s.setSettings);
-
-  const restoreLast = async () => {
-    try {
-      const last = await session.loadLast();
-      if (last && last.content) {
-        setContent(last.content);
-      }
-    } catch (_) {
-      /* ignore */
-    }
-  };
 
   useEffect(() => {
     if (historyModalOpen || settingsViewOpen || activePane === 'ai-fix') {
@@ -226,16 +213,44 @@ export function useGlobalHotkeys() {
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, []);
 
-  // AI Fix 快捷键优先于普通 single-pane apply / Esc hide，单双栏一致。
+  // Cmd+Enter 单一分发器：按优先级择一动作，避免多个 capture 监听器因各自 effect
+  // 依赖不同、重订阅时序漂移，导致同一次按键同时触发 apply 和 AI retry 两个动作。
+  // Esc 在 ai-fix 态退回编辑区。
   useEffect(() => {
+    const applySinglePane = () => {
+      if (content.trim() === '') {
+        setStatus('empty');
+        setOutput('');
+        setError(null);
+        setSinglePaneApplyState('idle');
+        return;
+      }
+      setSinglePaneApplyState('running');
+      runPaneApply(content, activePane)
+        .then((result) => {
+          setContent(result);
+          setOutput(result);
+          setStatus('valid');
+          setError(null);
+          setShowAiFix(false);
+          historyApi.add(result, paneToOpType(activePane)).catch(() => {});
+          setSinglePaneApplyState('success');
+        })
+        .catch((e: unknown) => {
+          if (isJsonitaError(e) && e.kind === 'Parse') {
+            setStatus('error');
+            setError({ line: e.data.line, col: e.data.col, msg: e.data.msg });
+            setShowAiFix(true);
+          }
+          setSinglePaneApplyState('error');
+        });
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (historyModalOpen || settingsViewOpen) return;
 
       const isCmdEnter =
-        event.key === 'Enter' &&
-        hasPrimaryModifier(event) &&
-        !event.altKey &&
-        !event.shiftKey;
+        event.key === 'Enter' && hasPrimaryModifier(event) && !event.altKey && !event.shiftKey;
       const isPlainEsc =
         event.key === 'Escape' &&
         !event.altKey &&
@@ -243,28 +258,38 @@ export function useGlobalHotkeys() {
         !event.metaKey &&
         !event.shiftKey;
 
-      if (isCmdEnter && activePane === 'ai-fix' && aiStatus === 'awaiting-decision') {
-        consume(event);
-        acceptAiFix(aiAfter, setContent, resetAi, setActivePane).catch(() => {});
+      if (isCmdEnter) {
+        // 优先级：接受 AI 修复 → 触发 AI 修复（存在 parse error）→ 单窗 apply
+        if (activePane === 'ai-fix' && aiStatus === 'awaiting-decision') {
+          consume(event);
+          acceptAiFix(aiAfter, setContent, resetAi, setActivePane).catch(() => {});
+          return;
+        }
+        if (
+          editorStatus === 'error' &&
+          showAiFix &&
+          aiEnabled &&
+          content.trim() !== '' &&
+          aiStatus !== 'requesting' &&
+          aiStatus !== 'awaiting-decision'
+        ) {
+          consume(event);
+          retryAi();
+          setActivePane('ai-fix');
+          return;
+        }
+        if (singlePaneMode && activePane !== 'tree' && activePane !== 'ai-fix') {
+          consume(event);
+          applySinglePane();
+        }
         return;
       }
 
       if (
-        isCmdEnter &&
-        editorStatus === 'error' &&
-        showAiFix &&
-        aiEnabled &&
-        content.trim() !== '' &&
-        aiStatus !== 'requesting' &&
-        aiStatus !== 'awaiting-decision'
+        isPlainEsc &&
+        activePane === 'ai-fix' &&
+        (aiStatus === 'awaiting-decision' || aiStatus === 'error')
       ) {
-        consume(event);
-        retryAi();
-        setActivePane('ai-fix');
-        return;
-      }
-
-      if (isPlainEsc && activePane === 'ai-fix' && (aiStatus === 'awaiting-decision' || aiStatus === 'error')) {
         consume(event);
         lastExitEscAtRef.current = 0;
         setEscCloseHintVisible(false);
@@ -281,14 +306,22 @@ export function useGlobalHotkeys() {
     aiEnabled,
     aiStatus,
     content,
+    editorError,
     editorStatus,
     historyModalOpen,
     resetAi,
     retryAi,
     setActivePane,
     setContent,
+    setError,
+    setEscCloseHintVisible,
+    setOutput,
+    setShowAiFix,
+    setSinglePaneApplyState,
+    setStatus,
     settingsViewOpen,
     showAiFix,
+    singlePaneMode,
   ]);
 
   // 单击 Esc 只退出编辑态 / 预备关闭；连续双击 Esc 才隐藏浮窗。
@@ -356,123 +389,46 @@ export function useGlobalHotkeys() {
     return () => window.clearTimeout(timer);
   }, [setSinglePaneApplyState, singlePaneApplyState]);
 
-  // 单窗模式：⌘Enter 才把当前功能的结果应用回输入编辑器。
+  // ⌘K 清空 + 不污染 last_session。用 window capture 手工监听，编辑器聚焦（contentEditable）时也生效。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
-        event.key !== 'Enter' ||
+        event.key.toLowerCase() !== 'k' ||
         !hasPrimaryModifier(event) ||
         event.altKey ||
         event.shiftKey
       ) {
         return;
       }
-      if (!singlePaneMode || historyModalOpen || settingsViewOpen) return;
-      if (activePane === 'tree' || activePane === 'ai-fix') return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (content.trim() === '') {
-        setStatus('empty');
-        setOutput('');
-        setError(null);
-        setSinglePaneApplyState('idle');
-        return;
-      }
-
-      setSinglePaneApplyState('running');
-      runPaneApply(content, activePane, editorError)
-        .then((result) => {
-          setContent(result);
-          setOutput(result);
-          setStatus('valid');
-          setError(null);
-          setShowAiFix(false);
-          session
-            .saveLast({
-              content: result,
-              opType: paneToOpType(activePane),
-              savedAt: Date.now(),
-            })
-            .catch(() => {});
-          historyApi.add(result, paneToOpType(activePane)).catch(() => {});
-          setSinglePaneApplyState('success');
-        })
-        .catch((e: unknown) => {
-          if (isJsonitaError(e) && e.kind === 'Parse') {
-            setStatus('error');
-            setError({ line: e.data.line, col: e.data.col, msg: e.data.msg });
-            setShowAiFix(true);
-          }
-          setSinglePaneApplyState('error');
-        });
+      if (historyModalOpen || settingsViewOpen) return;
+      consume(event);
+      clearEditor();
     };
-
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [
-    activePane,
-    content,
-    editorError,
-    historyModalOpen,
-    setContent,
-    setError,
-    setOutput,
-    setShowAiFix,
-    setActivePane,
-    setSinglePaneApplyState,
-    setStatus,
-    settingsViewOpen,
-    singlePaneMode,
-  ]);
+  }, [clearEditor, historyModalOpen, settingsViewOpen]);
 
-  // ⌘K 清空 + 不污染 last_session（M1-N7：调 session_clear_last 显式清）
-  useHotkeys(
-    `${primaryHotkeyPrefix()}+k`,
-    () => {
-      if (historyModalOpen || settingsViewOpen) return;
-      clearEditor();
-      session.clearLast().catch(() => {});
-    },
-    { preventDefault: true },
-    [clearEditor, historyModalOpen, settingsViewOpen],
-  );
-
-  // ⌘⇧L 找回上次会话
-  useHotkeys(
-    `${primaryHotkeyPrefix()}+shift+l`,
-    () => {
-      if (historyModalOpen || settingsViewOpen) return;
-      restoreLast();
-    },
-    { preventDefault: true },
-    [historyModalOpen, restoreLast, settingsViewOpen],
-  );
-
-  // 全局快捷键 Cmd+Shift+L 由 Rust 发事件；窗口 focus 内的 meta+shift+l 走上面的 useHotkeys。
+  // ⌘W 关闭浮窗；Settings 页内先返回编辑工作区。window capture，编辑器聚焦时也生效。
   useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    on('shortcut:restore_last', () => {
-      restoreLast();
-    }).then((fn) => {
-      unlisten = fn;
-    });
-    return () => {
-      unlisten?.();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() !== 'w' ||
+        !hasPrimaryModifier(event) ||
+        event.altKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+      consume(event);
+      if (settingsViewOpen) {
+        setSettingsViewOpen(false);
+        return;
+      }
+      win.hide().catch(() => {});
     };
-    // restoreLast 只闭包当前 setContent；setContent 在 zustand 中稳定。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setContent]);
-
-  // ⌘W 关闭浮窗；Settings 页内先返回编辑工作区。
-  useHotkeys(`${primaryHotkeyPrefix()}+w`, () => {
-    if (settingsViewOpen) {
-      setSettingsViewOpen(false);
-      return;
-    }
-    win.hide().catch(() => {});
-  }, { preventDefault: true }, [setSettingsViewOpen, settingsViewOpen]);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [setSettingsViewOpen, settingsViewOpen]);
 
   // ⌘+ / ⌘- / ⌘0 调整编辑器与树视图字体大小。
   useEffect(() => {

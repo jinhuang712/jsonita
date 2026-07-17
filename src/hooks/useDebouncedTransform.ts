@@ -6,9 +6,8 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { runPanePreview, paneToOpType } from '../editor/transforms';
+import { runPanePreview } from '../editor/transforms';
 import { isJsonitaError } from '../ipc/error';
-import { session } from '../ipc/commands';
 import { useEditorStore } from '../store/editor';
 import { useSettingsStore } from '../store/settings';
 import { useUiStore } from '../store/ui';
@@ -50,14 +49,6 @@ export function useDebouncedTransform() {
         setStatus('valid');
         setError(null);
         setShowAiFix(false);
-        // M1-N7：success 时持久化 last_session（恢复支持）
-        session
-          .saveLast({
-            content,
-            opType: paneToOpType(activePane),
-            savedAt: Date.now(),
-          })
-          .catch(() => {});
       } catch (e: unknown) {
         if (!isCurrentRequest()) return;
         if (isJsonitaError(e) && e.kind === 'Parse') {

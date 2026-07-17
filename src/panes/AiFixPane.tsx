@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ai as aiApi } from '../ipc/commands';
 import { isJsonitaError } from '../ipc/error';
 import { useAiStore } from '../store/ai';
@@ -30,11 +30,19 @@ export function AiFixPane() {
   const setActivePane = useUiStore((s) => s.setActivePane);
 
   const paneClassName = 'jsonita-ai-fix-pane';
+  // 防 StrictMode 下同一渲染闭包（status 恒为 idle）双发请求。
+  const inFlightRef = useRef(false);
 
   // 自动触发：tab 切到 ai-fix 且当前 status=idle 时
   useEffect(() => {
     if (status !== 'idle') return;
     if (content.trim() === '') return;
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+
+    // 记录请求时的输入；resolve 时若编辑器内容已变则视为陈旧响应丢弃，
+    // 避免用旧输入的 diff 覆盖，或让用户 Accept 回填旧内容。
+    const requestedFor = content;
     startFix(content);
     aiApi
       .fix({
@@ -45,9 +53,11 @@ export function AiFixPane() {
         requestId: crypto.randomUUID(),
       })
       .then((resp) => {
+        if (useEditorStore.getState().content !== requestedFor) return;
         setSuccess(resp.fixed);
       })
       .catch((e) => {
+        if (useEditorStore.getState().content !== requestedFor) return;
         if (isJsonitaError(e)) {
           if (e.kind === 'RateLimit') {
             setError(`Rate limited · retry in ${e.data.retryAfterSec}s`);
@@ -55,10 +65,17 @@ export function AiFixPane() {
             setError(`HTTP ${e.data.status}: ${e.data.body.slice(0, 120)}`);
           } else if (e.kind === 'Secrets') {
             setError(`No API key configured (Settings → AI)`);
+          } else if (e.kind === 'AiCannotRepair') {
+            const reason = e.data.reason?.trim().slice(0, 160);
+            setError(reason ? `AI couldn't repair this · ${reason}` : `AI couldn't repair this input`);
           } else if (e.kind === 'AiInvalidJson') {
             setError(`AI returned invalid JSON`);
           } else if (e.kind === 'AiDisabled') {
             setError(`AI Fix is disabled. Enable it in Settings → AI.`);
+          } else if (e.kind === 'Parse') {
+            setError(`Invalid JSON · line ${e.data.line}, col ${e.data.col}`);
+          } else if (e.kind === 'UnwrapTimeout') {
+            setError(`Unwrap timed out after ${e.data.ms}ms`);
           } else if (e.kind === 'Io' || e.kind === 'Sqlite') {
             setError(`${e.kind}: ${e.data}`);
           } else {
@@ -67,6 +84,9 @@ export function AiFixPane() {
         } else {
           setError(String(e));
         }
+      })
+      .finally(() => {
+        inFlightRef.current = false;
       });
     // 依赖项有意只用 status，避免 content 变化时重发
     // eslint-disable-next-line react-hooks/exhaustive-deps
