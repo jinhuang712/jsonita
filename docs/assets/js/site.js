@@ -77,24 +77,16 @@
     // settle immediately on format so users see the default
     setHero('format');
     if (reduce) return;
-    // cycle through the four transforms slowly so readers see the pane change
+    // cycle through the four transforms slowly so readers see the pane change;
+    // loop forever — the hero is the product demo, so a single pass looks
+    // frozen to anyone watching more than a few seconds.
     const seq = ['format', 'minify', 'tree', 'str'];
     let idx = 0;
     const STEP_MS = 2200;
-    const CYCLES = 1;
-    let ticks = 0;
-    const total = seq.length * CYCLES;
-    function advance() {
-      ticks += 1;
+    window.setInterval(() => {
       idx = (idx + 1) % seq.length;
       setHero(seq[idx]);
-      if (ticks >= total - 1) {
-        // settle back on format after showing everything
-        clearInterval(handle);
-        window.setTimeout(() => setHero('format'), STEP_MS);
-      }
-    }
-    const handle = window.setInterval(advance, STEP_MS);
+    }, STEP_MS);
   }
 
   /* ---------- bootstrap ---------- */
