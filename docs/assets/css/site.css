@@ -456,8 +456,8 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
   white-space: pre;
   display: block;
 }
-.diff-line-add { background: color-mix(in srgb, var(--ok) 12%, transparent); }
-.diff-line-del { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.diff-line-ok { background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.diff-line-danger { background: color-mix(in srgb, var(--danger) 10%, transparent); }
 .diff-sig {
   display: inline-block;
   width: 18px;
