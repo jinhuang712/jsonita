@@ -1,126 +1,125 @@
 <p align="center">
-  <img src="assets/icon-mark-transparent-2048.png" alt="Jsonita logo" width="96" height="96">
+  <img src="assets/icon-mark-transparent-2048.png" alt="Jsonita" width="96" height="96">
 </p>
 
-# Jsonita
+<h1 align="center">Jsonita</h1>
 
-**Tiny menu-bar JSON toolkit for macOS - paste, format, fix, copy. ⌘⇧J.**
+<p align="center">
+  <strong>A tiny menu-bar JSON toolkit for macOS &amp; Windows.</strong><br>
+  Press <kbd>⌘⇧J</kbd> from any app — format, minify, traverse, unwrap, and AI-fix JSON without leaving your keyboard.
+</p>
 
-一款常驻 macOS 菜单栏、按全局快捷键瞬时呼出的极轻量 JSON 工具集 · 浮窗 P95 < 500 ms · 内存稳态 < 80 MB · 本地优先；仅用户主动触发 AI Fix 时外发当前待修复文本。
+<p align="center">
+  <a href="https://jinhuang712.github.io/jsonita/">Website</a> ·
+  <a href="https://jinhuang712.github.io/jsonita/zh-CN/">中文站</a> ·
+  <a href="https://github.com/jinhuang712/jsonita/releases/latest">Download</a> ·
+  <a href="CLAUDE.md">Contracts</a>
+</p>
 
-> 截图与演示 GIF 待 v1.0 发布前 (M3-N6) 录入；当前请直接 `pnpm tauri dev` 起本地实例预览。
+<p align="center">
+  <img alt="version" src="https://img.shields.io/badge/version-1.0.0--beta.2-8B633A">
+  <img alt="platform" src="https://img.shields.io/badge/platform-macOS%20·%20Windows-496F99">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-4B7A63">
+</p>
 
 ---
 
-## 功能（v1.0 范围）
+Jsonita lives in your menu bar and appears the instant you press the global shortcut. Paste JSON, get a formatted result in under 300 ms, switch transforms with one keystroke, and dismiss it just as fast. Everything stays on your machine — the only time anything is sent anywhere is when you explicitly ask AI to repair a broken document.
 
-| 功能 | 说明 |
+**Local by default · window shows in P95 < 500 ms · steady memory < 80 MB · install < 15 MB.**
+
+## Features
+
+| Feature | What it does |
 |---|---|
-| **JSON 格式化** | 缩进 2 / 4 / Tab · sort keys · trailing newline 可配 |
-| **Minify** | 单行压缩 |
-| **Tree 视图** | JSON 树展开折叠 · 类型染色 |
-| **JSON → String** | 4 层嵌套转义往返一致 · 可选 Unicode 转义 |
-| **嵌套 stringified 解开** | Golang proto 多层 wrap 一键展开（200 ms 全局超时兜底）· 可在 Settings 开启「自动解包字符串输入」 |
-| **AI Auto-Fix** | 粘非法 JSON → ✨ AI Fix tab → DiffView → Accept（OpenAI 兼容 / Anthropic 双协议，需用户自带 API key） |
-| **历史记录** | SQLite · 自动去重 · star 收藏 · 100 条上限 · `⌘Y` 打开 |
-| **工作区留存** | 隐藏不退出，浮窗内容在进程存续期间一直保留；`⌘K` 一键清空，持久找回走历史记录 |
-| **自定义快捷键** | 默认 `⌘⇧J` 呼出；可改 + 冲突检测 + override 二次确认 |
-| **智能宽度** | 粘长行自动扩宽（4 层逻辑：手动拖锁定 / soft-wrap 跳过 / smartWidth 开关 / max-chars 阈值） |
-| **i18n** | English / 简体中文；默认 English，可在 Settings 切换 |
-| **隐私** | SQLite / settings / window state / `secrets.json` 本地保存 · AI API key 存用户数据目录并限制文件权限 · 日志不记 JSON 内容 · AI Fix 只在用户主动触发时发送当前文本与 parse context |
+| **Format** | Indent 2 / 4 / tab, sort keys, trailing newline — all configurable |
+| **Minify** | Collapse to a single line |
+| **Tree view** | Expand / collapse nodes with type-colored values; read-only |
+| **JSON ⇄ String** | Escape to a string or parse a string back; round-trips through multiple nesting layers |
+| **Nested unwrap** | Unwrap multiply-stringified payloads (e.g. Go/proto double-wrap) in one shot, with a hard timeout so it can never hang |
+| **AI Auto-Fix** | Paste almost-JSON → the AI Fix tab appears → review a diff → Accept. OpenAI-compatible and Anthropic providers, using your own API key |
+| **History** | Local SQLite, automatic dedupe, star to keep, opens with <kbd>⌘Y</kbd> |
+| **Custom shortcut** | Rebind the global hotkey with conflict detection |
+| **Smart width** | The window widens for long lines and collapses for short ones |
+| **i18n** | English and 简体中文, switchable in Settings |
 
-## 系统需求
+## Privacy
 
-- macOS 11 Big Sur 及以上（arm64 / x86_64）
-- Windows 10 及以上（x86_64，NSIS 安装包；无代码签名，v1 beta 小范围内测）
-- 安装体积 < 15 MB（macOS dmg）· 内存稳态 < 80 MB
+- History, settings, window state, and your API key are stored locally — nothing syncs anywhere.
+- Your API key is kept in the app data directory with restricted file permissions (no system Keychain).
+- Logs never record JSON content, API keys, or AI prompts and responses.
+- AI Fix only fires when you click it, and sends only the document you're looking at — nothing until you press Accept.
 
-## 安装
+## Install
 
-### v1 内测发布（优先）
+### Download (recommended)
 
-```bash
-# 受邀 beta 用户从 GitHub Releases 下载 .dmg，拖到 /Applications 后启动。
-# v1 先用 .dmg + GitHub Release 小范围内测；未签名 / 未公证状态必须以 release notes 明示。
-# Homebrew / updater 后置到 v1.1+；公开 release 前必须补 Developer ID signing + notarization。
-open https://github.com/jinhuang712/jsonita/releases/latest
-```
+Grab the latest build from [**GitHub Releases**](https://github.com/jinhuang712/jsonita/releases/latest):
 
-### 当前（开发期）── 从源码构建
+- **macOS** — download the `.dmg`, open it, and drag **Jsonita.app** into `/Applications`. Launch once, then press <kbd>⌘⇧J</kbd> anywhere.
+- **Windows** — download the `.exe` and run it (per-user install, no admin needed), then press <kbd>Ctrl⇧J</kbd>.
 
-要求：Rust ≥ 1.77 · Node ≥ 20 · pnpm ≥ 9 · Xcode CLT。
+> v1 is a small beta. macOS builds are unsigned and Windows builds are unsigned — this is noted in each release. Signed macOS builds and a Homebrew cask land in v1.1.
+
+### Build from source
+
+Requires Rust ≥ 1.77, Node ≥ 20, pnpm ≥ 9 (plus Xcode Command Line Tools on macOS).
 
 ```bash
 git clone https://github.com/jinhuang712/jsonita.git
 cd jsonita
-pnpm install                              # 装前端依赖
-cargo check --manifest-path src-tauri/Cargo.toml  # 装 Rust 依赖 + 生成 lockfile
-pnpm tauri dev                            # dev mode 启动（首次 ~5 min 编译）
-# 或：
-pnpm release:macos:dmg                    # 生产 dmg（未签名或按本机签名环境）
+pnpm install
+pnpm tauri dev          # dev mode (first build takes a few minutes)
 ```
 
-### 发布脚本
+Release builds:
 
 ```bash
-pnpm release:macos:dmg      # macOS：构建 .dmg → release-artifacts/macos-dmg/
-pnpm release:macos:app      # macOS：构建 .app → release-artifacts/macos-app/
-pnpm release:windows:exe    # Windows：在 Windows + MSVC 环境构建 NSIS .exe → release-artifacts/windows-exe/
-pnpm release:all            # 当前平台可构建的全部发布产物
+pnpm release:macos:dmg      # macOS .dmg  → release-artifacts/macos-dmg/
+pnpm release:macos:app      # macOS .app  → release-artifacts/macos-app/
+pnpm release:windows:exe    # Windows NSIS .exe (run on Windows + MSVC)
+pnpm release:all            # everything buildable on the current platform
 ```
 
-v1 beta 主产物是 macOS `.dmg`；Windows NSIS 安装包可从 Windows 机器本地构建产出，但未签名，适合小范围内测分发，不是公开 release 链路。CI 在 `windows-latest` runner 上跑 `cargo check` 保证 Windows cfg 分支持续编译。
+## Usage
 
-全局快捷键注册失败时，仍可从菜单栏打开 Jsonita；权限或系统保留组合会在浮窗内提示并引导到 macOS 隐私设置。macOS 13+ 可能出现 Input Monitoring 提示；当前 v1 不把 Accessibility 授权作为启动前置条件。
+1. Launch the app. There's no Dock icon — a single-color mark appears in the menu bar.
+2. Press <kbd>⌘⇧J</kbd> from any app; the window appears centered without stealing focus.
+3. Paste JSON → the formatted result shows within ~300 ms, with `● valid` in the status bar.
+4. Switch tabs: **Format** · **Minify** · **Tree** · **To String**.
+5. Paste **invalid** JSON → the **AI Fix** tab appears → click it → review the diff → Accept.
+6. <kbd>⌘K</kbd> clear · <kbd>⌘\\</kbd> single ⇄ split pane · <kbd>⌘↵</kbd> apply · <kbd>Esc</kbd> close.
+7. Open **Settings** (⚙) to change language, theme, the shortcut, and your AI key.
 
-## 基本使用
+Hiding the window keeps your workspace in memory; quitting ends the process and later restoration uses only saved data. If the global shortcut fails to register, you can still open Jsonita from the menu bar.
 
-1. 装入 `/Applications/Jsonita.app`，启动。Dock 不出图标，菜单栏右上出现单色 `J` 图标
-2. 任何前台 App 下按 `⌘⇧J` → 浮窗居中弹出（不抢焦点）
-3. 粘 JSON → 右侧 300 ms 内出现格式化输出 · StatusBar `● Valid JSON`
-4. 切 Tab：Format / Minify / Tree / →Str（String → JSON 方向由 Settings 的「自动解包字符串输入」接管）
-5. 粘**非法** JSON → AI Fix tab 出现 → 点击触发 AI 修复 → DiffView → Accept
-6. `⌘K` 清空 / `⌘\` 单窗⇄双栏切换 / `⌘↩` 应用当前操作 / `Esc`·`⌘W` 关闭浮窗
-7. `⚙` 打开 Settings → 改语言、主题、快捷键、AI key
+## System requirements
 
-## 项目文档
+- **macOS** 11 Big Sur or later (arm64 / x86_64)
+- **Windows** 10 or later (x86_64; unsigned NSIS installer, beta)
 
-| 路径 | 内容 |
+macOS is the primary v1 target; Windows ships as a secondary unsigned beta. Homebrew, an auto-updater, an npm wrapper, and Windows code signing are deferred to v1.1+.
+
+## Documentation
+
+| Path | Contents |
 |---|---|
-| [`WORKFLOW.md`](WORKFLOW.md) | 文档与实现协作流程 |
-| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Jsonita 专属 agent 约束、产品契约、行为不变量与验证规则 |
-| [`design/`](design/) | 简洁的界面意图、屏幕状态与低保真流程原型 |
-| [`docs/`](docs/) | GitHub Pages 发布根目录，以及 Superpowers 设计与实施过程记录 |
+| [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) | Product contracts, behavior invariants, and release boundaries (kept byte-identical) |
+| [`WORKFLOW.md`](WORKFLOW.md) | How docs and implementation stay in sync |
+| [`design/`](design/) | Screen hierarchy, visible states, and a low-fidelity flow prototype |
+| [`docs/`](docs/) | GitHub Pages site source and Superpowers design/plan records |
 
-变更历史与未关闭事项由 git 提交历史承载，不再单独维护 changelog / backlog / spec 文件。
+Change history and open work live in the git commit history — there is no separate changelog or backlog file.
 
-## 文档约定
-
-本仓库使用 Markdown 作为最终文档源。后来者在修改产品范围、契约、设计意图或文档入口时，需要先读 [`AGENTS.md`](AGENTS.md) 或 [`CLAUDE.md`](CLAUDE.md)，再读 [`WORKFLOW.md`](WORKFLOW.md)，并同步更新对应的 Markdown 文件。
-
-产品契约与行为不变量以 [`CLAUDE.md`](CLAUDE.md) 为准；[`design/`](design/) 只解释屏幕、状态和交互意图。精确样式、组件、schema、prompt 和发布命令以源码、测试和脚本为准。[`docs/`](docs/) 保留为 GitHub Pages 的非根目录发布位置，并承载 Superpowers 的过程文档。
-
-旧的 HTML 文档、CAST JSON 源、`.cast-docs/` 配置和 CAST 渲染脚本已清理；不要重新引入生成式 HTML 文档系统。`design/prototype/index.html` 只保留简单、可点击的低保真流程说明，不承担高保真视觉交付。
-
-## 当前进度（agent 实施）
-
-| Phase | 节点 | 状态 |
-|---|---|---|
-| M0 Skeleton | 7/7 | ✅ agent-side 完成（待用户验收 M0-A1..A13） |
-| M1 Core JSON | 9/9 | ✅ agent-side 完成（待用户验收 M1-A1..A22） |
-| M2 AI + Settings | 6/6 | ✅ agent-side 完成；v1 beta 使用 `secrets.json`，Settings 与 AI key 流程已闭环 |
-| M3 Polish | 6/6 | ✅ agent-side 完成；Settings/search/window polish、文档契约、beta release 链路已闭环 |
-| v1.1+ Distribution | 0/5 | 后置（brew / npm / updater / Win EV / 日志导出） |
-
-## 卸载
+## Uninstall
 
 ```bash
+# macOS
 rm -rf /Applications/Jsonita.app
-rm -rf ~/Library/Application\ Support/Jsonita    # 历史 + 设置 + window.json
-rm -rf ~/Library/Logs/Jsonita                    # 日志
-# API key 与 settings 一起在 Application Support/Jsonita 已被上一行删掉（secrets.json）
+rm -rf ~/Library/Application\ Support/Jsonita    # history, settings, window state, API key
+rm -rf ~/Library/Logs/Jsonita                    # logs
 ```
 
 ## License
 
-MIT
+[MIT](LICENSE) © 2026 Jin Huang
