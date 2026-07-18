@@ -1,107 +1,108 @@
 // Minimal JS for the GitHub Pages site.
 // 1. Scroll-reveal for .reveal elements.
-// 2. Position the sliding active-tab pill inside each rendered .appwin window,
-//    the same way the real app's TabBar measures tabs with a ResizeObserver —
-//    so the pill sits exactly under the active tab regardless of label width
-//    or locale. On the hero, the pill tours across the tabs once on load to
-//    demonstrate "switch transforms," then settles.
-// Reduced-motion users get elements visible immediately (CSS handles motion).
+// 2. Position the sliding active-tab pill inside each .appwin window (mirrors
+//    the real app's TabBar measurement).
+// 3. On the hero, slowly cycle the four transforms — the pill slides AND the
+//    pane content actually changes (format → minify → tree → to-string), so
+//    the motion demonstrates the product instead of being decorative.
 
 (function () {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const zh = document.documentElement.lang === 'zh-CN';
 
   /* ---------- scroll reveal ---------- */
   (function reveal() {
     const els = document.querySelectorAll('.reveal');
     if (!('IntersectionObserver' in window) || !els.length) {
-      els.forEach((el) => el.classList.add('in'));
-      return;
+      els.forEach((el) => el.classList.add('in')); return;
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in');
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    );
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     els.forEach((el) => io.observe(el));
   })();
 
-  /* ---------- tab pill positioning (mirrors real TabBar measurement) ---------- */
+  /* ---------- tab pill positioning ---------- */
   const appwins = Array.from(document.querySelectorAll('.appwin'));
-
-  function activeTabOf(appwin) {
-    const wanted = appwin.dataset.activeTab;
-    const tabs = Array.from(appwin.querySelectorAll('.appwin-tab[data-tab]'));
-    // match by data-tab; "ai" is not one of the four transform tabs → none active
-    return tabs.find((t) => t.dataset.tab === wanted) || null;
-  }
-
-  function placePill(appwin) {
-    const pill = appwin.querySelector('.appwin-pill');
-    const tab = activeTabOf(appwin);
+  function tabByData(w, name) { return w.querySelector('.appwin-tab[data-tab="' + name + '"]'); }
+  function activeTabOf(w) { return w.querySelector('.appwin-tab.is-active') || tabByData(w, w.dataset.activeTab); }
+  function placePill(w) {
+    const pill = w.querySelector('.appwin-pill');
     if (!pill) return;
-    if (!tab) {
-      // AI Fix view: no transform tab is active — hide the pill.
-      pill.style.opacity = '0';
-      appwin.classList.remove('is-ready');
-      return;
-    }
+    const tab = activeTabOf(w);
+    if (!tab) { pill.style.opacity = '0'; w.classList.remove('is-ready'); return; }
     pill.style.width = tab.offsetWidth + 'px';
     pill.style.transform = 'translateX(' + tab.offsetLeft + 'px)';
-    appwin.classList.add('is-ready');
+    pill.style.opacity = '1';
+    w.classList.add('is-ready');
   }
-
-  function placeAll() {
-    appwins.forEach(placePill);
-  }
-
-  // mark the active tab (drives its color) and place pills
-  appwins.forEach((appwin) => {
-    const tab = activeTabOf(appwin);
-    if (tab) tab.classList.add('is-active');
+  // non-hero windows: mark active from data-active-tab
+  appwins.forEach((w) => {
+    if (w.classList.contains('appwin--hero')) return;
+    const t = tabByData(w, w.dataset.activeTab);
+    if (t) t.classList.add('is-active');
   });
+  function placeAll() { appwins.forEach(placePill); }
 
-  // run once layout + fonts are ready, then again on resize (debounced)
-  function bootstrap() {
-    placeAll();
-    if (reduce) return;
-    heroTour();
-  }
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(placeAll);
-  }
-  window.addEventListener('load', bootstrap);
-  let rT;
-  window.addEventListener('resize', () => {
-    clearTimeout(rT);
-    rT = setTimeout(placeAll, 120);
-  });
+  /* ---------- hero: switch a transform (pill + pane + run pill) ---------- */
+  const hero = document.querySelector('.appwin--hero');
+  const RUN_LABEL = zh
+    ? { format: '运行 格式化', minify: '运行 压缩', str: '运行 转字符串' }
+    : { format: 'Run format', minify: 'Run minify', str: 'Run to string' };
 
-  /* ---------- hero pill tour: format → minify → tree → str → format ---------- */
-  function heroTour() {
-    const hero = document.querySelector('.appwin--hero');
+  function setHero(name) {
     if (!hero) return;
-    const tabs = Array.from(hero.querySelectorAll('.appwin-tab[data-tab]'));
+    hero.querySelectorAll('.appwin-tab').forEach((t) => t.classList.toggle('is-active', t.dataset.tab === name));
+    hero.querySelectorAll('.appwin-pane[data-variant]').forEach((p) => {
+      if (p.dataset.variant === name) p.removeAttribute('hidden');
+      else p.setAttribute('hidden', '');
+    });
+    const run = hero.querySelector('[data-run]');
+    if (run) {
+      const label = run.querySelector('.appwin-run-label');
+      if (name === 'tree') run.setAttribute('hidden', '');
+      else { run.removeAttribute('hidden'); if (label) label.textContent = RUN_LABEL[name] || ''; }
+    }
+    // position pill
+    const tab = tabByData(hero, name);
     const pill = hero.querySelector('.appwin-pill');
-    if (!pill || tabs.length < 2) return;
-    const active = activeTabOf(hero) || tabs[0];
-
-    // visit every tab in order, then settle on the active one
-    const seq = tabs.concat(active);
-    let i = 0;
-    const step = () => {
-      const t = seq[i];
-      pill.style.width = t.offsetWidth + 'px';
-      pill.style.transform = 'translateX(' + t.offsetLeft + 'px)';
-      i += 1;
-      if (i < seq.length) setTimeout(step, 260);
-    };
-    // small delay so the hero entrance animation (rise) finishes first
-    setTimeout(step, 760);
+    if (tab && pill) {
+      pill.style.width = tab.offsetWidth + 'px';
+      pill.style.transform = 'translateX(' + tab.offsetLeft + 'px)';
+    }
   }
+
+  function startTour() {
+    if (!hero) return;
+    // settle immediately on format so users see the default
+    setHero('format');
+    if (reduce) return;
+    // cycle through the four transforms slowly so readers see the pane change
+    const seq = ['format', 'minify', 'tree', 'str'];
+    let idx = 0;
+    const STEP_MS = 2200;
+    const CYCLES = 1;
+    let ticks = 0;
+    const total = seq.length * CYCLES;
+    function advance() {
+      ticks += 1;
+      idx = (idx + 1) % seq.length;
+      setHero(seq[idx]);
+      if (ticks >= total - 1) {
+        // settle back on format after showing everything
+        clearInterval(handle);
+        window.setTimeout(() => setHero('format'), STEP_MS);
+      }
+    }
+    const handle = window.setInterval(advance, STEP_MS);
+  }
+
+  /* ---------- bootstrap ---------- */
+  window.addEventListener('load', () => {
+    placeAll();
+    startTour();
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeAll);
+  let rT;
+  window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(placeAll, 120); });
 })();

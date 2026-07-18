@@ -81,7 +81,9 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 58px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; }
-.brand-logo { display: block; width: 26px; height: 26px; image-rendering: -webkit-optimize-contrast; }
+.brand-logo { display: block; width: 32px; height: 32px; image-rendering: -webkit-optimize-contrast; }
+
+/* hero brand mark — bigger than nav so the product identity reads */
 .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--text-muted); }
 .nav-links a:hover { color: var(--text); }
 .nav-cta {
@@ -102,16 +104,6 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 
 /* ---------- hero ---------- */
 .hero { padding: 80px 0 40px; text-align: center; }
-.hero-eyebrow {
-  display: inline-block;
-  font-family: var(--font-mono-ui);
-  font-size: var(--fs-xs); letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--primary);
-  padding: 6px 12px;
-  border: 1px solid var(--primary-edge);
-  border-radius: 999px;
-  margin-bottom: 28px;
-}
 .hero h1 {
   font-family: var(--font-ui);
   font-weight: 600;
@@ -149,11 +141,12 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 
 /* ---------- hero hotkey (real app keycaps) ---------- */
 .hotkey {
-  display: inline-flex; flex-direction: column;
+  display: flex; flex-direction: column;
   align-items: center; gap: 18px;
-  margin: 40px 0 44px;
+  margin: 40px auto 44px;
+  width: 100%;
 }
-.hotkey-combo { display: inline-flex; gap: 6px; align-items: center; }
+.hotkey-combo { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
 .kbd-tile {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 56px; height: 56px; padding: 0 16px;
@@ -203,7 +196,7 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
   color: var(--text);
 }
 /* soft halo behind the window — reads as vibrancy over the page ambient */
-.appwin::before {
+.appwin--hero::before {
   content: "";
   position: absolute;
   inset: -28% -8% -8% -8%;
@@ -226,16 +219,14 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
   user-select: none;
 }
 .appwin-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 22px; height: 22px;
   flex: 0 0 auto;
   margin-right: 6px;
-  color: var(--text);
+  background-color: var(--text);
   opacity: 0.82;
+  -webkit-mask: url("../img/menubar-template.png") center / contain no-repeat;
+  mask: url("../img/menubar-template.png") center / contain no-repeat;
 }
-.appwin-logo svg { width: 18px; height: 18px; display: block; }
 .appwin-tabs {
   position: relative;
   display: flex;
@@ -415,67 +406,77 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 .appwin-tree .v-num { color: var(--json-number); }
 .appwin-tree .v-bool { color: var(--json-bool); }
 
-/* ---------- diff pane (AI Fix) ---------- */
-.appwin-diff {
-  display: flex;
-  flex-direction: column;
-  font-family: var(--font-code);
-  font-size: var(--fs-sm);
-}
-.appwin-diff-bar {
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
+/* ---------- hero transform variants (tour switches these) ---------- */
+.appwin-pane[hidden] { display: none; }
+
+/* floating ⌘↵ run pill — mirrors the real SinglePaneHint:
+   bottom-right of the window, hovering just above the status bar.
+   Single-pane only; hidden on tree (no "run" action there).            */
+.appwin-run[hidden] { display: none; }
+.appwin-run {
+  position: absolute;
+  right: 12px;
+  bottom: 44px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-raised) 84%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
   font-size: var(--fs-xs);
-  color: var(--text-faint);
-  display: flex;
-  justify-content: space-between;
-  background: color-mix(in srgb, var(--void) 18%, transparent);
+  line-height: 1.3;
+  pointer-events: none;
 }
-.appwin-diff-body { padding: 16px 20px; line-height: var(--lh-code); flex: 1; white-space: pre; }
-.appwin-diff-body .minus { color: var(--danger); background: var(--danger-bg); display: block; }
-.appwin-diff-body .plus { color: var(--json-string); background: var(--ok-bg); display: block; }
-.appwin-diff-body .ctx { color: var(--text-muted); display: block; }
-.appwin-diff-cta {
-  padding: 12px 18px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  background: color-mix(in srgb, var(--void) 22%, transparent);
+.appwin-run .g {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 3px;
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  font-family: var(--font-mono-ui); font-size: 10px; color: var(--text);
+  box-shadow: inset 0 1px 0 var(--kbd-hi);
 }
-.appwin-diff-cta .b {
-  padding: 7px 16px; border-radius: var(--radius-md);
-  font-size: var(--fs-sm); font-family: var(--font-ui);
+
+/* ---------- AI Fix diff — mirrors real DiffView.tsx inline styles ---------- */
+.diff-pane {
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: var(--fs-editor);
+  line-height: 1.75;
+  background: var(--bg-card);
 }
-.appwin-diff-cta .b-cancel { color: var(--text-muted); }
-.appwin-diff-cta .b-accept { background: #fff; color: var(--void); font-weight: 500; }
+.diff-line {
+  white-space: pre;
+  display: block;
+}
+.diff-line-add { background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.diff-line-del { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.diff-sig {
+  display: inline-block;
+  width: 18px;
+  padding-right: 8px;
+  text-align: center;
+}
+.diff-sig-ok { color: var(--ok); }
+.diff-sig-danger { color: var(--danger); }
+.diff-sig-faint { color: var(--text-faint); }
+.diff-text { white-space: pre-wrap; }
+
+/* ---------- privacy pane — clean checklist, not centered monospace splash ---------- */
 
 /* ---------- privacy pane ---------- */
-.appwin-privacy {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 36px;
-  flex-direction: column;
-  gap: 14px;
-  font-family: var(--font-mono-ui);
-}
-.appwin-privacy-lock {
-  width: 56px; height: 56px;
-  border-radius: 16px;
-  background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  display: grid; place-items: center;
-  color: var(--accent);
-}
-.appwin-privacy-lock svg { width: 24px; height: 24px; }
-.appwin-privacy-item { font-size: var(--fs-sm); color: var(--text-muted); }
-.appwin-privacy-item b { color: var(--text); font-weight: 500; }
 
-/* ---------- hero stage sizing ---------- */
+/* ---------- hero stage sizing (real Jsonita window is 680×380) ---------- */
 .hero-stage {
   position: relative;
-  max-width: 820px;
+  max-width: 720px;
   margin: 0 auto;
 }
 .hero-stage .appwin { box-shadow: 0 40px 90px -30px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05); }
@@ -484,7 +485,7 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 /* ---------- stats strip ---------- */
 .stats {
   display: grid; grid-template-columns: repeat(4, 1fr);
-  margin: 60px auto 0; max-width: 820px;
+  margin: 64px auto 0; max-width: 820px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -527,7 +528,7 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 /* ---------- features ---------- */
 .feature {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 72px; align-items: center; margin-bottom: 104px;
+  gap: 64px; align-items: center; margin-bottom: 96px;
 }
 .feature:last-child { margin-bottom: 0; }
 .feature.reverse .feature-text { order: 2; }
@@ -550,9 +551,6 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 .feature-visual {
   position: relative;
   border-radius: var(--radius-xl);
-}
-.feature-visual .appwin {
-  box-shadow: 0 30px 70px -28px rgba(0,0,0,0.8);
 }
 .feature-visual .appwin-body { min-height: 260px; }
 @media (max-width: 860px) {
@@ -650,16 +648,7 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
   transition: opacity 0.6s var(--ease-native), transform 0.6s var(--ease-native);
 }
 .reveal.in { opacity: 1; transform: none; }
-.hero .hero-eyebrow,
-.hero h1,
-.hero .lede,
-.hero .hotkey,
-.hero .hero-cta,
-.hero .hero-stage {
-  opacity: 0; transform: translateY(14px);
-  animation: rise 0.7s var(--ease-native) forwards;
-}
-.hero h1 { animation-delay: 0.08s; }
+  .hero h1 { animation-delay: 0.08s; }
 .hero .lede { animation-delay: 0.18s; }
 .hero .hotkey { animation-delay: 0.26s; }
 .hero .hero-cta { animation-delay: 0.36s; }
@@ -675,9 +664,100 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
     scroll-behavior: auto !important;
   }
   .reveal { opacity: 1; transform: none; }
-  .hero-eyebrow, .hero h1, .hero .lede, .hero .hotkey, .hero .hero-cta, .hero .hero-stage {
+  .hero-lockup, .hero h1, .hero .lede, .hero .hotkey, .hero .hero-cta, .hero .hero-stage {
     opacity: 1; transform: none; animation: none;
   }
   .caret { animation: none; opacity: 1; }
   .appwin-pill { transition: none; }
+}
+
+/* ---------- hero lockup: logo + name + tagline in one quiet line ---------- */
+.hero-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+}
+.hero-lockup img { width: 22px; height: 22px; display: block; }
+.hero-lockup .hl-name { font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.hero-lockup .hl-sep { color: var(--text-faint); }
+.hero-lockup .hl-tag { color: var(--text-muted); }
+
+/* ---------- AI Fix footer — mirrors AiFixPane awaiting-decision bar ---------- */
+.appwin-aifooter {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.appwin-aifooter .ab {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 7px;
+  font: 510 13px var(--font-ui);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.appwin-aifooter .ab-secondary {
+  background: var(--control-bg);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+}
+.appwin-aifooter .ab-primary {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.appwin-aifooter .kbd-mini {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 15px; height: 15px; padding: 0 3px;
+  border-radius: 3px;
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  font-family: var(--font-mono-ui); font-size: 9.5px; color: var(--text);
+  box-shadow: inset 0 1px 0 var(--kbd-hi);
+}
+.appwin-status-ai { color: var(--accent); font-weight: 600; }
+.appwin-status .dot.ai { background: var(--accent); }
+
+/* ---------- privacy: pure typography, no window, no paths ---------- */
+.privacy-zero {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 380px;
+}
+.pz-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pz-row:last-of-type { border-bottom: 0; }
+.pz-num {
+  font-family: var(--font-mono-ui);
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+.pz-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-lg);
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+.pz-note {
+  margin: 18px 0 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--text-faint);
 }
