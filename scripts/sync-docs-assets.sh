@@ -17,14 +17,19 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-src="$repo_root/src/styles/tokens.css"
-dst="$repo_root/docs/assets/css/app-tokens.css"
 
-if [[ ! -f "$src" ]]; then
-  echo "sync-docs-assets: source not found: $src" >&2
-  exit 1
-fi
+copy() {
+  local src="$1" dst="$2" label="$3"
+  if [[ ! -f "$src" ]]; then
+    echo "sync-docs-assets: source not found: $src" >&2
+    exit 1
+  fi
+  mkdir -p "$(dirname "$dst")"
+  cp "$src" "$dst"
+  echo "synced $label → $dst"
+}
 
+# 1. design tokens (color / spacing / radius / motion / type)
 {
   echo "/* ==========================================================="
   echo "   GENERATED — do not edit by hand."
@@ -33,7 +38,12 @@ fi
   echo "   to the running app (no hand-mirrored copy that drifts)."
   echo "   =========================================================== */"
   echo ""
-  cat "$src"
-} > "$dst"
+  cat "$repo_root/src/styles/tokens.css"
+} > "$repo_root/docs/assets/css/app-tokens.css"
+echo "synced tokens → docs/assets/css/app-tokens.css"
 
-echo "synced tokens → $dst"
+# 2. tab-bar logo mark (the real brand asset the app masks with --text)
+copy \
+  "$repo_root/assets/icons/menubar/jsonita-menubar-template-22@3x.png" \
+  "$repo_root/docs/assets/img/menubar-template.png" \
+  "logo mark"

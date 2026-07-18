@@ -40,7 +40,7 @@
 <!-- hero -->
 <section class="hero">
   <div class="container">
-    <span class="hero-eyebrow">菜单栏 · JSON 工具集</span>
+<div class="hero-lockup"><img src="../assets/img/logo.png" alt="" width="22" height="22"><span class="hl-name">Jsonita</span><span class="hl-sep">—</span><span class="hl-tag">菜单栏 JSON 工具集</span></div>
     <h1>粘贴。<br>格式化。<br>修复。复制。</h1>
     <p class="lede">
       常驻 macOS 与 Windows 菜单栏的极简 JSON 工具集——格式化、压缩、树形展开、转字符串、多层解包、AI 修复坏掉的 JSON,全程不离开键盘。
@@ -67,7 +67,7 @@
     <div class="hero-stage">
       <div class="appwin appwin--hero" data-active-tab="format">
         <div class="appwin-tabbar">
-          <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+          <span class="appwin-logo" aria-hidden="true"></span>
           <div class="appwin-tabs">
             <span class="appwin-pill" aria-hidden="true"></span>
             <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>格式化</span>
@@ -77,13 +77,13 @@
           </div>
           <span class="appwin-spacer"></span>
           <div class="appwin-chrome">
-            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
+            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M12 5v14"/></svg></span>
             <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
-            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+            <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.2a8 8 0 0 0 .1-1.2 8 8 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.1-1.2L14.6 4h-5.2l-.4 2.6a7.8 7.8 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 4.4 13a8 8 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.1 1.2l.4 2.6h5.2l.4-2.6a7.8 7.8 0 0 0 2.1-1.2l2.4 1 2-3.5-2.1-1.5Z"/></svg></span>
           </div>
         </div>
-        <div class="appwin-body appwin-body--split">
-          <div class="appwin-pane">
+                        <div class="appwin-body appwin-body--single">
+          <div class="appwin-pane" data-variant="format">
             <div class="appwin-gutter">1
 2
 3
@@ -92,7 +92,8 @@
 6
 7
 8
-9</div>
+9
+10</div>
             <pre class="appwin-code"><span class="t-punc">{</span>
   <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span>
   <span class="t-key">"region"</span><span class="t-punc">:</span> <span class="t-str">"us-west-2"</span><span class="t-punc">,</span>
@@ -102,28 +103,27 @@
     <span class="t-key">"aiFix"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
     <span class="t-key">"telemetry"</span><span class="t-punc">:</span> <span class="t-bool">false</span>
   <span class="t-punc">},</span>
-  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">]</span><span class="caret"></span>
+  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">]</span>
 <span class="t-punc">}</span></pre>
           </div>
-          <div class="appwin-pane appwin-pane--bare">
-            <pre class="appwin-code"><span class="t-punc">{</span>
-  <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span>
-  <span class="t-key">"region"</span><span class="t-punc">:</span> <span class="t-str">"us-west-2"</span><span class="t-punc">,</span>
-  <span class="t-key">"version"</span><span class="t-punc">:</span> <span class="t-str">"1.0.0-beta.2"</span><span class="t-punc">,</span>
-  <span class="t-key">"replicas"</span><span class="t-punc">:</span> <span class="t-num">3</span><span class="t-punc">,</span>
-  <span class="t-key">"features"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
-    <span class="t-key">"aiFix"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
-    <span class="t-key">"autoUnwrap"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
-    <span class="t-key">"telemetry"</span><span class="t-punc">:</span> <span class="t-bool">false</span>
-  <span class="t-punc">},</span>
-  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">,</span> <span class="t-str">"native"</span><span class="t-punc">],</span>
-  <span class="t-key">"deployedAt"</span><span class="t-punc">:</span> <span class="t-str">"2026-07-18T09:30:00Z"</span>
-<span class="t-punc">}</span></pre>
+          <div class="appwin-pane appwin-pane--bare" data-variant="minify" hidden>
+            <pre class="appwin-code"><span class="t-punc">{</span><span class="t-key">"service"</span><span class="t-punc">:</span><span class="t-str">"jsonita-api"</span><span class="t-punc">,</span><span class="t-key">"region"</span><span class="t-punc">:</span><span class="t-str">"us-west-2"</span><span class="t-punc">,</span><span class="t-key">"replicas"</span><span class="t-punc">:</span><span class="t-num">3</span><span class="t-punc">,</span><span class="t-key">"tags"</span><span class="t-punc">:[</span><span class="t-str">"json"</span><span class="t-punc">,</span><span class="t-str">"menu-bar"</span><span class="t-punc">]}</span></pre>
+          </div>
+          <div class="appwin-pane appwin-pane--bare" data-variant="tree" hidden>
+            <div class="appwin-tree"><div class="row"><span class="toggle">▾</span><span class="key">root</span> <span class="summary">{5}</span></div>
+<div class="row indent-1"><span class="key">service</span><span class="punc">: </span><span class="v-str">"jsonita-api"</span></div>
+<div class="row indent-1"><span class="key">region</span><span class="punc">: </span><span class="v-str">"us-west-2"</span></div>
+<div class="row indent-1"><span class="key">replicas</span><span class="punc">: </span><span class="v-num">3</span></div>
+<div class="row indent-1"><span class="toggle">▾</span><span class="key">features</span> <span class="summary">{2}</span></div>
+<div class="row indent-2"><span class="key">aiFix</span><span class="punc">: </span><span class="v-bool">true</span></div></div>
+          </div>
+          <div class="appwin-pane appwin-pane--bare" data-variant="str" hidden>
+            <pre class="appwin-code"><span class="t-str">"{\"service\": \"jsonita-api\", \"replicas\": 3}"</span></pre>
           </div>
         </div>
+        <div class="appwin-run" data-run><span class="g">⌘</span><span class="g">↵</span> <span class="appwin-run-label">运行 格式化</span></div>
         <div class="appwin-statusbar">
-          <span class="appwin-status"><span class="dot ok"></span>有效 · <span class="mono">9</span> 行 · <span class="mono">284</span> 字节</span>
-          <span class="right">格式化 <kbd>⌘ ↵</kbd> 复制</span>
+          <span class="appwin-status"><span class="dot ok"></span>有效 · <span class="mono">10</span> 行 · <span class="mono">236</span> 字节</span>
         </div>
       </div>
     </div>
@@ -159,7 +159,7 @@
       <div class="feature-visual">
         <div class="appwin" data-active-tab="minify">
           <div class="appwin-tabbar">
-            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <span class="appwin-logo" aria-hidden="true"></span>
             <div class="appwin-tabs">
               <span class="appwin-pill" aria-hidden="true"></span>
               <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>格式化</span>
@@ -167,27 +167,18 @@
               <span class="appwin-tab" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>树视图</span>
               <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>转字符串</span>
             </div>
-            <span class="appwin-spacer"></span>
-            <div class="appwin-chrome">
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
-            </div>
-          </div>
-          <div class="appwin-body appwin-body--split">
-            <div class="appwin-pane appwin-pane--bare">
-              <pre class="appwin-code"><span class="t-punc">{</span><span class="t-key">"service"</span><span class="t-punc">:</span><span class="t-str">"jsonita-api"</span><span class="t-punc">,</span><span class="t-key">"region"</span><span class="t-punc">:</span><span class="t-str">"us-west-2"</span><span class="t-punc">,</span><span class="t-key">"replicas"</span><span class="t-punc">:</span><span class="t-num">3</span><span class="t-punc">,</span><span class="t-key">"features"</span><span class="t-punc">:</span><span class="t-punc">{</span><span class="t-key">"aiFix"</span><span class="t-punc">:</span><span class="t-bool">true</span><span class="t-punc">},</span><span class="t-key">"tags"</span><span class="t-punc">:[</span><span class="t-str">"json"</span><span class="t-punc">,</span><span class="t-str">"menu-bar"</span><span class="t-punc">]}</span><span class="caret"></span></pre>
-            </div>
-            <div class="appwin-pane appwin-pane--bare">
-              <pre class="appwin-code appwin-code--sm"><span class="t-punc">{</span>
+            <span class="appwin-spacer"></span>          </div>
+                  <div class="appwin-body appwin-body--single">
+          <div class="appwin-pane appwin-pane--bare">
+            <pre class="appwin-code"><span class="t-punc">{</span>
   <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span>
   <span class="t-key">"region"</span><span class="t-punc">:</span> <span class="t-str">"us-west-2"</span><span class="t-punc">,</span>
   <span class="t-key">"replicas"</span><span class="t-punc">:</span> <span class="t-num">3</span>
 <span class="t-punc">}</span></pre>
-            </div>
           </div>
-          <div class="appwin-statusbar">
-            <span class="appwin-status"><span class="dot ok"></span>有效 · <span class="mono">198</span> 字节(压缩后)</span>
+        </div>
+        <div class="appwin-statusbar">
+            <span class="appwin-status"><span class="dot ok"></span>有效 · 已格式化</span>
             <span class="right">缩进 2 · 不排序</span>
           </div>
         </div>
@@ -208,7 +199,7 @@
       <div class="feature-visual">
         <div class="appwin" data-active-tab="tree">
           <div class="appwin-tabbar">
-            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <span class="appwin-logo" aria-hidden="true"></span>
             <div class="appwin-tabs">
               <span class="appwin-pill" aria-hidden="true"></span>
               <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>格式化</span>
@@ -216,13 +207,7 @@
               <span class="appwin-tab is-active" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>树视图</span>
               <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>转字符串</span>
             </div>
-            <span class="appwin-spacer"></span>
-            <div class="appwin-chrome">
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
-            </div>
-          </div>
+            <span class="appwin-spacer"></span>          </div>
           <div class="appwin-body appwin-body--single">
             <div class="appwin-pane appwin-pane--bare">
               <div class="appwin-tree">
@@ -262,7 +247,7 @@
       <div class="feature-visual">
         <div class="appwin" data-active-tab="ai">
           <div class="appwin-tabbar">
-            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
+            <span class="appwin-logo" aria-hidden="true"></span>
             <div class="appwin-tabs">
               <span class="appwin-pill" aria-hidden="true"></span>
               <span class="appwin-tab" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>格式化</span>
@@ -273,24 +258,23 @@
             <span class="appwin-spacer"></span>
             <span class="appwin-tab" style="background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 24%, transparent);font-weight:580;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"/></svg>AI 修复</span>
           </div>
-          <div class="appwin-body appwin-body--single">
-            <div class="appwin-pane appwin-pane--bare">
-              <div class="appwin-diff">
-                <div class="appwin-diff-bar">
-                  <span>AI 修复 · diff 预览</span>
-                  <span>接受才会替换输入</span>
-                </div>
-                <div class="appwin-diff-body"><span class="ctx">  <span class="t-punc">{</span></span><span class="minus">-   <span class="t-key">service</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span></span><span class="plus">+   <span class="t-key">"service"</span><span class="t-punc">:</span> <span class="t-str">"jsonita-api"</span><span class="t-punc">,</span></span><span class="ctx">  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"json"</span><span class="t-punc">,</span> <span class="t-str">"menu-bar"</span><span class="t-punc">,</span></span><span class="plus">+   <span class="t-str">"native"</span></span><span class="minus">-   <span class="t-str">"native"</span><span class="t-punc">,]</span></span><span class="plus">+   <span class="t-str">"native"</span></span><span class="ctx">  <span class="t-punc">]</span></span></div>
-                <div class="appwin-diff-cta">
-                  <span class="b b-cancel">取消</span>
-                  <span class="b b-accept">接受</span>
-                </div>
-              </div>
-            </div>
+                          <div class="appwin-body appwin-body--single">
+          <div class="appwin-pane appwin-pane--bare diff-pane">
+              <div class="diff-line diff-line-ctx"><span class="diff-sig diff-sig-faint"> </span><span class="diff-text"><span class="t-punc">{</span></span></div>
+              <div class="diff-line diff-line-danger"><span class="diff-sig diff-sig-danger">-</span><span class="diff-text">  <span class="t-key">"name"</span><span class="t-punc">:</span> <span class="t-str">"Jin</span></span></div>
+              <div class="diff-line diff-line-ok"><span class="diff-sig diff-sig-ok">+</span><span class="diff-text">  <span class="t-key">"name"</span><span class="t-punc">:</span> <span class="t-str">"Jin"</span><span class="t-punc">,</span></span></div>
+              <div class="diff-line diff-line-ctx"><span class="diff-sig diff-sig-faint"> </span><span class="diff-text">  <span class="t-key">"plan"</span><span class="t-punc">:</span> <span class="t-str">"pro"</span><span class="t-punc">,</span></span></div>
+              <div class="diff-line diff-line-ctx"><span class="diff-sig diff-sig-faint"> </span><span class="diff-text">  <span class="t-key">"tags"</span><span class="t-punc">:</span> <span class="t-punc">[</span><span class="t-str">"founder"</span><span class="t-punc">,</span></span></div>
+              <div class="diff-line diff-line-ok"><span class="diff-sig diff-sig-ok">+</span><span class="diff-text">    <span class="t-str">"early-adopter"</span><span class="t-punc">,</span></span></div>
+              <div class="diff-line diff-line-ctx"><span class="diff-sig diff-sig-faint"> </span><span class="diff-text">  <span class="t-punc">],</span></span></div>
+              <div class="diff-line diff-line-ctx"><span class="diff-sig diff-sig-faint"> </span><span class="diff-text"><span class="t-punc">}</span></span></div>
           </div>
-          <div class="appwin-statusbar">
-            <span class="appwin-status"><span class="dot warn" style="background:var(--accent)"></span>AI 修复 · 2 处修正 · 已校验</span>
-            <span class="right">接受前不发送任何内容</span>
+        </div>
+                <div class="appwin-aifooter">
+          <span class="ab ab-secondary">取消</span>
+          <span class="ab ab-primary"><span class="kbd-mini">⌘</span><span class="kbd-mini">↵</span>接受</span>
+        </div><div class="appwin-statusbar">
+            <span class="appwin-status appwin-status-ai"><span class="dot ai"></span>检查 AI 修复结果</span>
           </div>
         </div>
       </div>
@@ -302,47 +286,20 @@
         <h3>默认私密。无账号,无云。</h3>
         <p>所有东西都在你本机:历史、设置、窗口状态、API key。AI 只在你点 AI 修复时触发,而且只会发送你正在看的那一段文本。</p>
         <ul class="feature-list">
-          <li>SQLite 存历史,设置本地保存——没有任何同步</li>
-          <li>API key 存在 <code>secrets.json</code>,限制文件权限(不走 Keychain)</li>
+          <li>历史与设置全部本地保存——没有任何同步</li>
+          <li>API key 只存在这台机器上,以受限权限保存</li>
           <li>日志自动打码:不记 JSON 内容、API key、AI 收发原文</li>
         </ul>
       </div>
       <div class="feature-visual">
-        <div class="appwin" data-active-tab="format">
-          <div class="appwin-tabbar">
-            <span class="appwin-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7c-2 0-2 2-2 3s0 2-2 2c2 0 2 1 2 2s0 3 2 3"/><path d="M14 7c2 0 2 2 2 3s0 2 2 2c-2 0-2 1-2 2s0 3-2 3"/></svg></span>
-            <div class="appwin-tabs">
-              <span class="appwin-pill" aria-hidden="true"></span>
-              <span class="appwin-tab is-active" data-tab="format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"/><path d="M6 12h9"/><path d="M6 17h12"/></svg>格式化</span>
-              <span class="appwin-tab" data-tab="minify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-4-4"/><path d="M5 9V5h4"/><path d="m15 9 4-4"/><path d="M19 9V5h-4"/><path d="m9 15-4 4"/><path d="M5 15v4h4"/><path d="m15 15 4 4"/><path d="M19 15v4h-4"/></svg>压缩</span>
-              <span class="appwin-tab" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>树视图</span>
-              <span class="appwin-tab" data-tab="str"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h11a4 4 0 0 1 0 8H8"/><path d="m8 12-4 4 4 4"/></svg>转字符串</span>
-            </div>
-            <span class="appwin-spacer"></span>
-            <div class="appwin-chrome">
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></span>
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/><path d="M12 8v5l3 2"/></svg></span>
-              <span class="appwin-icbtn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
-            </div>
-          </div>
-          <div class="appwin-body appwin-body--single">
-            <div class="appwin-pane appwin-pane--bare">
-              <div class="appwin-privacy">
-                <div class="appwin-privacy-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
-                <div class="appwin-privacy-item"><b>本地 SQLite</b> · 历史 + 设置</div>
-                <div class="appwin-privacy-item"><b>secrets.json</b> · 密钥存盘,文件权限受限</div>
-                <div class="appwin-privacy-item"><b>日志已脱敏</b> · 无 JSON、无 key、无 AI 原文</div>
-                <div class="appwin-privacy-item"><b>AI 主动触发</b> · 只有你点的时候才发送</div>
-              </div>
-            </div>
-          </div>
-          <div class="appwin-statusbar">
-            <span class="appwin-status"><span class="dot ok"></span>本地 · 任何东西都不离开这台机器</span>
-          </div>
-        </div>
+        <div class="privacy-zero">
+        <div class="pz-row"><span class="pz-num">0</span><span class="pz-label">账号</span></div>
+        <div class="pz-row"><span class="pz-num">0</span><span class="pz-label">云端</span></div>
+        <div class="pz-row"><span class="pz-num">0</span><span class="pz-label">遥测</span></div>
+        <p class="pz-note">你的 JSON 不会离开这台机器——除非你点 AI 修复,而那也只发送你正在看的这一份文档,用你自己的 key。</p>
+      </div>
       </div>
     </div>
-
   </div>
 </section>
 
