@@ -210,6 +210,27 @@ fn estimate_max_tokens(text: &str) -> u32 {
     ((text.chars().count() as f32 / 3.0) * 2.0).clamp(512.0, 8192.0) as u32
 }
 
+// 用户填的可能是「Base URL」(火山方舟等厂商控制台给的是 .../api/coding 这类基础地址)，
+// 也可能是完整端点 (.../v1/messages)。各厂商约定由客户端在 Base URL 后拼协议标准路径，
+// 用户无从得知，故在此补齐；已是完整端点则原样用，避免重复拼、也向后兼容老配置。
+fn anthropic_endpoint(url: &str) -> String {
+    let base = url.trim().trim_end_matches('/');
+    if base.ends_with("/messages") {
+        base.to_string()
+    } else {
+        format!("{base}/v1/messages")
+    }
+}
+
+fn openai_endpoint(url: &str) -> String {
+    let base = url.trim().trim_end_matches('/');
+    if base.ends_with("/completions") {
+        base.to_string()
+    } else {
+        format!("{base}/chat/completions")
+    }
+}
+
 pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, JsonitaError> {
     if !settings.ai_enabled {
         return Err(JsonitaError::AiDisabled);
@@ -285,7 +306,7 @@ async fn openai_call(
     };
     let client = build_client(TIMEOUT_SEC)?;
     let resp = client
-        .post(url)
+        .post(openai_endpoint(url))
         .bearer_auth(key)
         .json(&body)
         .send()
@@ -330,7 +351,7 @@ async fn anthropic_call(
     let client = build_client(TIMEOUT_SEC)?;
     // 官方 API 认 x-api-key；火山方舟等 Anthropic 协议兼容端点走 Authorization: Bearer；两个都发,各端点只看自己认的那个。
     let resp = client
-        .post(url)
+        .post(anthropic_endpoint(url))
         .header("x-api-key", key)
         .header("authorization", format!("Bearer {key}"))
         .header("anthropic-version", ANTHROPIC_VERSION)
@@ -411,7 +432,7 @@ pub async fn test_connection(
     let started = std::time::Instant::now();
     let request = match protocol {
         AiProtocol::OpenAi => client
-            .post(base_url)
+            .post(openai_endpoint(base_url))
             .bearer_auth(api_key)
             .json(&serde_json::json!({
                 "model": model,
@@ -420,7 +441,7 @@ pub async fn test_connection(
                 "stream": false,
             })),
         AiProtocol::Anthropic => client
-            .post(base_url)
+            .post(anthropic_endpoint(base_url))
             .header("x-api-key", api_key)
             .header("authorization", format!("Bearer {api_key}"))
             .header("anthropic-version", ANTHROPIC_VERSION)
@@ -475,4 +496,52 @@ fn http_reason(status: u16) -> String {
 
 fn fail(msg: &str) -> TestConnectionResp {
     TestConnectionResp { ok: false, latency_ms: 0, model_echoed: msg.to_string() }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn anthropic_endpoint_appends_path_to_base_url() {
+        // 火山方舟等控制台给的是 Base URL，需补 /v1/messages
+        assert_eq!(
+            anthropic_endpoint("https://ark.cn-beijing.volces.com/api/coding"),
+            "https://ark.cn-beijing.volces.com/api/coding/v1/messages"
+        );
+        // 尾部斜杠不产生双斜杠
+        assert_eq!(
+            anthropic_endpoint("https://api.anthropic.com/"),
+            "https://api.anthropic.com/v1/messages"
+        );
+    }
+
+    #[test]
+    fn anthropic_endpoint_keeps_full_endpoint() {
+        // 已是完整端点则原样用，向后兼容老配置与 UI 占位符
+        assert_eq!(
+            anthropic_endpoint("https://api.anthropic.com/v1/messages"),
+            "https://api.anthropic.com/v1/messages"
+        );
+        assert_eq!(
+            anthropic_endpoint("https://api.anthropic.com/v1/messages/"),
+            "https://api.anthropic.com/v1/messages"
+        );
+    }
+
+    #[test]
+    fn openai_endpoint_appends_path_to_base_url() {
+        assert_eq!(
+            openai_endpoint("https://ark.cn-beijing.volces.com/api/coding/v3"),
+            "https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions"
+        );
+    }
+
+    #[test]
+    fn openai_endpoint_keeps_full_endpoint() {
+        assert_eq!(
+            openai_endpoint("https://api.openai.com/v1/chat/completions"),
+            "https://api.openai.com/v1/chat/completions"
+        );
+    }
 }
