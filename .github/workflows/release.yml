@@ -4,6 +4,11 @@ name: release
 # NSIS .exe (Windows), uploads them to a GitHub Release under both their
 # Tauri-generated versioned filename and a stable alias the website links to.
 # No code signing / notarization yet — Homebrew Cask v1.1 work (CLAUDE.md).
+#
+# A separate "tidy" job runs last to delete stale assets from any prior
+# partial runs (e.g. wrong-version DMGs from a premature tag push) and to
+# merge the two per-platform SHA256 files into one SHA256SUMS.txt so users
+# and brew have a single checksum file.
 
 on:
   push:
@@ -50,17 +55,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          # Tauri writes the DMG to target/universal-apple-darwin/release/bundle/dmg/
           DMG_PATH="$(ls src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg | head -n1)"
           echo "Found DMG: $DMG_PATH"
-          # Versioned filename as produced by Tauri (kept for archive/history)
           cp "$DMG_PATH" "dist/$(basename "$DMG_PATH")"
-          # Stable alias the website links to (no version in the name)
           cp "$DMG_PATH" dist/Jsonita-macos-universal.dmg
-          # sha256 scoped to macOS assets so the Windows job can upload its own
           (cd dist && shasum -a 256 *.dmg > SHA256SUMS-macos.txt)
           cat dist/SHA256SUMS-macos.txt
-          echo "dmg=$(basename "$DMG_PATH")" >> "$GITHUB_OUTPUT"
 
       - name: Upload macOS artifacts to release
         uses: softprops/action-gh-release@v2
@@ -70,6 +70,7 @@ jobs:
             dist/SHA256SUMS-macos.txt
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+          overwrite_files: true
 
   windows-exe:
     runs-on: windows-latest
@@ -123,3 +124,61 @@ jobs:
             dist/SHA256SUMS-windows.txt
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+          overwrite_files: true
+
+  tidy:
+    # Runs after both build jobs. Deletes stale assets (e.g. a wrong-version
+    # DMG left over from a premature tag push) and publishes a single
+    # SHA256SUMS.txt combining macOS + Windows checksums.
+    needs: [macos-dmg, windows-exe]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.3
+      - name: Tidy release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Tidying release for tag: $TAG"
+
+          # Fetch per-platform sha files from the release and merge into SHA256SUMS.txt
+          TMPDIR="$(mktemp -d)"
+          cd "$TMPDIR"
+          for f in SHA256SUMS-macos.txt SHA256SUMS-windows.txt; do
+            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/$f"
+            if curl -fsSL -o "$f" "$url"; then
+              echo "got $f"
+              cat "$f"
+            else
+              echo "warning: $f not found (that platform may have failed)"
+            fi
+          done
+          cat SHA256SUMS-macos.txt SHA256SUMS-windows.txt 2>/dev/null > SHA256SUMS.txt || true
+          test -s SHA256SUMS.txt && echo "=== merged SHA256SUMS.txt ===" && cat SHA256SUMS.txt
+
+          # Upload merged file (and delete the per-platform shards so they don't clutter)
+          gh release upload "$TAG" SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
+          for f in SHA256SUMS-macos.txt SHA256SUMS-windows.txt; do
+            gh release delete-asset "$TAG" "$f" -y --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          done
+
+          # Delete any versioned DMG/EXE whose version does NOT match this tag,
+          # plus any zero-byte / leftover SHA256SUMS.txt from earlier races.
+          VERSION="${TAG#v}"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" \
+            --jq '.assets[] | "\(.id) \(.name) \(.size)"' | while read -r id name size; do
+              case "$name" in
+                Jsonita-macos-universal.dmg|Jsonita-windows-x64.exe|SHA256SUMS.txt) continue ;;
+                Jsonita_*_universal.dmg|Jsonita_*_x64-setup.exe)
+                  file_ver="${name#Jsonita_}"; file_ver="${file_ver%%_*}"
+                  if [[ "$file_ver" != "$VERSION" ]]; then
+                    echo "Deleting stale asset: $name (version $file_ver != $VERSION)"
+                    gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$id"
+                  fi ;;
+                # delete any other stray/old-named files
+                *)
+                  echo "Deleting stray asset: $name"
+                  gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$id" ;;
+              esac
+            done
