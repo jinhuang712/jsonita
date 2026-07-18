@@ -57,9 +57,9 @@ jobs:
           cp "$DMG_PATH" "dist/$(basename "$DMG_PATH")"
           # Stable alias the website links to (no version in the name)
           cp "$DMG_PATH" dist/Jsonita-macos-universal.dmg
-          # sha256 for both
-          (cd dist && shasum -a 256 *.dmg > SHA256SUMS.txt)
-          cat dist/SHA256SUMS.txt
+          # sha256 scoped to macOS assets so the Windows job can upload its own
+          (cd dist && shasum -a 256 *.dmg > SHA256SUMS-macos.txt)
+          cat dist/SHA256SUMS-macos.txt
           echo "dmg=$(basename "$DMG_PATH")" >> "$GITHUB_OUTPUT"
 
       - name: Upload macOS artifacts to release
@@ -67,7 +67,7 @@ jobs:
         with:
           files: |
             dist/*.dmg
-            dist/SHA256SUMS.txt
+            dist/SHA256SUMS-macos.txt
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
 
@@ -112,14 +112,14 @@ jobs:
           echo "Found EXE: $EXE_PATH"
           cp "$EXE_PATH" "dist/$(basename "$EXE_PATH")"
           cp "$EXE_PATH" dist/Jsonita-windows-x64.exe
-          (cd dist && shasum -a 256 *.exe > SHA256SUMS.txt)
-          cat dist/SHA256SUMS.txt
+          (cd dist && shasum -a 256 *.exe > SHA256SUMS-windows.txt)
+          cat dist/SHA256SUMS-windows.txt
 
       - name: Upload Windows artifacts to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.exe
-            dist/SHA256SUMS.txt
+            dist/SHA256SUMS-windows.txt
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
