@@ -111,6 +111,20 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
   line-height: 1.02; letter-spacing: -0.045em;
   margin: 0 0 20px; color: var(--text);
 }
+/* zh-CN hero headline: text-align:center centers each line's em box, but
+   CJK fullwidth stop "。" is a small hollow ring sitting in the bottom-left
+   of its 1em square, so every line that ends in "。" has ~1em of near-empty
+   space on the right that the eye treats as margin, not ink.
+   Canvas-measured on PingFang SC the INK center drifts ~29% of font-size
+   LEFT of the em center (88px -> 25px; 44px -> 12.7px), for ALL THREE
+   lines — even "修复。复制。", whose middle period is visually symmetric
+   but whose trailing period still pulls the ink box left.
+   Nudging the whole headline right by ~0.25em aligns ink centers with the
+   em center across clamp(44px, 8vw, 88px). The period still carries a
+   little visible weight, so full 0.29em overshoots.
+   EN headlines end in Latin "." (solid dot near em center, drift <1px) and
+   need no fix. */
+html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
 .hero p.lede {
   font-size: clamp(15px, 1.6vw, 18px);
   color: var(--text-muted);
@@ -149,9 +163,6 @@ section { position: relative; padding: 96px 0; overflow-x: clip; }
 .hotkey-combo {
   display: flex; gap: 6px; align-items: center; justify-content: center;
   width: 100%;
-  /* optical nudge left: the row's visual weight leans right (solid "J" tile
-     vs. the airier ⌘ glyph), so geometric center reads slightly off */
-  transform: translateX(-8px);
 }
 .kbd-tile {
   display: inline-flex; align-items: center; justify-content: center;
