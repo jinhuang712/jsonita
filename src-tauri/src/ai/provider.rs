@@ -328,9 +328,11 @@ async fn anthropic_call(
         thinking,
     };
     let client = build_client(TIMEOUT_SEC)?;
+    // 官方 API 认 x-api-key；火山方舟等 Anthropic 协议兼容端点走 Authorization: Bearer；两个都发,各端点只看自己认的那个。
     let resp = client
         .post(url)
         .header("x-api-key", key)
+        .header("authorization", format!("Bearer {key}"))
         .header("anthropic-version", ANTHROPIC_VERSION)
         .json(&body)
         .send()
@@ -420,6 +422,7 @@ pub async fn test_connection(
         AiProtocol::Anthropic => client
             .post(base_url)
             .header("x-api-key", api_key)
+            .header("authorization", format!("Bearer {api_key}"))
             .header("anthropic-version", ANTHROPIC_VERSION)
             .json(&serde_json::json!({
                 "model": model,
