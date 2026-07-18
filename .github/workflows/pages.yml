@@ -25,7 +25,7 @@ jobs:
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1.0.13
         with:
-          source: ./
+          source: ./docs
           destination: ./_site
 
       - uses: actions/upload-pages-artifact@v5.0.0

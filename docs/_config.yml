@@ -1,0 +1,5 @@
+# GitHub Pages build config for the Jsonita landing site.
+# The site is plain static HTML/CSS/JS — Jekyll only needs to copy it through
+# and skip the internal process-record folder.
+exclude:
+  - superpowers
