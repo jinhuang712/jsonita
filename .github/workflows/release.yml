@@ -48,6 +48,7 @@ jobs:
         env:
           TAURI_NO_SIGN: '1'
           TAURI_CI: '1'
+        shell: bash
         run: pnpm tauri build --target universal-apple-darwin --bundles dmg
 
       - name: Collect artifacts + stable alias + sha256
@@ -101,6 +102,7 @@ jobs:
         env:
           TAURI_NO_SIGN: '1'
           TAURI_CI: '1'
+        shell: bash
         run: pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis
 
       - name: Collect artifacts + stable alias + sha256
