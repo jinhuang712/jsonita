@@ -1,0 +1,125 @@
+name: release
+
+# Tag-triggered release build: produces unsigned universal DMG (macOS) and
+# NSIS .exe (Windows), uploads them to a GitHub Release under both their
+# Tauri-generated versioned filename and a stable alias the website links to.
+# No code signing / notarization yet — Homebrew Cask v1.1 work (CLAUDE.md).
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # needed by softprops/action-gh-release to create the release
+
+jobs:
+  macos-dmg:
+    runs-on: macos-14
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6.0.3
+
+      - uses: pnpm/action-setup@v6.0.8
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build unsigned universal DMG
+        env:
+          TAURI_NO_SIGN: '1'
+          TAURI_CI: '1'
+        run: pnpm tauri build --target universal-apple-darwin --bundles dmg
+
+      - name: Collect artifacts + stable alias + sha256
+        id: collect
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          # Tauri writes the DMG to target/universal-apple-darwin/release/bundle/dmg/
+          DMG_PATH="$(ls src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg | head -n1)"
+          echo "Found DMG: $DMG_PATH"
+          # Versioned filename as produced by Tauri (kept for archive/history)
+          cp "$DMG_PATH" "dist/$(basename "$DMG_PATH")"
+          # Stable alias the website links to (no version in the name)
+          cp "$DMG_PATH" dist/Jsonita-macos-universal.dmg
+          # sha256 for both
+          (cd dist && shasum -a 256 *.dmg > SHA256SUMS.txt)
+          cat dist/SHA256SUMS.txt
+          echo "dmg=$(basename "$DMG_PATH")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload macOS artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.dmg
+            dist/SHA256SUMS.txt
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  windows-exe:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6.0.3
+
+      - uses: pnpm/action-setup@v6.0.8
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build NSIS installer
+        env:
+          TAURI_NO_SIGN: '1'
+          TAURI_CI: '1'
+        run: pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis
+
+      - name: Collect artifacts + stable alias + sha256
+        id: collect
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          EXE_PATH="$(ls src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe | head -n1)"
+          echo "Found EXE: $EXE_PATH"
+          cp "$EXE_PATH" "dist/$(basename "$EXE_PATH")"
+          cp "$EXE_PATH" dist/Jsonita-windows-x64.exe
+          (cd dist && shasum -a 256 *.exe > SHA256SUMS.txt)
+          cat dist/SHA256SUMS.txt
+
+      - name: Upload Windows artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
