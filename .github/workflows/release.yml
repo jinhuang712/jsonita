@@ -1,8 +1,9 @@
 name: release
 
-# Tag-triggered release build: produces unsigned universal DMG (macOS) and
-# NSIS .exe (Windows), uploads them to a GitHub Release under both their
-# Tauri-generated versioned filename and a stable alias the website links to.
+# Tag-triggered release build. A dedicated "prepare" job creates (or reuses)
+# the GitHub Release first; platform jobs then just build + upload assets via
+# gh CLI, which avoids the softprops/action-gh-release tag_name race that
+# retried forever when two jobs touched the same release concurrently.
 # No code signing / notarization yet — Homebrew Cask v1.1 work (CLAUDE.md).
 
 on:
@@ -11,17 +12,42 @@ on:
       - 'v*'
 
 permissions:
-  contents: write  # needed by softprops/action-gh-release
+  contents: write
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.rel.outputs.upload_url }}
+    steps:
+      - name: Ensure release exists
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          PRERELEASE=false
+          [[ "$TAG" == *-* ]] && PRERELEASE=true
+          # gh release create is idempotent-ish: if it exists the command fails,
+          # so fall back to view.
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" \
+              --prerelease="$PRERELEASE" \
+              --notes "Release $TAG"
+          fi
+          echo "upload_url=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json uploadUrl --jq .uploadUrl)" >> "$GITHUB_OUTPUT"
+
   macos-dmg:
+    needs: prepare
     runs-on: macos-14
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v6.0.3
 
       - uses: pnpm/action-setup@v6.0.8
-
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: 20
@@ -45,8 +71,7 @@ jobs:
           TAURI_CI: '1'
         run: pnpm tauri build --target universal-apple-darwin --bundles dmg
 
-      - name: Collect artifacts + stable alias + sha256
-        id: collect
+      - name: Collect artifacts
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -54,30 +79,24 @@ jobs:
           echo "Found DMG: $DMG_PATH"
           cp "$DMG_PATH" "dist/$(basename "$DMG_PATH")"
           cp "$DMG_PATH" dist/Jsonita-macos-universal.dmg
-          (cd dist && shasum -a 256 *.dmg > SHA256SUMS-macos.txt)
-          cat dist/SHA256SUMS-macos.txt
 
-      - name: Upload macOS artifacts to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/*.dmg
-            dist/SHA256SUMS-macos.txt
-          draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
-          overwrite_files: true
-          # release may already exist (created by the Windows job, or manually);
-          # just upload files without attempting to recreate it
-          tag_name: ${{ github.ref_name }}
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          gh release upload "$TAG" dist/*.dmg \
+            --repo "$GITHUB_REPOSITORY" --clobber
 
   windows-exe:
+    needs: prepare
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v6.0.3
 
       - uses: pnpm/action-setup@v6.0.8
-
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: 20
@@ -99,8 +118,7 @@ jobs:
           TAURI_CI: '1'
         run: pnpm tauri build --bundles nsis
 
-      - name: Collect artifacts + stable alias + sha256
-        id: collect
+      - name: Collect artifacts
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
@@ -109,63 +127,32 @@ jobs:
           Write-Host "Found EXE: $($exe.FullName)"
           Copy-Item $exe.FullName "dist/$($exe.Name)"
           Copy-Item $exe.FullName "dist/Jsonita-windows-x64.exe"
-          # Compute SHA256 for both exes using certutil (Windows-native)
-          $lines = foreach ($f in (Get-ChildItem dist/*.exe)) {
-            $hash = (certutil -hashfile $f.FullName SHA256 2>$null | Select-Object -Index 1).Trim()
-            "$hash  $($f.Name)"
-          }
-          $lines | Set-Content -NoNewline:$false dist/SHA256SUMS-windows.txt
-          Get-Content dist/SHA256SUMS-windows.txt
 
-      - name: Upload Windows artifacts to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/*.exe
-            dist/SHA256SUMS-windows.txt
-          draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
-          overwrite_files: true
-          tag_name: ${{ github.ref_name }}
-
-  tidy:
-    needs: [macos-dmg, windows-exe]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.3
-      - name: Merge SHA256SUMS and tidy stale assets
+      - name: Upload
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF#refs/tags/}"
-          TMPDIR="$(mktemp -d)"
-          cd "$TMPDIR"
-          for f in SHA256SUMS-macos.txt SHA256SUMS-windows.txt; do
-            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/$f"
-            if curl -fsSL -o "$f" "$url"; then
-              echo "got $f"; cat "$f"
-            else
-              echo "warning: $f not found"
-            fi
-          done
-          cat SHA256SUMS-macos.txt SHA256SUMS-windows.txt 2>/dev/null > SHA256SUMS.txt || true
-          test -s SHA256SUMS.txt && echo "=== merged SHA256SUMS.txt ===" && cat SHA256SUMS.txt
-          gh release upload "$TAG" SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
-          for f in SHA256SUMS-macos.txt SHA256SUMS-windows.txt; do
-            gh release delete-asset "$TAG" "$f" -y --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
-          done
-          # Delete any versioned asset whose version does not match this tag.
-          VERSION="${TAG#v}"
-          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" \
-            --jq '.assets[] | "\(.id) \(.name)"' | while read -r id name; do
-              case "$name" in
-                Jsonita-macos-universal.dmg|Jsonita-windows-x64.exe|SHA256SUMS.txt) continue ;;
-                Jsonita_*_universal.dmg|Jsonita_*_aarch64.dmg|Jsonita_*_x64-setup.exe)
-                  file_ver="${name#Jsonita_}"; file_ver="${file_ver%%_*}"
-                  if [[ "$file_ver" != "$VERSION" ]]; then
-                    echo "Deleting stale asset: $name (version $file_ver != $VERSION)"
-                    gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$id"
-                  fi ;;
-              esac
-            done
+          gh release upload "$TAG" dist/*.exe \
+            --repo "$GITHUB_REPOSITORY" --clobber
+
+  checksums:
+    needs: [macos-dmg, windows-exe]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and hash all assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          TMP="$(mktemp -d)"
+          cd "$TMP"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.dmg' --pattern '*.exe'
+          shasum -a 256 * > SHA256SUMS.txt
+          echo "=== SHA256SUMS.txt ==="
+          cat SHA256SUMS.txt
+          gh release upload "$TAG" SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --clobber
