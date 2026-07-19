@@ -308,22 +308,25 @@
   <div class="container">
     <span class="section-eyebrow reveal">下载</span>
     <h2 class="section-title reveal">开始用 Jsonita。</h2>
-    <p class="section-lede reveal">v1.0 beta · macOS 为主,Windows 为 beta。macOS 签名包与 Homebrew 会在 v1.1 提供。</p>
+    <p class="section-lede reveal">v1.0 beta · macOS 为主,Windows 为 beta。</p>
 
     <div class="install-grid">
       <div class="install-card mac reveal">
         <div class="install-head">
           <div class="install-os"><span class="ic"> </span>macOS</div>
         </div>
-        <ol class="install-steps">
+        <p style="margin:0 0 14px;color:var(--text-muted);font-size:14px;">用 Homebrew 一行搞定:</p>
+        <pre style="background:var(--surface-quiet);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:0 0 16px;font-family:var(--font-mono-ui);font-size:13px;color:var(--text);overflow-x:auto;">brew install jinhuang712/jsonita/jsonita</pre>
+        <p style="margin:0 0 10px;color:var(--text-faint);font-size:13px;">或者手动下载 DMG:</p>
+        <ol class="install-steps" style="margin-bottom:14px;">
           <li>从 GitHub Releases 下载最新的 <code>.dmg</code>。</li>
           <li>打开后将 <strong>Jsonita.app</strong> 拖到 <code>/Applications</code>。</li>
           <li>启动一次,然后任意位置按 <kbd><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></kbd><kbd class="sep">+</kbd><kbd><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></kbd><kbd class="sep">+</kbd><kbd>J</kbd>。</li>
         </ol>
         <a class="btn btn-primary" href="https://github.com/jinhuang712/jsonita/releases/download/v1.0.0-beta.3/Jsonita-macos-universal.dmg" download>下载 macOS .dmg ↓</a>
         <div class="install-note" style="margin-top:16px;">
-          macOS 11 Big Sur 及以上 · arm64 与 x86_64 · 约 15 MB<br>
-          brew cask 将在 v1.1 提供
+          macOS 11 Big Sur 及以上 · arm64 · 约 4 MB<br>
+          未签名:首次打开请右键 → 打开(签名 v1.1 提供)
         </div>
       </div>
 
