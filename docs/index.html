@@ -310,22 +310,24 @@
   <div class="container">
     <span class="section-eyebrow reveal">Install</span>
     <h2 class="section-title reveal">Get Jsonita.</h2>
-    <p class="section-lede reveal">v1.0 beta · macOS primary, Windows beta. Signed macOS builds and Homebrew land in v1.1.</p>
+    <p class="section-lede reveal">v1.0 beta · macOS primary, Windows beta.</p>
 
     <div class="install-grid">
       <div class="install-card mac reveal">
         <div class="install-head">
           <div class="install-os"><span class="ic"> </span>macOS</div>
         </div>
-        <ol class="install-steps">
-          <li>Download the latest <code>.dmg</code> from GitHub Releases.</li>
-          <li>Open it and drag <strong>Jsonita.app</strong> into <code>/Applications</code>.</li>
-          <li>Launch once, then press <kbd><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></kbd><kbd class="sep">+</kbd><kbd><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></kbd><kbd class="sep">+</kbd><kbd>J</kbd> anywhere.</li>
+        <p style="margin:0 0 14px;color:var(--text-muted);font-size:14px;">Or install in one line with Homebrew:</p>
+        <pre style="background:var(--surface-quiet);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:0 0 16px;font-family:var(--font-mono-ui);font-size:13px;color:var(--text);overflow-x:auto;">brew install jinhuang712/jsonita/jsonita</pre>
+        <p style="margin:0 0 10px;color:var(--text-faint);font-size:13px;">Or grab the DMG manually:</p>
+        <ol class="install-steps" style="margin-bottom:14px;">
+          <li>Download the <code>.dmg</code>, open it and drag <strong>Jsonita.app</strong> into <code>/Applications</code>.</li>
+          <li>Launch once (right-click → Open the first time), then press <kbd><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 24a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8v32a8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8h32a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8V16a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg></kbd><kbd class="sep">+</kbd><kbd><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12M8 12L8 19L16 19L16 12"/></svg></kbd><kbd class="sep">+</kbd><kbd>J</kbd> anywhere.</li>
         </ol>
         <a class="btn btn-primary" href="https://github.com/jinhuang712/jsonita/releases/download/v1.0.0-beta.3/Jsonita-macos-universal.dmg" download>Download macOS .dmg ↓</a>
         <div class="install-note" style="margin-top:16px;">
-          macOS 11 Big Sur or later · arm64 &amp; x86_64 · ~15 MB<br>
-          brew cask coming in v1.1
+          macOS 11 Big Sur or later · arm64 · ~4 MB<br>
+          Unsigned beta: right-click → Open on first launch (signing lands in v1.1)
         </div>
       </div>
 
