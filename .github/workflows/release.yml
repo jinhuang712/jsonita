@@ -101,21 +101,21 @@ jobs:
 
       - name: Collect artifacts + stable alias + sha256
         id: collect
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          mkdir -p dist
-          # Tauri writes NSIS to target/release/bundle/nsis/ on a native
-          # Windows build (no target triple subdir when --target is omitted).
-          # Use find so we don't depend on the exact output subdir or on
-          # bash globbing expanding correctly under Git Bash on Windows.
-          EXE_PATH="$(find src-tauri/target -path '*/bundle/nsis/*.exe' -type f | head -n1)"
-          test -n "$EXE_PATH" || { echo "No NSIS exe found"; exit 1; }
-          echo "Found EXE: $EXE_PATH"
-          cp "$EXE_PATH" "dist/$(basename "$EXE_PATH")"
-          cp "$EXE_PATH" dist/Jsonita-windows-x64.exe
-          (cd dist && shasum -a 256 *.exe > SHA256SUMS-windows.txt)
-          cat dist/SHA256SUMS-windows.txt
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $exe = Get-ChildItem -Recurse -Path src-tauri/target -Filter *.exe -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'bundle[/\\]nsis' } | Select-Object -First 1
+          if (-not $exe) { Write-Error "No NSIS exe found"; exit 1 }
+          Write-Host "Found EXE: $($exe.FullName)"
+          Copy-Item $exe.FullName "dist/$($exe.Name)"
+          Copy-Item $exe.FullName "dist/Jsonita-windows-x64.exe"
+          # Compute SHA256 for both exes using certutil (Windows-native)
+          $lines = foreach ($f in (Get-ChildItem dist/*.exe)) {
+            $hash = (certutil -hashfile $f.FullName SHA256 2>$null | Select-Object -Index 1).Trim()
+            "$hash  $($f.Name)"
+          }
+          $lines | Set-Content -NoNewline:$false dist/SHA256SUMS-windows.txt
+          Get-Content dist/SHA256SUMS-windows.txt
 
       - name: Upload Windows artifacts to release
         uses: softprops/action-gh-release@v2
