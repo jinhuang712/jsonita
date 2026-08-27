@@ -3,6 +3,8 @@
 use crate::error::JsonitaError;
 
 const GITHUB_URL: &str = "https://github.com/jinhuang712/jsonita";
+const ZEN_URL: &str = "https://opencode.ai/zen";
+const OPENROUTER_URL: &str = "https://openrouter.ai";
 
 #[tauri::command]
 pub fn open_log_dir() -> Result<(), JsonitaError> {
@@ -81,6 +83,44 @@ pub fn open_github() -> Result<(), JsonitaError> {
             .spawn();
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+pub fn open_openrouter() -> Result<(), JsonitaError> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open").arg(OPENROUTER_URL).spawn();
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("cmd")
+            .args(["/C", "start", "", OPENROUTER_URL])
+            .spawn();
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let _ = std::process::Command::new("xdg-open").arg(OPENROUTER_URL).spawn();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn open_zen() -> Result<(), JsonitaError> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open").arg(ZEN_URL).spawn();
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("cmd")
+            .args(["/C", "start", "", ZEN_URL])
+            .spawn();
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let _ = std::process::Command::new("xdg-open").arg(ZEN_URL).spawn();
+    }
     Ok(())
 }
 

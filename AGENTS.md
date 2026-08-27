@@ -43,7 +43,7 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 ## Jsonita Behavior Invariants
 
 - User input is the visible editing truth. Preview, stale async responses, transport errors, and invalid AI output must never overwrite it. Only an explicit user action replaces input: applying a single-pane result, accepting AI output, or clearing.
-- AI repair is optional and user-triggered: it needs enabled AI, a stored key, and current input, and sends only the requested document to the configured provider. The response passes local JSON validation and is shown for review; only Accept may replace input. Cancel, provider failure, rate limiting, or invalid output keep the original text.
+- AI repair is optional and user-triggered: it needs enabled AI and current input, and sends only the requested document to the configured provider. Zen (OpenCode Zen free) works zero-config with no API key; Custom OpenAI/Anthropic providers require a stored key. The response passes local JSON validation and is shown for review; only Accept may replace input. Cancel, provider failure, rate limiting, or invalid output keep the original text.
 - Never report success when a transform, storage write, or AI request failed; never expose JSON text or API keys in messages or logs.
 - Hide is not quit: hiding preserves the in-memory workspace; quit ends the process and later restoration uses only durable data. A shortcut or permission failure must leave the menu-bar path usable.
 - Tree view is a read-only view of current input and must not show stale data after input becomes invalid.

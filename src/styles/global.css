@@ -547,7 +547,7 @@ select,
 }
 
 .jsonita-settings-section {
-  max-width: 560px;
+  max-width: min(720px, 100%);
   padding: 2px 0 14px;
   scroll-margin-top: 12px;
 }

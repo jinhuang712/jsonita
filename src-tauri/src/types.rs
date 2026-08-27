@@ -164,6 +164,22 @@ fn default_ai_max_tokens() -> u32 {
     8192
 }
 
+/// AI Provider —— zen = OpenCode Zen 零配置免费层；custom = 用户自带 OpenAI/Anthropic 兼容端点。
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AiProvider {
+    Zen,
+    Custom,
+}
+
+fn default_ai_provider() -> AiProvider {
+    AiProvider::Zen
+}
+
+fn default_ai_zen_model_id() -> String {
+    "hy3-free".to_string()
+}
+
 /// Settings 全字段权威定义见 CLAUDE.md 契约段。
 /// M1-N8 仅以 default 形态注入 SettingsStore；M2-N1 起从 settings.json 加载 + patch + 落盘。
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -179,6 +195,10 @@ pub struct Settings {
     #[serde(default = "default_shortcut_split_toggle")]
     pub shortcut_split_toggle: String,
     pub ai_enabled: bool,
+    #[serde(default = "default_ai_provider")]
+    pub ai_provider: AiProvider,
+    #[serde(default = "default_ai_zen_model_id")]
+    pub ai_zen_model_id: String,
     #[serde(default = "default_ai_protocol")]
     pub ai_protocol: AiProtocol,
     #[serde(default)]
@@ -213,7 +233,9 @@ impl Default for Settings {
             smart_width: true,
             shortcut_toggle: "CmdOrCtrl+Shift+J".to_string(),
             shortcut_split_toggle: "CmdOrCtrl+\\".to_string(),
-            ai_enabled: false,
+            ai_enabled: true,
+            ai_provider: AiProvider::Zen,
+            ai_zen_model_id: "hy3-free".to_string(),
             ai_protocol: AiProtocol::OpenAi,
             ai_base_url: String::new(),
             ai_model_id: String::new(),

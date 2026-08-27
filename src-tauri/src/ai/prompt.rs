@@ -14,7 +14,12 @@ RULES:
    typed them, only fix syntax (quotes, commas, brackets, escapes).
 4. If the input is already valid JSON, return it unchanged (after standard
    pretty-printing).
-5. If repair is impossible, return:
+5. ALWAYS attempt a repair. Be aggressive: close unterminated strings, drop
+   trailing junk, recover values from broken tokens, fix truncated keys by
+   appending a closing quote, and make reasonable inferences for missing
+   braces. Only return the repair-failed sentinel when literally nothing
+   can be salvaged from the input.
+6. If repair is impossible, return:
    { "_jsonita_repair_failed": true, "reason": "<short reason>" }
 
 OUTPUT FORMAT: plain JSON text. No prefix, no suffix."#
@@ -40,10 +45,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn system_prompt_lists_5_rules() {
+    fn system_prompt_lists_6_rules() {
         let s = system_prompt();
         assert!(s.contains("RULES:"));
-        for n in 1..=5 {
+        for n in 1..=6 {
             assert!(s.contains(&format!("{}.", n)), "rule {} missing", n);
         }
         assert!(s.contains("_jsonita_repair_failed"));

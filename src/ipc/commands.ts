@@ -53,6 +53,8 @@ export const win = {
 
 export const system = {
   openGithub: () => invoke<void>('open_github'),
+  openZen: () => invoke<void>('open_zen'),
+  openOpenRouter: () => invoke<void>('open_openrouter'),
 };
 
 // ──────────── settings (M2-N1) ────────────
@@ -89,6 +91,12 @@ export interface AiFixResp {
   elapsedMs: number;
 }
 
+export interface ZenModelInfo {
+  id: string;
+  free: boolean;
+  endpoint: string;
+}
+
 export const ai = {
   setApiKey: (apiKey: string) => invoke<void>('ai_set_api_key', { apiKey }),
   deleteApiKey: () => invoke<void>('ai_delete_api_key'),
@@ -101,6 +109,12 @@ export const ai = {
     invoke<TestConnectionResp>('ai_test_connection', { apiKey, protocol, baseUrl, modelId }),
   hasApiKey: () => invoke<boolean>('ai_has_api_key'),
   fix: (req: AiFixReq) => invoke<AiFixResp>('ai_fix', { req }),
+  listZenModels: () => invoke<ZenModelInfo[]>('ai_list_zen_models'),
+  listZenFreeModels: () => invoke<ZenModelInfo[]>('ai_list_zen_free_models'),
+  testZenConnection: (modelId: string, apiKey?: string | null) =>
+    invoke<TestConnectionResp>('ai_test_zen_connection', { modelId, apiKey: apiKey ?? null }),
+  listOpenRouterModels: () => invoke<ZenModelInfo[]>('ai_list_openrouter_models'),
+  listOpenRouterFreeModels: () => invoke<ZenModelInfo[]>('ai_list_openrouter_free_models'),
 };
 
 // ──────────── shortcuts (M2-N5) ────────────

@@ -55,6 +55,8 @@ fn main() {
             cmds::system::open_log_dir,
             cmds::system::open_db_path,
             cmds::system::open_github,
+            cmds::system::open_zen,
+            cmds::system::open_openrouter,
             cmds::system::quit_app,
             // M2-N1: settings (real load/patch/persist)
             cmds::settings::settings_get_all,
@@ -65,7 +67,12 @@ fn main() {
             cmds::ai::ai_delete_api_key,
             cmds::ai::ai_test_connection,
             cmds::ai::ai_has_api_key,
-            // M2-N3: ai fix (real DeepSeek HTTP)
+            cmds::ai::ai_list_zen_models,
+            cmds::ai::ai_list_zen_free_models,
+            cmds::ai::ai_test_zen_connection,
+            cmds::ai::ai_list_openrouter_models,
+            cmds::ai::ai_list_openrouter_free_models,
+            // M2-N3: ai fix (real DeepSeek HTTP) + Zen free
             cmds::ai::ai_fix,
         ])
         .setup(|app| {
