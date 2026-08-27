@@ -266,6 +266,7 @@ export function SettingsView() {
             ref={scrollRef}
             style={{
               flex: 1,
+              minWidth: 0,
               padding: 'var(--sp-5) var(--sp-5) var(--sp-6)',
               overflow: 'auto',
               fontSize: 'var(--fs-md)',
@@ -546,191 +547,38 @@ function GroupAppearance({ settings, patch }: GroupProps) {
   );
 }
 
-const AI_URL_PLACEHOLDER: Record<Settings['aiProtocol'], string> = {
-  openai: 'https://api.openai.com/v1/chat/completions',
-  anthropic: 'https://api.anthropic.com/v1/messages',
-};
-
-const AI_MODEL_PLACEHOLDER: Record<Settings['aiProtocol'], string> = {
-  openai: 'gpt-4o-mini',
-  anthropic: 'claude-3-5-sonnet-latest',
-};
-
-function aiConfigJson(settings: Settings): string {
-  return JSON.stringify(
-    {
-      protocol: settings.aiProtocol,
-      url: settings.aiBaseUrl,
-      model: settings.aiModelId,
-      thinking: settings.aiThinking,
-      maxTokens: settings.aiMaxTokens,
-    },
-    null,
-    2,
-  );
-}
-
 function GroupAi({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   const disabled = !settings.aiEnabled;
-  const [mode, setMode] = useState<'form' | 'json'>('form');
-  const [jsonText, setJsonText] = useState(() => aiConfigJson(settings));
-  const [jsonError, setJsonError] = useState<string | null>(null);
-
-  const switchMode = (m: 'form' | 'json') => {
-    if (m === 'json') {
-      // 进 JSON 模式时用当前配置重新种子，避免展示陈旧文本
-      setJsonText(aiConfigJson(settings));
-      setJsonError(null);
-    }
-    setMode(m);
-  };
-
-  const onJsonChange = (v: string) => {
-    setJsonText(v);
-    try {
-      const obj = JSON.parse(v);
-      if (obj.protocol !== 'openai' && obj.protocol !== 'anthropic') {
-        throw new Error(t('ai.invalidProtocol'));
-      }
-      patch({
-        aiProtocol: obj.protocol,
-        aiBaseUrl: String(obj.url ?? ''),
-        aiModelId: String(obj.model ?? ''),
-        aiThinking: Boolean(obj.thinking),
-        aiMaxTokens: Number(obj.maxTokens) || 8192,
-      });
-      setJsonError(null);
-    } catch (e) {
-      setJsonError(e instanceof Error ? e.message : String(e));
-    }
-  };
-
   return (
     <div
       aria-disabled={disabled}
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 10,
         opacity: disabled ? 0.45 : 1,
         pointerEvents: disabled ? 'none' : 'auto',
         transition: 'opacity var(--dur-base) var(--ease-out)',
       }}
     >
-      <div style={rowStyle}>
-        <span>{t('ai.editMode')}</span>
-        <SegmentedControl
-          value={mode}
-          options={[
-            { value: 'form', label: t('ai.modeForm') },
-            { value: 'json', label: t('ai.modeJson') },
-          ]}
-          onChange={switchMode}
-        />
-      </div>
-
-      {mode === 'form' ? (
-        <>
-          <div style={rowStyle}>
-            <span>{t('ai.protocol')}</span>
-            <SegmentedControl
-              value={settings.aiProtocol}
-              options={[
-                { value: 'openai', label: 'OpenAI' },
-                { value: 'anthropic', label: 'Anthropic' },
-              ]}
-              onChange={(v) => patch({ aiProtocol: v })}
-            />
+      <div style={{ ...rowStyle, alignItems: 'flex-end', gap: 12 }}>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 'var(--fs-md)', color: 'var(--text)' }}>
+            {t('groups.ai')}
           </div>
-          <label style={aiFieldStyle}>
-            <span style={aiFieldLabelStyle}>{t('ai.apiUrl')}</span>
-            <input
-              value={settings.aiBaseUrl}
-              onChange={(e) => patch({ aiBaseUrl: e.target.value })}
-              placeholder={AI_URL_PLACEHOLDER[settings.aiProtocol]}
-              style={aiInputStyle}
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </label>
-          <label style={aiFieldStyle}>
-            <span style={aiFieldLabelStyle}>{t('ai.model')}</span>
-            <input
-              value={settings.aiModelId}
-              onChange={(e) => patch({ aiModelId: e.target.value })}
-              placeholder={AI_MODEL_PLACEHOLDER[settings.aiProtocol]}
-              style={aiInputStyle}
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </label>
-        </>
-      ) : (
-        <div style={aiFieldStyle}>
-          <span style={aiFieldLabelStyle}>{t('ai.configJson')}</span>
-          <textarea
-            value={jsonText}
-            onChange={(e) => onJsonChange(e.target.value)}
-            style={aiJsonTextareaStyle}
-            spellCheck={false}
-            autoComplete="off"
-            rows={5}
-          />
-          {jsonError && <div style={aiErrorStyle}>{jsonError}</div>}
+          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+            {t('ai.sectionHint')}
+          </div>
         </div>
-      )}
-
-      <ApiKeyInput
-        settings={settings}
-        patch={patch}
-        blockTest={mode === 'json' && jsonError !== null}
-      />
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--accent)', letterSpacing: 0 }}>
+          Model: <span style={{ color: 'var(--text)' }}>openrouter/free</span> (auto)
+        </div>
+      </div>
+      <ApiKeyInput settings={settings} patch={patch} />
     </div>
   );
 }
-
-const aiFieldStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 4,
-};
-
-const aiFieldLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--fs-xs)',
-  color: 'var(--text-muted)',
-};
-
-const aiInputStyle: React.CSSProperties = {
-  width: '100%',
-  minWidth: 0,
-  padding: '4px 8px',
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
-  color: 'var(--text)',
-};
-
-const aiJsonTextareaStyle: React.CSSProperties = {
-  width: '100%',
-  minWidth: 0,
-  resize: 'vertical',
-  padding: '10px 12px',
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  fontFamily: 'var(--font-mono)',
-  fontSize: 'var(--fs-xs)',
-  lineHeight: 1.5,
-  color: 'var(--text)',
-};
-
-const aiErrorStyle: React.CSSProperties = {
-  fontSize: 'var(--fs-xs)',
-  color: 'var(--danger)',
-  wordBreak: 'break-word',
-};
 
 function GroupHistory({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
@@ -959,8 +807,8 @@ function AboutMeta({ label, value }: { label: string; value: string }) {
 }
 
 const rowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) auto',
   alignItems: 'center',
   gap: 16,
   minHeight: 38,
@@ -1085,6 +933,8 @@ const keyGroupStyle: React.CSSProperties = {
 };
 
 const inputStyle: React.CSSProperties = {
+  width: '100%',
+  minWidth: 0,
   padding: '5px 10px',
   background: 'var(--control-bg)',
   border: '1px solid var(--control-border)',

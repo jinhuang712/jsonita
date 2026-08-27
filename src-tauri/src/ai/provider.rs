@@ -1,7 +1,7 @@
-//! AI provider HTTP 客户端 —— OpenAI 兼容 与 Anthropic 两种协议。
+//! AI provider HTTP 客户端 —— OpenAI 兼容 / Anthropic / OpenCode Zen。
 //!
-//! fix() 按 settings.ai_protocol 分派请求体 / 鉴权 / 响应解析；
-//! test_connection() 短超时探活。prompt 纯模板；validate 抽取 + 二次验证。
+//! fix() 按 settings.ai_provider 分派：Zen 零配置免费层（匿名可调）或 Custom（OpenAI/Anthropic BYO）。
+//! Zen 免费模型通过 https://opencode.ai/zen/v1/models 动态发现，*-free + big-pickle 视为免费。
 
 use std::error::Error as StdError;
 use std::time::Duration;
@@ -12,15 +12,54 @@ use serde::{Deserialize, Serialize};
 use crate::ai::{prompt, validate};
 use crate::error::JsonitaError;
 use crate::store::{secrets, SettingsStore};
-use crate::types::{AiProtocol, Settings};
+use crate::types::{AiProvider, AiProtocol, Settings};
 
 const TIMEOUT_SEC: u64 = 60;
 const TEST_TIMEOUT_SEC: u64 = 15;
 const ANTHROPIC_VERSION: &str = "2023-06-01";
 
+const ZEN_CHAT_ENDPOINT: &str = "https://opencode.ai/zen/v1/chat/completions";
+const ZEN_RESPONSES_ENDPOINT: &str = "https://opencode.ai/zen/v1/responses";
+const ZEN_MODELS_URL: &str = "https://opencode.ai/zen/v1/models";
+const OPENROUTER_MODELS_URL: &str = "https://openrouter.ai/api/v1/models";
+
 /// 当前 secret account；旧版用 `deepseek_api_key`，读时兜底、删时一并清。
 pub const AI_ACCOUNT: &str = "ai_api_key";
 pub const LEGACY_ACCOUNT: &str = "deepseek_api_key";
+
+/// Zen 免费模型硬编码兜底（当 /v1/models 拉取失败时）。
+const ZEN_FREE_FALLBACK: &[&str] = &[
+    "hy3-free",
+    "mimo-v2.5-free",
+    "nemotron-3.5-lightning-free",
+    "nemotron-3-ultra-free",
+    "big-pickle",
+    "muse-spark-1.2-contributor-free",
+    "deepseek-v4-flash-free",
+    "laguna-s-2.1-free",
+];
+
+const OPENROUTER_FALLBACK_LIT: &[&str] = &[
+    "openai/gpt-4o",
+    "inclusionai/ling-3.0-flash-fin:free",
+    "dots-studio/dots-3-note-preview:free",
+    "liquid/lfm-2.5-2.6b:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "thinkingmachines/inkling-small:free",
+    "poolside/laguna-s-2.1:free",
+    "thinkingmachines/inkling:free",
+    "poolside/laguna-xs-2.1:free",
+    "cohere/north-mini-code:free",
+    "z-ai/glm-5.2:free",
+    "nvidia/nemotron-3.5-content-safety:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "minimax/minimax-m3:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "google/gemma-4-31b-it:free",
+    "minimax/minimax-m2.7:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+];
 
 /// reqwest 错误链展开 —— 否则只拿顶层 "error sending request"，丢了根因。
 fn err_chain(e: &reqwest::Error) -> String {
@@ -85,6 +124,14 @@ pub struct TestConnectionResp {
     pub ok: bool,
     pub latency_ms: u64,
     pub model_echoed: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZenModelInfo {
+    pub id: String,
+    pub free: bool,
+    pub endpoint: String,
 }
 
 // ── wire 结构 ────────────────────────────────────────────────────
@@ -181,12 +228,52 @@ struct AnthropicUsage {
     output_tokens: u32,
 }
 
+// Zen Responses API
+#[derive(Serialize)]
+struct ZenResponsesRequest {
+    model: String,
+    input: Vec<ZenResponsesInput>,
+    temperature: f32,
+    max_output_tokens: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reasoning: Option<ZenReasoningParam>,
+}
+
+#[derive(Serialize)]
+struct ZenResponsesInput {
+    role: String,
+    content: String,
+}
+
+#[derive(Serialize)]
+struct ZenReasoningParam {
+    effort: String,
+}
+
 /// 一次补全的归一化结果，屏蔽协议差异。
 struct Completion {
     content: String,
     model: String,
     tokens_in: u32,
     tokens_out: u32,
+}
+
+// ── helpers ──────────────────────────────────────────────────────
+
+fn is_zen_free_model(id: &str) -> bool {
+    id.ends_with("-free") || id == "big-pickle"
+}
+
+fn zen_endpoint_for_model(model_id: &str) -> &'static str {
+    if model_id == "muse-spark-1.2-contributor-free" {
+        ZEN_RESPONSES_ENDPOINT
+    } else {
+        ZEN_CHAT_ENDPOINT
+    }
+}
+
+fn is_responses_model(model_id: &str) -> bool {
+    zen_endpoint_for_model(model_id) == ZEN_RESPONSES_ENDPOINT
 }
 
 // ── client ──────────────────────────────────────────────────────
@@ -235,13 +322,9 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
     if !settings.ai_enabled {
         return Err(JsonitaError::AiDisabled);
     }
-    if settings.ai_base_url.trim().is_empty() || settings.ai_model_id.trim().is_empty() {
-        return Err(JsonitaError::Secrets("ai base url / model not configured".into()));
-    }
-    let key = get_api_key()?.ok_or_else(|| JsonitaError::Secrets("no api key".into()))?;
 
     let started = std::time::Instant::now();
-    let max_tokens = if settings.ai_max_tokens > 0 {
+    let mut max_tokens = if settings.ai_max_tokens > 0 {
         settings.ai_max_tokens
     } else {
         estimate_max_tokens(&req.text)
@@ -255,14 +338,70 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
     let system = prompt::system_prompt().to_string();
     let user = prompt::user_prompt(&req.text, req.error_line, req.error_col, req.error_msg.as_deref());
 
-    let completion = match settings.ai_protocol {
-        AiProtocol::OpenAi => {
-            openai_call(&settings.ai_base_url, &settings.ai_model_id, &key, system, user, max_tokens, thinking)
-                .await?
+    let completion = match settings.ai_provider {
+        AiProvider::Zen => {
+            let primary = settings.ai_zen_model_id.trim().to_string();
+            if primary.is_empty() {
+                return Err(JsonitaError::Secrets("zen model not configured".into()));
+            }
+            // 构建回退队列：首选模型 + 其余免费模型（去重）
+            let mut candidates: Vec<String> = Vec::new();
+            candidates.push(primary.clone());
+            for &fallback in ZEN_FREE_FALLBACK {
+                if fallback != primary {
+                    candidates.push(fallback.to_string());
+                }
+            }
+            let mut last_err: Option<JsonitaError> = None;
+            let mut completion_opt: Option<Completion> = None;
+            for model in candidates {
+                let mut try_max = max_tokens;
+                if is_responses_model(&model) {
+                    try_max = try_max.max(1024);
+                }
+                let key: Option<&str> = None;
+                let zen_thinking = Some(ThinkingParam { kind: "disabled" });
+                match zen_call(&model, key, system.clone(), user.clone(), try_max, zen_thinking).await {
+                    Ok(c) => {
+                        completion_opt = Some(c);
+                        break;
+                    }
+                    Err(JsonitaError::RateLimit { retry_after_sec }) => {
+                        last_err = Some(JsonitaError::RateLimit { retry_after_sec });
+                        continue; // 免费限流，自动试下一个
+                    }
+                    Err(e) => {
+                        // 401/其他错误直接透出（避免用错误模型掩盖真实问题）
+                        // 但若是当前模型非首选且失败，仍尝试下一个 free
+                        if model == primary {
+                            return Err(e);
+                        } else {
+                            last_err = Some(e);
+                            continue;
+                        }
+                    }
+                }
+            }
+            match completion_opt {
+                Some(c) => c,
+                None => return Err(last_err.unwrap_or(JsonitaError::RateLimit { retry_after_sec: 60 })),
+            }
         }
-        AiProtocol::Anthropic => {
-            anthropic_call(&settings.ai_base_url, &settings.ai_model_id, &key, system, user, max_tokens, thinking)
-                .await?
+        AiProvider::Custom => {
+            if settings.ai_base_url.trim().is_empty() || settings.ai_model_id.trim().is_empty() {
+                return Err(JsonitaError::Secrets("ai base url / model not configured".into()));
+            }
+            let key = get_api_key()?.ok_or_else(|| JsonitaError::Secrets("no api key".into()))?;
+            match settings.ai_protocol {
+                AiProtocol::OpenAi => {
+                    openai_call(&settings.ai_base_url, &settings.ai_model_id, &key, system, user, max_tokens, thinking)
+                        .await?
+                }
+                AiProtocol::Anthropic => {
+                    anthropic_call(&settings.ai_base_url, &settings.ai_model_id, &key, system, user, max_tokens, thinking)
+                        .await?
+                }
+            }
         }
     };
 
@@ -281,6 +420,163 @@ pub async fn fix(settings: &Settings, req: &AiFixReq) -> Result<AiFixResp, Jsoni
         tokens_in: completion.tokens_in,
         tokens_out: completion.tokens_out,
         elapsed_ms: started.elapsed().as_millis() as u64,
+    })
+}
+
+async fn zen_call(
+    model: &str,
+    key: Option<&str>,
+    system: String,
+    user: String,
+    max_tokens: u32,
+    thinking: Option<ThinkingParam>,
+) -> Result<Completion, JsonitaError> {
+    if is_responses_model(model) {
+        zen_responses_call(model, key, system, user, max_tokens).await
+    } else {
+        zen_chat_call(model, key, system, user, max_tokens, thinking).await
+    }
+}
+
+async fn zen_chat_call(
+    model: &str,
+    key: Option<&str>,
+    system: String,
+    user: String,
+    max_tokens: u32,
+    thinking: Option<ThinkingParam>,
+) -> Result<Completion, JsonitaError> {
+    let body = OpenAiRequest {
+        model,
+        messages: vec![
+            OpenAiMessage { role: "system", content: system },
+            OpenAiMessage { role: "user", content: user },
+        ],
+        temperature: 0.0,
+        max_tokens,
+        stream: false,
+        thinking,
+    };
+    let client = build_client(TIMEOUT_SEC)?;
+    let mut req = client.post(ZEN_CHAT_ENDPOINT).json(&body);
+    if let Some(k) = key.filter(|k| !k.is_empty()) {
+        req = req.bearer_auth(k);
+    }
+    let resp = req
+        .send()
+        .await
+        .map_err(|e| JsonitaError::Http { status: 0, body: err_chain(&e) })?;
+    let resp = check_status(resp).await?;
+    let parsed: OpenAiResponse = resp
+        .json()
+        .await
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+    let content = parsed
+        .choices
+        .first()
+        .map(|c| c.message.content.clone())
+        .unwrap_or_default();
+    let usage = parsed.usage.unwrap_or_default();
+    Ok(Completion {
+        content,
+        model: parsed.model.unwrap_or_else(|| model.to_string()),
+        tokens_in: usage.prompt_tokens,
+        tokens_out: usage.completion_tokens,
+    })
+}
+
+async fn zen_responses_call(
+    model: &str,
+    key: Option<&str>,
+    system: String,
+    user: String,
+    max_tokens: u32,
+) -> Result<Completion, JsonitaError> {
+    // Zen Responses 固定用 input 数组，JSON 修复关思考以省时（minimal）
+    let body = ZenResponsesRequest {
+        model: model.to_string(),
+        input: vec![
+            ZenResponsesInput { role: "system".to_string(), content: system },
+            ZenResponsesInput { role: "user".to_string(), content: user },
+        ],
+        temperature: 0.0,
+        max_output_tokens: max_tokens,
+        reasoning: Some(ZenReasoningParam { effort: "minimal".to_string() }),
+    };
+    let client = build_client(TIMEOUT_SEC)?;
+    let mut req = client.post(ZEN_RESPONSES_ENDPOINT).json(&body);
+    if let Some(k) = key.filter(|k| !k.is_empty()) {
+        req = req.bearer_auth(k);
+    }
+    let resp = req
+        .send()
+        .await
+        .map_err(|e| JsonitaError::Http { status: 0, body: err_chain(&e) })?;
+    let resp = check_status(resp).await?;
+    let value: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| JsonitaError::Http { status: 0, body: e.to_string() })?;
+
+    // 解析 Responses JSON：output[message].content[output_text].text
+    let mut content = String::new();
+    if let Some(outputs) = value.get("output").and_then(|v| v.as_array()) {
+        for out in outputs {
+            if out.get("type").and_then(|v| v.as_str()) == Some("message") {
+                if let Some(contents) = out.get("content").and_then(|v| v.as_array()) {
+                    for c in contents {
+                        if c.get("type").and_then(|v| v.as_str()) == Some("output_text") {
+                            if let Some(t) = c.get("text").and_then(|v| v.as_str()) {
+                                content.push_str(t);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // fallback: 若未按上述结构，尝试直接取 output_text 顶层
+    if content.is_empty() {
+        if let Some(t) = value
+            .pointer("/output/1/content/0/text")
+            .and_then(|v| v.as_str())
+        {
+            content = t.to_string();
+        }
+    }
+
+    let model_echoed = value
+        .get("model")
+        .and_then(|v| v.as_str())
+        .unwrap_or(model)
+        .to_string();
+    let usage = value.get("usage");
+    let tokens_in = usage
+        .and_then(|u| u.get("input_tokens"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0) as u32;
+    let tokens_out = usage
+        .and_then(|u| u.get("output_tokens"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0) as u32;
+    // 检测错误体：若 status != completed 且有 error
+    if content.is_empty() {
+        if let Some(status) = value.get("status").and_then(|v| v.as_str()) {
+            if status != "completed" {
+                if let Some(err) = value.get("error").and_then(|v| v.as_str()) {
+                    return Err(JsonitaError::Http {
+                        status: 500,
+                        body: err.to_string(),
+                    });
+                }
+            }
+        }
+    }
+    Ok(Completion {
+        content,
+        model: model_echoed,
+        tokens_in,
+        tokens_out,
     })
 }
 
@@ -393,6 +689,7 @@ async fn check_status(resp: reqwest::Response) -> Result<reqwest::Response, Json
         // 不透传上游原始 body（可能含 request id、回显的用户文档、鉴权字样）；
         // 与 test_connection 一致，只回状态码 + 简短归因。
         let code = status.as_u16();
+        // 尝试解析 FreeUsageLimitError 以归因更准，但不透传细节
         let _ = resp.text().await;
         return Err(JsonitaError::Http { status: code, body: http_hint(code).to_string() });
     }
@@ -402,6 +699,141 @@ async fn check_status(resp: reqwest::Response) -> Result<reqwest::Response, Json
 pub async fn fix_via_store(store: &SettingsStore, req: AiFixReq) -> Result<AiFixResp, JsonitaError> {
     let s = store.get();
     fix(&s, &req).await
+}
+
+// ── list zen models ───────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct ZenModelsResponse {
+    data: Vec<ZenModelEntry>,
+}
+
+#[derive(Deserialize)]
+struct ZenModelEntry {
+    id: String,
+}
+
+pub async fn list_zen_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let client = build_client(TEST_TIMEOUT_SEC)?;
+    let resp = match client.get(ZEN_MODELS_URL).send().await {
+        Ok(r) => r,
+        Err(_) => return fallback_zen_models(),
+    };
+    if !resp.status().is_success() {
+        let _ = resp.text().await;
+        return fallback_zen_models();
+    }
+    let parsed: ZenModelsResponse = match resp.json().await {
+        Ok(p) => p,
+        Err(_) => return fallback_zen_models(),
+    };
+    let mut out: Vec<ZenModelInfo> = parsed
+        .data
+        .into_iter()
+        .map(|e| {
+            let free = is_zen_free_model(&e.id);
+            ZenModelInfo {
+                endpoint: zen_endpoint_for_model(&e.id).to_string(),
+                id: e.id,
+                free,
+            }
+        })
+        .collect();
+    // 免费优先、ID 字典序稳定
+    out.sort_by(|a, b| match b.free.cmp(&a.free) {
+        std::cmp::Ordering::Equal => a.id.cmp(&b.id),
+        other => other,
+    });
+    if out.is_empty() {
+        return fallback_zen_models();
+    }
+    Ok(out)
+}
+
+fn fallback_zen_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let mut out: Vec<ZenModelInfo> = ZEN_FREE_FALLBACK
+        .iter()
+        .map(|id| ZenModelInfo {
+            id: id.to_string(),
+            free: true,
+            endpoint: zen_endpoint_for_model(id).to_string(),
+        })
+        .collect();
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(out)
+}
+
+pub async fn list_zen_free_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let all = list_zen_models().await?;
+    Ok(all.into_iter().filter(|m| m.free).collect())
+}
+
+// ── list openrouter models ───────────────────────────────────────
+
+#[derive(Deserialize)]
+struct OpenRouterModelsResponse {
+    data: Vec<OpenRouterModelEntry>,
+}
+
+#[derive(Deserialize)]
+struct OpenRouterModelEntry {
+    id: String,
+}
+
+pub async fn list_openrouter_models(api_key: Option<String>) -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let client = build_client(TEST_TIMEOUT_SEC)?;
+    // 带 Key 拉更多模型（按账户额度过滤）；匿名拉也 OK，列表较精简
+    let key = api_key.and_then(|k| if k.trim().is_empty() { None } else { Some(k) });
+    let mut req = client.get(OPENROUTER_MODELS_URL);
+    if let Some(k) = &key {
+        req = req.bearer_auth(k);
+    }
+    let resp = match req.send().await {
+        Ok(r) => r,
+        Err(_) => return fallback_openrouter_models(),
+    };
+    if !resp.status().is_success() {
+        let _ = resp.text().await;
+        return fallback_openrouter_models();
+    }
+    let parsed: OpenRouterModelsResponse = match resp.json().await {
+        Ok(p) => p,
+        Err(_) => return fallback_openrouter_models(),
+    };
+    let mut out: Vec<ZenModelInfo> = parsed
+        .data
+        .into_iter()
+        .map(|e| {
+            let free = e.id.ends_with(":free");
+            ZenModelInfo {
+                id: e.id,
+                free,
+                endpoint: "https://openrouter.ai/api/v1/chat/completions".to_string(),
+            }
+        })
+        .collect();
+    // 付费优先、free 跟随，按 id 字典序稳定
+    out.sort_by(|a, b| match b.free.cmp(&a.free) {
+        std::cmp::Ordering::Equal => a.id.cmp(&b.id),
+        other => other,
+    });
+    if out.is_empty() {
+        return fallback_openrouter_models();
+    }
+    Ok(out)
+}
+
+pub async fn list_openrouter_free_models(api_key: Option<String>) -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let all = list_openrouter_models(api_key).await?;
+    Ok(all.into_iter().filter(|m| m.free).collect())
+}
+
+fn fallback_openrouter_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    Ok(OPENROUTER_FALLBACK_LIT.iter().map(|id| ZenModelInfo {
+        id: (*id).to_string(),
+        free: id.ends_with(":free"),
+        endpoint: "https://openrouter.ai/api/v1/chat/completions".to_string(),
+    }).collect())
 }
 
 // ── test connection ──────────────────────────────────────────────
@@ -477,6 +909,66 @@ pub async fn test_connection(
     }
 }
 
+/// Zen 探活：支持匿名 free 模型。key 可空；model 决定 endpoint。
+pub async fn test_zen_connection(model_id: &str, api_key: Option<String>) -> TestConnectionResp {
+    let model = model_id.trim();
+    if model.is_empty() {
+        return fail("empty model name");
+    }
+    let client = match build_client(TEST_TIMEOUT_SEC) {
+        Ok(c) => c,
+        Err(e) => return fail(&format!("client build failed: {e:?}")),
+    };
+    let started = std::time::Instant::now();
+    let is_resp = is_responses_model(model);
+    let key = api_key.as_deref().filter(|k| !k.is_empty());
+    let request = if is_resp {
+        let body = serde_json::json!({
+            "model": model,
+            "input": "ping",
+            "max_output_tokens": 1
+        });
+        let mut r = client.post(ZEN_RESPONSES_ENDPOINT).json(&body);
+        if let Some(k) = key {
+            r = r.bearer_auth(k);
+        }
+        r
+    } else {
+        let body = serde_json::json!({
+            "model": model,
+            "messages": [{"role": "user", "content": "ping"}],
+            "max_tokens": 1,
+            "stream": false,
+            "thinking": {"type": "disabled"}
+        });
+        let mut r = client.post(ZEN_CHAT_ENDPOINT).json(&body);
+        if let Some(k) = key {
+            r = r.bearer_auth(k);
+        }
+        r
+    };
+    let resp = request.send().await;
+    let latency_ms = started.elapsed().as_millis() as u64;
+    match resp {
+        Ok(r) if r.status().is_success() => {
+            let json: serde_json::Value = r.json().await.unwrap_or(serde_json::Value::Null);
+            let echoed = json
+                .get("model")
+                .and_then(|v| v.as_str())
+                .or_else(|| json.get("id").and_then(|v| v.as_str()))
+                .unwrap_or(model)
+                .to_string();
+            TestConnectionResp { ok: true, latency_ms, model_echoed: echoed }
+        }
+        Ok(r) => {
+            let status = r.status().as_u16();
+            let _ = r.text().await;
+            TestConnectionResp { ok: false, latency_ms, model_echoed: http_reason(status) }
+        }
+        Err(_) => TestConnectionResp { ok: false, latency_ms, model_echoed: "connection failed".into() },
+    }
+}
+
 /// 状态码 → 简短、不泄露细节的归因短语（不含状态码本身）。
 fn http_hint(status: u16) -> &'static str {
     match status {
@@ -543,5 +1035,24 @@ mod tests {
             openai_endpoint("https://api.openai.com/v1/chat/completions"),
             "https://api.openai.com/v1/chat/completions"
         );
+    }
+
+    #[test]
+    fn zen_free_detection() {
+        assert!(is_zen_free_model("hy3-free"));
+        assert!(is_zen_free_model("mimo-v2.5-free"));
+        assert!(is_zen_free_model("big-pickle"));
+        assert!(!is_zen_free_model("gpt-5"));
+        assert!(!is_zen_free_model("deepseek-v4-pro"));
+    }
+
+    #[test]
+    fn zen_endpoint_routing() {
+        assert_eq!(zen_endpoint_for_model("hy3-free"), ZEN_CHAT_ENDPOINT);
+        assert_eq!(
+            zen_endpoint_for_model("muse-spark-1.2-contributor-free"),
+            ZEN_RESPONSES_ENDPOINT
+        );
+        assert_eq!(zen_endpoint_for_model("big-pickle"), ZEN_CHAT_ENDPOINT);
     }
 }

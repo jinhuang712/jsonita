@@ -17,6 +17,8 @@ export interface Settings {
   shortcutToggle: string;
   shortcutSplitToggle: string;
   aiEnabled: boolean;
+  aiProvider: 'zen' | 'custom';
+  aiZenModelId: string;
   aiProtocol: 'openai' | 'anthropic';
   aiBaseUrl: string;
   aiModelId: string;
@@ -39,7 +41,9 @@ const DEFAULT_SETTINGS: Settings = {
   smartWidth: true,
   shortcutToggle: 'CmdOrCtrl+Shift+J',
   shortcutSplitToggle: 'CmdOrCtrl+\\',
-  aiEnabled: false,
+  aiEnabled: true,
+  aiProvider: 'zen',
+  aiZenModelId: 'hy3-free',
   aiProtocol: 'openai',
   aiBaseUrl: '',
   aiModelId: '',

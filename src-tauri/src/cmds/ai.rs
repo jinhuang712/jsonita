@@ -4,7 +4,7 @@
 
 use tauri::State;
 
-use crate::ai::provider::{self, TestConnectionResp};
+use crate::ai::provider::{self, TestConnectionResp, ZenModelInfo};
 use crate::error::JsonitaError;
 use crate::store::SettingsStore;
 use crate::types::AiProtocol;
@@ -35,6 +35,39 @@ pub async fn ai_test_connection(
 #[tauri::command]
 pub fn ai_has_api_key() -> bool {
     provider::has_api_key()
+}
+
+/// 列出 Zen 模型（动态从 https://opencode.ai/zen/v1/models 拉取，失败回退硬编码）。
+#[tauri::command]
+pub async fn ai_list_zen_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    provider::list_zen_models().await
+}
+
+#[tauri::command]
+pub async fn ai_list_zen_free_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    provider::list_zen_free_models().await
+}
+
+/// Zen 探活（支持匿名 free）。key 可空。
+#[tauri::command]
+pub async fn ai_test_zen_connection(
+    model_id: String,
+    api_key: Option<String>,
+) -> Result<TestConnectionResp, JsonitaError> {
+    Ok(provider::test_zen_connection(&model_id, api_key).await)
+}
+
+/// 列出 OpenRouter 模型（带 Key 可拉账户过滤后的完整列表；匿名也能拉到精简版）。
+#[tauri::command]
+pub async fn ai_list_openrouter_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let key = provider::get_api_key().ok().flatten();
+    provider::list_openrouter_models(key).await
+}
+
+#[tauri::command]
+pub async fn ai_list_openrouter_free_models() -> Result<Vec<ZenModelInfo>, JsonitaError> {
+    let key = provider::get_api_key().ok().flatten();
+    provider::list_openrouter_free_models(key).await
 }
 
 /// AI Fix 主命令 ── M2-N3 真实化。

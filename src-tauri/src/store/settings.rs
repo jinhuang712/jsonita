@@ -17,12 +17,21 @@ pub struct SettingsStore {
 
 impl SettingsStore {
     /// 启动期调用：load settings.json → default 兜底。
+    /// Zen-only 精简：旧文件无论是否含 aiProvider，一律迁移到 Zen（Custom 已下线）。
     pub fn load() -> Self {
         let path = default_path();
         let initial = path
             .as_ref()
             .and_then(|p| std::fs::read_to_string(p).ok())
-            .and_then(|s| serde_json::from_str::<Settings>(&s).ok())
+            .and_then(|s| {
+                let mut settings: Settings = serde_json::from_str(&s).ok()?;
+                // 强制迁移到 Zen，废弃 Custom/自带 Key 入口
+                settings.ai_provider = crate::types::AiProvider::Zen;
+                if settings.ai_zen_model_id.trim().is_empty() {
+                    settings.ai_zen_model_id = "hy3-free".to_string();
+                }
+                Some(settings)
+            })
             .unwrap_or_default();
         SettingsStore {
             inner: Arc::new(RwLock::new(initial)),

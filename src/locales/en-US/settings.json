@@ -24,6 +24,7 @@
     "editorSoftWrap": "Editor soft-wrap"
   },
   "ai": {
+    "sectionHint": "OpenRouter free endpoint (auto-selected). Add a key for paid models.",
     "enabled": "Enable AI Fix",
     "editMode": "Edit mode",
     "modeForm": "Form",
