@@ -13,7 +13,7 @@ import { DiffView } from './DiffView';
 /**
  * AI Fix orchestrator — tab 切换到 ai-fix 时自动触发 ai_fix，loading → DiffView → Accept/Reject。
  *
- * Spec ref: CLAUDE.md 契约段 状态机 · design/screens.md DiffView 视觉
+ * Spec ref: CLAUDE.md 契约段 状态机 · design/screens.md § AI Fix
  */
 export function AiFixPane() {
   const status = useAiStore((s) => s.status);
@@ -30,7 +30,6 @@ export function AiFixPane() {
   const setContent = useEditorStore((s) => s.setContent);
   const setActivePane = useUiStore((s) => s.setActivePane);
 
-  const paneClassName = 'jsonita-ai-fix-pane';
   // 防 StrictMode 下同一渲染闭包（status 恒为 idle）双发请求。
   const inFlightRef = useRef(false);
 
@@ -99,25 +98,18 @@ export function AiFixPane() {
 
   if (status === 'requesting') {
     return (
-      <div
-        className={paneClassName}
-        style={{
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 24,
-        }}
-      >
-        <div className="jsonita-aifix-wait" role="status" aria-label="Repairing your JSON">
-          <div className="jsonita-aifix-skeleton" aria-hidden="true">
-            <span className="jsonita-aifix-brace">{'{'}</span>
-            <span className="jsonita-aifix-line" style={{ width: 128 }} />
-            <span className="jsonita-aifix-line" style={{ width: 186, animationDelay: '0.16s' }} />
-            <span className="jsonita-aifix-line" style={{ width: 96, animationDelay: '0.32s' }} />
-            <span className="jsonita-aifix-brace">{'}'}</span>
+      <div className="jsonita-ai-fix-pane">
+        <div className="jsonita-ai-fix-center">
+          <div className="jsonita-aifix-wait" role="status" aria-label="Repairing your JSON">
+            <div className="jsonita-aifix-skeleton" aria-hidden="true">
+              <span className="jsonita-aifix-brace">{'{'}</span>
+              <span className="jsonita-aifix-line" style={{ width: 128 }} />
+              <span className="jsonita-aifix-line" style={{ width: 186, animationDelay: '0.16s' }} />
+              <span className="jsonita-aifix-line" style={{ width: 96, animationDelay: '0.32s' }} />
+              <span className="jsonita-aifix-brace">{'}'}</span>
+            </div>
+            <div className="jsonita-aifix-caption">Repairing your JSON…</div>
           </div>
-          <div className="jsonita-aifix-caption">Repairing your JSON…</div>
         </div>
       </div>
     );
@@ -125,37 +117,37 @@ export function AiFixPane() {
 
   if (status === 'error') {
     return (
-      <div className={paneClassName} style={{ padding: 16 }}>
-        <div style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', marginBottom: 8 }}>
-          Error · {aiError ?? 'AI Fix failed'}
+      <div className="jsonita-ai-fix-pane">
+        <div className="jsonita-ai-fix-center" role="alert">
+          <div className="jsonita-ai-fix-message">
+            <div className="jsonita-ai-fix-message-title">AI Fix didn't finish</div>
+            <div className="jsonita-ai-fix-message-body">{aiError ?? 'AI Fix failed'}</div>
+            <div className="jsonita-ai-fix-message-actions">
+              <ActionButton variant="secondary" onClick={reject}>
+                Close
+              </ActionButton>
+            </div>
+          </div>
         </div>
-        <ActionButton variant="secondary" onClick={reject}>
-          Close
-        </ActionButton>
       </div>
     );
   }
 
   if (status === 'awaiting-decision') {
     return (
-      <div className={paneClassName} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, minHeight: 0 }}>
+      <div className="jsonita-ai-fix-pane">
+        <div className="jsonita-ai-fix-diff">
           <DiffView before={before} after={after} />
         </div>
-        <div
-          style={{
-            display: 'flex',
-            gap: 6,
-            justifyContent: 'flex-end',
-            padding: '8px 14px',
-            background: 'var(--bg)',
-            borderTop: '1px solid var(--border)',
-          }}
-        >
+        <div className="jsonita-ai-fix-footer">
           <ActionButton variant="secondary" onClick={reject} title="Esc">
             Cancel
           </ActionButton>
-          <ActionButton variant="primary" onClick={() => acceptAiFix(after, before, setContent, aiReset, setActivePane)} title={isMacPlatform() ? 'Cmd+Enter' : 'Ctrl+Enter'}>
+          <ActionButton
+            variant="primary"
+            onClick={() => acceptAiFix(after, before, setContent, aiReset, setActivePane)}
+            title={isMacPlatform() ? 'Cmd+Enter' : 'Ctrl+Enter'}
+          >
             <ShortcutGlyph accelerator="CmdOrCtrl+Enter" decorative />
             Accept
           </ActionButton>
@@ -166,4 +158,3 @@ export function AiFixPane() {
 
   return null;
 }
-

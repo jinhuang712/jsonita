@@ -12,13 +12,14 @@ const PANE_LABEL_KEY: Record<Pane, string> = {
   'ai-fix': 'aiFix',
 };
 
-const STATE_COLOR: Record<SinglePaneApplyState, string> = {
-  idle: 'var(--text-muted)',
-  running: 'var(--primary)',
-  success: 'var(--ok)',
-  error: 'var(--danger)',
+const STATE_CLASS: Record<SinglePaneApplyState, string> = {
+  idle: '',
+  running: 'jsonita-single-pane-hint-running',
+  success: 'jsonita-single-pane-hint-success',
+  error: 'jsonita-single-pane-hint-error',
 };
 
+/** 单栏模式下悬浮在状态栏上方的执行提示：键帽 + 一句话。 */
 export function SinglePaneHint() {
   const { t } = useTranslation(['shell', 'panes']);
   const settings = useSettingsStore((s) => s.settings);
@@ -43,41 +44,17 @@ export function SinglePaneHint() {
           ? t('shell:singlePane.failed', { pane })
           : t('shell:singlePane.run', { pane });
 
+  const className = [
+    'jsonita-single-pane-hint',
+    isAiFixPrimary ? 'jsonita-single-pane-hint-ai' : STATE_CLASS[state],
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div
-      aria-live="polite"
-      style={{
-        position: 'absolute',
-        right: 12,
-        bottom: 44,
-        zIndex: 'var(--z-sticky)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        maxWidth: 'calc(100% - 24px)',
-        padding: '6px 10px',
-        border: isAiFixPrimary
-          ? '1px solid color-mix(in srgb, var(--accent) 28%, var(--control-border))'
-          : '1px solid var(--control-border)',
-        borderRadius: 'var(--radius-md)',
-        background: isAiFixPrimary
-          ? 'color-mix(in srgb, var(--accent) 10%, var(--surface-raised))'
-          : 'color-mix(in srgb, var(--surface-raised) 84%, transparent)',
-        backdropFilter: 'var(--glass-blur)',
-        WebkitBackdropFilter: 'var(--glass-blur)',
-        boxShadow: isAiFixPrimary
-          ? '0 6px 18px color-mix(in srgb, var(--accent) 8%, transparent), var(--shadow-sm)'
-          : 'var(--shadow-sm)',
-        color: isAiFixPrimary ? 'color-mix(in srgb, var(--accent) 82%, var(--text))' : STATE_COLOR[state],
-        fontFamily: 'var(--font-ui)',
-        fontSize: 'var(--fs-xs)',
-        lineHeight: 1.3,
-        pointerEvents: 'none',
-        whiteSpace: 'normal',
-      }}
-    >
+    <div aria-live="polite" className={className} style={{ bottom: 44, padding: '6px 10px' }}>
       <ShortcutGlyph accelerator="CmdOrCtrl+Enter" />
-      <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{label}</span>
+      <span className="jsonita-single-pane-hint-label">{label}</span>
     </div>
   );
 }

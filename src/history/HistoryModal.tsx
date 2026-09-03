@@ -120,10 +120,7 @@ export function HistoryModal() {
     }
   };
 
-  const title = useMemo(() => {
-    const suffix = rows.length > 0 ? ` (${rows.length})` : '';
-    return `${t('title')}${suffix}`;
-  }, [rows.length, t]);
+  const title = useMemo(() => t('title'), [t]);
 
   if (!open) return null;
 
@@ -138,6 +135,9 @@ export function HistoryModal() {
         <header className="jsonita-history-header">
           <div id="history-modal-title" className="jsonita-history-title">
             {title}
+            {rows.length > 0 && (
+              <span className="jsonita-page-title-count">{rows.length}</span>
+            )}
           </div>
           <div className="jsonita-history-header-actions">
             <button
@@ -169,7 +169,7 @@ export function HistoryModal() {
               placeholder={t('searchPlaceholder')}
               aria-label={t('searchPlaceholder')}
               autoFocus
-              className="jsonita-history-search"
+              className="jsonita-input jsonita-input-mono jsonita-history-search"
             />
             {loading ? (
               <div className="jsonita-history-feedback" role="status">{t('loading')}</div>

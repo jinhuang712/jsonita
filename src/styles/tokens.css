@@ -1,86 +1,87 @@
 /**
  * 设计令牌 — design/overview.md
  *
- * 玻璃视觉 token（见 design/overview.md §2/§3）。
+ * 方向：安静的原生玻璃。一种墨色、一层玻璃、一根发丝线；
+ * 蓝灰 primary 只用于焦点与选中，青铜 accent 只用于 AI。
  * light = `:root`; dark via `[data-theme="dark"]` 覆盖。
  */
 
 :root {
-  /* § 4.2 品牌 / 中性 */
+  /* 中性 / 表面 */
   --bg: rgba(255, 255, 255, 0);
-  --bg-card: rgba(255, 255, 255, 0.62);
-  --bg-code: rgba(255, 255, 255, 0.46);
-  --bg-overlay: rgba(0, 0, 0, 0.32);
-  --bg-elevated: rgba(250, 250, 252, 0.9);
-  --bg-elevated-nav: rgba(18, 22, 30, 0.035);
-  --surface-quiet: rgba(255, 255, 255, 0.34);
-  --surface-raised: rgba(255, 255, 255, 0.52);
-  --control-bg: rgba(255, 255, 255, 0.24);
-  --control-bg-hover: rgba(255, 255, 255, 0.34);
-  --control-bg-active: rgba(70, 111, 160, 0.12);
-  --control-border: rgba(34, 43, 58, 0.12);
-  --text: #20232A;
-  --text-muted: rgba(26, 30, 40, 0.54);
-  --text-faint: rgba(26, 30, 40, 0.36);
-  --border: rgba(20, 26, 36, 0.075);
-  --border-strong: rgba(20, 26, 36, 0.13);
+  --bg-card: rgba(255, 255, 255, 0.5);
+  --bg-code: rgba(255, 255, 255, 0.4);
+  --bg-overlay: rgba(20, 24, 31, 0.28);
+  --bg-elevated: rgba(252, 252, 253, 0.94);
+  --bg-elevated-nav: transparent;
+  --surface-quiet: rgba(255, 255, 255, 0.3);
+  --surface-raised: rgba(255, 255, 255, 0.58);
+  --control-bg: rgba(255, 255, 255, 0.22);
+  --control-bg-hover: rgba(255, 255, 255, 0.4);
+  --control-bg-active: rgba(73, 111, 153, 0.1);
+  --control-border: rgba(28, 33, 44, 0.12);
+  --text: #1C1F26;
+  --text-muted: rgba(28, 31, 38, 0.56);
+  --text-faint: rgba(28, 31, 38, 0.36);
+  --border: rgba(28, 33, 44, 0.08);
+  --border-strong: rgba(28, 33, 44, 0.14);
   --primary: #496F99;
-  --primary-soft: rgba(73, 111, 153, 0.11);
-  --primary-edge: rgba(73, 111, 153, 0.24);
-  --toggle-on: #454B55;
+  --primary-soft: rgba(73, 111, 153, 0.1);
+  --primary-edge: rgba(73, 111, 153, 0.26);
+  --toggle-on: #2E3340;
+  --toggle-knob: #FFFFFF;
   --accent: #8B633A;
-  --accent-soft: rgba(139, 99, 58, 0.12);
+  --accent-soft: rgba(139, 99, 58, 0.1);
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-blur: blur(44px) saturate(140%);
   --glass-border: rgba(0, 0, 0, 0.07);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --chrome-bg: transparent;
   --chrome-bg-strong: rgba(255, 255, 255, 0.16);
-  --tab-active-bg: rgba(255, 255, 255, 0.2);
-  --tab-active-border: rgba(73, 111, 153, 0.18);
+  --tab-active-bg: rgba(255, 255, 255, 0.6);
+  --tab-active-border: rgba(28, 33, 44, 0.08);
 
-  /* § 4.3 状态色 */
+  /* 状态色（低饱和） */
   --ok: #4B7A63;
-  --ok-bg: rgba(75, 122, 99, 0.12);
+  --ok-bg: rgba(75, 122, 99, 0.1);
   --warn: #876740;
-  --warn-bg: rgba(135, 103, 64, 0.12);
+  --warn-bg: rgba(135, 103, 64, 0.1);
   --danger: #9D5E5A;
-  --danger-bg: rgba(157, 94, 90, 0.11);
+  --danger-bg: rgba(157, 94, 90, 0.1);
   --info: #527773;
-  --info-bg: rgba(82, 119, 115, 0.12);
+  --info-bg: rgba(82, 119, 115, 0.1);
 
-  /* § 4.4 JSON + editor */
-  --json-key: #547FA8;
-  --json-string: #578066;
-  --json-number: #947049;
-  --json-bool: #776B9F;
-  --json-null: rgba(20, 22, 30, 0.36);
-  --json-punc: rgba(20, 22, 30, 0.4);
+  /* JSON + editor */
+  --json-key: #4C6F92;
+  --json-string: #557C64;
+  --json-number: #8F6B44;
+  --json-bool: #6F6494;
+  --json-null: rgba(28, 31, 38, 0.38);
+  --json-punc: rgba(28, 31, 38, 0.4);
   --editor-bg: transparent;
   --editor-gutter: transparent;
-  --editor-line-active: rgba(73, 111, 153, 0.035);
-  --editor-selection: rgba(73, 111, 153, 0.2);
-  --editor-cursor: #496F99;
+  --editor-line-active: rgba(28, 33, 44, 0.03);
+  --editor-selection: rgba(73, 111, 153, 0.18);
+  --editor-cursor: #1C1F26;
   --editor-error-underline: #9D5E5A;
-  --editor-bracket-match: rgba(73, 111, 153, 0.15);
-  --editor-indent-guide: rgba(0, 0, 0, 0.07);
+  --editor-bracket-match: rgba(73, 111, 153, 0.14);
+  --editor-indent-guide: rgba(28, 33, 44, 0.07);
 
-  /* § 4.5 history op-chip 四色 */
-  --op-format: #547FA8;
-  --op-format-bg: rgba(84, 127, 168, 0.11);
+  /* history op-chip 四色（保留 token 名） */
+  --op-format: #4C6F92;
+  --op-format-bg: rgba(76, 111, 146, 0.1);
   --op-tree: #527773;
-  --op-tree-bg: rgba(82, 119, 115, 0.12);
-  --op-convert: #578066;
-  --op-convert-bg: rgba(87, 128, 102, 0.12);
+  --op-tree-bg: rgba(82, 119, 115, 0.1);
+  --op-convert: #557C64;
+  --op-convert-bg: rgba(85, 124, 100, 0.1);
   --op-ai-fix: #8B633A;
-  --op-ai-fix-bg: rgba(139, 99, 58, 0.12);
+  --op-ai-fix-bg: rgba(139, 99, 58, 0.1);
 
-  /* § 6 字体 */
+  /* 字体：一套系统 UI 字体 + 一套代码字体 */
   --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
     "PingFang SC", "Microsoft YaHei UI", Helvetica, Arial, sans-serif;
   --font-sans: var(--font-ui);
-  --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-    "PingFang SC", "Microsoft YaHei UI", Helvetica, Arial, sans-serif;
+  --font-text: var(--font-ui);
   --font-code: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo,
     Consolas, "Liberation Mono", "PingFang SC", "Microsoft YaHei UI", monospace;
   --font-mono: var(--font-code);
@@ -100,7 +101,7 @@
   --lh-normal: 1.6;
   --lh-code: 1.55;
 
-  /* § 7 间距 */
+  /* 间距 */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -108,18 +109,18 @@
   --sp-5: 20px;
   --sp-6: 24px;
 
-  /* § 8 圆角 / 阴影 */
-  --radius-sm: 4px;
+  /* 圆角：控件 6 / 容器 10 / 窗口 14 */
+  --radius-sm: 5px;
   --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
   --radius-2xl: 14px;
-  --shadow-sm: 0 1px 2px rgba(25, 31, 44, 0.06);
-  --shadow-md: 0 12px 28px -18px rgba(25, 31, 44, 0.18);
+  --shadow-sm: 0 1px 2px rgba(25, 31, 44, 0.05);
+  --shadow-md: 0 10px 28px -16px rgba(25, 31, 44, 0.2);
   --shadow-lg: 0 28px 64px -24px rgba(25, 31, 44, 0.24), var(--glass-highlight);
-  --shadow-focus: 0 0 0 2px rgba(73, 111, 153, 0.2);
+  --shadow-focus: 0 0 0 3px rgba(73, 111, 153, 0.14);
 
-  /* § 9 动效 */
+  /* 动效 */
   --dur-instant: 80ms;
   --dur-fast: 120ms;
   --dur-base: 150ms;
@@ -129,93 +130,94 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-native: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* § 10 Z-index */
+  /* Z-index */
   --z-sticky: 20;
   --z-modal-bg: 40;
   --z-modal: 50;
   --z-toast: 60;
   --z-tooltip: 70;
 
-  /* § 11 Keycap (matte tile) */
+  /* Keycap (matte tile) */
   --kbd-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
-  --kbd-border: rgba(34, 43, 58, 0.12);
+  --kbd-border: rgba(28, 33, 44, 0.12);
   --kbd-hi: rgba(255, 255, 255, 0.9);
 }
 
 [data-theme="dark"] {
   --bg: rgba(26, 28, 36, 0);
-  --bg-card: rgba(28, 32, 40, 0.68);
+  --bg-card: rgba(28, 32, 40, 0.6);
   --bg-code: rgba(28, 32, 40, 0.5);
-  --bg-overlay: rgba(0, 0, 0, 0.56);
-  --bg-elevated: rgba(29, 32, 39, 0.93);
-  --bg-elevated-nav: rgba(255, 255, 255, 0.035);
-  --surface-quiet: rgba(255, 255, 255, 0.065);
-  --surface-raised: rgba(255, 255, 255, 0.095);
-  --control-bg: rgba(255, 255, 255, 0.07);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-elevated: rgba(30, 33, 40, 0.96);
+  --bg-elevated-nav: transparent;
+  --surface-quiet: rgba(255, 255, 255, 0.05);
+  --surface-raised: rgba(255, 255, 255, 0.1);
+  --control-bg: rgba(255, 255, 255, 0.06);
   --control-bg-hover: rgba(255, 255, 255, 0.12);
-  --control-bg-active: rgba(178, 199, 219, 0.16);
-  --control-border: rgba(255, 255, 255, 0.18);
+  --control-bg-active: rgba(178, 199, 219, 0.14);
+  --control-border: rgba(255, 255, 255, 0.14);
   --text: #F2F4F7;
   --text-muted: rgba(242, 244, 247, 0.72);
   --text-faint: rgba(242, 244, 247, 0.52);
-  --border: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
   --primary: #B2C7DB;
-  --primary-soft: rgba(178, 199, 219, 0.14);
-  --primary-edge: rgba(178, 199, 219, 0.30);
-  --toggle-on: #6A717D;
-  --accent: #BE9A72;
-  --accent-soft: rgba(190, 154, 114, 0.13);
+  --primary-soft: rgba(178, 199, 219, 0.12);
+  --primary-edge: rgba(178, 199, 219, 0.3);
+  --toggle-on: #B2C7DB;
+  --toggle-knob: #1C1F26;
+  --accent: #C4A07A;
+  --accent-soft: rgba(196, 160, 122, 0.12);
   --glass-bg: rgba(28, 32, 40, 0.9);
   --glass-blur: blur(44px) saturate(150%);
   --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --chrome-bg: transparent;
   --chrome-bg-strong: rgba(255, 255, 255, 0.07);
-  --tab-active-bg: rgba(255, 255, 255, 0.09);
-  --tab-active-border: rgba(255, 255, 255, 0.22);
+  --tab-active-bg: rgba(255, 255, 255, 0.1);
+  --tab-active-border: rgba(255, 255, 255, 0.1);
 
   --ok: #90BCA1;
-  --ok-bg: rgba(144, 188, 161, 0.13);
+  --ok-bg: rgba(144, 188, 161, 0.12);
   --warn: #C2A178;
   --warn-bg: rgba(194, 161, 120, 0.12);
   --danger: #D19C99;
-  --danger-bg: rgba(209, 156, 153, 0.13);
+  --danger-bg: rgba(209, 156, 153, 0.12);
   --info: #90B5B0;
-  --info-bg: rgba(144, 181, 176, 0.13);
+  --info-bg: rgba(144, 181, 176, 0.12);
 
   --json-key: #9EB6CD;
   --json-string: #94BC9C;
   --json-number: #CBA87F;
   --json-bool: #B9AED0;
   --json-null: rgba(255, 255, 255, 0.36);
-  --json-punc: rgba(255, 255, 255, 0.42);
+  --json-punc: rgba(255, 255, 255, 0.4);
   --editor-bg: transparent;
   --editor-gutter: transparent;
-  --editor-line-active: rgba(138, 163, 190, 0.04);
-  --editor-selection: rgba(138, 163, 190, 0.2);
-  --editor-cursor: #A7BDD4;
+  --editor-line-active: rgba(255, 255, 255, 0.03);
+  --editor-selection: rgba(138, 163, 190, 0.22);
+  --editor-cursor: #F2F4F7;
   --editor-error-underline: #D19C99;
   --editor-bracket-match: rgba(138, 163, 190, 0.17);
-  --editor-indent-guide: rgba(255, 255, 255, 0.1);
+  --editor-indent-guide: rgba(255, 255, 255, 0.08);
 
   --op-format: #9EB6CD;
   --op-format-bg: rgba(158, 182, 205, 0.12);
   --op-tree: #90B5B0;
-  --op-tree-bg: rgba(144, 181, 176, 0.13);
+  --op-tree-bg: rgba(144, 181, 176, 0.12);
   --op-convert: #94BC9C;
-  --op-convert-bg: rgba(148, 188, 156, 0.13);
-  --op-ai-fix: #BE9A72;
-  --op-ai-fix-bg: rgba(190, 154, 114, 0.13);
+  --op-convert-bg: rgba(148, 188, 156, 0.12);
+  --op-ai-fix: #C4A07A;
+  --op-ai-fix-bg: rgba(196, 160, 122, 0.12);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.32);
-  --shadow-md: 0 16px 34px -20px rgba(0, 0, 0, 0.46);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 14px 32px -18px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 28px 64px -24px rgba(0, 0, 0, 0.52), var(--glass-highlight);
-  --shadow-focus: 0 0 0 2px rgba(138, 163, 190, 0.22);
+  --shadow-focus: 0 0 0 3px rgba(178, 199, 219, 0.2);
 
   --kbd-bg: rgba(255, 255, 255, 0.08);
-  --kbd-border: rgba(255, 255, 255, 0.18);
-  --kbd-hi: rgba(255, 255, 255, 0.16);
+  --kbd-border: rgba(255, 255, 255, 0.16);
+  --kbd-hi: rgba(255, 255, 255, 0.14);
 }
 
 @media (prefers-reduced-motion: reduce) {

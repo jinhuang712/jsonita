@@ -7,13 +7,12 @@ import { formatAccelerator, isMacPlatform } from '../keyboard/accelerators';
 /**
  * ShortcutInput — 录入快捷键，调 shortcut_register 验 + 注册。
  *
- * Spec ref: design/overview.md § 4.7 · design/overview.md § 2.3 / § 2.4
  * 行为：
  *   - 未聚焦：显当前值
  *   - 聚焦：listen keydown → 格式化组合 → 调 shortcut_register
- *   - Reserved → 默认阻塞 patch + Tooltip 警告 + "override" 链按钮走二次确认 Modal（M2-N5 minimal: 简化为 confirm dialog）
- *   - Conflict → Tooltip 警告 + 保留旧绑定
- *   - Ok → 绿色短暂闪烁
+ *   - Reserved → 阻塞 patch + 警告 + "override" 走二次确认
+ *   - Conflict → 警告 + 保留旧绑定
+ *   - Ok → 绿色确认
  */
 
 interface Props {
@@ -37,7 +36,6 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
     // 至少一个非 Shift 修饰键：否则裸键（如 "A"）或纯 Shift 组合会在编辑器打字时被误触发。
     if (!e.metaKey && !e.ctrlKey && !e.altKey) {
       setRecording(false);
-      // macOS 文案保留原 ⌘ 字符；Windows/Linux 用 Ctrl 表述，避免出现不认识的 ⌘ 符号。
       const modifierHint = isMacPlatform()
         ? t('shortcuts.needModifier')
         : t('shortcuts.needModifierNonMac');
@@ -111,7 +109,6 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
   };
 
   const overrideReserved = async () => {
-    // 二次确认（design/overview.md § 2.3 override Modal；M2-N5 minimal 用 window.confirm）
     if (!msg?.acc) return;
     const acc = msg.acc;
     const ok = window.confirm(t('shortcuts.overrideConfirm', { accelerator: formatAccelerator(acc) }));
@@ -121,8 +118,15 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
     }
   };
 
+  const noteClass =
+    msg?.kind === 'ok'
+      ? 'jsonita-field-note jsonita-field-note-ok'
+      : msg?.kind === 'reserved'
+        ? 'jsonita-field-note jsonita-field-note-warn'
+        : 'jsonita-field-note jsonita-field-note-error';
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
       <div
         tabIndex={0}
         onFocus={() => {
@@ -131,18 +135,11 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
         }}
         onBlur={() => setRecording(false)}
         onKeyDown={recording ? handleKeyDown : undefined}
-        style={{
-          padding: '6px 12px',
-          background: recording ? 'var(--control-bg-active)' : 'var(--control-bg)',
-          border: `1px solid ${recording ? 'var(--primary-edge)' : 'var(--control-border)'}`,
-          borderRadius: 'var(--radius-sm)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--fs-md)',
-          color: 'var(--text)',
-          cursor: 'pointer',
-          minWidth: 160,
-          outline: 'none',
-        }}
+        className={
+          recording
+            ? 'jsonita-shortcut-input jsonita-shortcut-input-recording'
+            : 'jsonita-shortcut-input'
+        }
         role="button"
         aria-label={ariaLabel ?? `Shortcut for ${action}`}
       >
@@ -153,34 +150,10 @@ export function ShortcutInput({ action, ariaLabel, value, onChange }: Props) {
             : t('shortcuts.noneBound')}
       </div>
       {msg && (
-        <div
-          style={{
-            fontSize: 'var(--fs-sm)',
-            color:
-              msg.kind === 'ok'
-                ? 'var(--ok)'
-                : msg.kind === 'reserved'
-                  ? 'var(--warn)'
-                  : 'var(--danger)',
-            display: 'flex',
-            gap: 8,
-            alignItems: 'center',
-          }}
-        >
+        <div className={noteClass} style={{ display: 'flex', gap: 8, alignItems: 'center', textAlign: 'right' }}>
           <span>{msg.text}</span>
           {msg.kind === 'reserved' && (
-            <button
-              onClick={overrideReserved}
-              style={{
-                padding: '0 6px',
-                background: 'var(--control-bg)',
-                border: '1px solid color-mix(in srgb, var(--warn) 36%, var(--control-border))',
-                color: 'var(--warn)',
-                borderRadius: 4,
-                fontSize: 'var(--fs-sm)',
-                cursor: 'pointer',
-              }}
-            >
+            <button type="button" onClick={overrideReserved} className="jsonita-shortcut-override">
               {t('shortcuts.overrideButton')}
             </button>
           )}

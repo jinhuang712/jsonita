@@ -20,8 +20,8 @@ import { WindowResizeHandles } from './WindowResizeHandles';
 /**
  * 浮窗主壳 — TabBar 上 + 左右双栏（input | output）+ StatusBar 下。
  *
- * Spec ref: design/screens.md § 1 主浮窗 6 态 · design/screens.md § 5 编辑器 ↔ 树同步
- * M1-N4：双栏 CSS Grid 静态 50/50；M1-N9 起加智能缩放 + 可拖边 resize。
+ * Spec ref: design/screens.md § Editor Workspace
+ * 壳层样式见 global.css `.jsonita-floating-window`；此处只注入随字号变化的变量。
  */
 export function FloatingWindow() {
   const { t } = useTranslation('shell');
@@ -41,7 +41,7 @@ export function FloatingWindow() {
 
   // editor onChange → debounce 300ms → IPC → 更新 store output/error
   useDebouncedTransform();
-  // 智能缩放：内容 / 字号变化后自动调整窗口（design/overview.md § 7）
+  // 智能缩放：内容 / 字号变化后自动调整窗口
   useSmartWidth();
 
   // 窗口显隐动画走原生 NSWindow.alphaValue（见 window/mod.rs animated_show/hide），
@@ -67,17 +67,6 @@ export function FloatingWindow() {
     <div
       className="jsonita-floating-window"
       style={{
-        height: '100%',
-        background: 'var(--glass-bg)',
-        backdropFilter: 'var(--glass-blur)',
-        WebkitBackdropFilter: 'var(--glass-blur)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 'var(--radius-xl)',
-        boxShadow: 'var(--shadow-lg)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
         ['--fs-editor' as string]: `${editorFontSize}px`,
         ['--fs-tree' as string]: `${Math.max(10, editorFontSize - 1)}px`,
         ['--fs-xs' as string]: `${chromeXsFontSize}px`,
@@ -92,22 +81,13 @@ export function FloatingWindow() {
         <>
           <TabBar />
           <div
-            className="jsonita-pane-transition"
-            style={{
-              flex: 1,
-              display: 'grid',
-              gridTemplateColumns: singlePaneMode ? '1fr' : '1fr 1fr',
-              minHeight: 0,
-              padding: '2px 0',
-            }}
+            className={
+              singlePaneMode
+                ? 'jsonita-workspace jsonita-workspace-single jsonita-pane-transition'
+                : 'jsonita-workspace jsonita-pane-transition'
+            }
           >
-            <div
-              className={
-                singlePaneMode
-                  ? 'jsonita-pane jsonita-pane-input jsonita-pane-single'
-                  : 'jsonita-pane jsonita-pane-input'
-              }
-            >
+            <div className="jsonita-pane">
               {singlePaneMode && activePane === 'ai-fix' ? (
                 <AiFixPane />
               ) : showTreeInSinglePane ? (
@@ -126,7 +106,7 @@ export function FloatingWindow() {
               )}
             </div>
             {!singlePaneMode && (
-              <div className="jsonita-pane jsonita-pane-output">
+              <div className="jsonita-pane">
                 {activePane === 'ai-fix' ? (
                   <AiFixPane />
                 ) : activePane === 'tree' ? (
@@ -195,23 +175,21 @@ function TreePanel({ state, softWrap }: { state: TreePanelState; softWrap?: bool
     return <TreeView data={state.data} softWrap={softWrap} />;
   }
 
+  const invalid = state.kind === 'invalid';
   return (
     <div
-      className="jsonita-tree-container"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        color: state.kind === 'invalid' ? 'var(--danger)' : 'var(--text-faint)',
-      }}
+      className={
+        invalid
+          ? 'jsonita-tree-container jsonita-tree-empty jsonita-tree-empty-invalid'
+          : 'jsonita-tree-container jsonita-tree-empty'
+      }
     >
       <div>
-        <div style={{ fontSize: 'calc(var(--fs-tree) + 8px)', marginBottom: 6 }}>
-          {state.kind === 'invalid' ? t('tree.unavailable') : '{ }'}
+        <div className="jsonita-tree-empty-glyph">
+          {invalid ? t('tree.unavailable') : '{ }'}
         </div>
-        <div style={{ color: 'var(--text-muted)' }}>
-          {state.kind === 'invalid' ? t('tree.fixToView') : t('tree.pasteToView')}
+        <div className="jsonita-tree-empty-text">
+          {invalid ? t('tree.fixToView') : t('tree.pasteToView')}
         </div>
       </div>
     </div>

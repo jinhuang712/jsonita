@@ -6,6 +6,7 @@ import { useSettingsStore, type Settings } from '../store/settings';
 import { useUiStore } from '../store/ui';
 import { formatAccelerator } from '../keyboard/accelerators';
 import { ShortcutGlyph } from '../components/ShortcutGlyph';
+import { ActionButton } from '../components/ActionButton';
 import { CloseIcon } from '../components/icons';
 import { ApiKeyInput } from './ApiKeyInput';
 import { ShortcutInput } from './ShortcutInput';
@@ -16,13 +17,14 @@ import {
 } from './settingsScrollSpy';
 
 /**
- * 设置页 — 左侧目录索引 + 右侧连续滚动配置文档。
+ * 设置页 — 左侧目录 + 右侧连续滚动的分组列表。
  *
- * 视觉锚：design/overview.md
- * Spec ref: design/overview.md § 4.6 SettingsView
- * M2-N1 minimal：General + AI + JSON Transform + History 4 组（Shortcuts M2-N5；About M3）；
- * 字段：launchAtLogin / hideOnBlur / autoUnwrap / aiEnabled / historyLimit / smartWidth / editorSoftWrap。
- * 即时生效：onChange 立即 settings_set。
+ * 控件语言（global.css § 6）：
+ *   - 每组一个安静容器 `.jsonita-settings-group`，行间发丝线，不再用彩色区块。
+ *   - 布尔项统一为开关 `.jsonita-switch`；枚举项用分段控件；文本 / 快捷键用单边框输入。
+ *   - 即时生效：onChange 立即 settings_set。
+ *
+ * Spec ref: design/screens.md § Settings and History
  */
 
 type Group = 'general' | 'appearance' | 'shortcuts' | 'ai' | 'history' | 'jsonTransform' | 'about';
@@ -72,7 +74,7 @@ export function SettingsView() {
     about: null,
   });
 
-  // 启动 + Modal 打开时拉 settings
+  // 页面打开时拉一次 settings
   useEffect(() => {
     if (!open) return;
     settingsApi
@@ -152,185 +154,98 @@ export function SettingsView() {
     <div
       aria-labelledby="settings-page-title"
       className="jsonita-page jsonita-settings-page"
-      style={{
-        flex: 1,
-        minHeight: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--glass-bg)',
-        color: 'var(--text)',
-        fontFamily: 'var(--font-sans)',
-      }}
     >
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            padding: '14px 18px',
-            borderBottom: '1px solid var(--border)',
-          }}
-        >
-          <div
-            id="settings-page-title"
-            style={{
-              fontFamily: 'var(--font-ui)',
-              fontSize: '20px',
-              fontWeight: 600,
-              letterSpacing: '-0.01em',
-              lineHeight: 1.15,
-            }}
-          >
-            {t('title')}
-          </div>
-          <button
-            type="button"
-            className="jsonita-page-close"
-            onClick={() => setOpen(false)}
-            aria-label={t('actions.close')}
-            title={t('actions.close')}
-          >
-            <ShortcutGlyph accelerator="Escape" decorative />
-            <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
-          </button>
+      <div className="jsonita-page-header">
+        <div id="settings-page-title" className="jsonita-page-title">
+          {t('title')}
         </div>
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <nav
-            style={{
-              width: 170,
-              borderRight: '1px solid var(--border)',
-              background: 'var(--bg-elevated-nav)',
-              padding: 'var(--sp-3) var(--sp-2)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {GROUPS.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => scrollToGroup(g)}
-                  aria-current={activeGroup === g ? 'page' : undefined}
-                  className="jsonita-settings-nav-btn"
-                  data-active={activeGroup === g ? 'true' : undefined}
-                >
-                  <span className="jsonita-settings-nav-icon">{NAV_ICONS[g]}</span>
-                  {t(`groups.${g}` as 'groups.general')}
-                </button>
-              ))}
-            </div>
-            <div
-              style={{
-                marginTop: 'auto',
-                paddingTop: 8,
-                borderTop: '1px solid var(--border)',
+        <button
+          type="button"
+          className="jsonita-page-close"
+          onClick={() => setOpen(false)}
+          aria-label={t('actions.close')}
+          title={t('actions.close')}
+        >
+          <ShortcutGlyph accelerator="Escape" decorative />
+          <CloseIcon width={15} height={15} strokeWidth={1.85} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="jsonita-page-body">
+        <nav className="jsonita-settings-nav">
+          <div className="jsonita-settings-nav-list">
+            {GROUPS.map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => scrollToGroup(g)}
+                aria-current={activeGroup === g ? 'page' : undefined}
+                className="jsonita-settings-nav-btn"
+                data-active={activeGroup === g ? 'true' : undefined}
+              >
+                <span className="jsonita-settings-nav-icon">{NAV_ICONS[g]}</span>
+                {t(`groups.${g}` as 'groups.general')}
+              </button>
+            ))}
+          </div>
+          <div className="jsonita-settings-nav-footer">
+            <button
+              type="button"
+              className="jsonita-settings-reset-btn"
+              onClick={async () => {
+                const u = await settingsApi.reset();
+                setSettings(u);
               }}
             >
-              <button
-                type="button"
-                className="jsonita-settings-reset-btn"
-                onClick={async () => {
-                  const u = await settingsApi.reset();
-                  setSettings(u);
-                }}
-              >
-                <span className="jsonita-settings-nav-icon" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.7}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 12a9 9 0 1 0 3-6.7" />
-                    <path d="M3 4v5h5" />
-                  </svg>
-                </span>
-                {t('footer.resetAll')}
-              </button>
-            </div>
-          </nav>
-          <div
-            className="jsonita-settings-scroll"
-            ref={scrollRef}
-            style={{
-              flex: 1,
-              minWidth: 0,
-              padding: 'var(--sp-5) var(--sp-5) var(--sp-6)',
-              overflow: 'auto',
-              fontSize: 'var(--fs-md)',
-              position: 'relative',
-              scrollBehavior: 'smooth',
-            }}
-          >
-            <SettingsSection
-              group="general"
-              title={t('groups.general')}
-              sectionRefs={sectionRefs}
-            >
-              <GroupGeneral settings={settings} patch={patch} />
-            </SettingsSection>
-            <SettingsSection
-              group="appearance"
-              title={t('groups.appearance')}
-              sectionRefs={sectionRefs}
-            >
-              <GroupAppearance settings={settings} patch={patch} />
-            </SettingsSection>
-            <SettingsSection
-              group="ai"
-              title={t('groups.ai')}
-              sectionRefs={sectionRefs}
-              headerAction={
-                <CheckItem
-                  label={t('ai.enabled')}
-                  on={settings.aiEnabled}
-                  onChange={(v) => patch({ aiEnabled: v })}
-                />
-              }
-            >
-              <GroupAi settings={settings} patch={patch} />
-            </SettingsSection>
-            <SettingsSection
-              group="history"
-              title={t('groups.history')}
-              sectionRefs={sectionRefs}
-            >
-              <GroupHistory settings={settings} patch={patch} />
-            </SettingsSection>
-            <SettingsSection
-              group="jsonTransform"
-              title={t('groups.jsonTransform')}
-              sectionRefs={sectionRefs}
-            >
-              <GroupJsonTransform settings={settings} patch={patch} />
-            </SettingsSection>
-            <SettingsSection
-              group="shortcuts"
-              title={t('groups.shortcuts')}
-              sectionRefs={sectionRefs}
-            >
-              <GroupShortcuts settings={settings} patch={patch} />
-            </SettingsSection>
-            <SettingsSection
-              group="about"
-              title={t('groups.about')}
-              sectionRefs={sectionRefs}
-            >
-              <GroupAbout />
-            </SettingsSection>
+              <span className="jsonita-settings-nav-icon" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 12a9 9 0 1 0 3-6.7" />
+                  <path d="M3 4v5h5" />
+                </svg>
+              </span>
+              {t('footer.resetAll')}
+            </button>
           </div>
+        </nav>
+        <div className="jsonita-settings-scroll" ref={scrollRef}>
+          <SettingsSection group="general" title={t('groups.general')} sectionRefs={sectionRefs}>
+            <GroupGeneral settings={settings} patch={patch} />
+          </SettingsSection>
+          <SettingsSection group="appearance" title={t('groups.appearance')} sectionRefs={sectionRefs}>
+            <GroupAppearance settings={settings} patch={patch} />
+          </SettingsSection>
+          <SettingsSection
+            group="ai"
+            title={t('groups.ai')}
+            sectionRefs={sectionRefs}
+            headerAction={
+              <Switch
+                checked={settings.aiEnabled}
+                onChange={(v) => patch({ aiEnabled: v })}
+                ariaLabel={t('ai.enabled')}
+              />
+            }
+          >
+            <GroupAi settings={settings} patch={patch} />
+          </SettingsSection>
+          <SettingsSection group="history" title={t('groups.history')} sectionRefs={sectionRefs}>
+            <GroupHistory settings={settings} patch={patch} />
+          </SettingsSection>
+          <SettingsSection group="jsonTransform" title={t('groups.jsonTransform')} sectionRefs={sectionRefs}>
+            <GroupJsonTransform settings={settings} patch={patch} />
+          </SettingsSection>
+          <SettingsSection group="shortcuts" title={t('groups.shortcuts')} sectionRefs={sectionRefs}>
+            <GroupShortcuts settings={settings} patch={patch} />
+          </SettingsSection>
+          <SettingsSection group="about" title={t('groups.about')} sectionRefs={sectionRefs}>
+            <GroupAbout />
+          </SettingsSection>
         </div>
       </div>
     </div>
@@ -375,175 +290,191 @@ function SettingsSection({
   );
 }
 
-function GroupShortcuts({ settings, patch }: GroupProps) {
-  const { t } = useTranslation('settings');
-  const reservedExamples = [
-    formatAccelerator('CmdOrCtrl+Q'),
-    formatAccelerator('CmdOrCtrl+W'),
-    formatAccelerator('CmdOrCtrl+Tab'),
-  ].join(' / ');
-  const builtInShortcuts = [
-    {
-      label: t('shortcuts.builtIn.switchTabs'),
-      keys: ['Tab', 'Shift+Tab'],
-    },
-    {
-      label: t('shortcuts.builtIn.exitEditing'),
-      keys: ['Escape'],
-    },
-    {
-      label: t('shortcuts.builtIn.hideWindow'),
-      keys: ['Escape', 'Escape'],
-    },
-    {
-      label: t('shortcuts.builtIn.runCurrent'),
-      keys: ['CmdOrCtrl+Enter'],
-    },
-    {
-      label: t('shortcuts.builtIn.aiFixCancel'),
-      keys: ['Escape'],
-    },
-    {
-      label: t('shortcuts.builtIn.history'),
-      keys: ['CmdOrCtrl+Y'],
-    },
-    {
-      label: t('shortcuts.builtIn.settings'),
-      keys: ['CmdOrCtrl+,'],
-    },
-    {
-      label: t('shortcuts.builtIn.clearInput'),
-      keys: ['CmdOrCtrl+K'],
-    },
-    {
-      label: t('shortcuts.builtIn.zoom'),
-      keys: ['CmdOrCtrl+Plus', 'CmdOrCtrl+Minus', 'CmdOrCtrl+0'],
-    },
-  ];
+/* ── 行级构件 ───────────────────────────────────────── */
 
+function SettingsGroup({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionLabel>{t('shortcuts.customTitle')}</SectionLabel>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{t('shortcuts.toggle')}</span>
-        <ShortcutInput
-          action="toggle-window"
-          value={settings.shortcutToggle}
-          onChange={(v) => patch({ shortcutToggle: v })}
-        />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{t('shortcuts.splitToggle')}</span>
-        <ShortcutInput
-          ariaLabel={t('shortcuts.splitToggle')}
-          value={settings.shortcutSplitToggle}
-          onChange={(v) => patch({ shortcutSplitToggle: v })}
-        />
-      </div>
-      <div style={shortcutDividerStyle} />
-      <SectionLabel>{t('shortcuts.builtInTitle')}</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {builtInShortcuts.map((shortcut) => (
-          <ReadonlyShortcutRow
-            key={shortcut.label}
-            label={shortcut.label}
-            keys={shortcut.keys}
-          />
-        ))}
-      </div>
-      <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginTop: 8 }}>
-        {t('shortcuts.hint', { reserved: reservedExamples })}
-      </div>
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={sectionLabelStyle}>
+    <div className={className ? `jsonita-settings-group ${className}` : 'jsonita-settings-group'}>
       {children}
     </div>
   );
 }
 
-function ReadonlyShortcutRow({ label, keys }: { label: string; keys: string[] }) {
+function Row({
+  label,
+  hint,
+  children,
+  muted,
+}: {
+  label: React.ReactNode;
+  hint?: React.ReactNode;
+  children: React.ReactNode;
+  muted?: boolean;
+}) {
   return (
-    <div style={readonlyShortcutRowStyle}>
-      <span>{label}</span>
-      <span style={keyGroupStyle}>
-        {keys.map((accelerator, index) => (
-          <ShortcutGlyph key={`${accelerator}-${index}`} accelerator={accelerator} />
-        ))}
-      </span>
+    <div className={muted ? 'jsonita-settings-row jsonita-settings-row-muted' : 'jsonita-settings-row'}>
+      <div className="jsonita-settings-row-label">
+        {label}
+        {hint && <div className="jsonita-settings-row-hint">{hint}</div>}
+      </div>
+      <div className="jsonita-settings-row-control">{children}</div>
     </div>
   );
 }
 
+function ToggleRow({
+  label,
+  hint,
+  on,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  on: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="jsonita-settings-row jsonita-settings-row-toggle">
+      <span className="jsonita-settings-row-label">
+        {label}
+        {hint && <span className="jsonita-settings-row-hint">{hint}</span>}
+      </span>
+      <span className="jsonita-settings-row-control">
+        <Switch checked={on} onChange={onChange} />
+      </span>
+    </label>
+  );
+}
+
+function Switch({
+  checked,
+  onChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  ariaLabel?: string;
+}) {
+  return (
+    <span className="jsonita-switch">
+      <input
+        type="checkbox"
+        role="switch"
+        aria-checked={checked}
+        aria-label={ariaLabel}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="jsonita-switch-input"
+      />
+      <span
+        aria-hidden="true"
+        className="jsonita-switch-track"
+        style={{
+          background: checked ? 'var(--toggle-on)' : 'transparent',
+          borderColor: checked ? 'transparent' : undefined,
+        }}
+      />
+    </span>
+  );
+}
+
+function SegmentedControl<T extends string | number>({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+  ariaLabel?: string;
+}) {
+  return (
+    <div className="jsonita-segmented" role="group" aria-label={ariaLabel}>
+      {options.map((opt) => (
+        <button
+          key={String(opt.value)}
+          type="button"
+          aria-pressed={value === opt.value}
+          onClick={() => {
+            if (opt.value !== value) onChange(opt.value);
+          }}
+          className="jsonita-segmented-option"
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ── 分组 ───────────────────────────────────────────── */
+
 function GroupGeneral({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <CheckGrid>
-        <CheckItem
-          label={t('general.launchAtLogin')}
-          on={settings.launchAtLogin}
-          onChange={(v) => patch({ launchAtLogin: v })}
-        />
-        <CheckItem
-          label={t('general.hideOnBlur')}
-          on={settings.hideOnBlur}
-          onChange={(v) => patch({ hideOnBlur: v })}
-        />
-      </CheckGrid>
-    </div>
+    <SettingsGroup>
+      <ToggleRow
+        label={t('general.launchAtLogin')}
+        on={settings.launchAtLogin}
+        onChange={(v) => patch({ launchAtLogin: v })}
+      />
+      <ToggleRow
+        label={t('general.hideOnBlur')}
+        on={settings.hideOnBlur}
+        onChange={(v) => patch({ hideOnBlur: v })}
+      />
+    </SettingsGroup>
   );
 }
 
 function GroupAppearance({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={rowStyle}>
-        <span>{t('appearance.language')}</span>
-        <SegmentedControl
-          value={settings.locale}
-          options={[
-            { value: 'en-US', label: 'English' },
-            { value: 'zh-CN', label: '中文' },
-          ]}
-          onChange={(v) => patch({ locale: v })}
-        />
-      </div>
-      <div style={rowStyle}>
-        <span>{t('appearance.theme')}</span>
-        <SegmentedControl
-          value={settings.theme}
-          options={[
-            { value: 'system', label: 'System' },
-            { value: 'light', label: 'Light' },
-            { value: 'dark', label: 'Dark' },
-          ]}
-          onChange={(v) => patch({ theme: v })}
-        />
-      </div>
-      <CheckGrid>
-        <CheckItem
+    <>
+      <SettingsGroup>
+        <Row label={t('appearance.language')}>
+          <SegmentedControl
+            ariaLabel={t('appearance.language')}
+            value={settings.locale}
+            options={[
+              { value: 'en-US', label: 'English' },
+              { value: 'zh-CN', label: '中文' },
+            ]}
+            onChange={(v) => patch({ locale: v })}
+          />
+        </Row>
+        <Row label={t('appearance.theme')}>
+          <SegmentedControl
+            ariaLabel={t('appearance.theme')}
+            value={settings.theme}
+            options={[
+              { value: 'system', label: 'System' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
+            onChange={(v) => patch({ theme: v })}
+          />
+        </Row>
+      </SettingsGroup>
+      <SettingsGroup>
+        <ToggleRow
           label={t('appearance.smartWidth')}
           on={settings.smartWidth}
           onChange={(v) => patch({ smartWidth: v })}
         />
-        <CheckItem
+        <ToggleRow
           label={t('appearance.singlePaneMode')}
           on={settings.singlePaneMode}
           onChange={(v) => patch({ singlePaneMode: v })}
         />
-        <CheckItem
+        <ToggleRow
           label={t('appearance.editorSoftWrap')}
           on={settings.editorSoftWrap}
           onChange={(v) => patch({ editorSoftWrap: v })}
         />
-      </CheckGrid>
-    </div>
+      </SettingsGroup>
+    </>
   );
 }
 
@@ -551,31 +482,15 @@ function GroupAi({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   const disabled = !settings.aiEnabled;
   return (
-    <div
-      aria-disabled={disabled}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        opacity: disabled ? 0.45 : 1,
-        pointerEvents: disabled ? 'none' : 'auto',
-        transition: 'opacity var(--dur-base) var(--ease-out)',
-      }}
-    >
-      <div style={{ ...rowStyle, alignItems: 'flex-end', gap: 12 }}>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 'var(--fs-md)', color: 'var(--text)' }}>
-            {t('groups.ai')}
-          </div>
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            {t('ai.sectionHint')}
-          </div>
-        </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--accent)', letterSpacing: 0 }}>
-          Model: <span style={{ color: 'var(--text)' }}>openrouter/free</span> (auto)
-        </div>
-      </div>
-      <ApiKeyInput settings={settings} patch={patch} />
+    <div aria-disabled={disabled} className={disabled ? 'jsonita-settings-disabled' : undefined}>
+      <SettingsGroup>
+        <Row label={t('ai.model')} hint={t('ai.sectionHint')}>
+          <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
+            openrouter/free
+          </span>
+        </Row>
+        <ApiKeyInput settings={settings} patch={patch} />
+      </SettingsGroup>
     </div>
   );
 }
@@ -583,10 +498,15 @@ function GroupAi({ settings, patch }: GroupProps) {
 function GroupHistory({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={rowStyle}>
-        <span>{t('history.limit')}</span>
+    <SettingsGroup>
+      <ToggleRow
+        label={t('history.enabled')}
+        on={settings.historyEnabled}
+        onChange={(v) => patch({ historyEnabled: v })}
+      />
+      <Row label={t('history.limit')}>
         <SegmentedControl
+          ariaLabel={t('history.limit')}
           value={settings.historyLimit}
           options={[
             { value: 10, label: '10' },
@@ -596,162 +516,91 @@ function GroupHistory({ settings, patch }: GroupProps) {
           ]}
           onChange={(v) => patch({ historyLimit: v })}
         />
-      </div>
-      <CheckItem
-        label={t('history.enabled')}
-        on={settings.historyEnabled}
-        onChange={(v) => patch({ historyEnabled: v })}
-      />
-    </div>
+      </Row>
+    </SettingsGroup>
   );
 }
 
 function GroupJsonTransform({ settings, patch }: GroupProps) {
   const { t } = useTranslation('settings');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={rowStyle}>
-        <span>{t('jsonTransform.unwrapTimeoutMs')}</span>
+    <SettingsGroup>
+      <ToggleRow
+        label={t('jsonTransform.alwaysStringToJson')}
+        on={settings.alwaysStringToJson}
+        onChange={(v) => patch({ alwaysStringToJson: v })}
+      />
+      <ToggleRow
+        label={t('jsonTransform.autoUnwrap')}
+        on={settings.autoUnwrap}
+        onChange={(v) => patch({ autoUnwrap: v })}
+      />
+      <Row label={t('jsonTransform.unwrapTimeoutMs')}>
         <input
           type="number"
           value={settings.unwrapTimeoutMs}
           onChange={(e) =>
             patch({ unwrapTimeoutMs: Number(e.target.value) || 200 })
           }
-          style={{ ...inputStyle, width: 80 }}
+          className="jsonita-input jsonita-input-mono"
+          style={{ width: 84, textAlign: 'right' }}
+          aria-label={t('jsonTransform.unwrapTimeoutMs')}
         />
-      </div>
-      <CheckGrid>
-        <CheckItem
-          label={t('jsonTransform.alwaysStringToJson')}
-          on={settings.alwaysStringToJson}
-          onChange={(v) => patch({ alwaysStringToJson: v })}
-        />
-        <CheckItem
-          label={t('jsonTransform.autoUnwrap')}
-          on={settings.autoUnwrap}
-          onChange={(v) => patch({ autoUnwrap: v })}
-        />
-      </CheckGrid>
-    </div>
+      </Row>
+    </SettingsGroup>
   );
 }
 
-function CheckGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-        columnGap: 20,
-        rowGap: 12,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+function GroupShortcuts({ settings, patch }: GroupProps) {
+  const { t } = useTranslation('settings');
+  const reservedExamples = [
+    formatAccelerator('CmdOrCtrl+Q'),
+    formatAccelerator('CmdOrCtrl+W'),
+    formatAccelerator('CmdOrCtrl+Tab'),
+  ].join(' / ');
+  const builtInShortcuts = [
+    { label: t('shortcuts.builtIn.switchTabs'), keys: ['Tab', 'Shift+Tab'] },
+    { label: t('shortcuts.builtIn.exitEditing'), keys: ['Escape'] },
+    { label: t('shortcuts.builtIn.hideWindow'), keys: ['Escape', 'Escape'] },
+    { label: t('shortcuts.builtIn.runCurrent'), keys: ['CmdOrCtrl+Enter'] },
+    { label: t('shortcuts.builtIn.aiFixCancel'), keys: ['Escape'] },
+    { label: t('shortcuts.builtIn.history'), keys: ['CmdOrCtrl+Y'] },
+    { label: t('shortcuts.builtIn.settings'), keys: ['CmdOrCtrl+,'] },
+    { label: t('shortcuts.builtIn.clearInput'), keys: ['CmdOrCtrl+K'] },
+    { label: t('shortcuts.builtIn.zoom'), keys: ['CmdOrCtrl+Plus', 'CmdOrCtrl+Minus', 'CmdOrCtrl+0'] },
+  ];
 
-function CheckItem({
-  label,
-  on,
-  onChange,
-}: {
-  label: string;
-  on: boolean;
-  onChange: (v: boolean) => void;
-}) {
   return (
-    <label
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        minHeight: 24,
-        cursor: 'pointer',
-        fontSize: 'var(--fs-sm)',
-      }}
-    >
-      <SettingsCheckbox checked={on} onChange={onChange} />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-function SettingsCheckbox({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <span style={checkboxWrapStyle}>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        style={checkboxInputStyle}
-      />
-      <span
-        aria-hidden="true"
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: 5,
-          background: checked ? 'var(--toggle-on)' : 'transparent',
-          border: `1px solid ${checked ? 'transparent' : 'var(--control-border)'}`,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          transition:
-            'background var(--dur-base) var(--ease-native), border-color var(--dur-base)',
-        }}
-      >
-        {checked ? (
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#fff"
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12.5l4.5 4.5L19 7" />
-          </svg>
-        ) : null}
-      </span>
-    </span>
-  );
-}
-
-function SegmentedControl<T extends string | number>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (v: T) => void;
-}) {
-  return (
-    <div style={segSmStyle}>
-      {options.map((opt) => (
-        <button
-          key={String(opt.value)}
-          type="button"
-          onClick={() => {
-            if (opt.value !== value) onChange(opt.value);
-          }}
-          style={value === opt.value ? segSmOnStyle : segSmOffStyle}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+    <>
+      <SettingsGroup>
+        <Row label={t('shortcuts.toggle')}>
+          <ShortcutInput
+            action="toggle-window"
+            value={settings.shortcutToggle}
+            onChange={(v) => patch({ shortcutToggle: v })}
+          />
+        </Row>
+        <Row label={t('shortcuts.splitToggle')}>
+          <ShortcutInput
+            ariaLabel={t('shortcuts.splitToggle')}
+            value={settings.shortcutSplitToggle}
+            onChange={(v) => patch({ shortcutSplitToggle: v })}
+          />
+        </Row>
+      </SettingsGroup>
+      <SettingsGroup>
+        {builtInShortcuts.map((shortcut) => (
+          <Row key={shortcut.label} label={shortcut.label} muted>
+            <span className="jsonita-settings-key-group">
+              {shortcut.keys.map((accelerator, index) => (
+                <ShortcutGlyph key={`${accelerator}-${index}`} accelerator={accelerator} />
+              ))}
+            </span>
+          </Row>
+        ))}
+      </SettingsGroup>
+      <div className="jsonita-settings-note">{t('shortcuts.hint', { reserved: reservedExamples })}</div>
+    </>
   );
 }
 
@@ -763,228 +612,38 @@ function GroupAbout() {
   }, []);
 
   return (
-    <div style={aboutStyle}>
-      <div style={aboutHeaderStyle}>
+    <div className="jsonita-about">
+      <div className="jsonita-about-head">
         <div>
-          <div style={aboutTitleStyle}>Jsonita</div>
-          <div style={aboutSubtitleStyle}>Tiny menu-bar JSON toolkit</div>
+          <div className="jsonita-about-name">Jsonita</div>
+          <div className="jsonita-about-tagline">Tiny menu-bar JSON toolkit</div>
         </div>
-        <button
-          type="button"
-          onClick={() => systemApi.openGithub().catch(() => {})}
-          style={aboutGithubButtonStyle}
-        >
+        <ActionButton variant="secondary" onClick={() => systemApi.openGithub().catch(() => {})}>
           GitHub
-        </button>
+        </ActionButton>
       </div>
-
-      <div style={aboutMetaGridStyle}>
+      <SettingsGroup className="jsonita-about-meta">
         <AboutMeta label={t('about.version')} value={version || '—'} />
         <AboutMeta label={t('about.license')} value="MIT" />
         <AboutMeta label={t('about.author')} value="Jin Huang" />
-      </div>
-
-      <div style={aboutPathsStyle}>
-        <div style={sectionLabelStyle}>Data &amp; logs</div>
-        <div style={aboutPathStyle}>
-          ~/Library/Application Support/Jsonita/
-        </div>
-        <div style={aboutPathStyle}>
-          ~/Library/Logs/Jsonita/
-        </div>
-      </div>
+      </SettingsGroup>
+      <SettingsGroup>
+        <Row label="Data">
+          <span className="jsonita-about-path">~/Library/Application Support/Jsonita/</span>
+        </Row>
+        <Row label="Logs">
+          <span className="jsonita-about-path">~/Library/Logs/Jsonita/</span>
+        </Row>
+      </SettingsGroup>
     </div>
   );
 }
 
 function AboutMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div style={aboutMetaStyle}>
-      <span style={aboutMetaLabelStyle}>{label}</span>
-      <span style={aboutMetaValueStyle}>{value}</span>
+    <div>
+      <span className="jsonita-about-meta-label">{label}</span>
+      <span className="jsonita-about-meta-value">{value}</span>
     </div>
   );
 }
-
-const rowStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) auto',
-  alignItems: 'center',
-  gap: 16,
-  minHeight: 38,
-  padding: '6px 0',
-  fontSize: 'var(--fs-sm)',
-};
-
-const sectionLabelStyle: React.CSSProperties = {
-  color: 'var(--text-muted)',
-  fontSize: 'var(--fs-xs)',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: 0,
-};
-
-const aboutStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 16,
-  fontSize: 'var(--fs-sm)',
-};
-
-const aboutHeaderStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  gap: 16,
-  paddingBottom: 12,
-  borderBottom: '1px solid var(--border)',
-};
-
-const aboutTitleStyle: React.CSSProperties = {
-  color: 'var(--text-faint)',
-  fontSize: 'var(--fs-lg)',
-  fontWeight: 700,
-  lineHeight: 1.15,
-};
-
-const aboutSubtitleStyle: React.CSSProperties = {
-  marginTop: 4,
-  color: 'var(--text-faint)',
-  lineHeight: 1.35,
-};
-
-const aboutGithubButtonStyle: React.CSSProperties = {
-  flex: '0 0 auto',
-  padding: '4px 10px',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--control-border)',
-  background: 'var(--control-bg)',
-  color: 'var(--text)',
-  fontFamily: 'var(--font-mono)',
-  fontSize: 'var(--fs-xs)',
-  cursor: 'pointer',
-};
-
-const aboutMetaGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-  gap: 8,
-};
-
-const aboutMetaStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 3,
-  minWidth: 0,
-};
-
-const aboutMetaLabelStyle: React.CSSProperties = {
-  color: 'var(--text-faint)',
-  fontSize: 'var(--fs-xs)',
-};
-
-const aboutMetaValueStyle: React.CSSProperties = {
-  color: 'var(--text-faint)',
-  fontWeight: 600,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-};
-
-const aboutPathsStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 6,
-  paddingTop: 4,
-};
-
-const aboutPathStyle: React.CSSProperties = {
-  padding: '5px 8px',
-  borderRadius: 'var(--radius-sm)',
-  background: 'var(--control-bg)',
-  color: 'var(--text-faint)',
-  fontFamily: 'var(--font-mono)',
-  fontSize: 'var(--fs-xs)',
-  overflowWrap: 'anywhere',
-};
-
-const shortcutDividerStyle: React.CSSProperties = {
-  height: 1,
-  background: 'var(--border)',
-  margin: '2px 0',
-};
-
-const readonlyShortcutRowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: 16,
-  minHeight: 28,
-  color: 'var(--text-faint)',
-};
-
-const keyGroupStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  gap: 4,
-  flexWrap: 'wrap',
-  opacity: 0.6,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  minWidth: 0,
-  padding: '5px 10px',
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-md)',
-  color: 'var(--text)',
-};
-
-const segSmStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  padding: 2,
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-md)',
-  flexShrink: 0,
-};
-
-const segSmOffStyle: React.CSSProperties = {
-  border: 0,
-  background: 'transparent',
-  color: 'var(--text-muted)',
-  fontSize: 'var(--fs-base)',
-  fontWeight: 500,
-  padding: '3px 12px',
-  borderRadius: 'var(--radius-sm)',
-  cursor: 'pointer',
-};
-
-const segSmOnStyle: React.CSSProperties = {
-  ...segSmOffStyle,
-  background: 'var(--surface-raised)',
-  color: 'var(--text)',
-  fontWeight: 600,
-  boxShadow: 'var(--shadow-sm)',
-};
-
-const checkboxWrapStyle: React.CSSProperties = {
-  position: 'relative',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 18,
-  height: 18,
-  flexShrink: 0,
-};
-
-const checkboxInputStyle: React.CSSProperties = {
-  position: 'absolute',
-  inset: 0,
-  margin: 0,
-  opacity: 0,
-  cursor: 'pointer',
-};
