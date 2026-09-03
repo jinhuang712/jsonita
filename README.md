@@ -28,6 +28,17 @@ Jsonita lives in your menu bar and appears the instant you press the global shor
 
 **Local by default · window shows in P95 < 500 ms · steady memory < 80 MB · install < 15 MB.**
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/docs/screenshots/light-format.png" alt="Format: raw JSON on the left, formatted result on the right" width="49%">
+  <img src="assets/docs/screenshots/dark-tree.png" alt="Tree view in dark theme" width="49%">
+</p>
+<p align="center">
+  <img src="assets/docs/screenshots/light-history.png" alt="Local history with search, star, and preview" width="49%">
+  <img src="assets/docs/screenshots/dark-settings.png" alt="Settings in dark theme" width="49%">
+</p>
+
 ## Features
 
 | Feature | What it does |
@@ -106,7 +117,7 @@ macOS is the primary v1 target; Windows ships as a secondary unsigned beta. Home
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) | Product contracts, behavior invariants, and release boundaries (kept byte-identical) |
 | [`WORKFLOW.md`](WORKFLOW.md) | How docs and implementation stay in sync |
-| [`design/`](design/) | Screen hierarchy, visible states, and a low-fidelity flow prototype |
+| [`design/`](design/) | Screen hierarchy, visible states, and a low-fidelity (低保真) flow prototype at `design/prototype/index.html` |
 | [`docs/`](docs/) | GitHub Pages site source and Superpowers design/plan records |
 
 Change history and open work live in the git commit history — there is no separate changelog or backlog file.
