@@ -22,10 +22,10 @@ import {
 import logoMarkUrl from '../../assets/icons/menubar/jsonita-menubar-template-22@3x.png';
 
 /**
- * 顶部 5 个功能 Tab + AI Fix 提示 + 右上设置入口。
+ * 顶部 chrome：品牌标记 + 4 个功能 Tab + AI Fix 入口 + 右侧窗口动作。
  *
- * 视觉锚：design/screens.md § 1.1-1.5
- * Spec ref: design/overview.md § 4.1 TabBar
+ * 视觉锚：design/screens.md § Editor Workspace
+ * 样式统一在 global.css § 3；此处只保留几何测量与行为。
  */
 
 const TABS: { id: Pane; key: string; Icon: (props: IconProps) => JSX.Element }[] = [
@@ -49,8 +49,7 @@ export function TabBar() {
   const aiStatus = useAiStore((s) => s.status);
   const retryAi = useAiStore((s) => s.retry);
   const editorStatus = useEditorStore((s) => s.status);
-  // 有 parse error 且 showAiFix 时都露出 AI Fix 入口：AI 开启则可点击进入并触发修复，
-  // 未开启则灰显 + 引导 tooltip（此前 aiEnabled 时无任何可点击入口，只能靠键盘）。
+  // 有 parse error 且 showAiFix 时露出 AI Fix 入口：AI 开启可点击，未开启灰显 + 引导 tooltip。
   const showAiFixEntry = showAiFix && editorStatus === 'error';
   const aiFixDisabled = !aiEnabled;
   const tabListRef = useRef<HTMLDivElement | null>(null);
@@ -112,48 +111,19 @@ export function TabBar() {
   };
 
   return (
-    <div
-      onMouseDown={startDragging}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 5,
-        minHeight: 44,
-        padding: '7px 10px 8px',
-        background: 'color-mix(in srgb, var(--surface-quiet) 28%, transparent)',
-        borderBottom: '1px solid var(--border)',
-        cursor: 'grab',
-        position: 'relative',
-        userSelect: 'none',
-      }}
-    >
+    <div className="jsonita-tabbar" onMouseDown={startDragging}>
       <span
         aria-hidden="true"
+        className="jsonita-brand-mark"
         style={{
           width: 22,
           height: 22,
-          flex: '0 0 auto',
           marginRight: 6,
-          pointerEvents: 'none',
-          display: 'inline-block',
-          backgroundColor: 'var(--text)',
-          opacity: 0.82,
           WebkitMaskImage: `url(${logoMarkUrl})`,
           maskImage: `url(${logoMarkUrl})`,
-          WebkitMaskSize: 'contain',
-          maskSize: 'contain',
-          WebkitMaskRepeat: 'no-repeat',
-          maskRepeat: 'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskPosition: 'center',
         }}
       />
-      <div
-        role="tablist"
-        aria-label="Pane tabs"
-        ref={tabListRef}
-        style={{ display: 'flex', alignItems: 'center', gap: 5, position: 'relative' }}
-      >
+      <div role="tablist" aria-label="Pane tabs" ref={tabListRef} className="jsonita-tablist">
         {activeRect && (
           <span
             aria-hidden="true"
@@ -183,15 +153,16 @@ export function TabBar() {
                   : 'jsonita-tab-button'
               }
             >
-              <Icon className="jsonita-tab-button-icon" width={13} height={13} strokeWidth={2} aria-hidden="true" />
+              <Icon className="jsonita-tab-button-icon" width={13} height={13} strokeWidth={1.9} aria-hidden="true" />
               {t(`tab.${tab.key}` as 'tab.format')}
             </button>
           );
         })}
       </div>
-      <div style={{ flex: 1 }} />
+      <div className="jsonita-tabbar-spacer" />
       {showAiFixEntry && (
         <button
+          type="button"
           aria-disabled={aiFixDisabled ? 'true' : undefined}
           aria-pressed={!aiFixDisabled && active === 'ai-fix' ? 'true' : undefined}
           tabIndex={aiFixDisabled ? -1 : 0}
@@ -205,26 +176,8 @@ export function TabBar() {
                 }
           }
           title={aiFixDisabled ? t('tab.aiFixDisabledTooltip') : t('tab.aiFix')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '4px 10px',
-            fontSize: 'var(--fs-sm)',
-            lineHeight: 'var(--lh-tight)',
-            fontWeight: 580,
-            fontFamily: 'var(--font-ui)',
-            background: 'var(--accent-soft)',
-            color: 'var(--accent)',
-            border: '1px solid color-mix(in srgb, var(--accent) 24%, transparent)',
-            borderRadius: 'var(--radius-sm)',
-            cursor: aiFixDisabled ? 'not-allowed' : 'pointer',
-            opacity: aiFixDisabled ? 0.55 : active === 'ai-fix' ? 1 : 0.9,
-            transition:
-              'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)',
-          }}
         >
-          <SparklesIcon width={13} height={13} strokeWidth={2} aria-hidden="true" />
+          <SparklesIcon width={13} height={13} strokeWidth={1.9} aria-hidden="true" />
           {t('tab.aiFix')}
         </button>
       )}
@@ -244,9 +197,9 @@ export function TabBar() {
           tooltipShortcut={settings.shortcutSplitToggle}
         >
           {settings.singlePaneMode ? (
-            <SinglePanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+            <SinglePanelIcon width={15} height={15} strokeWidth={1.7} aria-hidden="true" />
           ) : (
-            <SplitPanelIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+            <SplitPanelIcon width={15} height={15} strokeWidth={1.7} aria-hidden="true" />
           )}
         </ChromeIconButton>
         <ChromeIconButton
@@ -258,7 +211,7 @@ export function TabBar() {
           tooltipLabel={tShell('actions.history')}
           tooltipShortcut="CmdOrCtrl+Y"
         >
-          <HistoryIcon width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+          <HistoryIcon width={15} height={15} strokeWidth={1.7} aria-hidden="true" />
         </ChromeIconButton>
         <ChromeIconButton
           onClick={() => {
@@ -269,7 +222,7 @@ export function TabBar() {
           tooltipLabel={tShell('actions.settings')}
           tooltipShortcut="CmdOrCtrl+,"
         >
-          <GearIcon width={15} height={15} strokeWidth={1.75} aria-hidden="true" />
+          <GearIcon width={15} height={15} strokeWidth={1.7} aria-hidden="true" />
         </ChromeIconButton>
       </div>
     </div>

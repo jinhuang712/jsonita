@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { computeDiff } from './diff';
 
 /**
- * AI Fix 接受前 diff 显示 — 左右合并行式（unified diff，design/screens.md § 8 视觉锚）。
+ * AI Fix 接受前 diff 显示 — unified diff（design/screens.md § AI Fix）。
+ * 行底色只用状态色的 10% 淡底，符号列承担颜色。
  */
 
 interface Props {
@@ -10,37 +11,22 @@ interface Props {
   after: string;
 }
 
+const LINE_CLASS = {
+  add: 'jsonita-diff-line jsonita-diff-line-add',
+  del: 'jsonita-diff-line jsonita-diff-line-del',
+  same: 'jsonita-diff-line',
+} as const;
+
 export function DiffView({ before, after }: Props) {
   const lines = useMemo(() => computeDiff(before, after), [before, after]);
   return (
-    <div
-      style={{
-        height: '100%',
-        overflow: 'auto',
-        fontFamily: 'var(--font-mono)',
-        fontSize: 'var(--fs-editor)',
-        padding: 'var(--sp-3) var(--sp-4)',
-        background: 'var(--bg-card)',
-        lineHeight: 1.75,
-      }}
-    >
+    <div className="jsonita-diff">
       {lines.map((l, i) => {
-        const bg =
-          l.type === 'add'
-            ? 'color-mix(in srgb, var(--ok) 12%, transparent)'
-            : l.type === 'del'
-              ? 'color-mix(in srgb, var(--danger) 10%, transparent)'
-              : 'transparent';
-        const sigil = l.type === 'add' ? '+' : l.type === 'del' ? '-' : ' ';
-        const sigilColor =
-          l.type === 'add'
-            ? 'var(--ok)'
-            : l.type === 'del'
-              ? 'var(--danger)'
-              : 'var(--text-faint)';
+        const kind = l.type === 'add' ? 'add' : l.type === 'del' ? 'del' : 'same';
+        const sigil = kind === 'add' ? '+' : kind === 'del' ? '−' : ' ';
         return (
-          <div key={i} style={{ background: bg, whiteSpace: 'pre' }}>
-            <span style={{ color: sigilColor, paddingRight: 8 }}>{sigil}</span>
+          <div key={i} className={LINE_CLASS[kind]}>
+            <span className="jsonita-diff-sigil">{sigil}</span>
             <span>{l.text}</span>
           </div>
         );

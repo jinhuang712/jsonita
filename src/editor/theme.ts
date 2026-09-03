@@ -93,9 +93,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     gap: '4px',
     padding: '6px 10px 0',
     borderBottom: '1px solid var(--border)',
-    backgroundColor: 'color-mix(in srgb, var(--bg-code) 82%, var(--surface-raised))',
-    backdropFilter: 'var(--glass-blur)',
-    WebkitBackdropFilter: 'var(--glass-blur)',
+    backgroundColor: 'var(--surface-quiet)',
     fontFamily: 'var(--font-sans)',
     fontSize: 'var(--fs-sm)',
     color: 'var(--text-muted)',
@@ -113,8 +111,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
     minHeight: '38px',
     margin: '0 -10px',
     padding: '6px 10px',
-    borderTop: '1px solid color-mix(in srgb, var(--border) 72%, transparent)',
-    backgroundColor: 'color-mix(in srgb, var(--surface-raised) 15%, transparent)',
+    borderTop: '1px solid var(--border)',
   },
   '.jsonita-search-label': {
     flex: '0 0 54px',
@@ -185,7 +182,7 @@ const sharedSpec: Parameters<typeof EditorView.theme>[0] = {
   },
   '.jsonita-search-button:hover': {
     backgroundColor: 'var(--control-bg-hover)',
-    color: 'color-mix(in srgb, var(--text) 84%, var(--primary))',
+    color: 'var(--text)',
   },
   '.jsonita-search-button:focus-visible': {
     boxShadow: 'var(--shadow-focus)',

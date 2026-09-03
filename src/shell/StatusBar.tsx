@@ -4,10 +4,10 @@ import { useEditorStore } from '../store/editor';
 import { useUiStore } from '../store/ui';
 
 /**
- * 底部状态栏 — 4 态文案（valid / error / empty / large）。
+ * 底部状态栏 — 4 态文案（valid / error / empty / large）+ AI Fix 进行态。
  *
- * 视觉锚：design/screens.md § 2 状态栏 4 态对照
- * Spec ref: design/overview.md § 4.2 StatusBar
+ * 一颗 6px 圆点承担状态色，文字保持墨色；数字用等宽 + tabular。
+ * 视觉锚：design/screens.md § Editor Workspace
  */
 export function StatusBar() {
   const { t } = useTranslation('shell');
@@ -17,42 +17,49 @@ export function StatusBar() {
   const aiStatus = useAiStore((s) => s.status);
   const activePane = useUiStore((s) => s.activePane);
 
-  let left: React.ReactNode;
+  let dot = 'jsonita-status-dot';
+  let content: React.ReactNode;
+
   if (activePane === 'ai-fix' && aiStatus !== 'idle') {
-    const aiLabel =
-      aiStatus === 'requesting' ? t('statusBar.aiFixing') : t('statusBar.aiReview');
-    left = (
-      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
-        ● {aiLabel}
+    dot += ' jsonita-status-dot-accent';
+    content = (
+      <span className="jsonita-status-text-accent">
+        {aiStatus === 'requesting' ? t('statusBar.aiFixing') : t('statusBar.aiReview')}
       </span>
     );
   } else {
     switch (status) {
-    case 'valid':
-      left = (
-        <span>
-          <span style={{ color: 'var(--ok)' }}>●</span> {t('statusBar.valid')} ·{' '}
-          <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{lines}</span> {t('statusBar.lines')} ·{' '}
-          <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{bytes}</span> {t('statusBar.bytes')}
-        </span>
-      );
-      break;
-    case 'error':
-      left = (
-        <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
-          ● {t('statusBar.invalid')}
-        </span>
-      );
-      break;
-    case 'large':
-      left = (
-        <span style={{ color: 'var(--warn)', fontWeight: 600 }}>
-          ● {t('statusBar.largeFile')} · <span style={{ fontFamily: 'var(--font-mono-ui)' }}>{bytes}</span> {t('statusBar.bytes')}
-        </span>
-      );
-      break;
-    default:
-      left = <span style={{ color: 'var(--text-faint)' }}>— {t('statusBar.empty')}</span>;
+      case 'valid':
+        dot += ' jsonita-status-dot-ok';
+        content = (
+          <>
+            <span className="jsonita-status-text-strong">{t('statusBar.valid')}</span>
+            <span className="jsonita-status-meta">
+              <span className="jsonita-status-num">{lines}</span> {t('statusBar.lines')}
+            </span>
+            <span className="jsonita-status-meta">
+              <span className="jsonita-status-num">{bytes}</span> {t('statusBar.bytes')}
+            </span>
+          </>
+        );
+        break;
+      case 'error':
+        dot += ' jsonita-status-dot-error';
+        content = <span className="jsonita-status-text-error">{t('statusBar.invalid')}</span>;
+        break;
+      case 'large':
+        dot += ' jsonita-status-dot-warn';
+        content = (
+          <>
+            <span className="jsonita-status-text-warn">{t('statusBar.largeFile')}</span>
+            <span className="jsonita-status-meta">
+              <span className="jsonita-status-num">{bytes}</span> {t('statusBar.bytes')}
+            </span>
+          </>
+        );
+        break;
+      default:
+        content = <span className="jsonita-status-meta">{t('statusBar.empty')}</span>;
     }
   }
 
@@ -61,20 +68,11 @@ export function StatusBar() {
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      style={{
-        display: 'flex',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        minHeight: 33,
-        padding: '5px 12px',
-        fontSize: 'var(--fs-xs)',
-        fontFamily: 'var(--font-ui)',
-        letterSpacing: 0,
-        borderTop: '1px solid var(--border)',
-        background: 'color-mix(in srgb, var(--surface-quiet) 30%, transparent)',
-      }}
+      className="jsonita-statusbar"
+      style={{ fontFamily: 'var(--font-ui)' }}
     >
-      {left}
+      <span className={dot} aria-hidden="true" />
+      {content}
     </div>
   );
 }

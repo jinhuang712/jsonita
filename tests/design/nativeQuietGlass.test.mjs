@@ -36,9 +36,11 @@ test('history and settings use shared quiet surface tokens for controls', () => 
   assert.match(styles, /\.jsonita-history-document-row\s*\{[^}]*background:\s*var\(--control-bg\)/s);
   assert.match(styles, /\.jsonita-action-button-secondary\s*\{[^}]*var\(--control-bg\)/s);
   assert.doesNotMatch(history, /<span style=\{\{ \.\.\.chipStyle/);
-  assert.match(settings, /var\(--control-bg\)/);
+  // Settings 控件语言收敛到 global.css：分组容器 / 分段控件 / 开关共用安静表面 token。
+  assert.match(styles, /\.jsonita-settings-group\s*\{[^}]*background:\s*var\(--control-bg\)/s);
+  assert.match(styles, /\.jsonita-segmented-option\[aria-pressed='true'\]\s*\{[^}]*var\(--surface-raised\)/s);
+  assert.match(settings, /className="jsonita-switch"/);
   assert.match(settings, /background: checked \? 'var\(--toggle-on\)' : 'transparent'/);
-  assert.match(settings, /background: 'var\(--surface-raised\)'/);
   assert.doesNotMatch(settings, /var\(--control-bg-active\)/);
 });
 

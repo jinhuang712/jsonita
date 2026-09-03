@@ -1,6 +1,14 @@
 /**
- * 全局基础 — body 透明（NSPanel 兼容），字体 / 颜色继承 tokens。
+ * 全局样式 — body 透明（NSPanel 兼容），字体 / 颜色继承 tokens。
+ *
+ * 结构：
+ *   1. 基础            5. 页面壳（Settings / History 共用）
+ *   2. 通用控件        6. Settings
+ *   3. 顶部 chrome     7. History
+ *   4. 编辑区 / 状态栏 8. AI Fix / Tree / 提示层
  */
+
+/* ── 1. 基础 ─────────────────────────────────────────── */
 
 html,
 body {
@@ -19,7 +27,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* 内层滚动不向文档链式传播（修滚动弹出浮窗边界的橡皮筋） */
 .cm-scroller {
   overscroll-behavior: contain;
 }
@@ -42,6 +49,10 @@ select,
   box-sizing: border-box;
 }
 
+button {
+  font-family: inherit;
+}
+
 .jsonita-theme-transition,
 .jsonita-theme-transition * {
   transition:
@@ -49,6 +60,390 @@ select,
     border-color 180ms var(--ease-native),
     color 180ms var(--ease-native),
     box-shadow 180ms var(--ease-native) !important;
+}
+
+/* 窗口壳：一层玻璃 + 一根发丝边 */
+.jsonita-floating-window {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── 2. 通用控件 ─────────────────────────────────────── */
+
+/* 文本输入：无填充、一根边、聚焦时只换边色 */
+.jsonita-input {
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--control-bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  outline: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-input::placeholder {
+  color: var(--text-faint);
+}
+
+.jsonita-input:focus {
+  border-color: var(--primary-edge);
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-input-mono {
+  font-family: var(--font-mono-ui);
+}
+
+/* 按钮：四种克制的玻璃变体 */
+.jsonita-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font: 500 13px/1 var(--font-ui);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-native),
+    border-color var(--dur-fast) var(--ease-native),
+    color var(--dur-fast) var(--ease-native),
+    box-shadow var(--dur-fast) var(--ease-native);
+}
+
+.jsonita-action-button-primary {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.jsonita-action-button-primary:hover {
+  border-color: var(--primary-edge);
+}
+
+.jsonita-action-button-secondary {
+  background: var(--control-bg);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+}
+
+.jsonita-action-button-secondary:hover {
+  background: var(--control-bg-hover);
+}
+
+.jsonita-action-button-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--control-border);
+}
+
+.jsonita-action-button-danger:hover {
+  background: var(--danger-bg);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+.jsonita-action-button-text {
+  background: transparent;
+  color: var(--text-muted);
+  border: 0;
+  padding: 0 6px;
+}
+
+.jsonita-action-button-text:hover {
+  color: var(--text);
+}
+
+.jsonita-action-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.jsonita-action-button:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-action-button[aria-pressed='true'] {
+  border-color: var(--primary-edge);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* 分段控件 */
+.jsonita-segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--control-bg);
+}
+
+.jsonita-segmented-option {
+  min-width: 44px;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-segmented-option:hover {
+  color: var(--text);
+}
+
+.jsonita-segmented-option[aria-pressed='true'] {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.jsonita-segmented-option:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+/* 开关：macOS 风格，轨道用 --toggle-on */
+.jsonita-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+}
+
+.jsonita-switch-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.jsonita-switch-track {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--control-bg);
+  transition:
+    background var(--dur-base) var(--ease-native),
+    border-color var(--dur-base) var(--ease-native);
+}
+
+.jsonita-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--toggle-knob);
+  box-shadow: 0 1px 2px rgba(20, 26, 36, 0.24);
+  transition: transform var(--dur-base) var(--ease-native);
+}
+
+.jsonita-switch-input:checked + .jsonita-switch-track::after {
+  transform: translateX(14px);
+}
+
+.jsonita-switch-input:focus-visible + .jsonita-switch-track {
+  box-shadow: var(--shadow-focus);
+}
+
+/* 34px 图标按钮 + 自绘 tooltip */
+.jsonita-chrome-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.jsonita-chrome-actions .jsonita-chrome-icon-button {
+  margin-left: 0;
+}
+
+.jsonita-chrome-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  margin-left: 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-chrome-icon-button:hover,
+.jsonita-chrome-icon-button:focus-visible {
+  background: var(--control-bg-hover);
+  color: var(--text);
+  outline: 0;
+}
+
+.jsonita-chrome-icon-button:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-chrome-icon-button.is-selected {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.jsonita-chrome-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: var(--z-tooltip);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  max-width: 220px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-chrome-tooltip-label {
+  white-space: nowrap;
+}
+
+.jsonita-chrome-icon-button:hover .jsonita-chrome-tooltip,
+.jsonita-chrome-icon-button:focus-visible .jsonita-chrome-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 键帽 */
+.jsonita-shortcut-glyph {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.jsonita-shortcut-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  font: 500 12.5px/1 var(--font-ui);
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  box-shadow: inset 0 1px 0 var(--kbd-hi);
+  white-space: nowrap;
+}
+
+.jsonita-shortcut-tile .jsonita-shortcut-glyph-icon {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+/* 表单反馈文本 */
+.jsonita-field-note {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.jsonita-field-note-ok {
+  color: var(--ok);
+}
+
+.jsonita-field-note-warn {
+  color: var(--warn);
+}
+
+.jsonita-field-note-error {
+  color: var(--danger);
+}
+
+/* ── 3. 顶部 chrome ──────────────────────────────────── */
+
+.jsonita-tabbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 6px 8px 6px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  user-select: none;
+}
+
+.jsonita-brand-mark {
+  display: inline-block;
+  flex: 0 0 auto;
+  background-color: var(--text);
+  opacity: 0.7;
+  pointer-events: none;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.jsonita-tablist {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .jsonita-tab-active-pill {
@@ -60,7 +455,7 @@ select,
   background: var(--tab-active-bg);
   box-shadow:
     inset 0 0 0 1px var(--tab-active-border),
-    0 1px 2px rgba(0, 0, 0, 0.08);
+    var(--shadow-sm);
   pointer-events: none;
   transition:
     transform 180ms var(--ease-native),
@@ -71,35 +466,88 @@ select,
 .jsonita-tab-button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   position: relative;
   z-index: 1;
-  min-height: 27px;
-  padding: 0 9px;
+  min-height: 28px;
+  padding: 0 10px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
-  font-family: var(--font-ui);
   font-size: var(--fs-sm);
   font-weight: 500;
   letter-spacing: 0;
   line-height: var(--lh-tight);
   cursor: pointer;
-  transform: translateY(0);
-  transition:
-    color var(--dur-base) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  transition: color var(--dur-base) var(--ease-out);
 }
 
 .jsonita-tab-button-icon {
   flex: 0 0 auto;
-  opacity: 0.88;
+  opacity: 0.7;
+  transition: opacity var(--dur-base) var(--ease-out);
 }
 
-/* 窗口显隐动画由原生 NSWindow.alphaValue 承担（window/mod.rs animated_show/hide）：
-   整窗（vibrancy 材质 + webview 内容 + 投影）作为单一合成单元淡变，避免 CSS 层
-   opacity 动画只作用 webview、露出空原生玻璃框的两段式。此处不再做窗口级动画。 */
+.jsonita-tab-button:hover {
+  color: var(--text);
+}
+
+.jsonita-tab-button:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-tab-button-active {
+  color: var(--text);
+}
+
+.jsonita-tab-button-active .jsonita-tab-button-icon {
+  opacity: 1;
+}
+
+.jsonita-tabbar-spacer {
+  flex: 1;
+}
+
+/* AI Fix 入口：唯一带色的 chrome 元素 */
+.jsonita-ai-fix-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-ai-fix-entry:hover {
+  border-color: color-mix(in srgb, var(--accent) 44%, transparent);
+}
+
+.jsonita-ai-fix-entry[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.jsonita-ai-fix-entry[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jsonita-ai-fix-entry:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
 
 .jsonita-pane-transition {
   animation: jsonita-pane-in var(--dur-fast) var(--ease-native) both;
@@ -122,7 +570,7 @@ select,
 @keyframes jsonita-ai-fix-enter {
   from {
     opacity: 0;
-    transform: translateX(10px);
+    transform: translateX(6px);
   }
   to {
     opacity: 1;
@@ -130,110 +578,201 @@ select,
   }
 }
 
-.jsonita-tab-button:hover {
-  color: var(--text);
+/* ── 4. 编辑区 / 状态栏 ──────────────────────────────── */
+
+.jsonita-workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 0;
 }
 
-.jsonita-tab-button:active {
-  transform: translateY(1px);
+.jsonita-workspace-single {
+  grid-template-columns: 1fr;
 }
 
-.jsonita-tab-button-active {
-  color: color-mix(in srgb, var(--primary) 68%, var(--text));
-}
-
-.jsonita-chrome-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 8px;
-}
-
-.jsonita-chrome-actions .jsonita-chrome-icon-button {
-  margin-left: 0;
-}
-
-.jsonita-chrome-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
+.jsonita-pane {
   position: relative;
-  width: 34px;
-  height: 34px;
-  margin-left: 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: inherit;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--dur-base) var(--ease-out),
-    color var(--dur-base) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.jsonita-chrome-icon-button:hover,
-.jsonita-chrome-icon-button:focus-visible {
-  background: var(--surface-raised);
-  color: var(--text);
-  outline: 0;
+/* 双栏之间只有一根发丝线 */
+.jsonita-pane + .jsonita-pane {
+  box-shadow: inset 1px 0 0 var(--border);
 }
 
-.jsonita-chrome-icon-button:focus-visible {
-  box-shadow: var(--shadow-focus);
+.jsonita-editor-shell {
+  position: relative;
+  height: 100%;
 }
 
-.jsonita-chrome-icon-button:active {
-  transform: translateY(1px);
-}
-
-.jsonita-chrome-icon-button.is-selected {
-  background: var(--surface-raised);
-  color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--border-strong);
-}
-
-.jsonita-chrome-tooltip {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: var(--z-tooltip);
-  display: inline-flex;
+.jsonita-statusbar {
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-width: max-content;
-  max-width: 220px;
-  padding: 6px 8px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
-  color: var(--text);
-  box-shadow: var(--shadow-md);
-  font-family: var(--font-ui);
+  min-height: 32px;
+  padding: 4px 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
   font-size: var(--fs-xs);
-  font-weight: 540;
-  line-height: var(--lh-tight);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-3px);
-  transition:
-    opacity var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  letter-spacing: 0;
 }
 
-.jsonita-chrome-tooltip-label {
+.jsonita-status-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.jsonita-status-dot-ok {
+  background: var(--ok);
+}
+
+.jsonita-status-dot-error {
+  background: var(--danger);
+}
+
+.jsonita-status-dot-warn {
+  background: var(--warn);
+}
+
+.jsonita-status-dot-accent {
+  background: var(--accent);
+}
+
+.jsonita-status-text {
+  color: var(--text-muted);
+}
+
+.jsonita-status-text-strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.jsonita-status-text-error {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.jsonita-status-text-warn {
+  color: var(--warn);
+  font-weight: 500;
+}
+
+.jsonita-status-text-accent {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.jsonita-status-meta {
+  color: var(--text-faint);
+}
+
+.jsonita-status-num {
+  font-family: var(--font-mono-ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.jsonita-statusbar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
   white-space: nowrap;
 }
 
-.jsonita-chrome-icon-button:hover .jsonita-chrome-tooltip,
-.jsonita-chrome-icon-button:focus-visible .jsonita-chrome-tooltip {
-  opacity: 1;
-  transform: translateY(0);
+.jsonita-statusbar-action:hover,
+.jsonita-statusbar-action:focus-visible {
+  color: var(--text);
+  outline: none;
 }
 
+.jsonita-statusbar-shortcut {
+  display: inline-flex;
+  align-items: center;
+  max-width: 0;
+  padding: 0;
+  border: 0 solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
+  color: var(--text-muted);
+  font-family: var(--font-mono-ui);
+  font-size: calc(var(--fs-xs) - 1px);
+  line-height: 1.35;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateX(4px);
+  white-space: nowrap;
+  transition:
+    max-width var(--dur-base) var(--ease-native),
+    padding var(--dur-base) var(--ease-native),
+    border-width var(--dur-base) var(--ease-native),
+    opacity var(--dur-base) var(--ease-native),
+    transform var(--dur-base) var(--ease-native);
+}
+
+.jsonita-statusbar-action-hint-visible .jsonita-statusbar-shortcut {
+  max-width: 44px;
+  padding: 0 4px;
+  border-width: 1px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 单栏执行提示（浮在状态栏上方） */
+.jsonita-single-pane-hint {
+  position: absolute;
+  right: 12px;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.jsonita-single-pane-hint-running {
+  color: var(--text);
+}
+
+.jsonita-single-pane-hint-success {
+  color: var(--ok);
+}
+
+.jsonita-single-pane-hint-error {
+  color: var(--danger);
+}
+
+.jsonita-single-pane-hint-ai {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border-strong));
+  color: var(--accent);
+}
+
+.jsonita-single-pane-hint-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 双击 Esc 提示 */
 .jsonita-esc-close-hint {
   position: absolute;
   left: 50%;
@@ -243,28 +782,33 @@ select,
   align-items: center;
   gap: 8px;
   max-width: min(360px, calc(100% - 32px));
-  padding: 9px 12px;
-  border: 1px solid rgba(178, 199, 219, 0.22);
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
-  background: rgba(20, 24, 31, 0.66);
+  background: rgba(24, 27, 34, 0.78);
   color: rgba(242, 244, 247, 0.94);
   box-shadow: 0 18px 42px -22px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  font-family: var(--font-ui);
-  font-size: calc(var(--fs-sm) + 0.5px);
-  font-weight: 620;
-  letter-spacing: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
   line-height: var(--lh-tight);
   pointer-events: none;
   transform: translateX(-50%);
   animation: jsonita-esc-close-hint-lifecycle 1700ms var(--ease-native) both;
 }
 
+.jsonita-esc-close-hint .jsonita-shortcut-tile {
+  color: rgba(242, 244, 247, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+}
+
 .jsonita-esc-key-combo {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 @keyframes jsonita-esc-close-hint-lifecycle {
@@ -286,17 +830,423 @@ select,
   }
 }
 
+/* ── 5. 页面壳（Settings / History） ─────────────────── */
+
 .jsonita-page {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  color: var(--text);
 }
 
-.jsonita-history-page {
+.jsonita-page-header {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+  min-height: 52px;
+  padding: 0 12px 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.jsonita-page-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.jsonita-page-title-count {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.jsonita-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.jsonita-page-close,
+.jsonita-settings-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  height: 30px;
+  padding: 0 6px 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-page-close:hover,
+.jsonita-page-close:focus-visible,
+.jsonita-settings-close:hover,
+.jsonita-settings-close:focus-visible {
+  background: var(--control-bg-hover);
   color: var(--text);
+  outline: none;
+}
+
+.jsonita-page-close:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+
+.jsonita-page-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ── 6. Settings ─────────────────────────────────────── */
+
+.jsonita-settings-nav {
+  display: flex;
+  flex-direction: column;
+  width: 164px;
+  flex: 0 0 auto;
+  padding: 10px 8px;
+  border-right: 1px solid var(--border);
+}
+
+.jsonita-settings-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.jsonita-settings-nav-footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.jsonita-settings-nav-btn,
+.jsonita-settings-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-settings-nav-icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  opacity: 0.6;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-settings-nav-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.jsonita-settings-nav-btn:hover,
+.jsonita-settings-nav-btn:focus-visible {
+  background: var(--control-bg-hover);
+  color: var(--text);
+  outline: 0;
+}
+
+.jsonita-settings-nav-btn:hover .jsonita-settings-nav-icon {
+  opacity: 0.9;
+}
+
+.jsonita-settings-nav-btn[data-active='true'] {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.jsonita-settings-nav-btn[data-active='true'] .jsonita-settings-nav-icon {
+  opacity: 1;
+}
+
+.jsonita-settings-reset-btn:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.jsonita-settings-reset-btn:focus-visible {
+  background: var(--danger-bg);
+  color: var(--danger);
+  outline: 0;
+}
+
+.jsonita-settings-reset-btn:hover .jsonita-settings-nav-icon {
+  opacity: 1;
+}
+
+.jsonita-settings-scroll {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 18px 22px 28px;
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.jsonita-settings-section {
+  max-width: min(640px, 100%);
+  padding: 4px 0 20px;
+  scroll-margin-top: 12px;
+}
+
+.jsonita-settings-section + .jsonita-settings-section {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.jsonita-settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 10px;
+}
+
+.jsonita-settings-section-title {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+
+/* 分组列表：一个安静容器，行间发丝线 */
+.jsonita-settings-group {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--control-bg);
+}
+
+.jsonita-settings-group + .jsonita-settings-group {
+  margin-top: 10px;
+}
+
+.jsonita-settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 40px;
+  padding: 6px 12px;
+  font-size: var(--fs-sm);
+}
+
+.jsonita-settings-row + .jsonita-settings-row {
+  border-top: 1px solid var(--border);
+}
+
+.jsonita-settings-row-stack {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+
+.jsonita-settings-row-label {
+  min-width: 0;
+  color: var(--text);
+}
+
+.jsonita-settings-row-hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+
+.jsonita-settings-row-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.jsonita-settings-row-muted .jsonita-settings-row-label {
+  color: var(--text-muted);
+}
+
+.jsonita-settings-row-muted .jsonita-shortcut-glyph {
+  opacity: 0.75;
+}
+
+.jsonita-settings-key-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.jsonita-settings-note {
+  margin-top: 8px;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+
+.jsonita-settings-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* 开关行整行可点 */
+.jsonita-settings-row-toggle {
+  cursor: pointer;
+}
+
+/* Shortcut 录制框 */
+.jsonita-shortcut-input {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--control-bg);
+  color: var(--text);
+  font-family: var(--font-mono-ui);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-shortcut-input:hover {
+  border-color: var(--border-strong);
+}
+
+.jsonita-shortcut-input-recording {
+  border-color: var(--primary-edge);
+  box-shadow: var(--shadow-focus);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+}
+
+.jsonita-shortcut-override {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--warn) 36%, var(--control-border));
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--warn);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+/* About */
+.jsonita-about {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: var(--fs-sm);
+}
+
+.jsonita-about-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jsonita-about-name {
+  color: var(--text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.jsonita-about-tagline {
+  margin-top: 3px;
+  color: var(--text-muted);
+}
+
+.jsonita-about-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.jsonita-about-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 12px;
+}
+
+.jsonita-about-meta > div + div {
+  border-left: 1px solid var(--border);
+}
+
+.jsonita-about-meta-label {
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+.jsonita-about-meta-value {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jsonita-about-path {
+  color: var(--text-muted);
+  font-family: var(--font-mono-ui);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+/* ── 7. History ──────────────────────────────────────── */
+
+.jsonita-history-page {
   font-family: var(--font-sans);
 }
 
@@ -315,14 +1265,49 @@ select,
   align-items: center;
   justify-content: space-between;
   flex: 0 0 auto;
-  min-height: 58px;
-  padding: 0 18px;
+  min-height: 52px;
+  padding: 0 12px 0 18px;
   border-bottom: 1px solid var(--border);
 }
 
 .jsonita-history-title {
   font-size: var(--fs-lg);
   font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.jsonita-history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.jsonita-history-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.jsonita-history-clear-btn:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.jsonita-history-clear-btn:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
 }
 
 .jsonita-history-library {
@@ -337,29 +1322,14 @@ select,
   min-width: 0;
   min-height: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   padding: 12px;
   border-right: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-quiet) 62%, transparent);
 }
 
 .jsonita-history-search {
   flex: 0 0 auto;
-  min-width: 0;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--radius-sm);
-  background: var(--control-bg);
-  color: var(--text);
-  font-family: var(--font-mono-ui);
-  font-size: var(--fs-sm);
-  outline: none;
-}
-
-.jsonita-history-search:focus {
-  border-color: var(--primary-edge);
-  box-shadow: var(--shadow-focus);
+  width: 100%;
 }
 
 .jsonita-history-document-list {
@@ -368,7 +1338,7 @@ select,
   overflow: auto;
   display: grid;
   align-content: start;
-  gap: 3px;
+  gap: 2px;
   padding-bottom: 2px;
 }
 
@@ -412,7 +1382,6 @@ select,
 
 .jsonita-history-document-row:hover,
 .jsonita-history-document-row:focus-visible {
-  border-color: var(--control-border);
   background: var(--control-bg-hover);
   color: var(--text);
   outline: none;
@@ -421,9 +1390,10 @@ select,
 .jsonita-history-document-row-selected,
 .jsonita-history-document-row-selected:hover,
 .jsonita-history-document-row-selected:focus-visible {
-  border-color: var(--primary-edge);
-  background: var(--primary-soft);
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
   color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
 
 .jsonita-history-document-snippet {
@@ -431,7 +1401,7 @@ select,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   line-height: 1.35;
 }
 
@@ -443,12 +1413,13 @@ select,
   color: var(--text-faint);
   font-family: var(--font-ui);
   font-size: calc(var(--fs-xs) - 1px);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .jsonita-history-document-meta svg {
   flex: 0 0 auto;
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .jsonita-history-preview {
@@ -456,8 +1427,7 @@ select,
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 18px 24px;
-  background: transparent;
+  padding: 14px 20px 16px;
 }
 
 .jsonita-history-preview-empty {
@@ -475,8 +1445,6 @@ select,
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
 }
 
 .jsonita-history-preview-meta {
@@ -484,8 +1452,8 @@ select,
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-muted);
-  font-family: var(--font-ui);
   font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -499,146 +1467,121 @@ select,
 .jsonita-history-preview-code {
   flex: 1 1 auto;
   min-height: 0;
-  margin: 16px 0;
+  margin: 12px 0 14px;
+  padding: 10px 12px;
   overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--control-bg);
   color: var(--text);
   font-family: var(--font-code);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   line-height: var(--lh-code);
   white-space: pre;
   user-select: text;
 }
 
-.jsonita-history-header-actions {
+/* ── 8. AI Fix / Tree / 弹层 ─────────────────────────── */
+
+.jsonita-ai-fix-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.jsonita-ai-fix-center {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
+  justify-content: center;
+  padding: 24px;
 }
 
-.jsonita-history-clear-btn {
-  display: inline-flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: var(--fs-xs);
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+.jsonita-ai-fix-message {
+  max-width: 320px;
+  text-align: center;
 }
 
-.jsonita-history-clear-btn:hover {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
+.jsonita-ai-fix-message-title {
   color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 500;
 }
 
-.jsonita-history-clear-btn:focus-visible {
-  outline: 0;
-  box-shadow: var(--shadow-focus);
+.jsonita-ai-fix-message-body {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
-.jsonita-settings-section {
-  max-width: min(720px, 100%);
-  padding: 2px 0 14px;
-  scroll-margin-top: 12px;
+.jsonita-ai-fix-message-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }
-.jsonita-settings-section + .jsonita-settings-section {
-  margin-top: 14px;
-  padding-top: 16px;
+
+.jsonita-ai-fix-diff {
+  flex: 1;
+  min-height: 0;
+}
+
+.jsonita-ai-fix-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 12px;
   border-top: 1px solid var(--border);
 }
-.jsonita-settings-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 0 0 12px;
-}
-.jsonita-settings-section-title {
-  margin: 0;
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: var(--fs-lg);
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  line-height: 1.25;
+
+.jsonita-diff {
+  height: 100%;
+  overflow: auto;
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: var(--fs-editor);
+  line-height: var(--lh-code);
 }
 
-.jsonita-settings-nav-btn {
+.jsonita-diff-line {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 8px;
-  font-size: var(--fs-md);
-  text-align: left;
-  background: transparent;
-  color: var(--text-muted);
-  border: 0;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-weight: 450;
-  white-space: nowrap;
-  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  white-space: pre;
+  border-radius: 2px;
 }
-.jsonita-settings-nav-icon {
-  width: 22px;
-  height: 22px;
+
+.jsonita-diff-sigil {
   flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  opacity: 0.55;
-  transition: opacity var(--dur-fast) var(--ease-out);
+  width: 1.4em;
+  color: var(--text-faint);
 }
 
-.jsonita-settings-reset-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 8px;
-  font-size: var(--fs-md);
-  font-weight: 450;
-  text-align: left;
-  background: transparent;
-  color: var(--text-muted);
-  border: 0;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+.jsonita-diff-line-add {
+  background: var(--ok-bg);
 }
-.jsonita-settings-reset-btn:hover {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
+
+.jsonita-diff-line-add .jsonita-diff-sigil {
+  color: var(--ok);
+}
+
+.jsonita-diff-line-del {
+  background: var(--danger-bg);
+  color: var(--text-muted);
+}
+
+.jsonita-diff-line-del .jsonita-diff-sigil {
   color: var(--danger);
 }
-.jsonita-settings-reset-btn:focus-visible {
-  outline: 0;
-  box-shadow: var(--shadow-focus);
-}
-.jsonita-settings-reset-btn .jsonita-settings-nav-icon {
-  opacity: 0.5;
-}
-.jsonita-settings-reset-btn:hover .jsonita-settings-nav-icon {
-  opacity: 1;
-}
 
-/* AI Fix — "repairing" skeleton: braces framing shimmering code-line bars */
+/* AI Fix 等待骨架：花括号包住闪动的代码行 */
 .jsonita-aifix-wait {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 18px;
 }
+
 .jsonita-aifix-skeleton {
   display: flex;
   flex-direction: column;
@@ -650,8 +1593,9 @@ select,
   line-height: 1;
   color: var(--text-faint);
 }
+
 .jsonita-aifix-line {
-  height: 10px;
+  height: 8px;
   margin-left: 24px;
   border-radius: 3px;
   background: linear-gradient(
@@ -663,11 +1607,12 @@ select,
   background-size: 200% 100%;
   animation: jsonita-aifix-shimmer 1.4s linear infinite;
 }
+
 .jsonita-aifix-caption {
   font-size: var(--fs-sm);
   color: var(--text-muted);
-  letter-spacing: 0.01em;
 }
+
 @keyframes jsonita-aifix-shimmer {
   0% {
     background-position: 200% 0;
@@ -676,6 +1621,7 @@ select,
     background-position: -200% 0;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .jsonita-aifix-line {
     animation: jsonita-aifix-pulse 1.6s ease-in-out infinite;
@@ -690,172 +1636,8 @@ select,
     }
   }
 }
-.jsonita-settings-nav-icon svg {
-  width: 15px;
-  height: 15px;
-}
-.jsonita-settings-nav-btn:hover {
-  background: var(--control-bg-hover);
-  color: var(--text);
-}
-.jsonita-settings-nav-btn:hover .jsonita-settings-nav-icon {
-  opacity: 0.85;
-}
-.jsonita-settings-nav-btn[data-active='true'] {
-  background: var(--toggle-on);
-  color: #fff;
-  font-weight: 600;
-}
-.jsonita-settings-nav-btn[data-active='true'] .jsonita-settings-nav-icon {
-  opacity: 1;
-}
 
-.jsonita-page-close,
-.jsonita-settings-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  gap: 6px;
-  min-width: 30px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: color-mix(in srgb, var(--text-muted) 82%, var(--text));
-  font-family: inherit;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
-    color var(--dur-base) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-}
-
-.jsonita-page-close:hover,
-.jsonita-page-close:focus-visible,
-.jsonita-settings-close:hover,
-.jsonita-settings-close:focus-visible {
-  background: var(--control-bg-hover);
-  border-color: var(--control-border);
-  color: color-mix(in srgb, var(--primary) 72%, var(--text));
-  outline: none;
-}
-
-.jsonita-page-close:active,
-.jsonita-settings-close:active {
-  transform: translateY(1px);
-}
-
-.jsonita-statusbar-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.jsonita-statusbar-action:hover,
-.jsonita-statusbar-action:focus-visible {
-  color: color-mix(in srgb, var(--text) 82%, var(--primary));
-  outline: none;
-}
-
-.jsonita-statusbar-shortcut {
-  display: inline-flex;
-  align-items: center;
-  max-width: 0;
-  padding: 0;
-  border: 0 solid transparent;
-  opacity: 0;
-  overflow: hidden;
-  transform: translateX(4px);
-  white-space: nowrap;
-  transition:
-    max-width var(--dur-base) var(--ease-native),
-    padding var(--dur-base) var(--ease-native),
-    border-width var(--dur-base) var(--ease-native),
-    opacity var(--dur-base) var(--ease-native),
-    transform var(--dur-base) var(--ease-native),
-    margin-right var(--dur-base) var(--ease-native);
-}
-
-.jsonita-statusbar-action-hint-visible .jsonita-statusbar-shortcut {
-  max-width: 44px;
-  padding: 0 4px;
-  border-width: 1px;
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.jsonita-statusbar-shortcut {
-  border-color: var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--control-bg);
-  color: var(--text-muted);
-  font-family: var(--font-mono-ui);
-  font-size: calc(var(--fs-xs) - 1px);
-  line-height: 1.35;
-}
-
-.jsonita-pane {
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--surface-quiet) 38%, transparent);
-}
-
-.jsonita-pane + .jsonita-pane {
-  box-shadow: inset 1px 0 0 var(--border);
-}
-
-.jsonita-pane-input::after {
-  content: "";
-  position: absolute;
-  top: var(--sp-4);
-  bottom: var(--sp-4);
-  right: 0;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    color-mix(in srgb, var(--border-strong) 64%, transparent) 18%,
-    color-mix(in srgb, var(--border-strong) 64%, transparent) 82%,
-    transparent
-  );
-  opacity: 0.42;
-  pointer-events: none;
-}
-
-.jsonita-pane-single::after {
-  display: none;
-}
-
-.jsonita-editor-shell {
-  position: relative;
-  height: 100%;
-}
-
-.jsonita-history-item-main:hover,
-.jsonita-history-item-main:focus-visible {
-  background: var(--surface-quiet);
-  border-left-color: var(--primary-edge);
-  outline: none;
-}
-
-.jsonita-history-item-main:active {
-  background: var(--control-bg-active);
-}
-
+/* Tree */
 .jsonita-tree-container {
   height: 100%;
   overflow: auto;
@@ -866,6 +1648,29 @@ select,
   font-family: var(--font-code);
   font-size: var(--fs-tree);
   line-height: var(--lh-code);
+}
+
+.jsonita-tree-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.jsonita-tree-empty-glyph {
+  font-size: calc(var(--fs-tree) + 8px);
+  margin-bottom: 6px;
+}
+
+.jsonita-tree-empty-invalid .jsonita-tree-empty-glyph {
+  color: var(--danger);
+}
+
+.jsonita-tree-empty-text {
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
 }
 
 .jsonita-tree-item {
@@ -893,7 +1698,6 @@ select,
   white-space: unset;
 }
 
-/* 长值元素可换行（key / string / number / bool / null） */
 .jsonita-tree-wrap .jsonita-tree-string,
 .jsonita-tree-wrap .jsonita-tree-number,
 .jsonita-tree-wrap .jsonita-tree-bool,
@@ -904,7 +1708,6 @@ select,
   word-break: break-word;
 }
 
-/* 多行节点时 copy 图标置顶 */
 .jsonita-tree-wrap .tree-copy-icon {
   top: 0.2em;
   transform: none;
@@ -943,7 +1746,7 @@ select,
 }
 
 .jsonita-tree-toggle:hover {
-  color: color-mix(in srgb, var(--primary) 70%, var(--text-muted));
+  color: var(--text);
 }
 
 .jsonita-tree-toggle-placeholder {
@@ -1037,14 +1840,10 @@ select,
 
 .tree-copy-icon:hover,
 .tree-copy-icon:focus {
-  color: color-mix(in srgb, var(--primary) 78%, var(--text));
+  color: var(--text);
   border-color: var(--control-border);
   background: var(--control-bg-hover);
   outline: none;
-}
-
-.tree-copy-icon:active {
-  color: var(--text);
 }
 
 .tree-copy-label {
@@ -1052,90 +1851,61 @@ select,
   line-height: 1.1;
 }
 
-/* ── Shortcut keycap tiles (matte) ───────────────────── */
-.jsonita-shortcut-glyph {
-  display: inline-flex;
-  gap: 3px;
-  align-items: center;
-}
-
-.jsonita-shortcut-tile {
-  display: inline-flex;
+/* 权限引导弹层 */
+.jsonita-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-bg);
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 5px;
-  font: 500 13px/1 var(--font-ui);
+  background: var(--bg-overlay);
+}
+
+.jsonita-modal {
+  width: 360px;
+  padding: 20px 20px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  background: var(--bg-elevated);
   color: var(--text);
-  letter-spacing: 0.01em;
-  background: var(--kbd-bg);
-  border: 1px solid var(--kbd-border);
-  box-shadow: inset 0 1px 0 var(--kbd-hi), 0 1px 1px rgba(20, 26, 36, 0.05);
-  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
-.jsonita-shortcut-tile .jsonita-shortcut-glyph-icon {
-  width: 13px;
-  height: 13px;
-  display: block;
-}
-
-.jsonita-action-button {
-  height: 30px;
-  padding: 0 13px;
-  border-radius: 7px;
-  font: 510 13px var(--font-ui);
-  cursor: pointer;
-  display: inline-flex;
+.jsonita-modal-glyph {
+  display: flex;
   align-items: center;
-  gap: 7px;
-  transition: background 120ms var(--ease-native), box-shadow 120ms var(--ease-native);
-}
-
-.jsonita-action-button-primary {
-  background: var(--surface-raised);
-  color: var(--text);
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 12px;
   border: 1px solid var(--border-strong);
-}
-
-.jsonita-action-button-primary:hover {
-  filter: brightness(0.96);
-}
-
-.jsonita-action-button-secondary {
+  border-radius: var(--radius-md);
   background: var(--control-bg);
-  color: var(--text);
-  border: 1px solid var(--control-border);
-}
-
-.jsonita-action-button-danger {
-  background: transparent;
-  color: var(--danger);
-  border: 1px solid var(--control-border);
-}
-
-.jsonita-action-button-danger:hover {
-  background: var(--danger);
-  color: #fff;
-}
-
-.jsonita-action-button-text {
-  background: transparent;
-  color: var(--text-muted);
-  border: 0;
-  padding-left: 4px;
-}
-
-.jsonita-action-button:focus-visible {
-  outline: 0;
-  box-shadow: var(--shadow-focus);
-}
-
-.jsonita-action-button[aria-pressed='true'] {
-  border-color: var(--primary-edge);
-  background: var(--primary-soft);
   color: var(--primary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  font-weight: 500;
 }
 
+.jsonita-modal-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.jsonita-modal-body {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+
+.jsonita-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}

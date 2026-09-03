@@ -6,10 +6,10 @@ import { ActionButton } from '../components/ActionButton';
 import type { Settings } from '../store/settings';
 
 /**
- * API key 输入 + Test + Reset。两种编辑模式共用。
+ * API key 输入 + Test + Reset。
  *
- * Test：用当前编辑中的 protocol/url/model + 输入的 key 实打探活；成功后落盘 key。
- * Reset：protocol/url/model 复位默认 + 删除已存 key（含旧 deepseek_api_key）。
+ * Test：用当前 protocol/url/model + 输入的 key 实打探活；成功后落盘 key。
+ * Reset：protocol/url/model 复位默认 + 删除已存 key。
  * key 直接传给 ai_test_connection，不先存 secrets，避免污染已有 key。
  */
 
@@ -68,31 +68,29 @@ export function ApiKeyInput({ settings, patch, blockTest }: Props) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={fieldLabelStyle}>{t('ai.apiKey')}</span>
+    <div className="jsonita-settings-row jsonita-settings-row-stack">
+      <div className="jsonita-settings-row-label">{t('ai.apiKey')}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <input
           type="password"
           value={keyInput}
           onChange={(e) => setKeyInput(e.target.value)}
           placeholder={hasKey ? t('ai.apiKeySavedPlaceholder') : '••••••••'}
-          style={inputStyle}
+          className="jsonita-input jsonita-input-mono"
+          style={{ flex: 1 }}
           autoComplete="off"
+          aria-label={t('ai.apiKey')}
         />
         <ActionButton variant="secondary" onClick={test} disabled={testing || !keyInput || blockTest}>
           {testing ? '…' : t('ai.test')}
         </ActionButton>
-        <ActionButton variant="secondary" onClick={reset}>
+        <ActionButton variant="text" onClick={reset}>
           {t('ai.reset')}
         </ActionButton>
       </div>
       {msg && (
         <div
-          style={{
-            fontSize: 'var(--fs-xs)',
-            color: msg.kind === 'ok' ? 'var(--ok)' : 'var(--danger)',
-            wordBreak: 'break-word',
-          }}
+          className={`jsonita-field-note ${msg.kind === 'ok' ? 'jsonita-field-note-ok' : 'jsonita-field-note-error'}`}
         >
           {msg.text}
         </div>
@@ -100,19 +98,3 @@ export function ApiKeyInput({ settings, patch, blockTest }: Props) {
     </div>
   );
 }
-
-const fieldLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--fs-xs)',
-  color: 'var(--text-muted)',
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  padding: '4px 8px',
-  background: 'var(--control-bg)',
-  border: '1px solid var(--control-border)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--fs-sm)',
-  color: 'var(--text)',
-};
