@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://jinhuang712.github.io/jsonita/">Website</a> ·
-  <a href="https://jinhuang712.github.io/jsonita/zh-CN/">中文站</a> ·
+  <a href="https://project.huangjin.online/jsonita/">Website</a> ·
+  <a href="https://project.huangjin.online/jsonita/zh-CN/">中文站</a> ·
   <a href="https://github.com/jinhuang712/jsonita/releases/latest">Download</a> ·
   <a href="CLAUDE.md">Contracts</a>
 </p>
