@@ -228,10 +228,9 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
 .appwin-tabbar {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   min-height: 44px;
-  padding: 7px 10px 8px;
-  background: color-mix(in srgb, var(--surface-quiet) 28%, transparent);
+  padding: 6px 8px 6px 12px;
   border-bottom: 1px solid var(--border);
   user-select: none;
 }
@@ -240,7 +239,7 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
   flex: 0 0 auto;
   margin-right: 6px;
   background-color: var(--text);
-  opacity: 0.82;
+  opacity: 0.7;
   -webkit-mask: url("../img/menubar-template.png") center / contain no-repeat;
   mask: url("../img/menubar-template.png") center / contain no-repeat;
 }
@@ -258,7 +257,7 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
   background: var(--tab-active-bg);
   box-shadow:
     inset 0 0 0 1px var(--tab-active-border),
-    0 1px 2px rgba(0, 0, 0, 0.08);
+    var(--shadow-sm);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
@@ -271,11 +270,11 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
 .appwin-tab {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   position: relative;
   z-index: 1;
-  min-height: 27px;
-  padding: 0 9px;
+  min-height: 28px;
+  padding: 0 10px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
@@ -290,10 +289,10 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
 .appwin-tab svg {
   flex: 0 0 auto;
   width: 13px; height: 13px;
-  opacity: 0.88;
+  opacity: 0.7;
 }
 .appwin-tab.is-active {
-  color: color-mix(in srgb, var(--primary) 68%, var(--text));
+  color: var(--text);
 }
 .appwin-tab.is-active svg { opacity: 1; }
 
@@ -331,7 +330,6 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
   display: grid;
   grid-template-columns: 44px 1fr;
   min-width: 0;
-  background: color-mix(in srgb, var(--bg-code) 40%, transparent);
 }
 .appwin-pane + .appwin-pane { border-left: 1px solid var(--border); }
 .appwin-pane--bare { grid-template-columns: 1fr; }   /* output pane: no gutter */
@@ -345,8 +343,6 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
   color: var(--text-faint);
   opacity: 0.55;
   user-select: none;
-  border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  background: color-mix(in srgb, var(--void) 22%, transparent);
 }
 .appwin-code {
   margin: 0;
@@ -364,17 +360,16 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
 .appwin-statusbar {
   display: flex;
   align-items: center;
-  min-height: 33px;
-  padding: 5px 12px;
+  min-height: 32px;
+  padding: 4px 14px;
   font-family: var(--font-ui);
   font-size: var(--fs-xs);
   letter-spacing: 0;
   border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-quiet) 30%, transparent);
   color: var(--text-muted);
 }
-.appwin-status .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; }
-.appwin-status .dot.ok { background: var(--ok); box-shadow: 0 0 6px color-mix(in srgb, var(--ok) 50%, transparent); }
+.appwin-status .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; }
+.appwin-status .dot.ok { background: var(--ok); }
 .appwin-status .dot.err { background: var(--danger); }
 .appwin-status .dot.warn { background: var(--warn); }
 .appwin-status .mono { font-family: var(--font-mono-ui); color: var(--text); }
@@ -781,4 +776,32 @@ html[lang="zh-CN"] .hero h1 { transform: translateX(0.25em); }
   font-size: var(--fs-sm);
   line-height: var(--lh-normal);
   color: var(--text-faint);
+}
+
+/* ---------- screenshots gallery ---------- */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 8px;
+}
+.gallery figure {
+  margin: 0;
+  min-width: 0;
+}
+.gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+}
+.gallery figcaption {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+@media (max-width: 720px) {
+  .gallery { grid-template-columns: 1fr; }
 }
