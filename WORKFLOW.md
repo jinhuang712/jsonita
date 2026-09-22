@@ -50,6 +50,15 @@ flowchart LR
 完整状态矩阵、主题切换或与运行时逐像素对齐。Markdown 不得超链接到仓库内
 HTML 文件；如需提及原型，使用路径文字。
 
+### Mermaid 写法
+
+Mermaid 对 label 里的特殊字符很敏感，出错时整张图不渲染：
+
+- 节点 label 含括号、斜线或星号时加引号：`A["..."]`。
+- edge label 用 `|"..."|` 包裹。edge 与 stateDiagram 转移的 label 里不放 `→`、`/`、`*`、半角 `:`、全角 `（）`；换行用 `<br/>`，连接用空格、中文逗号或 `+`。
+- classDef 与 subgraph 名不以 `end`、`start`、`subgraph`、`note` 开头；subgraph 不与节点重名。
+- 改完在浏览器里看一眼渲染结果，语法错误静态读不出来。
+
 ## 提交前验证
 
 文档变更至少运行：

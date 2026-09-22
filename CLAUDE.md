@@ -54,3 +54,5 @@ Resolve `<repo-root>` as this checkout, then read and follow [WORKFLOW.md](WORKF
 - Documentation-only changes should at least run `git diff --check` and `diff -u AGENTS.md CLAUDE.md`.
 - Implementation or Tauri configuration changes should additionally run the relevant subset of `pnpm build`, `pnpm tsc --noEmit`, `cargo check`, `cargo test`, `cargo build`, or `pnpm tauri dev`.
 - Avoid dependency installation unless the user asks or validation is blocked by missing local dependencies.
+- The user validates changes in the installed app: after an implementation change, run `pnpm deploy:local:macos`. If a frontend change does not show after redeploy, WKWebView is serving cached assets; quit Jsonita and clear `~/Library/Caches/jsonita`. `~/Library/WebKit/jsonita` also holds LocalStorage and IndexedDB, so clear it only if the first step is not enough.
+- The installed panel cannot be summoned from a script. For screenshots, run `pnpm dev --port 5199` and drive it with the repo's Playwright, with `colorScheme: 'dark'` for the dark theme. Tauri IPC fails in the browser, so only window chrome, settings, tree and editor styling can be reviewed this way.
